@@ -13,20 +13,22 @@ finding it hard.
 
 ## The flow
 
-1. **Seven tabs across the bottom** — the four operations (`+` `−` `×` `÷`) as
-   rounded coloured squares, plus three **game tabs** with their sprites:
-   **chickens** (egg-packing), **trains** (the race), **coins** (make the
-   amount). The active tab glows gold.
-2. **Operation card** — a big symbol tile, the name, a worked example, and two
+1. **Launch home** — no tile selected. An intro tour highlights each control in
+   gold while narrating: the four number tiles across the bottom, the three
+   story games stacked top-right (chickens, trains, coins), then the ☰ menu —
+   ending with **"Tap a tile to begin!"**
+2. **Number tiles** (`+` `−` `×` `÷`) sit centred along the bottom; **story
+   games** are a vertical list on the right. Selecting a tile opens its card.
+3. **Operation card** — a big symbol tile, the name, a worked example, and two
    buttons: **Practice ▶** (endless generated equations with counting cubes) and
    **Watch the tutorial ▶**. The **first** Practice tap on a tab plays its block
    tutorial first (tracked in `user://seen.cfg`), so she is never dropped in cold.
-3. **Block tutorials for every operation** — the same cube language throughout
+4. **Block tutorials for every operation** — the same cube language throughout
    (gold ring = counting now, dull = counted): addition counts on `7 + 4`;
    subtraction takes 4 from 7 and counts what's left; multiplication counts 3
    groups of 4; division deals 9 cubes into 3 buckets. All narrated. **Tap to
    skip.**
-4. **☰ Math Concepts Library** (top-left) — the four block tutorials on top,
+5. **☰ Math Concepts Library** (top-left) — the four block tutorials on top,
    then the games, then concept videos (the animated chickens & trains runs).
 
 ![Counting](game/docs/screenshots/01_tutorial.png)

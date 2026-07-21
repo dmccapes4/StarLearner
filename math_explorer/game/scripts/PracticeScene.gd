@@ -49,8 +49,17 @@ func start(op: String) -> void:
 	_streak = 0
 	_update_streak()
 	visible = true
-	Narrator.speak("Let's practice!")
-	_next_round()
+	_gen += 1
+	var gen := _gen
+	# Let the opener finish — otherwise the equation speech cuts it off.
+	var d := Narrator.speak("Let's practice!")
+	if not await _wait(gen, maxf(1.8, d)):
+		return
+	_deal_round()
+
+func _next_round() -> void:
+	_gen += 1
+	_deal_round()
 
 func _build() -> void:
 	if _built:
@@ -103,8 +112,7 @@ func _layout_buttons() -> void:
 
 # ---- rounds ------------------------------------------------------------------
 
-func _next_round() -> void:
-	_gen += 1
+func _deal_round() -> void:
 	_busy = false
 	_clear_groups()
 	_p = MathProblemGen.generate(TEMPLATES[_op], -1)
@@ -212,7 +220,9 @@ func _celebrate() -> void:
 		(g as CubeGroup).set_all_state(CubeGroup.HL.DONE)
 	Narrator.speak(PRAISE[randi() % PRAISE.size()])
 	if not await _wait(gen, 1.8): return
-	_next_round()
+	# One problem per Practice tap — return to the card so she can tap
+	# Practice again (no Back → re-select tile needed).
+	finished.emit()
 
 ## Wrong answer → the cubes SHOW the truth, slowly, with the count spoken.
 func _explain(gen: int) -> void:
@@ -272,7 +282,7 @@ func _explain(gen: int) -> void:
 	_eq.text = _equation_text(true)
 	Narrator.speak(_equation_speech(true))
 	if not await _wait(gen, 2.6): return
-	_next_round()
+	finished.emit()
 
 # ---- text --------------------------------------------------------------------
 

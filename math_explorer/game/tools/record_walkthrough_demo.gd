@@ -19,48 +19,56 @@ func _init() -> void:
 
 func _run() -> void:
 	root.get_viewport().size = Vector2i(1280, 600)
+	# Wipe the "intro seen" flag so this recording always plays the launch tour.
+	var cfg := ConfigFile.new()
+	cfg.load("user://seen.cfg")
+	cfg.set_value("seen", "intro", false)
+	cfg.save("user://seen.cfg")
+
 	_main = (load("res://scenes/Main.tscn") as PackedScene).instantiate()
 	root.add_child(_main)
 	await _sec(0.5)
 
-	# 1) Tab tour on the card: the four ops, then the game tabs.
-	print("DEMO: tab tour")
-	await _sec(2.2)
-	for op in ["sub", "mul", "div", "eggs", "trains", "coins", "add"]:
-		_main._tabs.select(op)
-		await _sec(1.6)
+	# 1) Launch intro: gold-highlight tour of every tile + the ☰ menu.
+	print("DEMO: intro tour")
+	var intro_t := 0.0
+	while _main._intro_running and intro_t < 90.0:
+		await _sec(0.25)
+		intro_t += 0.25
+	await _sec(1.0)
 
-	# 2) Addition tutorial, full run.
+	# 2) First tap on Addition → "this is a tutorial…" then the block lesson.
 	print("DEMO: addition tutorial")
-	_main._play_tutorial_for("add")
-	await _wait_signal_or(_main._tutorial.finished, 40.0)
+	_main._tabs.select("add")
+	await _sec(3.0)  # first-time VO line
+	await _wait_signal_or(_main._tutorial.finished, 45.0)
 	await _sec(2.0)
 	_main._show_card()
 	await _sec(0.8)
 
-	# 3) Subtraction block tutorial (the new cube take-away).
+	# 3) First tap on Subtraction → same first-time line, then take-away.
 	print("DEMO: subtraction tutorial")
 	_main._tabs.select("sub")
-	await _sec(1.2)
-	_main._play_tutorial_for("sub")
-	await _wait_signal_or(_main._block_tut.finished, 40.0)
+	await _sec(3.0)
+	await _wait_signal_or(_main._block_tut.finished, 45.0)
 	await _sec(2.0)
 	_main._show_card()
 	await _sec(0.8)
 
-	# 4) Practice: one correct answer, then one wrong (to show the coaching).
+	# 4) Practice: one correct (returns to card), then one wrong with coaching.
 	print("DEMO: practice")
 	_main._tabs.select("add")
 	await _sec(1.2)
-	_main._enter_scene(_main._practice)
-	_main._practice.start("add")
-	await _sec(3.0)
+	_main._on_primary()
+	await _sec(5.0)              # "Let's practice!" then the equation
 	_press_practice_answer(true)
-	await _sec(3.5)              # celebrate + next round appears
+	await _wait_signal_or(_main._practice.finished, 8.0)
+	await _sec(1.2)              # card with Practice is back
+	_main._on_primary()
+	await _sec(5.0)
 	_press_practice_answer(false)
-	await _sec(14.0)             # the slow count-it-together explanation
-	_main._show_card()
-	await _sec(0.8)
+	await _wait_signal_or(_main._practice.finished, 20.0)
+	await _sec(1.0)
 
 	# 5) Chickens & eggs, animated walkthrough (its own tab now).
 	print("DEMO: chickens and eggs")

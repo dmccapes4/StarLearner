@@ -15,6 +15,7 @@ const EggsDragScene := preload("res://scripts/EggsDragScene.gd")
 const PracticeScene := preload("res://scripts/PracticeScene.gd")
 const BlockTutorial := preload("res://scripts/BlockTutorial.gd")
 const CoinsScene := preload("res://scripts/CoinsScene.gd")
+const MainScript := preload("res://scripts/Main.gd")
 const NarratorScript := preload("res://scripts/Narrator.gd")
 
 const OUT_PATH := "res://data/math_vo_manifest.json"
@@ -66,6 +67,10 @@ func _run() -> void:
 	# Game-tab card titles + menu extras (spoken on tab select / menu tap).
 	for s in ["Chickens & Eggs", "Two Trains", "Coin Counter",
 			"Big kid ideas are coming soon!"]:
+		_add(str(s))
+
+	# Launch intro tour (highlights each tile + the ☰ menu).
+	for s in MainScript.intro_lines():
 		_add(str(s))
 
 	var chars := 0

@@ -205,10 +205,9 @@ func _win() -> void:
 	var tw := create_tween()
 	tw.tween_property(_tray, "scale", Vector2(1.06, 1.06), 0.12)
 	tw.tween_property(_tray, "scale", Vector2.ONE, 0.12)
+	await get_tree().create_timer(2.0).timeout
+	# Return to the card — Play again starts a fresh target.
 	finished.emit()
-	await get_tree().create_timer(2.2).timeout
-	if is_inside_tree() and visible:
-		_next_round()
 
 func _update_total() -> void:
 	_total_lbl.text = "%d\u00A2" % _total

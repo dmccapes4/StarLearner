@@ -17,15 +17,24 @@ func _run() -> void:
 	var dir := "res://docs/screenshots"
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
 
-	# 1) Main card view, once per operation tab.
+	# 1) Home (no tile selected) + card view per tab. Skip the launch intro so
+	#    screenshots aren't racing the narration tour.
 	var MainScene := load("res://scenes/Main.tscn")
 	var m: Node = MainScene.instantiate()
 	get_root().add_child(m)
-	for i in 10:
+	for i in 4:
 		await process_frame
-	await RenderingServer.frame_post_draw
-	get_root().get_texture().get_image().save_png(
-		ProjectSettings.globalize_path(dir + "/00_card.png"))
+	m._skip_intro()
+	m._tabs.clear_selection()
+	m._current_op = ""
+	m._card.visible = false
+	for i in 6:
+		await process_frame
+	await _shot(dir + "/00_home.png")
+	m._tabs.select("add")
+	for i in 5:
+		await process_frame
+	await _shot(dir + "/00_card.png")
 	for op in ["sub", "mul", "div", "eggs", "trains", "coins"]:
 		m._tabs.select(op)
 		for i in 5:

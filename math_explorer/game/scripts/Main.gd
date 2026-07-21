@@ -31,6 +31,25 @@ const GAME_CARDS := {
 		"play": "Play  \u25B6", "watch": ""},
 }
 
+## Launch intro: each line pairs with a highlight target ("menu" or a tab id).
+## Enumerated by tools/dump_vo_lines.gd so every sentence is baked.
+const INTRO_STEPS := [
+	{"say": "Welcome to Math Explorer! Let's look around.", "hl": ""},
+	{"say": "Along the bottom are your number tiles. Addition.", "hl": "add"},
+	{"say": "Subtraction.", "hl": "sub"},
+	{"say": "Multiplication.", "hl": "mul"},
+	{"say": "Division.", "hl": "div"},
+	{"say": "Up here are story games. Chickens and eggs.", "hl": "eggs"},
+	{"say": "Two trains.", "hl": "trains"},
+	{"say": "Coin counter.", "hl": "coins"},
+	{"say": "And this menu has all the tutorials.", "hl": "menu"},
+	{"say": "Tap a tile to begin!", "hl": ""},
+]
+
+## Spoken once, right before a first-time tutorial / walkthrough starts.
+const VO_FIRST_TUTORIAL := \
+	"This is a tutorial, because it is the first time you tapped this tile."
+
 var _ui: Control
 var _header: Label
 var _card: Control
@@ -53,8 +72,11 @@ var _eggs_drag: EggsDragScene
 var _practice: PracticeScene
 var _coins: CoinsScene
 var _back: Button
-var _current_op: String = "add"
+var _current_op: String = ""
 var _seen := ConfigFile.new()
+var _intro_running: bool = false
+var _intro_gen: int = 0
+var _first_tut_gen: int = 0
 
 func _ready() -> void:
 	_seen.load(SEEN_PATH)
@@ -71,6 +93,7 @@ func _ready() -> void:
 
 	_build_header()
 	_build_card()
+	_card.visible = false
 
 	_tabs = MathTabBar.new()
 	_ui.add_child(_tabs)
@@ -79,36 +102,56 @@ func _ready() -> void:
 	_tutorial = AdditionTutorial.new()
 	_tutorial.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_tutorial.visible = false
+	_tutorial.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_tutorial)
+	_tutorial.finished.connect(_on_activity_finished)
 
 	_block_tut = BlockTutorial.new()
 	_block_tut.visible = false
+	_block_tut.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_block_tut)
+	_block_tut.finished.connect(_on_activity_finished)
 
 	_trains = TrainsScene.new()
 	_trains.visible = false
+	_trains.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_trains)
+	_trains.finished.connect(_on_activity_finished)
 
 	_eggs = EggsScene.new()
 	_eggs.visible = false
+	_eggs.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_eggs)
+	_eggs.finished.connect(_on_activity_finished)
 
 	_eggs_drag = EggsDragScene.new()
 	_eggs_drag.visible = false
+	_eggs_drag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_eggs_drag)
+	_eggs_drag.finished.connect(_on_activity_finished)
 
 	_practice = PracticeScene.new()
 	_practice.visible = false
+	_practice.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_practice)
+	_practice.finished.connect(_on_activity_finished)
 
 	_coins = CoinsScene.new()
 	_coins.visible = false
+	_coins.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_coins)
+	_coins.finished.connect(_on_activity_finished)
 
 	_build_back_button()
 	_build_menu()
 
-	_tabs.select(_current_op)
+	# No tile selected on launch — the intro tour points at each one, then asks
+	# her to pick. Skipping the tour (seen) still starts with an empty home.
+	_tabs.clear_selection()
+	if _was_seen("intro"):
+		pass
+	else:
+		_run_intro()
 
 func _build_header() -> void:
 	_header = Label.new()
@@ -238,6 +281,8 @@ func _build_menu() -> void:
 	_ui.add_child(_menu)
 
 func _open_menu() -> void:
+	if _intro_running:
+		return
 	_menu.popup(Rect2i(Vector2i(20, 72), Vector2i(340, 0)))
 
 func _on_menu_item(id: int) -> void:
@@ -264,11 +309,74 @@ func _on_menu_item(id: int) -> void:
 		22:
 			Narrator.speak("Big kid ideas are coming soon!")
 
+# ---- launch intro ------------------------------------------------------------
+
+static func intro_lines() -> Array:
+	var out: Array = []
+	for step in INTRO_STEPS:
+		out.append(str(step["say"]))
+	out.append(VO_FIRST_TUTORIAL)
+	return out
+
+func _run_intro() -> void:
+	_intro_running = true
+	_intro_gen += 1
+	var gen := _intro_gen
+	_card.visible = false
+	_tabs.clear_selection()
+	for step in INTRO_STEPS:
+		if gen != _intro_gen:
+			return
+		_set_intro_highlight(str(step["hl"]))
+		var d := Narrator.speak(str(step["say"]))
+		if not await _wait_intro(gen, maxf(1.4, d)):
+			return
+	_set_intro_highlight("")
+	_intro_running = false
+	_mark_seen("intro")
+
+func _set_intro_highlight(hl: String) -> void:
+	_tabs.set_tour_highlight(hl if hl != "menu" else "")
+	MathTabBar.style_tour_control(_menu_btn, hl == "menu", _style_secondary)
+
+func _skip_intro() -> void:
+	if not _intro_running:
+		return
+	_intro_gen += 1
+	Narrator.stop()
+	_set_intro_highlight("")
+	_intro_running = false
+	_mark_seen("intro")
+
+func _wait_intro(gen: int, secs: float) -> bool:
+	await get_tree().create_timer(secs).timeout
+	return gen == _intro_gen and is_inside_tree()
+
 # ---- tab / card --------------------------------------------------------------
 
 func _on_tab(tab_id: String) -> void:
+	# A tap during the intro cancels the tour and opens that tile.
+	if _intro_running:
+		_skip_intro()
 	_current_op = tab_id
+	_fill_card(tab_id)
+	# First tap on an op (or chickens) tile → announce + play its tutorial.
+	# Later taps just show the card.
+	if MathTheme.OPS.has(tab_id) and not _was_seen("tut_" + tab_id):
+		_mark_seen("tut_" + tab_id)
+		_start_first_tutorial(tab_id)
+		return
+	if tab_id == "eggs" and not _was_seen("game_eggs"):
+		_mark_seen("game_eggs")
+		_start_first_eggs()
+		return
 	_show_card()
+	if MathTheme.OPS.has(tab_id):
+		Narrator.speak(str(MathTheme.OPS[tab_id]["label"]))
+	else:
+		Narrator.speak(str(GAME_CARDS[tab_id]["title"]))
+
+func _fill_card(tab_id: String) -> void:
 	if MathTheme.OPS.has(tab_id):
 		var meta: Dictionary = MathTheme.OPS[tab_id]
 		_hero_symbol.visible = true
@@ -281,7 +389,6 @@ func _on_tab(tab_id: String) -> void:
 		_btn_primary.text = "Practice  \u25B6"
 		_btn_secondary.text = "Watch the tutorial  \u25B6"
 		_btn_secondary.visible = true
-		Narrator.speak(str(meta["label"]))
 	else:
 		var g: Dictionary = MathTabBar.GAME_TABS[tab_id]
 		var card: Dictionary = GAME_CARDS[tab_id]
@@ -294,7 +401,6 @@ func _on_tab(tab_id: String) -> void:
 		_btn_primary.text = str(card["play"])
 		_btn_secondary.text = str(card["watch"])
 		_btn_secondary.visible = str(card["watch"]) != ""
-		Narrator.speak(str(card["title"]))
 
 func _set_hero_box(color: Color) -> void:
 	var sb := MathTheme.rounded_box(color, 28)
@@ -304,11 +410,6 @@ func _set_hero_box(color: Color) -> void:
 
 func _on_primary() -> void:
 	if MathTheme.OPS.has(_current_op):
-		# First practice on a tab: play its block tutorial first.
-		if not _was_seen("tut_" + _current_op):
-			_mark_seen("tut_" + _current_op)
-			_play_tutorial_for(_current_op)
-			return
 		_enter_scene(_practice)
 		_practice.start(_current_op)
 	else:
@@ -320,6 +421,38 @@ func _on_secondary() -> void:
 	elif _current_op == "eggs":
 		_enter_scene(_eggs)
 		_eggs.start(-1)
+
+## First tile tap: explain why a tutorial is starting, then play it.
+func _start_first_tutorial(op: String) -> void:
+	_first_tut_gen += 1
+	var gen := _first_tut_gen
+	_hide_scenes()
+	_card.visible = false
+	_header.visible = true
+	_menu_btn.visible = false
+	_tabs.visible = true
+	_back.visible = true
+	var d := Narrator.speak(VO_FIRST_TUTORIAL)
+	await get_tree().create_timer(maxf(2.2, d)).timeout
+	if gen != _first_tut_gen or not is_inside_tree() or _current_op != op:
+		return
+	_play_tutorial_for(op)
+
+func _start_first_eggs() -> void:
+	_first_tut_gen += 1
+	var gen := _first_tut_gen
+	_hide_scenes()
+	_card.visible = false
+	_header.visible = true
+	_menu_btn.visible = false
+	_tabs.visible = true
+	_back.visible = true
+	var d := Narrator.speak(VO_FIRST_TUTORIAL)
+	await get_tree().create_timer(maxf(2.2, d)).timeout
+	if gen != _first_tut_gen or not is_inside_tree() or _current_op != "eggs":
+		return
+	_enter_scene(_eggs)
+	_eggs.start(-1)
 
 func _play_tutorial_for(op: String) -> void:
 	_mark_seen("tut_" + op)
@@ -333,12 +466,6 @@ func _play_tutorial_for(op: String) -> void:
 func _launch_game(game: String) -> void:
 	match game:
 		"eggs":
-			# First time: the animated walkthrough teaches the game.
-			if not _was_seen("game_eggs"):
-				_mark_seen("game_eggs")
-				_enter_scene(_eggs)
-				_eggs.start(-1)
-				return
 			_enter_scene(_eggs_drag)
 			_eggs_drag.start(-1)
 		"trains":
@@ -350,6 +477,30 @@ func _launch_game(game: String) -> void:
 
 # ---- scene switching -----------------------------------------------------------
 
+## Tutorial / practice / story finished → land on the card with Practice (or
+## Play) ready. No need to hit Back and tap the tile again.
+func _on_activity_finished() -> void:
+	if _current_op.is_empty():
+		_show_home()
+		return
+	_fill_card(_current_op)
+	# Don't Narrator.stop() here — praise / "Let's practice!" may still be
+	# draining; _reveal_card keeps the chrome without cutting the voice.
+	_reveal_card()
+
+func _reveal_card() -> void:
+	_first_tut_gen += 1
+	_hide_scenes()
+	_back.visible = false
+	_header.visible = true
+	_menu_btn.visible = true
+	_tabs.visible = true
+	_card.visible = true
+	_ui.move_child(_card, -1)
+	_ui.move_child(_tabs, -1)
+	_ui.move_child(_menu_btn, -1)
+	_ui.move_child(_header, -1)
+
 func _enter_scene(scene: Control) -> void:
 	_hide_scenes()
 	_card.visible = false
@@ -358,26 +509,41 @@ func _enter_scene(scene: Control) -> void:
 	_tabs.visible = false
 	_back.visible = true
 	scene.visible = true
+	scene.mouse_filter = Control.MOUSE_FILTER_STOP
+	_ui.move_child(scene, -1)
+	_ui.move_child(_back, -1)
 
 func _hide_scenes() -> void:
-	_tutorial.visible = false
-	_block_tut.visible = false
-	_trains.visible = false
-	_eggs.visible = false
-	_eggs_drag.visible = false
-	_practice.visible = false
+	for s in [_tutorial, _block_tut, _trains, _eggs, _eggs_drag, _practice, _coins]:
+		s.visible = false
+		s.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_practice.stop()
-	_coins.visible = false
 	_coins.stop()
 
 func _show_card() -> void:
+	# Cancel a pending first-tutorial launch if she pressed Back during the VO.
+	_first_tut_gen += 1
 	Narrator.stop()
 	_hide_scenes()
 	_back.visible = false
 	_header.visible = true
 	_menu_btn.visible = true
 	_tabs.visible = true
-	_card.visible = true
+	if _current_op.is_empty():
+		_card.visible = false
+		_tabs.clear_selection()
+	else:
+		_fill_card(_current_op)
+		_card.visible = true
+	# Bring interactive chrome above any full-rect scene nodes so taps work.
+	_ui.move_child(_card, -1)
+	_ui.move_child(_tabs, -1)
+	_ui.move_child(_menu_btn, -1)
+	_ui.move_child(_header, -1)
+
+func _show_home() -> void:
+	_current_op = ""
+	_show_card()
 
 # ---- seen flags -----------------------------------------------------------------
 

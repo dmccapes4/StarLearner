@@ -127,6 +127,7 @@ func _test_vo_coverage() -> void:
 	var PracticeSceneS := load("res://scripts/PracticeScene.gd")
 	var BlockTutorialS := load("res://scripts/BlockTutorial.gd")
 	var CoinsSceneS := load("res://scripts/CoinsScene.gd")
+	var MainS := load("res://scripts/Main.gd")
 	var NarratorS := load("res://scripts/Narrator.gd")
 
 	var lines: Array = []
@@ -148,6 +149,7 @@ func _test_vo_coverage() -> void:
 	lines.append_array(CoinsSceneS.VO_FIXED)
 	lines.append_array(["Chickens & Eggs", "Two Trains", "Coin Counter",
 		"Big kid ideas are coming soon!"])
+	lines.append_array(MainS.intro_lines())
 
 	var missing := 0
 	for line in lines:
