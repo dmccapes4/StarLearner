@@ -11,7 +11,8 @@ static func speak(text: String) -> float:
 		return 0.0
 	if DisplayServer.tts_get_voices().size() > 0:
 		DisplayServer.tts_stop()
-		DisplayServer.tts_speak(text, "", 1.0, 1.0, 0.95)
+		# volume is 0–100 (int). Passing 1.0 was ~1% — barely audible next to video.
+		DisplayServer.tts_speak(text, "", 100, 1.0, 0.95)
 	return estimate_seconds(text)
 
 static func stop() -> void:

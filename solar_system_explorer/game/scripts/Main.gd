@@ -2,7 +2,7 @@ extends Node
 ## Solar System Explorer — preview flow controller.
 ##
 ##   Title (START) ─▶ Orrery tour ─▶ Astronaut briefing ─▶ Piloting strip
-##                                                           │ fly ship + tap
+##                                                           │ tap → fly → video
 ##                                                           ▼
 ##                                                       Video / "coming soon"
 ##

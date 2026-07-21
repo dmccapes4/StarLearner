@@ -60,34 +60,7 @@ func _build() -> void:
 		pic.texture = tex
 	_root.add_child(pic)
 
-	# Caption bar across the bottom for readability over the artwork.
-	var bar := ColorRect.new()
-	bar.color = Color(0.02, 0.03, 0.10, 0.72)
-	bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	bar.offset_top = -150.0
-	bar.offset_left = 0.0
-	bar.offset_right = 0.0
-	bar.offset_bottom = 0.0
-	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(bar)
-
-	var caption := Label.new()
-	caption.text = BRIEFING
-	caption.add_theme_font_size_override("font_size", 30)
-	caption.add_theme_color_override("font_color", Color(1, 1, 1))
-	caption.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.9))
-	caption.add_theme_constant_override("outline_size", 6)
-	caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	caption.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	caption.offset_top = -142.0
-	caption.offset_left = 60.0
-	caption.offset_right = -60.0
-	caption.offset_bottom = -12.0
-	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(caption)
-
+	# Voice-only briefing — no on-screen script. Small skip hint only.
 	var hint := Label.new()
 	hint.text = "tap to continue \u25B6"
 	hint.add_theme_font_size_override("font_size", 18)

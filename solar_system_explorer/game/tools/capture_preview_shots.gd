@@ -56,7 +56,7 @@ func _run() -> void:
 	fly.begin_exploration()
 	for i in 6:
 		await process_frame
-	fly._on_cell_pressed(6)  # Earth → Jupiter: a longer glide, mid-tilt
+	fly._on_body_tapped(6)  # Earth → Jupiter: a longer glide, mid-tilt
 	for i in 22:
 		await process_frame
 	await RenderingServer.frame_post_draw

@@ -1,26 +1,56 @@
 # Solar System Explorer — video source manifest.
 # Tab-separated: id <TAB> start(HH:MM:SS) <TAB> end(HH:MM:SS) <TAB> url
-# Source download is cached by YouTube id, so re-cutting after tweaking a window
-# is seconds. IDs must match SolarData.gd (file written: game/videos/<id>.ogv).
+# Consecutive rows with the same id are cut and concatenated in order.
+# Pattern: short real/NASA "alive" opener, then the VectorGlobe explainer.
 #
-# Windows come from the creator's own chapter markers on this single tour video:
+# Explainer source (all bodies):
 #   "The Solar System Explained (2026)" — VectorGlobe (@KnowtheWorld)
 #   https://www.youtube.com/watch?v=1wyr5rWonbE
-# Kid-clean narrated animation; used for the private family device, same posture
-# as ant_explorer's clips. Credit the channel; swap for public-domain NASA
-# footage if this ever ships beyond the gift.
+# Kid-clean narrated animation; used for the private family device. Credit the
+# channel; prefer public-domain NASA footage if this ever ships beyond the gift.
 #
 # id <TAB> start <TAB> end <TAB> url
+
+# Sun — SDO ultra-HD (skip title cards)
+sun	00:01:25	00:01:37	https://www.youtube.com/watch?v=6tmbeLTHC_0
 sun	00:00:08	00:01:02	https://www.youtube.com/watch?v=1wyr5rWonbE
+
+# Mercury — MESSENGER false-color globe
+mercury	00:01:35	00:01:47	https://www.youtube.com/watch?v=ENwD31EDFjc
 mercury	00:01:29	00:02:25	https://www.youtube.com/watch?v=1wyr5rWonbE
+
+# Venus — Magellan radar map of the surface
+venus	00:00:06	00:00:18	https://www.youtube.com/watch?v=yUrIzPRI4GE
 venus	00:02:25	00:03:19	https://www.youtube.com/watch?v=1wyr5rWonbE
+
+# Earth — DSCOVR / EPIC blue marble (NASA Goddard)
+earth	00:00:10	00:00:22	https://www.youtube.com/watch?v=CFrP6QfbC2g
 earth	00:03:19	00:04:36	https://www.youtube.com/watch?v=1wyr5rWonbE
+
+# Mars — Perseverance surface footage
+mars	00:00:05	00:00:17	https://www.youtube.com/watch?v=Vy_RPd0rblI
 mars	00:04:36	00:05:37	https://www.youtube.com/watch?v=1wyr5rWonbE
-# Asteroid belt is a short on-point beat in the source (~14s); best clean footage.
+
+# Asteroid belt — Dawn flyover of Ceres (belt stand-in)
+asteroid_belt	00:00:05	00:00:17	https://www.youtube.com/watch?v=uSaLVAl-ObY
 asteroid_belt	00:05:37	00:05:51	https://www.youtube.com/watch?v=1wyr5rWonbE
+
+# Jupiter — Juno Great Red Spot fly-in
+jupiter	00:00:05	00:00:17	https://www.youtube.com/watch?v=uj3Lq7Gu94Y
 jupiter	00:05:51	00:06:59	https://www.youtube.com/watch?v=1wyr5rWonbE
+
+# Saturn — Cassini ringed beauty (NASA / JPL)
+saturn	00:00:28	00:00:40	https://www.youtube.com/watch?v=htOoWJmYVtQ
 saturn	00:06:59	00:08:07	https://www.youtube.com/watch?v=1wyr5rWonbE
+
+# Uranus — Voyager 2 encounter imagery
+uranus	00:00:50	00:01:02	https://www.youtube.com/watch?v=1EWTku7Fr0Y
 uranus	00:08:07	00:09:18	https://www.youtube.com/watch?v=1wyr5rWonbE
+
+# Neptune — Voyager 2 approach (short whole clip)
+neptune	00:00:00	00:00:10	https://www.youtube.com/watch?v=dthZsl9AkgA
 neptune	00:09:18	00:10:30	https://www.youtube.com/watch?v=1wyr5rWonbE
-# Pluto lives in the Kuiper Belt / dwarf-planet beat.
+
+# Pluto — New Horizons flyover
+pluto	00:00:35	00:00:47	https://www.youtube.com/watch?v=g1fPhhTT2Oo
 pluto	00:10:30	00:10:57	https://www.youtube.com/watch?v=1wyr5rWonbE

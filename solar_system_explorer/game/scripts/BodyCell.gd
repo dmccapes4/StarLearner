@@ -1,9 +1,7 @@
 class_name BodyCell
 extends Control
-## One tappable body in the horizontal strip: a procedural disc + name, plus a
-## dwarf-planet note for Pluto.
-
-signal pressed(id: String)
+## Visual-only body in the horizontal strip (disc + name). Taps are handled by
+## ScrollView so swipes always scroll the strip.
 
 const DISC_Y := 220.0
 
@@ -14,19 +12,15 @@ func setup(b: Dictionary) -> void:
 	var r: float = float(b["draw_radius"])
 	custom_minimum_size = Vector2(2.0 * r + 40.0, 560.0)
 	size = custom_minimum_size
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	tooltip_text = b["name"]
 	queue_redraw()
 
-func _gui_input(event: InputEvent) -> void:
-	var tap := false
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		tap = true
-	elif event is InputEventScreenTouch and event.pressed:
-		tap = true
-	if tap:
-		pressed.emit(body["id"])
-		accept_event()
+func contains_local_point(local: Vector2) -> bool:
+	## Generous disc hit target (not the full tall cell) so gaps scroll cleanly.
+	var r: float = float(body["draw_radius"]) + 28.0
+	var c := Vector2(size.x * 0.5, DISC_Y)
+	return local.distance_to(c) <= r
 
 func _draw() -> void:
 	var r: float = float(body["draw_radius"])
@@ -45,10 +39,8 @@ func _draw() -> void:
 		_centered(font, "(not a planet anymore)", 20, Color(1.0, 0.62, 0.55), 466.0)
 	elif bool(body.get("is_star", false)):
 		_centered(font, "our star", 20, Color(1.0, 0.86, 0.5), 466.0)
-	elif bool(body.get("belt", false)):
-		_centered(font, "tap to fly", 20, Color(0.72, 0.8, 1.0), 466.0)
 	else:
-		_centered(font, "tap to fly", 20, Color(0.72, 0.8, 1.0), 466.0)
+		_centered(font, "tap to explore", 20, Color(0.72, 0.8, 1.0), 466.0)
 
 func _draw_belt(c: Vector2, r: float) -> void:
 	var rng := RandomNumberGenerator.new()

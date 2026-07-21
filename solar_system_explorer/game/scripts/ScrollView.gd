@@ -1,9 +1,10 @@
 class_name ScrollView
 extends Control
 ## Horizontal "piloting" strip: the Sun, eight planets, the asteroid belt, and
-## Pluto. A spaceship marker hovers above the selected body; tapping another body
-## flies the ship there with a fun speed-up / slow-down glide, then opens its
-## video. Drag to scroll manually too.
+## Pluto. Swipe anywhere to scroll (including over planets). Tap a body to fly
+## the ship there; on arrival the explore video opens. Tap empty space flies to
+## the nearest body without opening video. Scrolling never moves the ship; the
+## ship does not auto-follow the frame edge.
 
 signal body_selected(id: String)
 signal go_home()
@@ -14,16 +15,20 @@ const VIEW_W := 1280.0        ## design-space width (1280x600, canvas_items stre
 const DISC_STRIP_Y := 240.0   ## disc centre in strip coords (cell y 20 + DISC_Y 220)
 const SHIP_W := 132.0
 const SHIP_H := 82.0
+const TAP_SLOP_PX := 28.0
 
 var _scroll: ScrollContainer
 var _strip: Control
 var _ship: TextureRect
+var _cells: Array = []
 var _xs: Array = []
 var _radii: Array = []
 var _ids: Array = []
 var _selected: int = -1
 var _flying: bool = false
 var _flight: Tween
+var _pressing: bool = false
+var _press_pos: Vector2 = Vector2.ZERO
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -33,11 +38,13 @@ func _ready() -> void:
 	_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.gui_input.connect(_on_scroll_input)
 	add_child(_scroll)
 
 	var layout := SolarData.scroll_layout()
 	_strip = Control.new()
 	_strip.custom_minimum_size = Vector2(float(layout["width"]), 560)
+	_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_scroll.add_child(_strip)
 
 	_xs = layout["xs"]
@@ -47,10 +54,9 @@ func _ready() -> void:
 		_strip.add_child(cell)
 		cell.setup(list[i])
 		cell.position = Vector2(float(_xs[i]) - cell.size.x * 0.5, 20)
+		_cells.append(cell)
 		_radii.append(float(list[i]["draw_radius"]))
 		_ids.append(str(list[i]["id"]))
-		var idx := i
-		cell.pressed.connect(func(_id: String) -> void: _on_cell_pressed(idx))
 
 	_ship = TextureRect.new()
 	var tex := load(SHIP_PATH)
@@ -65,8 +71,8 @@ func _ready() -> void:
 	_strip.add_child(_ship)
 
 	var header := Label.new()
-	header.text = "Fly your ship  \u2192  tap a planet to explore"
-	header.add_theme_font_size_override("font_size", 24)
+	header.text = "Swipe to look around  \u2192  tap a planet to fly there and explore"
+	header.add_theme_font_size_override("font_size", 22)
 	header.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
 	header.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -102,16 +108,79 @@ func set_active(on: bool) -> void:
 		if _flight != null and _flight.is_valid():
 			_flight.kill()
 		_flying = false
+		_pressing = false
 
-func _on_cell_pressed(i: int) -> void:
+func _on_scroll_input(event: InputEvent) -> void:
+	## Distinguish tap vs swipe. Never accept_event on press so ScrollContainer
+	## keeps ownership of the drag.
+	if event is InputEventScreenTouch:
+		var st := event as InputEventScreenTouch
+		if st.pressed:
+			_pressing = true
+			_press_pos = st.position
+		else:
+			if _pressing and st.position.distance_to(_press_pos) <= TAP_SLOP_PX:
+				_handle_tap(_press_pos)
+			_pressing = false
+		return
+	if event is InputEventScreenDrag:
+		var sd := event as InputEventScreenDrag
+		if _pressing and sd.position.distance_to(_press_pos) > TAP_SLOP_PX:
+			_pressing = false
+		return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		var mb := event as InputEventMouseButton
+		if mb.pressed:
+			_pressing = true
+			_press_pos = mb.position
+		else:
+			if _pressing and mb.position.distance_to(_press_pos) <= TAP_SLOP_PX:
+				_handle_tap(_press_pos)
+			_pressing = false
+		return
+	if event is InputEventMouseMotion and _pressing:
+		var mm := event as InputEventMouseMotion
+		if mm.button_mask & MOUSE_BUTTON_MASK_LEFT:
+			if mm.position.distance_to(_press_pos) > TAP_SLOP_PX:
+				_pressing = false
+
+func _handle_tap(scroll_local: Vector2) -> void:
 	if _flying:
 		return
+	var strip_pt := Vector2(
+		scroll_local.x + float(_scroll.scroll_horizontal),
+		scroll_local.y)
+	for i in _cells.size():
+		var cell: BodyCell = _cells[i]
+		var local: Vector2 = strip_pt - cell.position
+		if cell.contains_local_point(local):
+			_on_body_tapped(i)
+			return
+	# Empty space / frame edge: fly to nearest body, never open video.
+	var best := _nearest_index(strip_pt.x)
+	if best >= 0 and best != _selected:
+		_fly_to(best, false)
+
+func _on_body_tapped(i: int) -> void:
+	if _flying:
+		return
+	# Already parked here → open immediately. Otherwise fly, then open on arrival.
 	if i == _selected:
 		body_selected.emit(_ids[i])
 		return
-	_fly_to(i)
+	_fly_to(i, true)
 
-func _fly_to(i: int) -> void:
+func _nearest_index(strip_x: float) -> int:
+	var best := -1
+	var best_d := INF
+	for i in _xs.size():
+		var d: float = absf(float(_xs[i]) - strip_x)
+		if d < best_d:
+			best_d = d
+			best = i
+	return best
+
+func _fly_to(i: int, open_video: bool = false) -> void:
 	_flying = true
 	var from: Vector2 = _ship.position
 	var to: Vector2 = _ship_pos(i)
@@ -132,7 +201,8 @@ func _fly_to(i: int) -> void:
 	_flight.chain().tween_callback(func() -> void:
 		_selected = i
 		_flying = false
-		body_selected.emit(_ids[i]))
+		if open_video:
+			body_selected.emit(_ids[i]))
 
 func _ship_pos(i: int) -> Vector2:
 	var r: float = float(_radii[i])
