@@ -5,20 +5,24 @@ extends SceneTree
 ##   godot --path game --fixed-fps 24 --write-movie /tmp/ant_demo.avi \
 ##     -s res://tools/record_playthrough_demo.gd
 ##
-## Beats: START → intro → entrance VO → nearest star (10s) → tunnel to surface →
-## leaf-cutter trail (automate) → surface star (10s) → wander → rail video (3s).
+## Beats:
+##   START → intro → entrance-room star (10s video) → check sides (tile lit)
+##   → tunnel to pheromone trail → another star (10s) → check sides
+##   → 15s wander → rail tile double-tap (3s video)
 ##
 ## Autoload singletons are resolved via /root at runtime — the -s entry script
 ## cannot see their compile-time names.
 
 const FPS := 24.0
-const STAR_ENTRANCE := Vector2(-300, -2530)   ## 06_pheromone
+const STAR_ENTRANCE_FALLBACK := Vector2(-300, -2530)  ## 06_pheromone
 const TRAIL_FORAGER := Vector2(-400, -3327)
-const STAR_SURFACE := Vector2(-400, -3740)    ## 05_forage
-const SURFACE_WANDER := [
+const STAR_SURFACE_FALLBACK := Vector2(-400, -3740)   ## 05_forage
+const WANDER_SPOTS := [
 	Vector2(-500, -3400),
 	Vector2(-250, -3550),
 	Vector2(-550, -3600),
+	Vector2(-380, -3480),
+	Vector2(-420, -3650),
 ]
 
 func _init() -> void:
@@ -56,7 +60,7 @@ func _run() -> void:
 		quit(1)
 		return
 
-	await _sec(1.2)
+	await _sec(1.0)
 	print("DEMO: START")
 	if intro.has_method("_on_start_pressed"):
 		intro.call("_on_start_pressed")
@@ -71,62 +75,111 @@ func _run() -> void:
 		quit(1)
 		return
 	var colony: Node = world.get("colony")
+	var star_entrance := _star_pos(world, "entrance", STAR_ENTRANCE_FALLBACK)
+	var star_surface := _star_pos(world, "surface", STAR_SURFACE_FALLBACK)
 
-	print("DEMO: entrance narration")
-	await _sec(7.5)
-
-	print("DEMO: walk to entrance star 06_pheromone")
-	await _walk_or_place(colony, STAR_ENTRANCE, 55.0, 20.0)
-	await _sec(1.0)
+	# 1–2) First star in the starting room, immediately — then 10s of video.
+	print("DEMO: entrance-room star first thing")
+	await _walk_or_place(colony, star_entrance, 55.0, 18.0)
+	await _sec(0.6)
 	await _watch_star_video(10.0)
 	print("DEMO: closed entrance star")
 
-	print("DEMO: tunnel toward surface / leaf-cutter trail")
-	# Walk most of the way so the tunnel reads on camera, then join the trail.
-	await _walk_or_place(colony, TRAIL_FORAGER, 120.0, 40.0)
-	_tap(TRAIL_FORAGER)  # trail hit-test is on tap position
-	await _sec(0.8)
-	print("DEMO: leaf-cutter trail automate")
-	await _sec(12.0)
+	# 3) Exit video and check the side rails so the new tile is visible.
+	print("DEMO: check sides (entrance tile)")
+	await _check_sides(4.0)
 
+	# 4) Tunnel up to the pheromone / leaf-cutter trail and ride it briefly.
+	print("DEMO: tunnel to pheromone trail")
+	await _walk_or_place(colony, TRAIL_FORAGER, 120.0, 40.0)
+	_tap(TRAIL_FORAGER)
+	await _sec(0.8)
+	print("DEMO: on pheromone trail")
+	await _sec(10.0)
 	print("DEMO: exit trail")
-	_tap(STAR_SURFACE + Vector2(120, 80))
-	await _sec(1.2)
+	_tap(star_surface + Vector2(120, 80))
+	await _sec(1.0)
 	if colony != null and bool(colony.call("player_has_role")):
 		colony.call("set_player_role", 0)  ## Role.NONE
 		await _sec(0.3)
 
+	# 5) Another star — surface forage — 10s video.
 	print("DEMO: surface star 05_forage")
-	await _walk_or_place(colony, STAR_SURFACE, 50.0, 18.0)
-	await _sec(1.2)
+	await _walk_or_place(colony, star_surface, 50.0, 18.0)
+	await _sec(0.8)
 	await _watch_star_video(10.0)
 	print("DEMO: closed surface star")
-	print("DEMO: wander")
-	for i in 3:
-		_tap(SURFACE_WANDER[i % SURFACE_WANDER.size()])
-		await _sec(1.7)
 
-	print("DEMO: open star rails")
-	var shell: Node = get_first_node_in_group("landscape_shell")
-	if shell != null and shell.has_method("reveal"):
-		var now := float(Time.get_ticks_msec()) / 1000.0
-		shell.call("reveal", now)
-		await _sec(0.8)
-		var pick := "06_pheromone"
-		if shell.has_method("_handle_tile_tap"):
-			var t_arm := float(Time.get_ticks_msec()) / 1000.0
-			shell.call("_handle_tile_tap", pick, t_arm)
-			await process_frame
-			shell.call("_handle_tile_tap", pick, t_arm + 0.05)
-		await _sec(0.8)
-		await _wait_video_open(4.0)
-		await _sec(3.0)
-		_close_video()
-		print("DEMO: closed rail video")
+	# 6) Check sides again (second tile lit).
+	print("DEMO: check sides (surface tile)")
+	await _check_sides(4.0)
 
-	await _sec(1.0)
+	# 7) Random exploration ~15s.
+	print("DEMO: wander 15s")
+	var wander_t := 0.0
+	var wi := 0
+	while wander_t < 15.0:
+		_tap(WANDER_SPOTS[wi % WANDER_SPOTS.size()])
+		var step := 2.5
+		await _sec(step)
+		wander_t += step
+		wi += 1
+
+	# 8) Click a collected rail tile and play its video for 3s.
+	print("DEMO: rail tile video 3s")
+	await _play_rail_tile("06_pheromone", 3.0)
+
+	await _sec(0.8)
 	print("DEMO: done")
 	quit(0)
+
+func _star_pos(world: Node, zone: String, fallback: Vector2) -> Vector2:
+	var mb = world.get("map_builder") if world != null else null
+	if mb == null:
+		return fallback
+	var placements = mb.get("star_placements")
+	if typeof(placements) != TYPE_DICTIONARY or not placements.has(zone):
+		return fallback
+	var info: Dictionary = placements[zone]
+	var p = info.get("pos", fallback)
+	return p if p is Vector2 else fallback
+
+## Reveal the side star-rails and hold them up so a newly collected tile reads.
+func _check_sides(hold_sec: float) -> void:
+	var shell: Node = get_first_node_in_group("landscape_shell")
+	if shell == null:
+		await _sec(hold_sec)
+		return
+	var now := float(Time.get_ticks_msec()) / 1000.0
+	if shell.has_method("reveal"):
+		shell.call("reveal", now)
+	elif shell.has_method("_handle_side_touch"):
+		shell.call("_handle_side_touch", now)
+	await _sec(hold_sec)
+
+func _play_rail_tile(star_id: String, watch_sec: float) -> void:
+	var shell: Node = get_first_node_in_group("landscape_shell")
+	if shell == null:
+		print("DEMO: no landscape_shell for rail tile")
+		return
+	var now := float(Time.get_ticks_msec()) / 1000.0
+	if shell.has_method("reveal"):
+		shell.call("reveal", now)
+	await _sec(0.6)
+	if shell.has_method("_handle_tile_tap"):
+		# Double-tap within 1s arms then plays a collected tile.
+		var t0 := float(Time.get_ticks_msec()) / 1000.0
+		shell.call("_handle_tile_tap", star_id, t0)
+		await process_frame
+		shell.call("_handle_tile_tap", star_id, t0 + 0.05)
+	await _sec(0.5)
+	var opened := await _wait_video_open(4.0)
+	if not opened:
+		print("DEMO: rail video did not open")
+		return
+	await _sec(watch_sec)
+	_close_video()
+	print("DEMO: closed rail video")
 
 func _silence_idle_guard() -> void:
 	var ig := root.get_node_or_null("IdleGuard")
