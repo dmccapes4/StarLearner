@@ -86,7 +86,8 @@ format=yuv420p" \
     -c:v libx264 -pix_fmt yuv420p -preset fast -crf 18 "$out"
 }
 
-mkslide "$SHOTS/01_title.png" "$d0" "$WORK/s0.mp4" in
+# Open on the astronaut art (girl + ship), not the title/star screen — no on-image caption.
+mkslide "$GAME/images/astronaut_girl.png" "$d0" "$WORK/s0.mp4" in
 mkslide "$SHOTS/02_orrery.png" "$d1" "$WORK/s1.mp4" out
 mkslide "$SHOTS/04_scroll.png" "$d2" "$WORK/s2.mp4" in
 mkslide "$SHOTS/earth_to_jupiter_0_plot.png" "$d3" "$WORK/s3.mp4" out
