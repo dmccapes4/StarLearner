@@ -1,0 +1,57 @@
+# Secrets / local env
+.env
+.env.*
+*.env
+!.env.example
+!**/*.env.example
+**/secrets/*
+!**/secrets/*.example
+*.conf.local
+credentials.json
+**/credentials.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*~
+*.swp
+.vscode/
+.idea/
+
+# Godot
+**/.godot/
+**/.godot_user/
+**/.godot_home/
+*.translation
+
+# Godot Android export template (regenerate via editor; overlay forced in separately)
+ant_explorer/game/android/
+
+# Build / caches
+**/tools/build/
+**/node_modules/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+**/.gradle/
+**/local.properties
+
+# Host-local tooling binaries (install separately)
+ant_explorer/tools/piper/
+ant_explorer/tools/antphone_tunnel/
+
+# Large video / raw asset sources
+**/stars/*.mp4
+**/stars/*.ogv
+**/assets/**/raw/
+**/assets/**/SOURCE_ARCHIVES/
+**/assets/**/unity_package/
+**/*.autosave.scml
+
+# Out of scope for the tracked repo (remote phone-update strategy)
+ant_explorer/docs/STRATEGY_ANT_PHONE_UPDATES.md
