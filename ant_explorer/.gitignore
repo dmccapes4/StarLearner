@@ -1,0 +1,7 @@
+# Secrets: ignore everything under any secrets/ dir except *.example
+secrets/*
+!secrets/*.example
+*.conf.local
+
+# Star video pipeline cache (full YouTube sources)
+tools/build/
