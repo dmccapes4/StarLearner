@@ -10,6 +10,10 @@ adb shell settings put system user_rotation 1
 adb shell settings put system accelerometer_rotation 0
 adb shell settings put global policy_control immersive.full=*
 adb shell settings put global stay_on_while_plugged_in 3
+# Kid appliance: bright, manual — auto-brightness often parks near minimum indoors.
+adb shell settings put system screen_brightness_mode 0
+adb shell settings put system screen_brightness 220
+adb shell cmd display set-brightness 0.86 2>/dev/null || true
 adb shell settings put secure lock_to_app_enabled 1
 # Never drop to the keyguard/PIN when lock-task ends (kid appliance).
 adb shell settings put secure lock_to_app_exit_locked 0
