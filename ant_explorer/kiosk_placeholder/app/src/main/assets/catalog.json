@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T18:40:00Z",
+  "updated_at": "2026-07-21T20:50:00Z",
   "apps": [
     {
       "id": "colony",
@@ -9,7 +9,8 @@
       "activity": "com.godot.game.GodotApp",
       "tile": "tile_ants",
       "enter_name": "Ant Explorer",
-      "enter_line": "You are entering Ant Explorer"
+      "enter_line": "You are entering Ant Explorer",
+      "video": "ant_explorer_explainer.mp4"
     },
     {
       "id": "solar",
@@ -18,7 +19,18 @@
       "activity": "com.godot.game.GodotApp",
       "tile": "tile_solar",
       "enter_name": "Solar System Explorer",
-      "enter_line": "You are entering Solar System Explorer"
+      "enter_line": "You are entering Solar System Explorer",
+      "video": "solar_system_explorer_explainer.mp4"
+    },
+    {
+      "id": "math",
+      "label": "math",
+      "package": "com.dylan.antexplorer.math",
+      "activity": "com.godot.game.GodotApp",
+      "tile": "tile_math",
+      "enter_name": "Math Explorer",
+      "enter_line": "You are entering Math Explorer",
+      "video": "math_explorer_explainer.mp4"
     }
   ]
 }

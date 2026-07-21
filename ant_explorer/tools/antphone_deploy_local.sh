@@ -13,6 +13,21 @@ adb push "$CATALOG" /sdcard/AntPhone/catalog.json
 adb push "$CATALOG" /data/local/tmp/antphone_catalog.json
 adb shell chmod 644 /data/local/tmp/antphone_catalog.json || true
 
+# Explainer videos for the ▶ chips under kiosk tiles (catalog "video" field).
+STAR="$(cd "$ROOT/.." && pwd)"
+VIDEOS=(
+  "$ROOT/docs/demo/ant_explorer_explainer.mp4"
+  "$STAR/solar_system_explorer/docs/demo/solar_system_explorer_explainer.mp4"
+  "$STAR/math_explorer/docs/demo/math_explorer_explainer.mp4"
+)
+adb shell mkdir -p /sdcard/AntPhone/videos /data/local/tmp/antphone_videos
+for v in "${VIDEOS[@]}"; do
+  [[ -f "$v" ]] || { echo "skip missing video $v"; continue; }
+  adb push "$v" "/sdcard/AntPhone/videos/$(basename "$v")"
+  adb push "$v" "/data/local/tmp/antphone_videos/$(basename "$v")"
+  adb shell chmod 644 "/data/local/tmp/antphone_videos/$(basename "$v")" || true
+done
+
 for apk in "$@"; do
   [[ -f "$apk" ]] || { echo "missing $apk"; exit 1; }
   echo "installing $apk"

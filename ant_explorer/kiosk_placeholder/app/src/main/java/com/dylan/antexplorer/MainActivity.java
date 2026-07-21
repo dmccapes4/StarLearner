@@ -28,6 +28,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -50,6 +51,9 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     private static final String CATALOG_PRIMARY = "/sdcard/AntPhone/catalog.json";
     private static final String CATALOG_FALLBACK = "/data/local/tmp/antphone_catalog.json";
+    /** Where deploy pushes the per-game explainer videos (first readable wins). */
+    private static final String[] VIDEO_DIRS = {
+            "/sdcard/AntPhone/videos", "/data/local/tmp/antphone_videos"};
     private static final String COLONY_PACKAGE = "com.dylan.antexplorer.colony";
     private static final String EXTRA_WIPE_SAVE = "com.dylan.antexplorer.EXTRA_WIPE_SAVE";
 
@@ -60,6 +64,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private LinearLayout tileRow;
+    private FrameLayout rootLayout;
+    private FrameLayout videoOverlay;
     private TextToSpeech tts;
     private boolean ttsReady = false;
     /** Last game package we launched — used to show the restart chip while it is alive. */
@@ -86,6 +92,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF1B3D24);
+        rootLayout = root;
 
         // Subtle help control — top-left, narrates kiosk instructions.
         Button help = makeHelpChip();
@@ -174,7 +181,11 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     @Override
     public void onBackPressed() {
-        // Stay in launcher; do not leave appliance.
+        // Close a playing video first; otherwise stay in launcher.
+        if (videoOverlay != null) {
+            closeVideoOverlay();
+            return;
+        }
         rebuildTiles();
     }
 
@@ -296,6 +307,17 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
         box.addView(under);
 
+        // ▶ chip below the label — plays this game's explainer video, if deployed.
+        final File video = resolveVideo(t.videoName);
+        if (video != null) {
+            Button play = makePlayChip();
+            LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(dp(40), dp(40));
+            pp.topMargin = dp(6);
+            pp.gravity = Gravity.CENTER_HORIZONTAL;
+            box.addView(play, pp);
+            play.setOnClickListener(v -> showVideoOverlay(video));
+        }
+
         box.setOnClickListener(v -> launchTile(t, false));
         box.setOnLongClickListener(v -> {
             confirmStartOver(t);
@@ -323,6 +345,121 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         bg.setStroke(dp(1), 0x66A5D6A7);
         b.setBackground(bg);
         return b;
+    }
+
+    private Button makePlayChip() {
+        Button b = new Button(this);
+        b.setText("\u25B6");
+        b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        b.setTextColor(0xFF1B3D24);
+        b.setPadding(0, 0, 0, 0);
+        b.setMinWidth(0);
+        b.setMinHeight(0);
+        b.setAllCaps(false);
+        b.setContentDescription("Watch what this game is about");
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(0xFFFFD54F);
+        bg.setCornerRadius(dp(20));
+        bg.setStroke(dp(1), 0x66FFFFFF);
+        b.setBackground(bg);
+        return b;
+    }
+
+    /** First readable copy of the named explainer video, or null. */
+    private File resolveVideo(String name) {
+        if (name == null || name.isEmpty()) return null;
+        // Already cached in private storage? (mediaserver can always read that)
+        File cached = new File(new File(getFilesDir(), "videos"), name);
+        if (cached.canRead() && cached.length() > 0) return cached;
+        for (String dir : VIDEO_DIRS) {
+            File f = new File(dir, name);
+            if (f.canRead()) return f;
+        }
+        return null;
+    }
+
+    /**
+     * MediaPlayer (mediaserver) cannot open /data/local/tmp or scoped /sdcard
+     * paths even when this app can. Copy into private files/ once and play that.
+     */
+    private File cacheVideoForPlayback(File src) {
+        File dir = new File(getFilesDir(), "videos");
+        File dst = new File(dir, src.getName());
+        if (dst.equals(src)) return dst;
+        if (dst.canRead() && dst.length() == src.length()) return dst;
+        try {
+            if (!dir.isDirectory() && !dir.mkdirs()) return src;
+            try (FileInputStream in = new FileInputStream(src);
+                 java.io.FileOutputStream out = new java.io.FileOutputStream(dst)) {
+                byte[] buf = new byte[1 << 16];
+                int n;
+                while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+            }
+            return dst;
+        } catch (Exception e) {
+            android.util.Log.w("StarLearner", "video cache copy failed", e);
+            return src;
+        }
+    }
+
+    /** Fullscreen in-launcher video player. Tap anywhere (or finish) to close. */
+    private void showVideoOverlay(File file) {
+        if (videoOverlay != null) closeVideoOverlay();
+        if (tts != null) tts.stop();
+
+        FrameLayout overlay = new FrameLayout(this);
+        overlay.setBackgroundColor(0xFF000000);
+        overlay.setClickable(true);
+
+        VideoView vv = new VideoView(this);
+        FrameLayout.LayoutParams vp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER);
+        overlay.addView(vv, vp);
+
+        TextView hint = new TextView(this);
+        hint.setText("tap to close");
+        hint.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        hint.setTextColor(0x99FFFFFF);
+        FrameLayout.LayoutParams hp2 = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.BOTTOM | Gravity.END);
+        hp2.setMargins(0, 0, dp(16), dp(10));
+        overlay.addView(hint, hp2);
+
+        overlay.setOnClickListener(v -> closeVideoOverlay());
+        vv.setOnCompletionListener(mp -> closeVideoOverlay());
+        vv.setOnErrorListener((mp, what, extra) -> {
+            Toast.makeText(this, "can't play video", Toast.LENGTH_SHORT).show();
+            closeVideoOverlay();
+            return true;
+        });
+
+        rootLayout.addView(overlay, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
+        videoOverlay = overlay;
+
+        vv.setVideoPath(cacheVideoForPlayback(file).getAbsolutePath());
+        vv.start();
+        applyImmersive();
+    }
+
+    private void closeVideoOverlay() {
+        if (videoOverlay == null) return;
+        FrameLayout overlay = videoOverlay;
+        videoOverlay = null;
+        // Stop playback before detach so the media player releases cleanly.
+        for (int i = 0; i < overlay.getChildCount(); i++) {
+            View child = overlay.getChildAt(i);
+            if (child instanceof VideoView) {
+                try { ((VideoView) child).stopPlayback(); } catch (Exception ignored) {}
+            }
+        }
+        rootLayout.removeView(overlay);
+        applyImmersive();
     }
 
     private Button makeRestartChip() {
@@ -478,6 +615,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 t.drawableName = o.optString("tile", "tile_ants");
                 t.enterName = o.optString("enter_name", o.optString("title", ""));
                 t.enterLine = o.optString("enter_line", "");
+                t.videoName = o.optString("video", "");
                 t.preview = o.optBoolean("preview", false);
                 if (!t.packageName.isEmpty()) out.add(t);
             }
@@ -590,6 +728,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         String drawableName;
         String enterName;
         String enterLine;
+        String videoName;
         boolean preview;
 
         static Tile builtinAnts() {
