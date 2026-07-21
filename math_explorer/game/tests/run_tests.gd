@@ -125,6 +125,8 @@ func _test_vo_coverage() -> void:
 	var EggsSceneS := load("res://scripts/EggsScene.gd")
 	var EggsDragSceneS := load("res://scripts/EggsDragScene.gd")
 	var PracticeSceneS := load("res://scripts/PracticeScene.gd")
+	var BlockTutorialS := load("res://scripts/BlockTutorial.gd")
+	var CoinsSceneS := load("res://scripts/CoinsScene.gd")
 	var NarratorS := load("res://scripts/Narrator.gd")
 
 	var lines: Array = []
@@ -141,6 +143,11 @@ func _test_vo_coverage() -> void:
 	for seed in EggsDragSceneS.SEED_POOL:
 		lines.append_array(EggsDragSceneS.vo_lines(int(seed)))
 	lines.append_array(PracticeSceneS.VO_FIXED)
+	for op in ["sub", "mul", "div"]:
+		lines.append_array(BlockTutorialS.vo_lines(op))
+	lines.append_array(CoinsSceneS.VO_FIXED)
+	lines.append_array(["Chickens & Eggs", "Two Trains", "Coin Counter",
+		"Big kid ideas are coming soon!"])
 
 	var missing := 0
 	for line in lines:
@@ -160,6 +167,7 @@ func _test_scripts_compile() -> void:
 		"res://scripts/StorySprites.gd", "res://scripts/TrainsScene.gd",
 		"res://scripts/EggsScene.gd", "res://scripts/EggsDragScene.gd",
 		"res://scripts/VoStream.gd", "res://scripts/NarratorVoice.gd",
-		"res://scripts/PracticeScene.gd",
+		"res://scripts/PracticeScene.gd", "res://scripts/BlockTutorial.gd",
+		"res://scripts/CoinsScene.gd",
 	]:
 		_ok(load(path) != null, "compiles: %s" % path)

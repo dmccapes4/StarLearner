@@ -7,6 +7,8 @@ const TrainsScene := preload("res://scripts/TrainsScene.gd")
 const EggsScene := preload("res://scripts/EggsScene.gd")
 const EggsDragScene := preload("res://scripts/EggsDragScene.gd")
 const PracticeScene := preload("res://scripts/PracticeScene.gd")
+const BlockTutorial := preload("res://scripts/BlockTutorial.gd")
+const CoinsScene := preload("res://scripts/CoinsScene.gd")
 
 func _init() -> void:
 	call_deferred("_run")
@@ -24,7 +26,7 @@ func _run() -> void:
 	await RenderingServer.frame_post_draw
 	get_root().get_texture().get_image().save_png(
 		ProjectSettings.globalize_path(dir + "/00_card.png"))
-	for op in ["sub", "mul", "div"]:
+	for op in ["sub", "mul", "div", "eggs", "trains", "coins"]:
 		m._tabs.select(op)
 		for i in 5:
 			await process_frame
@@ -94,6 +96,24 @@ func _run() -> void:
 		await create_timer(0.8).timeout
 		await _shot(dir + "/09_practice_%s.png" % op)
 		pr.stop()
+
+	# 8) Block tutorials mid-run (sub / mul / div).
+	for op in ["sub", "mul", "div"]:
+		await _reset_root()
+		var bt: BlockTutorial = BlockTutorial.new()
+		get_root().add_child(bt)
+		bt.start(op)
+		await create_timer(7.0).timeout
+		await _shot(dir + "/10_tutorial_%s.png" % op)
+		bt._skip()
+
+	# 9) Coin counter.
+	await _reset_root()
+	var co: CoinsScene = CoinsScene.new()
+	get_root().add_child(co)
+	co.start()
+	await create_timer(1.0).timeout
+	await _shot(dir + "/11_coins.png")
 
 	print("captured math shots to ", dir)
 	quit()

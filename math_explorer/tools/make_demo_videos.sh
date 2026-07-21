@@ -81,13 +81,13 @@ format=yuv420p" \
 }
 
 mkslide "$SHOTS/00_card.png" "$d0" "$WORK/s0.mp4" in
-mkslide "$SHOTS/00_card_mul.png" "$d1" "$WORK/s1.mp4" out
-mkslide "$SHOTS/02_tutorial_done.png" "$d2" "$WORK/s2.mp4" in
-mkslide "$SHOTS/04_trains_done.png" "$d3" "$WORK/s3.mp4" out
+mkslide "$SHOTS/00_card_eggs.png" "$d1" "$WORK/s1.mp4" out
+mkslide "$SHOTS/10_tutorial_mul.png" "$d2" "$WORK/s2.mp4" in
+mkslide "$SHOTS/07_eggs_drag.png" "$d3" "$WORK/s3.mp4" out
 mkslide "$SHOTS/09_practice_add.png" "$d4" "$WORK/s4.mp4" in
 # Pad the last slide so 5 crossfades don't shorten the film vs. narration.
 d5_pad=$(python3 -c "print(float('$d5') + 5 * float('$XFADE'))")
-mkslide "$SHOTS/06_eggs_cartons.png" "$d5_pad" "$WORK/s5.mp4" out
+mkslide "$SHOTS/11_coins.png" "$d5_pad" "$WORK/s5.mp4" out
 
 python3 - <<PY
 import subprocess

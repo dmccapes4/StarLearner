@@ -13,6 +13,8 @@ const TrainsScene := preload("res://scripts/TrainsScene.gd")
 const EggsScene := preload("res://scripts/EggsScene.gd")
 const EggsDragScene := preload("res://scripts/EggsDragScene.gd")
 const PracticeScene := preload("res://scripts/PracticeScene.gd")
+const BlockTutorial := preload("res://scripts/BlockTutorial.gd")
+const CoinsScene := preload("res://scripts/CoinsScene.gd")
 const NarratorScript := preload("res://scripts/Narrator.gd")
 
 const OUT_PATH := "res://data/math_vo_manifest.json"
@@ -50,6 +52,20 @@ func _run() -> void:
 	# Practice mode: fixed praise/coaching lines are baked; the dynamic equation
 	# speech ("What is 6 plus 3?") intentionally uses the OS TTS fallback.
 	for s in PracticeScene.VO_FIXED:
+		_add(str(s))
+
+	# Block tutorials (fixed numbers per op).
+	for op in ["sub", "mul", "div"]:
+		for s in BlockTutorial.vo_lines(op):
+			_add(str(s))
+
+	# Coin counter fixed lines ("Make 12 cents." totals use the TTS fallback).
+	for s in CoinsScene.VO_FIXED:
+		_add(str(s))
+
+	# Game-tab card titles + menu extras (spoken on tab select / menu tap).
+	for s in ["Chickens & Eggs", "Two Trains", "Coin Counter",
+			"Big kid ideas are coming soon!"]:
 		_add(str(s))
 
 	var chars := 0

@@ -23,56 +23,121 @@ func _run() -> void:
 	root.add_child(_main)
 	await _sec(0.5)
 
-	# 1) Tab tour on the card.
+	# 1) Tab tour on the card: the four ops, then the game tabs.
 	print("DEMO: tab tour")
 	await _sec(2.2)
-	for op in ["sub", "mul", "div", "add"]:
+	for op in ["sub", "mul", "div", "eggs", "trains", "coins", "add"]:
 		_main._tabs.select(op)
 		await _sec(1.6)
 
 	# 2) Addition tutorial, full run.
 	print("DEMO: addition tutorial")
-	_main._on_play_tutorial()
+	_main._play_tutorial_for("add")
 	await _wait_signal_or(_main._tutorial.finished, 40.0)
 	await _sec(2.0)
 	_main._show_card()
 	await _sec(0.8)
 
-	# 3) Two trains (subtraction story).
-	print("DEMO: two trains")
+	# 3) Subtraction block tutorial (the new cube take-away).
+	print("DEMO: subtraction tutorial")
 	_main._tabs.select("sub")
 	await _sec(1.2)
-	_main._on_play_story()
-	await _wait_signal_or(_main._trains.finished, 25.0)
-	await _sec(2.5)
+	_main._play_tutorial_for("sub")
+	await _wait_signal_or(_main._block_tut.finished, 40.0)
+	await _sec(2.0)
 	_main._show_card()
 	await _sec(0.8)
 
-	# 4) Chickens & eggs, animated (multiplication tutorial).
-	print("DEMO: chickens and eggs")
-	_main._tabs.select("mul")
-	await _sec(1.2)
-	_main._on_play_tutorial()
-	await _wait_signal_or(_main._eggs.finished, 45.0)
-	await _sec(2.5)
-	_main._show_card()
-	await _sec(0.8)
-
-	# 5) Practice: one correct answer, then one wrong (to show the coaching).
+	# 4) Practice: one correct answer, then one wrong (to show the coaching).
 	print("DEMO: practice")
 	_main._tabs.select("add")
 	await _sec(1.2)
-	_main._on_play_practice()
+	_main._enter_scene(_main._practice)
+	_main._practice.start("add")
 	await _sec(3.0)
 	_press_practice_answer(true)
 	await _sec(3.5)              # celebrate + next round appears
 	_press_practice_answer(false)
 	await _sec(14.0)             # the slow count-it-together explanation
 	_main._show_card()
+	await _sec(0.8)
+
+	# 5) Chickens & eggs, animated walkthrough (its own tab now).
+	print("DEMO: chickens and eggs")
+	_main._tabs.select("eggs")
+	await _sec(1.4)
+	_main._enter_scene(_main._eggs)
+	_main._eggs.start(-1)
+	await _wait_signal_or(_main._eggs.finished, 45.0)
+	await _sec(2.5)
+	_main._show_card()
+	await _sec(0.8)
+
+	# 6) Two trains: race, then answer the miles-ahead question.
+	print("DEMO: two trains")
+	_main._tabs.select("trains")
+	await _sec(1.4)
+	_main._launch_game("trains")
+	await _wait_trains_question(30.0)
+	await _sec(1.5)
+	_press_trains_answer(true)
+	await _wait_signal_or(_main._trains.finished, 12.0)
+	await _sec(2.5)
+	_main._show_card()
+	await _sec(0.8)
+
+	# 7) Coin counter: drop coins to make the target.
+	print("DEMO: coins")
+	_main._tabs.select("coins")
+	await _sec(1.4)
+	_main._launch_game("coins")
+	await _sec(3.0)
+	await _play_coins()
+	await _sec(3.0)
+	_main._show_card()
 	await _sec(1.5)
 
 	print("DEMO: done")
 	quit()
+
+func _wait_trains_question(timeout: float) -> void:
+	var t := 0.0
+	while not _main._trains._answering and t < timeout:
+		await _sec(0.25)
+		t += 0.25
+
+func _press_trains_answer(correct: bool) -> void:
+	var tr: Control = _main._trains
+	var answer := "%d mi" % int(tr._p["answer"])
+	for i in 3:
+		var is_answer: bool = (tr._buttons[i] as Button).text == answer
+		if is_answer == correct:
+			tr._on_answer(i)
+			return
+
+## Move coins into the tray one by one until the total is exact.
+func _play_coins() -> void:
+	var co: Control = _main._coins
+	# Greedy: dimes, then nickels, then pennies.
+	for kind in ["dime", "nickel", "penny"]:
+		for c in co._coins:
+			if co._total >= co._target:
+				return
+			if c.kind != kind or bool(c.get_meta("in_tray")):
+				continue
+			if co._total + int(c.value) > co._target:
+				continue
+			# Simulate the drag: press on the coin, release over the tray.
+			co._begin_drag(c.position + c.size * 0.5)
+			var target: Vector2 = co._tray.position + Vector2(80 + co._total * 3.0, 80)
+			var steps := 10
+			for s in steps:
+				var p: Vector2 = (c.position + c.size * 0.5).lerp(target, float(s + 1) / steps)
+				if co._dragging != null:
+					co._dragging.position = p - co._drag_off
+				await _sec(0.05)
+			co._end_drag(target)
+			await _sec(1.2)
 
 func _press_practice_answer(correct: bool) -> void:
 	var pr: Control = _main._practice

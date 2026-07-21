@@ -5,25 +5,29 @@ you can count; every answer is narrated and animated; wrong answers are re-shown
 slower — never just marked wrong. Built for a six-year-old who's learning math and
 finding it hard.
 
-> **Preview.** This build ships the shell + a fully animated **Addition** tutorial.
-> The full design (all four operations, practice mode, sprite-driven word problems,
-> and a time-math thread) is in [`docs/STRATEGY_MATH_EXPLORER.md`](docs/STRATEGY_MATH_EXPLORER.md).
-> A full review of the working set (with fresh screenshots) is in
+> The full design is in [`docs/STRATEGY_MATH_EXPLORER.md`](docs/STRATEGY_MATH_EXPLORER.md).
+> A review of the working set (with fresh screenshots) is in
 > [`docs/REVIEW_BASIC_MATH_SET.md`](docs/REVIEW_BASIC_MATH_SET.md).
 
 ![Card](game/docs/screenshots/00_card.png)
 
 ## The flow
 
-1. **Four tabs across the bottom** — `+` Addition, `−` Subtraction, `×`
-   Multiplication, `÷` Division — each a rounded, coloured square; the active one
-   glows gold.
-2. **Operation card** — a big symbol tile, the name, a worked example, and a gold
-   **Watch the tutorial ▶** button.
-3. **Addition tutorial** — `7 + 4 =` comes alive: seven red cubes are counted
-   (gold ring: bright = counting now, dull = counted), then four blue cubes (grey
-   ring), then we **count on** — 8, 9, 10, 11 — the heart of addition. The cubes
-   turn gold and slide together into eleven. All narrated. **Tap to skip.**
+1. **Seven tabs across the bottom** — the four operations (`+` `−` `×` `÷`) as
+   rounded coloured squares, plus three **game tabs** with their sprites:
+   **chickens** (egg-packing), **trains** (the race), **coins** (make the
+   amount). The active tab glows gold.
+2. **Operation card** — a big symbol tile, the name, a worked example, and two
+   buttons: **Practice ▶** (endless generated equations with counting cubes) and
+   **Watch the tutorial ▶**. The **first** Practice tap on a tab plays its block
+   tutorial first (tracked in `user://seen.cfg`), so she is never dropped in cold.
+3. **Block tutorials for every operation** — the same cube language throughout
+   (gold ring = counting now, dull = counted): addition counts on `7 + 4`;
+   subtraction takes 4 from 7 and counts what's left; multiplication counts 3
+   groups of 4; division deals 9 cubes into 3 buckets. All narrated. **Tap to
+   skip.**
+4. **☰ Math Concepts Library** (top-left) — the four block tutorials on top,
+   then the games, then concept videos (the animated chickens & trains runs).
 
 ![Counting](game/docs/screenshots/01_tutorial.png)
 
@@ -59,28 +63,30 @@ One of the harder, prettier ones — **two trains**:
 > **ahead = 50 miles** (and B *catches* A after 1.5 h). Animated on parallel
 > tracks so you literally watch the faster train eat the gap and pull ahead.
 
-## Story problems (built)
+## The games (their own tabs)
 
-Two sprite-driven, narrated word-problem scenes are live, reached from the
-operation card's **Story problem ▶** button (the `×` tab opens eggs, the `−` tab
-opens trains):
-
-**Two trains** (`−` tab). A red steam engine leaves first (slower); a blue bullet
-leaves later (faster), visibly eats the head start, flashes **★ Caught up!** as it
-passes, and pulls ahead. Freezes on `Blue − Red = miles ahead`.
-
-![Two trains](docs/screenshots/04_trains_done.png)
-
-**Chickens & eggs** (`×` tab). Two flavours share the `×` tab: **Watch the
-tutorial ▶** plays the animated walkthrough (chickens lay, the rate equation
-builds, eggs gather and fly into 6-egg cartons that **snap shut**, ending on
-`total ÷ 6 = cartons`), and **Story problem ▶** is the *interactive* version she
-plays (`EggsDragScene`) — drag each hen's eggs into her nest (the nest goes gold
-when it holds the right number), then drag the day's eggs into cartons that snap
-shut when full. Works with mouse or touch.
+**Chickens & eggs** (chicken tab). **Play ▶** is the interactive version
+(`EggsDragScene`) — drag each hen's eggs into her nest (the nest goes gold when
+it holds the right number), then drag the day's eggs into cartons that snap shut
+when full. **Watch how it works ▶** plays the animated walkthrough
+(`EggsScene`); the first Play also shows it once so the game explains itself.
+Hens lay 1 or 2 eggs a day (like real hens), and the two colours always lay
+*different* amounts.
 
 ![Chickens and eggs](docs/screenshots/06_eggs_cartons.png)
 ![Drag the eggs](game/docs/screenshots/07_eggs_drag.png)
+
+**Two trains** (train tab). A red steam engine leaves first (slower); a blue
+bullet leaves later (faster), visibly eats the head start, flashes **★ Caught
+up!** as it passes, and pulls ahead. The run ends on a **question** — three mile
+buttons, "How many miles ahead is Blue?" — before the reveal, so it's a game,
+not just a movie.
+
+![Two trains](docs/screenshots/04_trains_done.png)
+
+**Coin counter** (coin tab). Pennies, nickels and dimes in a purse; she drags
+coins into the tray to *make the amount*, with the running total spoken. Going
+over bounces the coin back with a hint; exact is a win and a fresh target.
 
 The animated scenes auto-play with narration and **tap-to-skip**; numbers come
 from the generators (trains clamp to stay on-screen; eggs clamp to stay
@@ -108,17 +114,19 @@ as alternates. See [`docs/ASSETS.md`](docs/ASSETS.md).
 
 ## What's built vs. planned
 
-- **Built:** tab shell, operation card, crash-safe narrator, the counting-cube
-  widget (`CubeGroup`), the Addition tutorial, the procedural problem generator
-  (`MathProblemGen`, 10 templates), the story-sprite set + manifest
-  (`StorySprites`), **two animated word-problem scenes** — two trains
-  (`TrainsScene`) and chickens & eggs (`EggsScene`) — an **interactive drag
-  activity** (`EggsDragScene`: drag eggs into nests, then into cartons), plus
-  headless tests.
-- **Planned (specced in the strategy doc):** Subtraction / Multiplication /
-  Division tutorials, Practice mode with explained mistakes, the remaining scenes
-  (coins & change, sharing dolls, painting stones), a time-math thread (clock
-  face, elapsed time, rates), and the **Big Kid Ideas** track
+- **Built:** seven-tab shell (4 ops + 3 games), block tutorials for **all four
+  operations** (`AdditionTutorial`, `BlockTutorial`), **Practice mode**
+  (`PracticeScene`: endless generated equations, wrong answers re-counted
+  slowly), first-time-tutorial gating, the ☰ Math Concepts Library, the
+  procedural problem generator (`MathProblemGen`, 10 templates), the
+  story-sprite set (`StorySprites`), the **chickens & eggs** game (animated
+  `EggsScene` + draggable `EggsDragScene`), the **two trains** race with its
+  end-of-run question (`TrainsScene`), the **coin counter** (`CoinsScene`),
+  baked ElevenLabs narration, headless tests, demo videos, the Android APK, and
+  the kiosk tile with its ▶ explainer chip.
+- **Planned (specced in the strategy doc):** the remaining scenes (sharing
+  dolls, painting stones), a time-math thread (clock face, elapsed time,
+  rates), and the **Big Kid Ideas** track
   ([`docs/ADVANCED_CONCEPTS.md`](docs/ADVANCED_CONCEPTS.md)).
 
 ## Design notes
@@ -144,8 +152,9 @@ game/
   project.godot  icon.svg
   scenes/Main.tscn
   scripts/  Main / TabBar / MathTheme / MathData / Narrator / VoStream / NarratorVoice
-            CubeGroup / AdditionTutorial / MathProblemGen / StorySprites
-            TrainsScene / EggsScene / EggsDragScene
+            CubeGroup / AdditionTutorial / BlockTutorial / PracticeScene
+            MathProblemGen / StorySprites
+            TrainsScene / EggsScene / EggsDragScene / CoinsScene
   audio/vo/                    baked ElevenLabs clips (md5 per sentence)
   data/math_vo_manifest.json   every sentence the narrator can speak
   tests/run_tests.gd
