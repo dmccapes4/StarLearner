@@ -1,0 +1,17 @@
+{
+  "_comment": "Guidance VO for undiscovered rail tiles. `place` overrides the zone->label map; `line` overrides the whole sentence. Optional baked WAVs live at assets/audio/vo/star_rail/<id>.wav (VoStream raw-loads them); text is the TTS fallback + on-screen intent.",
+  "stars": {
+    "01_queen": {"place": "queen's room", "line": "Find the queen's room and look for the golden star!"},
+    "02_larvae": {"place": "nursery", "line": "Visit the nursery where the baby ants grow and look for the golden star!"},
+    "03_pupae": {"place": "pupa room", "line": "Explore the pupa room and look for the golden star!"},
+    "04_fungus": {"place": "fungus garden", "line": "Explore the mushroom garden and look for the golden star!"},
+    "05_forage": {"place": "sunny outside", "line": "Go outside in the sunshine and look for the golden star!"},
+    "06_pheromone": {"place": "doorway", "line": "Explore the doorway where ants say hello and look for the golden star!"},
+    "07_soldiers": {"place": "soldier lookout", "line": "Explore the soldier lookout and look for the golden star!"},
+    "08_waste": {"place": "dump", "line": "Explore the dump where the ants tidy up and look for the golden star!"},
+    "09_labor": {"place": "busy garden", "line": "Explore the busy garden where everyone helps and look for the golden star!"},
+    "10_bacteria": {"place": "cleaning room", "line": "Explore the cleaning room and look for the golden star!"},
+    "11_architecture": {"place": "deep tunnels", "line": "Explore the deep tunnels and look for the golden star!"},
+    "12_invaders": {"place": "invasion clearing", "line": "Explore the invasion clearing and look for the golden star!"}
+  }
+}

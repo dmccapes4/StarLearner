@@ -1,0 +1,3 @@
+# Prevent Godot from importing non-game trees if linked nearby.
+# (Empty on purpose for the game root; raw sources live outside.)
+android

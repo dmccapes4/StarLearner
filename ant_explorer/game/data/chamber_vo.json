@@ -1,0 +1,53 @@
+{
+  "note": "First visit per session: two spoken sentences. {what it is}. {what ants do here}.",
+  "chambers": {
+    "surface": {
+      "line1": "This is the sunny foraging ground outside the nest.",
+      "line2": "Worker ants cut leaf pieces here and carry them home."
+    },
+    "invasion": {
+      "line1": "This clearing is where strangers sometimes try to enter.",
+      "line2": "Soldier ants rush out, face them bravely, and send them away."
+    },
+    "entrance": {
+      "line1": "This is the nest doorway, busy with ants coming and going.",
+      "line2": "They follow scent trails so everyone knows which way to walk."
+    },
+    "outpost": {
+      "line1": "This is the soldier outpost by the defensive tunnel.",
+      "line2": "Big soldier ants wait here, ready to protect the colony."
+    },
+    "garden_a": {
+      "line1": "This is a fungal garden, the colony's underground farm.",
+      "line2": "Gardeners feed the fungus with leaf bits and keep it healthy."
+    },
+    "garden_b": {
+      "line1": "This is another garden room where many jobs meet.",
+      "line2": "Different ants share the work so the whole nest stays fed."
+    },
+    "hygiene": {
+      "line1": "This is a tidy garden corner for keeping the fungus clean.",
+      "line2": "Tiny helpers fight mold so the food garden stays safe."
+    },
+    "nursery": {
+      "line1": "This is the nursery, where baby ants grow.",
+      "line2": "Nurse ants feed the larvae and tuck them carefully."
+    },
+    "pupae": {
+      "line1": "This is the quiet pupa room next to the nursery.",
+      "line2": "Babies rest in cocoons here until they become grown ants."
+    },
+    "queen": {
+      "line1": "This is the queen's chamber, the heart of the nest.",
+      "line2": "The queen lays eggs, and nurses carry them to the nursery."
+    },
+    "dump": {
+      "line1": "This is the refuse dump, the nest's cleanup room.",
+      "line2": "Workers bring old bits and waste here to keep gardens clean."
+    },
+    "deep": {
+      "line1": "This is a deep tunnel, a quiet corner of the nest.",
+      "line2": "Ants explore these passages and learn how the colony is built."
+    }
+  }
+}

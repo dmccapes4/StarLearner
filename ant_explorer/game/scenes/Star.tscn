@@ -1,0 +1,8 @@
+[gd_scene format=3]
+
+[node name="Star" type="Node2D"]
+# Phase 5 — documentary knowledge star. Stub for folder completeness.
+
+[node name="Sparkle" type="Polygon2D" parent="."]
+color = Color(1, 0.9, 0.35, 0.9)
+polygon = PackedVector2Array(0, -16, 4, -4, 16, 0, 4, 4, 0, 16, -4, 4, -16, 0, -4, -4)

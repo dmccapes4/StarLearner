@@ -1,0 +1,16 @@
+{
+  "stars": [
+    {"id": "01_queen", "topic": "Queen & egg-laying", "zone": "queen", "file": "01_queen.ogv"},
+    {"id": "02_larvae", "topic": "Larvae & nursing", "zone": "nursery", "file": "02_larvae.ogv"},
+    {"id": "03_pupae", "topic": "Pupae & caste determination", "zone": "pupae", "file": "03_pupae.ogv"},
+    {"id": "04_fungus", "topic": "Fungal garden cultivation", "zone": "garden_a", "file": "04_fungus.ogv"},
+    {"id": "05_forage", "topic": "Leaf cutting & foraging trails", "zone": "surface", "file": "05_forage.ogv"},
+    {"id": "06_pheromone", "topic": "Pheromone communication", "zone": "entrance", "file": "06_pheromone.ogv"},
+    {"id": "07_soldiers", "topic": "Soldier caste & defense", "zone": "outpost", "file": "07_soldiers.ogv"},
+    {"id": "08_waste", "topic": "Waste management / dump", "zone": "dump", "file": "08_waste.ogv"},
+    {"id": "09_labor", "topic": "Division of labor", "zone": "garden_b", "file": "09_labor.ogv"},
+    {"id": "10_bacteria", "topic": "Symbiotic bacteria & hygiene", "zone": "hygiene", "file": "10_bacteria.ogv"},
+    {"id": "11_architecture", "topic": "Colony architecture & tunnels", "zone": "deep", "file": "11_architecture.ogv"},
+    {"id": "12_invaders", "topic": "Invaders & colony resilience", "zone": "invasion", "file": "12_invaders.ogv"}
+  ]
+}

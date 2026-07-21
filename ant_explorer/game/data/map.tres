@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="MapData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/content/MapData.gd" id="1_map"]
+
+[resource]
+script = ExtResource("1_map")
+phase = 2
+note = "Authoritative layout is data/map.json (12 zones, one star each). This tres is a pointer."
+chamber_ids = PackedStringArray("surface", "invasion", "entrance", "outpost", "garden_a", "garden_b", "hygiene", "nursery", "pupae", "queen", "dump", "deep")

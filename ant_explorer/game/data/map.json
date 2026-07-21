@@ -1,0 +1,52 @@
+{
+  "phase": 2,
+  "note": "Realistic nest cross-section, 2x+ scale. Surface meadow on top, entrance shaft below, fungus gardens mid-depth, nursery below gardens, queen deepest at center, dump banished to the far west flank, deep galleries at the bottom east.",
+  "chambers": [
+    {"id": 0, "name": "surface", "kind": "outdoor", "center": [-400, -3500], "half": [850, 480], "star": "05_forage", "color": [0.35, 0.55, 0.28]},
+    {"id": 1, "name": "invasion", "kind": "outdoor", "center": [1900, -3450], "half": [650, 420], "star": "12_invaders", "color": [0.40, 0.50, 0.30]},
+    {"id": 2, "name": "entrance", "kind": "hub", "center": [-300, -2350], "half": [550, 360], "star": "06_pheromone", "color": [0.42, 0.32, 0.22]},
+    {"id": 3, "name": "outpost", "kind": "defense", "center": [1250, -2150], "half": [480, 340], "star": "07_soldiers", "color": [0.45, 0.28, 0.22]},
+    {"id": 4, "name": "garden_a", "kind": "garden", "center": [-1550, -1250], "half": [620, 450], "star": "04_fungus", "color": [0.32, 0.42, 0.28]},
+    {"id": 5, "name": "garden_b", "kind": "garden", "center": [550, -1100], "half": [600, 430], "star": "09_labor", "color": [0.34, 0.44, 0.30]},
+    {"id": 6, "name": "hygiene", "kind": "garden", "center": [1950, -750], "half": [420, 330], "star": "10_bacteria", "color": [0.30, 0.40, 0.35]},
+    {"id": 7, "name": "nursery", "kind": "nursery", "center": [-450, 250], "half": [700, 480], "star": "02_larvae", "color": [0.45, 0.34, 0.24]},
+    {"id": 8, "name": "pupae", "kind": "nursery", "center": [-1900, 550], "half": [480, 380], "star": "03_pupae", "color": [0.48, 0.38, 0.30]},
+    {"id": 9, "name": "queen", "kind": "queen", "center": [150, 1600], "half": [520, 380], "star": "01_queen", "color": [0.50, 0.38, 0.22]},
+    {"id": 10, "name": "dump", "kind": "dump", "center": [-2750, -450], "half": [450, 350], "star": "08_waste", "color": [0.28, 0.24, 0.20]},
+    {"id": 11, "name": "deep", "kind": "explore", "center": [1600, 1500], "half": [500, 380], "star": "11_architecture", "color": [0.25, 0.22, 0.28]}
+  ],
+  "tunnels": [
+    {"a": "surface", "b": "entrance"},
+    {"a": "surface", "b": "invasion"},
+    {"a": "invasion", "b": "outpost"},
+    {"a": "entrance", "b": "outpost"},
+    {"a": "entrance", "b": "garden_a"},
+    {"a": "entrance", "b": "garden_b"},
+    {"a": "garden_a", "b": "garden_b"},
+    {"a": "garden_b", "b": "hygiene"},
+    {"a": "garden_a", "b": "dump"},
+    {"a": "garden_a", "b": "nursery"},
+    {"a": "garden_b", "b": "nursery"},
+    {"a": "nursery", "b": "pupae"},
+    {"a": "nursery", "b": "queen"},
+    {"a": "pupae", "b": "queen"},
+    {"a": "queen", "b": "deep"}
+  ],
+  "leaf_spots": [
+    {"zone": "surface", "offset": [-550, -220]},
+    {"zone": "surface", "offset": [350, 180]},
+    {"zone": "surface", "offset": [620, -260]},
+    {"zone": "surface", "offset": [-160, 320]},
+    {"zone": "surface", "offset": [120, -380]},
+    {"zone": "surface", "offset": [-750, 80]}
+  ],
+  "trails": [
+    {"role": "nurse", "zone": "nursery", "scale": 2.4, "width": 18.0},
+    {"role": "forager", "zone": "surface", "scale": 2.8, "width": 18.0},
+    {"role": "gardener", "zone": "garden_a", "scale": 2.4, "width": 18.0},
+    {"role": "gardener", "zone": "hygiene", "scale": 1.6, "width": 12.0},
+    {"role": "soldier", "zone": "outpost", "scale": 2.2, "width": 18.0},
+    {"role": "waste", "zone": "dump", "scale": 2.2, "width": 18.0},
+    {"role": "scout", "zone": "deep", "scale": 2.6, "width": 18.0}
+  ]
+}

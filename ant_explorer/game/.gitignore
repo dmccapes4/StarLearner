@@ -1,0 +1,22 @@
+# Godot 4
+.godot/
+*.translation
+export_presets.cfg
+*.apk
+*.aab
+*.so
+
+# OS / editor
+.DS_Store
+*~
+*.swp
+.vscode/
+.idea/
+
+# Raw asset sources (keep imported; ignore oversized dumps)
+assets/**/raw/
+assets/**/SOURCE_ARCHIVES/
+
+# Video builds (trimmed clips may be large; keep stars/.gitkeep)
+stars/*.mp4
+stars/*.ogv

@@ -1,0 +1,10 @@
+{
+  "trails": {
+    "forager": "You've entered the leaf cutter pheromone trail. Click anywhere if you would like to exit.",
+    "nurse": "You've entered the nurse pheromone trail. Click anywhere if you would like to exit.",
+    "gardener": "You've entered the gardener pheromone trail. Click anywhere if you would like to exit.",
+    "soldier": "You've entered the soldier pheromone trail. Click anywhere if you would like to exit.",
+    "waste": "You've entered the clean-up pheromone trail. Click anywhere if you would like to exit.",
+    "scout": "You've entered the scout pheromone trail. Click anywhere if you would like to exit."
+  }
+}

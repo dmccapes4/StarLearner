@@ -1,0 +1,34 @@
+{
+  "roles": {
+    "nurse": {
+      "line1": "Your job is nursing the colony's babies.",
+      "line2": "Gather fungus from the garden and bring it to the nursery.",
+      "line3": "Feed the larvae and help manage their juvenile hormone."
+    },
+    "forager": {
+      "line1": "Your job is cutting leaves on the foraging trail.",
+      "line2": "Snip leaf pieces outside and carry them home.",
+      "line3": "The colony uses those leaves to grow its fungus farm."
+    },
+    "gardener": {
+      "line1": "Your job is tending the fungus garden.",
+      "line2": "Keep the fungus healthy and tidy.",
+      "line3": "Healthy fungus feeds every ant in the nest."
+    },
+    "soldier": {
+      "line1": "Your job is guarding the nest.",
+      "line2": "Patrol and face strangers at the edge of the colony.",
+      "line3": "You shake and scare them away — nobody gets hurt."
+    },
+    "waste": {
+      "line1": "Your job is keeping the nest clean.",
+      "line2": "Carry old bits and trash to the dump.",
+      "line3": "Clean gardens stay safer and grow better food."
+    },
+    "scout": {
+      "line1": "Your job is exploring the deep trail.",
+      "line2": "Walk the deep tunnels and learn how the nest is built.",
+      "line3": "Exploring helps the colony find new rooms."
+    }
+  }
+}

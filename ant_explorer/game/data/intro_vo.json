@@ -1,0 +1,14 @@
+{
+  "note": "Played once at game launch. Cannot be skipped. Movement unlocks when finished. `lines` play in order; each optional `cue` fires a shell animation (reveal_rails brightens the star shelves). gen_vo.py bakes one WAV per line into assets/audio/vo/intro/<key>.wav.",
+  "intro": {
+    "lines": [
+      {"key": "welcome", "text": "Welcome, little explorer ant!", "cue": ""},
+      {"key": "walk", "text": "When I stop talking, tap the ground to walk through your nest.", "cue": ""},
+      {"key": "jobs", "text": "Follow the glowing trails to try different ant jobs.", "cue": ""},
+      {"key": "rails_reveal", "text": "Now look at the sides. Your star shelves are hiding under the soil. Here they come!", "cue": "reveal_rails"},
+      {"key": "rails_locked", "text": "All twelve stars start dim, because they are still locked.", "cue": ""},
+      {"key": "rails_unlock", "text": "Walk up to a shiny golden star in the nest to light one up here. Can you find all twelve?", "cue": ""},
+      {"key": "rails_hide", "text": "The shelves rest under the soil. Touch a side any time to peek at your stars!", "cue": "hide_rails"}
+    ]
+  }
+}

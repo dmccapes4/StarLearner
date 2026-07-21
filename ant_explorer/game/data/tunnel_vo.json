@@ -1,0 +1,6 @@
+{
+  "note": "Played once per session the first time the player steps onto a tunnel mouth pad. gen_vo.py --tunnels bakes assets/audio/vo/tunnel.wav.",
+  "tunnel": {
+    "text": "This tunnel goes to another room. Your ant will walk you through!"
+  }
+}

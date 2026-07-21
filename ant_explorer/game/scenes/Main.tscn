@@ -1,0 +1,49 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/Main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/World.tscn" id="2_world"]
+[ext_resource type="Script" path="res://scripts/input/TapRouter.gd" id="3_tap"]
+[ext_resource type="Script" path="res://scripts/ui/DebugHUD.gd" id="4_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/VideoPanel.tscn" id="5_video"]
+[ext_resource type="PackedScene" path="res://scenes/ui/LandscapeShell.tscn" id="6_shell"]
+[ext_resource type="PackedScene" path="res://scenes/ui/IntroPanel.tscn" id="7_intro"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main")
+
+[node name="World" parent="." instance=ExtResource("2_world")]
+
+[node name="VideoPanel" parent="." instance=ExtResource("5_video")]
+
+[node name="LandscapeShell" parent="." instance=ExtResource("6_shell")]
+
+[node name="IntroPanel" parent="." instance=ExtResource("7_intro")]
+groups = ["intro_panel"]
+
+[node name="TapRouter" type="Node" parent="."]
+script = ExtResource("3_tap")
+camera_path = NodePath("../World/CameraFollow")
+
+[node name="DebugHUD" type="CanvasLayer" parent="."]
+script = ExtResource("4_hud")
+
+[node name="Margin" type="MarginContainer" parent="DebugHUD"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -420.0
+offset_top = 8.0
+offset_right = -12.0
+offset_bottom = 48.0
+grow_horizontal = 0
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="Label" type="Label" parent="DebugHUD/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.75, 0.85)
+theme_override_font_sizes/font_size = 14
+text = "sim …"
+horizontal_alignment = 2

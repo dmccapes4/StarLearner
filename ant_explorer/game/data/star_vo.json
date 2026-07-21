@@ -1,0 +1,18 @@
+{
+  "note": "Played when the player stops on an undiscovered star. line2 topic filled from stars.json at generation time.",
+  "line1": "You found a knowledge star!",
+  "stars": {
+    "01_queen": "This star is about the queen and how she lays eggs for the whole colony.",
+    "02_larvae": "This star is about hungry larvae and the nurses who feed them.",
+    "03_pupae": "This star is about pupae resting in silk and growing into their caste.",
+    "04_fungus": "This star is about the underground fungal garden the ants cultivate.",
+    "05_forage": "This star is about leaf cutting and the trails foragers follow outside.",
+    "06_pheromone": "This star is about scent trails and how ants talk without words.",
+    "07_soldiers": "This star is about soldier ants standing guard at the outpost.",
+    "08_waste": "This star is about the dump chamber and keeping the nest clean.",
+    "09_labor": "This star is about division of labor and many ants sharing the work.",
+    "10_bacteria": "This star is about helpful bacteria and careful hygiene in the garden.",
+    "11_architecture": "This star is about tunnels, chambers, and how the nest is built.",
+    "12_invaders": "This star is about invaders and how the colony stays resilient."
+  }
+}
