@@ -5,15 +5,20 @@ job is to prove the console holds more than one subject. A calm, guided tour of 
 planets for a young child. Marked **PREVIEW** on every screen.
 
 - **Engine:** Godot **4.3** (Mobile renderer), landscape 1280×600, offline-first.
-- **Assets:** bodies + orbits drawn procedurally; narration is the OS text-to-speech voice. Three
-  agent-generated image assets in `game/images/` — the astronaut girl, the ship marker, and the
-  keyed-window cockpit frame (`cockpit.png`, for the planned 3D flyer — see
-  [`docs/STRATEGY_3D_FLYER.md`](docs/STRATEGY_3D_FLYER.md)). Each body has a **real
+- **Assets:** bodies + orbits drawn procedurally; narration is the OS text-to-speech voice. Four
+  agent-generated image assets in `game/images/` — the astronaut girl, the ship marker, the
+  keyed-window cockpit frame (`cockpit.png`), and the `coming_soon.png` teaser (both for the planned
+  3D flyer — see [`docs/STRATEGY_3D_FLYER.md`](docs/STRATEGY_3D_FLYER.md)). Each body has a **real
   1–2 minute `.ogv` clip** in `game/videos/` (see below).
 - **Package (planned):** `com.dylan.antexplorer.solar` · tile `tile_solar` · label **planets**.
 
 ## The flow
 
+0. **Coming-soon teaser.** The very first thing on launch: a concept frame for the planned 3D flyer
+   — an over-the-shoulder view of the astronaut girl piloting a cockpit toward the planets (Sun to
+   the right, a streaking starfield, one planet approaching), with a spoken *"Coming soon! …fly your
+   very own spaceship…"* line tuned for a six-year-old. Fades to the title. **Tap to skip.** *(The
+   girl appears only in this teaser and the briefing, never in gameplay.)*
 1. **Title → START.** A star-field title screen with one big START button.
 2. **Orrery (top-down).** The Sun with the eight planets tracing flattened ellipses, plus the
    **asteroid belt** as a scattered ring between Mars and Jupiter. A voice walks the tour
@@ -31,6 +36,7 @@ planets for a young child. Marked **PREVIEW** on every screen.
    auto-closes when it finishes. If a clip is ever missing it falls back to a spoken **"video coming
    soon"** facts card, so the app never dead-ends.
 
+![Coming-soon 3D flyer teaser](game/docs/screenshots/00_coming_soon.png)
 ![Title](game/docs/screenshots/01_title.png)
 ![Orrery tour with asteroid belt](game/docs/screenshots/02_orrery.png)
 ![Astronaut briefing](game/docs/screenshots/03_astronaut.png)

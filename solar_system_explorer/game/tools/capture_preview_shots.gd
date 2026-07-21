@@ -15,6 +15,22 @@ func _run() -> void:
 	var dir := "res://docs/screenshots"
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
 
+	# Coming-soon teaser (the first thing on launch), mid fade-in.
+	var ComingSoon := load("res://scripts/ComingSoon.gd")
+	var cbg := Starfield.new()
+	var coming = ComingSoon.new()
+	root.add_child(cbg)
+	root.add_child(coming)
+	coming.begin()
+	for i in 30:
+		await process_frame
+	await RenderingServer.frame_post_draw
+	get_root().get_texture().get_image().save_png(
+		ProjectSettings.globalize_path(dir + "/00_coming_soon.png"))
+	coming.queue_free()
+	cbg.queue_free()
+	await process_frame
+
 	await _shot_view(TitleView.new(), dir + "/01_title.png", 2)
 
 	var orrery: OrreryView = OrreryView.new()

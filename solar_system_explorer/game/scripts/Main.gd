@@ -1,13 +1,14 @@
 extends Node
 ## Solar System Explorer — preview flow controller.
 ##
-##   Title (START) ─▶ Orrery tour ─▶ Astronaut briefing ─▶ Piloting strip
-##                                                           │ tap → fly → video
-##                                                           ▼
-##                                                       Video / "coming soon"
+##   Coming-soon teaser ─▶ Title (START) ─▶ Orrery tour ─▶ Astronaut briefing
+##                                                           ─▶ Piloting strip
+##                                                              │ tap → fly → video
+##                                                              ▼
+##                                                          Video / "coming soon"
 ##
-## Bodies + orbits are drawn in code; the astronaut girl and the ship marker are
-## the only image assets (res://images/).
+## Bodies + orbits are drawn in code; the astronaut girl, the ship marker, and
+## the coming-soon teaser frame are the only image assets (res://images/).
 
 const Starfield := preload("res://scripts/Starfield.gd")
 const TitleView := preload("res://scripts/TitleView.gd")
@@ -15,12 +16,14 @@ const OrreryView := preload("res://scripts/OrreryView.gd")
 const ScrollView := preload("res://scripts/ScrollView.gd")
 const VideoPanel := preload("res://scripts/VideoPanel.gd")
 const AstronautIntro := preload("res://scripts/AstronautIntro.gd")
+const ComingSoon := preload("res://scripts/ComingSoon.gd")
 
 var _title: TitleView
 var _orrery: OrreryView
 var _scroll: ScrollView
 var _video: VideoPanel
 var _astro: AstronautIntro
+var _coming: ComingSoon
 
 func _ready() -> void:
 	var starfield := Starfield.new()
@@ -31,11 +34,13 @@ func _ready() -> void:
 	_scroll = ScrollView.new()
 	_video = VideoPanel.new()
 	_astro = AstronautIntro.new()
+	_coming = ComingSoon.new()
 	add_child(_title)
 	add_child(_orrery)
 	add_child(_scroll)
 	add_child(_video)
 	add_child(_astro)
+	add_child(_coming)
 
 	_title.start_pressed.connect(_on_start)
 	_orrery.tour_finished.connect(_begin_astronaut)
@@ -43,9 +48,13 @@ func _ready() -> void:
 	_scroll.go_home.connect(_show_title)
 	_scroll.body_selected.connect(_on_body_selected)
 	_astro.finished.connect(_on_astro_finished)
+	_coming.finished.connect(_show_title)
 
 	_add_preview_badge()
-	_show_title()
+
+	# The 3D-flyer teaser is the very first thing on launch; it fades to the title.
+	_hide_all_views()
+	_coming.begin()
 
 func _on_start() -> void:
 	_set_view(_orrery)
@@ -74,6 +83,14 @@ func _set_view(active: Control) -> void:
 		v.visible = on
 		if v.has_method("set_active"):
 			v.set_active(on)
+
+## Hide every stacked view without activating one (so no view narrates behind the
+## coming-soon teaser on launch).
+func _hide_all_views() -> void:
+	for v in [_title, _orrery, _scroll]:
+		v.visible = false
+		if v.has_method("set_active"):
+			v.set_active(false)
 
 func _add_preview_badge() -> void:
 	var layer := CanvasLayer.new()

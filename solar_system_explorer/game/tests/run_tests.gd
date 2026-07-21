@@ -81,7 +81,7 @@ func _test_scripts_compile() -> void:
 		"res://scripts/OrreryBodies.gd", "res://scripts/ScrollView.gd",
 		"res://scripts/BodyCell.gd", "res://scripts/VideoPanel.gd",
 		"res://scripts/Narrator.gd", "res://scripts/SolarData.gd",
-		"res://scripts/AstronautIntro.gd",
+		"res://scripts/AstronautIntro.gd", "res://scripts/ComingSoon.gd",
 	]:
 		_ok(load(path) != null, "compiles: %s" % path)
 
