@@ -5,8 +5,10 @@ job is to prove the console holds more than one subject. A calm, guided tour of 
 planets for a young child. Marked **PREVIEW** on every screen.
 
 - **Engine:** Godot **4.3** (Mobile renderer), landscape 1280×600, offline-first.
-- **Assets:** bodies + orbits drawn procedurally; narration is the OS text-to-speech voice. Two
-  image assets in `game/images/` — the astronaut girl and the ship marker. Each body has a **real
+- **Assets:** bodies + orbits drawn procedurally; narration is the OS text-to-speech voice. Three
+  agent-generated image assets in `game/images/` — the astronaut girl, the ship marker, and the
+  keyed-window cockpit frame (`cockpit.png`, for the planned 3D flyer — see
+  [`docs/STRATEGY_3D_FLYER.md`](docs/STRATEGY_3D_FLYER.md)). Each body has a **real
   1–2 minute `.ogv` clip** in `game/videos/` (see below).
 - **Package (planned):** `com.dylan.antexplorer.solar` · tile `tile_solar` · label **planets**.
 
@@ -62,16 +64,15 @@ tools/build_clips.sh --id saturn     # re-cut one (source stays cached)
 tools/build_clips.sh --force         # rebuild everything
 ```
 
-**Source:** the windows are the creator's own chapter markers on a single tour video —
-*"The Solar System Explained (2026)"* by **VectorGlobe / @KnowtheWorld**
-(`youtube.com/watch?v=1wyr5rWonbE`). Kid-clean narrated animation; used for the **private family
-device**, the same posture as Ant Explorer's clips. Credit the channel; swap in public-domain
-**NASA** footage if this ever ships beyond the gift. Clip lengths track the source beats: planets
-run ~55–77 s each; the asteroid belt is a short ~14 s beat (all the on-point footage the source
-gives it); Pluto rides the ~27 s Kuiper-belt / dwarf-planet segment.
+**Source:** each body is two segments concatenated by `build_clips.sh` (same `id` on consecutive
+TSV rows): a short (~10–12 s) real / NASA “alive” opener, then the VectorGlobe explainer beat from
+*"The Solar System Explained (2026)"* (`youtube.com/watch?v=1wyr5rWonbE`). Openers are mission
+footage (SDO, MESSENGER, Magellan, DSCOVR, Perseverance, Dawn/Ceres, Juno, Cassini, Voyager, New
+Horizons). Credit VectorGlobe for the explainers; private family device posture. Explainer lengths
+track the source beats (~55–77 s planets; short asteroid-belt / Pluto tails).
 
-**Note:** the eleven clips total ~165 MB. That bakes into the game APK; if you'd rather keep the APK
-small, lower `libtheora -q:v` in `build_clips.sh`, or push `game/videos/` to the device out-of-band
+**Note:** the eleven clips bake into the game APK (~190 MB APK with video). To shrink, lower
+`libtheora -q:v` in `build_clips.sh`, or push `game/videos/` to the device out-of-band
 (`adb push`) instead of embedding.
 
 **Ingest prerequisite:** modern YouTube needs a JS runtime for `yt-dlp`'s challenge solver. Install
