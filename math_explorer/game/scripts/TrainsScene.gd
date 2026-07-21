@@ -11,6 +11,11 @@ extends Control
 
 signal finished()
 
+## Fixed interaction lines (baked; the per-seed result lines are in vo_lines).
+const VO_ASK := "The trains stopped! How many miles ahead is the blue train?"
+const VO_RIGHT := "You got it!"
+const VO_WRONG := "Not quite. Let's work it out."
+
 const RAIL_A_Y := 250.0
 const RAIL_B_Y := 388.0
 const X0 := 168.0
@@ -41,6 +46,9 @@ var _catch: Label
 var _end: Panel
 var _end_lbl: Label
 var _hint: Label
+var _ask: Label
+var _buttons: Array = []
+var _answering: bool = false
 var _built := false
 
 func start(seed: int = -1) -> void:
@@ -63,8 +71,12 @@ func start(seed: int = -1) -> void:
 	_running = true
 	_done = false
 	_caught = false
+	_answering = false
 	_catch.visible = false
 	_end.visible = false
+	_ask.visible = false
+	for b in _buttons:
+		(b as Button).visible = false
 	_eq.text = ""
 	visible = true
 	queue_redraw()
@@ -82,6 +94,7 @@ static func vo_lines(seed: int) -> Array:
 		"Two trains leave the station. The red train goes first, but it is slower.",
 		"The blue train caught up! Now it speeds ahead.",
 		"After %d hours, the blue train is %d miles ahead of the red train." % [t, gap],
+		VO_ASK, VO_RIGHT, VO_WRONG,
 	]
 
 func _build() -> void:
@@ -154,6 +167,27 @@ func _build() -> void:
 	_hint.size = Vector2(170, 26)
 	add_child(_hint)
 
+	# She answers before the reveal: a question + three mile buttons.
+	_ask = _label(28, MathTheme.GOLD)
+	_ask.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_ask.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_ask.offset_left = 0
+	_ask.offset_right = 0
+	_ask.offset_top = 424
+	_ask.visible = false
+	add_child(_ask)
+	for i in 3:
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(170, 76)
+		b.size = Vector2(170, 76)
+		b.focus_mode = Control.FOCUS_NONE
+		b.add_theme_font_size_override("font_size", 34)
+		b.visible = false
+		var idx := i
+		b.pressed.connect(func() -> void: _on_answer(idx))
+		add_child(b)
+		_buttons.append(b)
+
 func _process(delta: float) -> void:
 	if not _running or not visible:
 		return
@@ -192,10 +226,62 @@ func _place_trains() -> void:
 		_catch.visible = true
 		Narrator.speak("The blue train caught up! Now it speeds ahead.")
 
+## The run ends on a QUESTION: she picks how far ahead Blue is, then we reveal.
 func _finish_sim() -> void:
 	_running = false
-	_done = true
+	_answering = true
 	_place_trains()
+	_catch.visible = false
+	var gap: int = _p["answer"]
+	_ask.text = "How many miles ahead is Blue?"
+	_ask.visible = true
+	_hint.text = ""
+	Narrator.speak(VO_ASK)
+	# Three choices: the answer plus two nearby mile counts.
+	var opts := [gap]
+	var deltas := [-30, -20, -10, 10, 20, 30]
+	var di := 0
+	while opts.size() < 3:
+		var v: int = gap + deltas[(di * 7 + gap) % deltas.size()]
+		di += 1
+		if v > 0 and not opts.has(v):
+			opts.append(v)
+	opts.shuffle()
+	var w := 170.0
+	var bgap := 40.0
+	var x0 := 640.0 - (3.0 * w + 2.0 * bgap) * 0.5
+	for i in 3:
+		var b := _buttons[i] as Button
+		b.text = "%d mi" % opts[i]
+		b.position = Vector2(x0 + i * (w + bgap), 470.0)
+		b.visible = true
+		b.disabled = false
+		_style_answer(b, false)
+
+func _on_answer(idx: int) -> void:
+	if not _answering:
+		return
+	_answering = false
+	var b := _buttons[idx] as Button
+	var gap: int = _p["answer"]
+	var right: bool = int((b.text as String).split(" ")[0]) == gap
+	for btn in _buttons:
+		(btn as Button).disabled = true
+	if right:
+		_style_answer(b, true)
+		Narrator.speak(VO_RIGHT)
+	else:
+		Narrator.speak(VO_WRONG)
+	await get_tree().create_timer(1.4).timeout
+	if not is_inside_tree():
+		return
+	_reveal()
+
+func _reveal() -> void:
+	_done = true
+	_ask.visible = false
+	for b in _buttons:
+		(b as Button).visible = false
 	var q: Dictionary = _p["params"]
 	var s_a: int = q["s_a"]
 	var s_b: int = q["s_b"]
@@ -211,11 +297,25 @@ func _finish_sim() -> void:
 	Narrator.speak("After %d hours, the blue train is %d miles ahead of the red train." % [t, gap])
 	finished.emit()
 
+func _style_answer(b: Button, correct: bool) -> void:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = MathTheme.GOLD if correct else MathTheme.PANEL
+	sb.set_corner_radius_all(20)
+	sb.set_border_width_all(3)
+	sb.border_color = Color(1, 1, 1, 0.9) if correct else Color(1, 1, 1, 0.3)
+	var fg := Color(0.06, 0.06, 0.12) if correct else MathTheme.TEXT
+	b.add_theme_color_override("font_color", fg)
+	b.add_theme_color_override("font_hover_color", fg)
+	b.add_theme_color_override("font_pressed_color", fg)
+	b.add_theme_color_override("font_disabled_color", fg)
+	for state in ["normal", "hover", "focus", "pressed", "disabled"]:
+		b.add_theme_stylebox_override(state, sb)
+
 func _on_input(event: InputEvent) -> void:
 	var tap: bool = (event is InputEventMouseButton and event.pressed \
 			and event.button_index == MOUSE_BUTTON_LEFT) \
 		or (event is InputEventScreenTouch and event.pressed)
-	if tap and not _done:
+	if tap and _running:
 		Narrator.stop()
 		_a_hours = _total_a
 		_finish_sim()

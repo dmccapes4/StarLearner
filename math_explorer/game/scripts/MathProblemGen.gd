@@ -98,8 +98,9 @@ static func _share_div(rng: RandomNumberGenerator) -> Dictionary:
 static func _eggs_rate(rng: RandomNumberGenerator) -> Dictionary:
 	var white := rng.randi_range(2, 5)
 	var yellow := rng.randi_range(2, 5)
-	var w_eggs := rng.randi_range(1, 3)
-	var y_eggs := rng.randi_range(1, 3)
+	# Real hens lay one egg a day, occasionally two — never three.
+	var w_eggs := rng.randi_range(1, 2)
+	var y_eggs := rng.randi_range(1, 2)
 	var days := rng.randi_range(2, 4)
 	var carton := 6
 	var per_day := white * w_eggs + yellow * y_eggs

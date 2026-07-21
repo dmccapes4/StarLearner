@@ -113,10 +113,11 @@ func _run(gen: int) -> void:
 	var total: int = _p["answer"]
 	var cartons := int(ceil(float(total) / CARTON))
 
-	# 1) Chickens appear.
-	Narrator.speak("%d white chickens each lay %d eggs a day. %d yellow chickens each lay %d." % [white, w_eggs, yellow, y_eggs])
+	# 1) Chickens appear. Waits are paced by the actual spoken duration so a
+	# longer clip is never cut off by the next line.
+	var d := Narrator.speak("%d white chickens each lay %d eggs a day. %d yellow chickens each lay %d." % [white, w_eggs, yellow, y_eggs])
 	_lay_out_chickens(white, yellow)
-	if not await _wait(gen, 2.4): return
+	if not await _wait(gen, maxf(2.4, d)): return
 
 	# 2) Each chicken lays its eggs for the day (little pops under it).
 	for i in _chickens.size():
@@ -126,8 +127,8 @@ func _run(gen: int) -> void:
 			_spawn_egg_under(meta["node"], k, n)
 			if not await _wait(gen, 0.16): return
 	_eq0.text = "(%d\u00D7%d) + (%d\u00D7%d) = %d eggs a day" % [white, w_eggs, yellow, y_eggs, per_day]
-	Narrator.speak("That is %d eggs every day." % per_day)
-	if not await _wait(gen, 2.2): return
+	d = Narrator.speak("That is %d eggs every day." % per_day)
+	if not await _wait(gen, maxf(2.2, d)): return
 
 	# 3) Over `days` days -> gather `total` eggs into a tray.
 	Narrator.speak("For %d days, that is %d eggs in all." % [days, total])
