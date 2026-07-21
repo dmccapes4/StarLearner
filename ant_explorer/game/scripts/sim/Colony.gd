@@ -7,6 +7,7 @@ signal colony_ready()
 const ANT_SCENE_DEFAULT := preload("res://scenes/Ant.tscn")
 ## Preload (not typed class_name) so headless CLI runs without editor global-class cache.
 const _TunnelTransit := preload("res://scripts/nav/TunnelTransit.gd")
+const _EggPileView := preload("res://scripts/sim/EggPileView.gd")
 
 var graph: NavGraph
 var pathing: Pathing
@@ -25,6 +26,7 @@ var views_parent: Node2D
 var ant_scene: PackedScene = ANT_SCENE_DEFAULT
 var _views: Dictionary = {}
 var _tick: int = 0
+var _egg_pile_view: Node2D
 
 func setup(nav: NavGraph, path: Pathing) -> void:
 	graph = nav
@@ -108,14 +110,50 @@ func spawn_phase2(parent: Node2D, scene: PackedScene, leaves: Array = []) -> voi
 
 	brood = Brood.new()
 	brood.setup(self, nest_center, queen_id)
-	var want: int = brood.target_larvae()
-	for i in want:
+	# Dense starting brood: larvae in nursery, pupae in the pupa room.
+	# Leave a little headroom under target so the queen keeps laying; seed a
+	# waiting egg pile so nurses ferry immediately.
+	var want: int = maxi(0, brood.target_larvae() - 3)
+	# Nursery should read as larvae; pupae mostly already in the pupa room.
+	var n_pupae: int = maxi(6, int(round(float(want) * 0.22)))
+	var n_larvae: int = maxi(0, want - n_pupae)
+	# Spread larvae across the growth curve so pupations trickle, not burst.
+	var pupate_at: float = brood.pupate_threshold()
+	var stages: PackedFloat32Array = Config.data.larva_nutrition_stage
+	for i in n_larvae:
 		var larva := brood.spawn_larva(brood.nest_spot(rng))
 		if larva == null:
 			break
-		if i % 5 == 1:
-			larva.nutrition = 8.0
+		var t: float = 0.0 if n_larvae <= 1 else float(i) / float(n_larvae - 1)
+		larva.nutrition = lerpf(2.0, pupate_at * 0.92, t) + rng.randf_range(-1.5, 1.5)
+		larva.nutrition = clampf(larva.nutrition, 1.0, pupate_at - 1.0)
+		larva.larva_stage = 0
+		if stages.size() >= 2 and larva.nutrition >= stages[0]:
 			larva.larva_stage = 1
+		if stages.size() >= 3 and larva.nutrition >= stages[1]:
+			larva.larva_stage = 2
+	# Mostly minors/foragers so soak homeostasis isn't flooded with soldiers.
+	var destinies: Array[int] = [
+		AntEnums.Caste.NURSE,
+		AntEnums.Caste.FORAGER,
+		AntEnums.Caste.NURSE,
+		AntEnums.Caste.FORAGER,
+		AntEnums.Caste.SOLDIER,
+	]
+	for i in n_pupae:
+		var dest: int = destinies[i % destinies.size()]
+		# One nursery pupa so ferry is visible; rest already in the pupa room.
+		var zone := "nursery" if i < 1 else "pupae"
+		var pupa := brood.spawn_pupa(brood.chamber_spot(zone, rng), dest)
+		if pupa == null:
+			break
+		# Stagger timers so the room doesn't mass-eclose at once.
+		pupa.pupa_ticks_left = maxi(12, Config.get_pupa_ticks() - (i * 3) % 40)
+	# Seed a visible heap so the pile reads immediately; nurses wait for min.
+	brood.eggs_waiting = 5
+	ants[queen_id].intent = AntEnums.State.IDLE
+	_ensure_egg_pile_view()
+	_sync_egg_pile_view()
 
 	invaders.setup(self)
 	colony_ready.emit()
@@ -151,6 +189,11 @@ func _activate(a: AntState, id: int, is_player: bool, caste: int, pos: Vector2) 
 	var ch := graph.chamber_for_point(pos)
 	a.node_id = ch.id if ch else 0
 	a.state = AntEnums.State.IDLE
+	# Stagger NPC ages so retirements start immediately instead of a mass die-off.
+	if not is_player and AntEnums.is_adult_worker(caste) \
+			and caste != AntEnums.Caste.QUEEN and caste != AntEnums.Caste.PLAYER:
+		var span: int = maxi(30, Config.get_max_age())
+		a.age_ticks = rng.randi_range(0, int(span * 0.75))
 	_spawn_view(a, views_parent, ant_scene)
 
 func _spawn_view(state: AntState, parent: Node2D, scene: PackedScene) -> void:
@@ -258,7 +301,9 @@ func on_sim_tick(tick: int) -> void:
 			var carrier := get_ant(a.carried_by)
 			if carrier != null and carrier.alive:
 				a.prev_cell = a.cell
-				a.cell = carrier.cell + Vector2(0, -6)
+				# Ride slightly ahead of the nurse so the big pupa/larva reads
+				# as cargo in her mandibles, not a second body underfoot.
+				a.cell = carrier.cell + Vector2(10, -8)
 				continue
 		a.prev_cell = a.cell
 		_sync_node(a)
@@ -270,7 +315,7 @@ func on_sim_tick(tick: int) -> void:
 			AntEnums.Caste.LARVA, AntEnums.Caste.PUPA:
 				pass
 			AntEnums.Caste.QUEEN:
-				_step_queen(a)
+				_step_queen(a, speed)
 			AntEnums.Caste.INVADER:
 				_step_invader(a, speed)
 			_:
@@ -289,8 +334,10 @@ func on_sim_tick(tick: int) -> void:
 						_:
 							_step_wanderer(a, speed)
 		a.age_ticks += 1
+		_maybe_retire(a)
 	if brood:
 		brood.tick(tick)
+		_sync_egg_pile_view()
 	if garden and tick % 5 == 0:
 		garden.tick_decay()
 	if invaders:
@@ -315,8 +362,35 @@ func _npc_jh_scale() -> float:
 		return 1.0
 	return homeostasis.jh_dose_scale()
 
-func _step_queen(a: AntState) -> void:
-	a.state = AntEnums.State.LAY_EGG
+func _step_queen(a: AntState, speed: float) -> void:
+	## Wander the queen chamber; walk to the egg pile to lay.
+	if a.state == AntEnums.State.WALK or not a.path.is_empty():
+		_step_walker(a, speed * 0.7)
+		if a.path.is_empty():
+			if a.intent == AntEnums.State.LAY_EGG:
+				a.state = AntEnums.State.LAY_EGG
+				a.idle_ticks_left = rng.randi_range(4, 10)
+			else:
+				a.state = AntEnums.State.IDLE
+				a.idle_ticks_left = rng.randi_range(10, 28)
+		return
+	if a.idle_ticks_left > 0:
+		a.idle_ticks_left -= 1
+		if a.intent == AntEnums.State.LAY_EGG:
+			a.state = AntEnums.State.LAY_EGG
+		else:
+			a.state = AntEnums.State.IDLE
+		return
+	# Brood.tick asks her to lay by setting LAY_EGG + a path; otherwise amble.
+	if a.intent == AntEnums.State.LAY_EGG and brood != null:
+		a.set_path(pathing.find_path(a.cell, brood.egg_pile_pos))
+		return
+	var qch := graph.get_chamber_by_name("queen")
+	if qch != null:
+		a.intent = AntEnums.State.IDLE
+		a.set_path(pathing.find_path(a.cell, qch.random_point(rng)))
+	else:
+		a.idle_ticks_left = 20
 
 func _step_invader(a: AntState, speed: float) -> void:
 	if a.intent == AntEnums.State.SHAKE:
@@ -539,12 +613,23 @@ func _scout_pick_job(a: AntState) -> void:
 	a.idle_ticks_left = rng.randi_range(15, 40)
 
 func _nurse_pick_job(a: AntState) -> void:
-	var queen := get_ant(queen_id)
-	if not a.is_player and queen != null and queen.intent == AntEnums.State.LAY_EGG and a.carry == AntEnums.Carry.NONE:
+	# Egg ferry only when the pile has built up — otherwise nurses empty it
+	# faster than the queen can lay and the heap never reads as a pile.
+	if not a.is_player and brood != null and a.carry == AntEnums.Carry.NONE \
+			and brood.eggs_waiting >= Config.get_egg_ferry_min() \
+			and _egg_ferry_nurse_count() < Config.get_egg_ferry_max_nurses():
 		a.intent = AntEnums.State.CARRY_EGG
-		a.target_ant_id = queen_id
-		a.set_path(pathing.find_path(a.cell, queen.cell))
+		a.target_ant_id = -1
+		a.set_path(pathing.find_path(a.cell, brood.egg_pile_pos))
 		return
+	# Next: carry newly pupated brood from the nursery into the pupa room.
+	if not a.is_player and a.carry == AntEnums.Carry.NONE:
+		var pupa := _pick_pupa_needing_ferry()
+		if pupa != null:
+			a.intent = AntEnums.State.CARRY_PUPA
+			a.target_ant_id = pupa.id
+			a.set_path(pathing.find_path(a.cell, pupa.cell))
+			return
 	if a.carry == AntEnums.Carry.FOOD:
 		var feed_larva := get_ant(a.target_ant_id)
 		if feed_larva == null or not feed_larva.alive or feed_larva.caste != AntEnums.Caste.LARVA:
@@ -596,6 +681,34 @@ func _pick_needy_larva() -> AntState:
 			best_score = score
 			best = a
 	return best
+
+
+func _pick_pupa_needing_ferry() -> AntState:
+	if brood == null:
+		return null
+	var best: AntState = null
+	var best_d := INF
+	for a in ants:
+		if a == null or not brood.pupa_needs_ferry(a):
+			continue
+		var d: float = a.cell.distance_squared_to(nest_center)
+		# Prefer pupae still near the nursery / nest center.
+		if d < best_d:
+			best_d = d
+			best = a
+	return best
+
+
+func _egg_ferry_nurse_count() -> int:
+	var n := 0
+	for a in ants:
+		if a == null or not a.alive or a.is_player:
+			continue
+		if a.caste != AntEnums.Caste.NURSE:
+			continue
+		if a.intent == AntEnums.State.CARRY_EGG or a.carry == AntEnums.Carry.EGG:
+			n += 1
+	return n
 
 func _pick_leaf_spot() -> Vector2:
 	if leaf_spots.size() > 0:
@@ -679,6 +792,9 @@ func _finish_intent(a: AntState, is_player_feed: bool) -> void:
 		AntEnums.State.CARRY_EGG:
 			_finish_carry_egg(a)
 			return
+		AntEnums.State.CARRY_PUPA:
+			_finish_carry_pupa(a)
+			return
 		AntEnums.State.GO_TO_LEAF, AntEnums.State.HAUL, AntEnums.State.DEPOSIT, AntEnums.State.CUT:
 			_finish_forager(a)
 			return
@@ -712,19 +828,73 @@ func _finish_move_larva(a: AntState) -> void:
 	a.action_ticks_left = 3
 	a.idle_ticks_left = rng.randi_range(6, 18)
 
+func _finish_carry_pupa(a: AntState) -> void:
+	## Nursery → pupa room ferry (pickup, haul, tuck).
+	var pupa := get_ant(a.target_ant_id)
+	if pupa == null or not pupa.alive or pupa.caste != AntEnums.Caste.PUPA:
+		a.carry = AntEnums.Carry.NONE
+		a.intent = AntEnums.State.IDLE
+		a.target_ant_id = -1
+		a.idle_ticks_left = 8
+		return
+	if a.carry != AntEnums.Carry.LARVA:
+		# Reuse LARVA carry visual — white oval on the nurse's mandibles.
+		pupa.carried_by = a.id
+		a.carry = AntEnums.Carry.LARVA
+		a.intent = AntEnums.State.CARRY_PUPA
+		var drop := brood.chamber_spot("pupae", rng) if brood != null else nest_center
+		a.set_path(pathing.find_path(a.cell, drop))
+		return
+	# Tuck deep inside the pupa room (not under the nurse's feet), then the
+	# nurse steps aside so she doesn't walk back over the drop and re-pick it.
+	pupa.carried_by = -1
+	var pch := graph.get_chamber_by_name("pupae")
+	var tuck: Vector2 = a.cell
+	if pch != null:
+		tuck = pch.center.lerp(pch.random_point(rng), 0.55)
+		tuck = pch.clamp_point(tuck)
+		pupa.node_id = pch.id
+	elif brood != null:
+		tuck = brood.chamber_spot("pupae", rng)
+	pupa.cell = tuck
+	pupa.prev_cell = tuck
+	a.carry = AntEnums.Carry.NONE
+	a.intent = AntEnums.State.IDLE
+	a.target_ant_id = -1
+	a.action_ticks_left = 4
+	a.idle_ticks_left = rng.randi_range(10, 20)
+	var nursery := graph.get_chamber_by_name("nursery")
+	if nursery != null:
+		a.set_path(pathing.find_path(a.cell, nursery.clamp_point(
+			nursery.center + Vector2(rng.randf_range(-40, 40), rng.randf_range(-40, 40))
+		)))
+
+
 func _finish_carry_egg(a: AntState) -> void:
-	var queen := get_ant(queen_id)
 	if a.carry != AntEnums.Carry.EGG:
-		if queen != null and queen.intent == AntEnums.State.LAY_EGG:
-			queen.intent = AntEnums.State.IDLE
+		# Must be at the pile — not the queen — to pick up.
+		if brood == null or a.cell.distance_to(brood.egg_pile_pos) > 48.0:
+			a.set_path(pathing.find_path(a.cell, brood.egg_pile_pos if brood else nest_center))
+			a.intent = AntEnums.State.CARRY_EGG
+			return
+		if brood.take_egg_from_pile():
 			a.carry = AntEnums.Carry.EGG
 			a.intent = AntEnums.State.CARRY_EGG
-			a.set_path(pathing.find_path(a.cell, brood.nest_spot(rng)))
+			a.target_ant_id = -1
+			_sync_egg_pile_view()
+			var drop := brood.nest_spot(rng)
+			var nursery := graph.get_chamber_by_name("nursery")
+			if nursery != null:
+				drop = nursery.clamp_point(drop)
+			a.set_path(pathing.find_path(a.cell, drop))
 			return
+		# Pile empty — idle near it briefly.
 		a.intent = AntEnums.State.IDLE
 		a.idle_ticks_left = 10
 		return
-	brood.spawn_larva(a.cell)
+	# Deliver to nursery; hatch into a larva at the drop.
+	if brood != null:
+		brood.spawn_larva(a.cell)
 	a.carry = AntEnums.Carry.NONE
 	a.intent = AntEnums.State.IDLE
 	a.target_ant_id = -1
@@ -775,6 +945,85 @@ func on_ant_eclosed(ant: AntState) -> void:
 	if view and view.has_method("play_eclosion"):
 		view.call("play_eclosion")
 
+
+func _ensure_egg_pile_view() -> void:
+	if _egg_pile_view != null and is_instance_valid(_egg_pile_view):
+		return
+	if views_parent == null or brood == null:
+		return
+	_egg_pile_view = _EggPileView.new()
+	views_parent.add_child(_egg_pile_view)
+	_egg_pile_view.global_position = brood.egg_pile_pos
+
+
+func _sync_egg_pile_view() -> void:
+	if brood == null:
+		return
+	_ensure_egg_pile_view()
+	if _egg_pile_view == null:
+		return
+	_egg_pile_view.global_position = brood.egg_pile_pos
+	if _egg_pile_view.has_method("sync_count"):
+		_egg_pile_view.call("sync_count", brood.eggs_waiting)
+
+
+func _maybe_retire(a: AntState) -> void:
+	## Soft turnover: aged workers free a slot so eggs/pupae keep flowing.
+	## Floors prevent an extinction cascade (no foragers → garden dies → no eggs).
+	if a == null or not a.alive or a.is_player:
+		return
+	if a.caste == AntEnums.Caste.QUEEN or a.caste == AntEnums.Caste.INVADER:
+		return
+	if not AntEnums.is_adult_worker(a.caste):
+		return
+	var span: int = maxi(60, Config.get_max_age())
+	# Per-ant lifespan jitter so retirements don't sync.
+	var limit: int = span + ((a.id * 47) % maxi(1, span / 3)) - span / 6
+	if a.age_ticks < limit:
+		return
+	if _count_caste(a.caste) <= _retire_floor(a.caste):
+		return
+	_retire_ant(a)
+
+
+func _count_caste(caste: int) -> int:
+	var n := 0
+	for a in ants:
+		if a != null and a.alive and a.caste == caste and not a.is_player:
+			n += 1
+	return n
+
+
+func _retire_floor(caste: int) -> int:
+	## Never retire the last few of a working caste.
+	match caste:
+		AntEnums.Caste.SOLDIER:
+			return maxi(4, Config.data.target_soldiers / 3)
+		AntEnums.Caste.FORAGER:
+			return maxi(10, Config.data.target_foragers / 3)
+		AntEnums.Caste.NURSE:
+			return maxi(5, Config.data.phase2_nurses / 3)
+		AntEnums.Caste.GARDENER:
+			return maxi(3, Config.data.phase2_gardeners / 3)
+		_:
+			return 2
+
+
+func _retire_ant(a: AntState) -> void:
+	## Gentle exit — no gore. Drop cargo / release carried brood, free the slot.
+	if a.carry == AntEnums.Carry.LARVA and a.target_ant_id >= 0:
+		var held := get_ant(a.target_ant_id)
+		if held != null and held.carried_by == a.id:
+			held.carried_by = -1
+	for b in ants:
+		if b != null and b.alive and b.carried_by == a.id:
+			b.carried_by = -1
+	a.carry = AntEnums.Carry.NONE
+	a.clear_path()
+	a.alive = false
+	a.state = AntEnums.State.IDLE
+	a.intent = AntEnums.State.IDLE
+
 func interpolate_views(alpha: float) -> void:
 	for id in _views:
 		var view: Node = _views[id]
@@ -783,8 +1032,14 @@ func interpolate_views(alpha: float) -> void:
 			if view and a != null and not a.alive:
 				(view as CanvasItem).visible = false
 			continue
-		(view as CanvasItem).visible = a.carried_by < 0
+		# Brood stays visible while carried — the pupa/larva sprite travels
+		# with the nurse (offset above her head in on_sim_tick).
+		(view as CanvasItem).visible = true
 		var pos: Vector2 = a.prev_cell.lerp(a.cell, clampf(alpha, 0.0, 1.0))
+		if view is CanvasItem and a.carried_by >= 0:
+			(view as CanvasItem).z_index = 2
+		elif view is CanvasItem:
+			(view as CanvasItem).z_index = 0
 		if view.has_method("sync_visual"):
 			view.call("sync_visual", pos, a)
 		else:

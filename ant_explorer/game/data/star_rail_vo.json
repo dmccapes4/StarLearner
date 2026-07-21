@@ -6,7 +6,7 @@
     "03_pupae": {"place": "pupa room", "line": "Explore the pupa room and look for the golden star!"},
     "04_fungus": {"place": "fungus garden", "line": "Explore the mushroom garden and look for the golden star!"},
     "05_forage": {"place": "sunny outside", "line": "Go outside in the sunshine and look for the golden star!"},
-    "06_pheromone": {"place": "doorway", "line": "Explore the doorway where ants say hello and look for the golden star!"},
+    "06_pheromone": {"place": "doorway", "line": "Explore the doorway where ants leave scent trails and look for the golden star!"},
     "07_soldiers": {"place": "soldier lookout", "line": "Explore the soldier lookout and look for the golden star!"},
     "08_waste": {"place": "dump", "line": "Explore the dump where the ants tidy up and look for the golden star!"},
     "09_labor": {"place": "busy garden", "line": "Explore the busy garden where everyone helps and look for the golden star!"},

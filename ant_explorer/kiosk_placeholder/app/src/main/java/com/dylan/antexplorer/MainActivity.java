@@ -190,24 +190,58 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
     }
 
+    // Tile sizing (dp). Preview tiles are slightly smaller than the main game(s).
+    private static final int MAIN_BOX_DP = 180;
+    private static final int MAIN_IMG_DP = 168;
+    private static final int PREVIEW_BOX_DP = 150;
+    private static final int PREVIEW_IMG_DP = 136;
+    private static final int TILE_MARGIN_DP = 12;
+
     private void rebuildTiles() {
         tileRow.removeAllViews();
         List<Tile> tiles = loadCatalog();
         if (tiles.isEmpty()) {
             tiles.add(Tile.builtinAnts());
         }
+
+        // Preview tiles sit to the LEFT (smaller); the finished game(s) stay
+        // centered on screen. A right-side spacer equal to the previews' width
+        // balances the row so the main tile lands dead-center.
+        List<Tile> previews = new ArrayList<>();
+        List<Tile> mains = new ArrayList<>();
         for (Tile t : tiles) {
+            if (t.preview) previews.add(t); else mains.add(t);
+        }
+
+        int previewFootprintPx = 0;
+        for (Tile t : previews) {
             tileRow.addView(makeTileView(t));
+            previewFootprintPx += dp(PREVIEW_BOX_DP) + dp(TILE_MARGIN_DP) * 2;
+        }
+        for (Tile t : mains) {
+            tileRow.addView(makeTileView(t));
+        }
+        if (previewFootprintPx > 0 && !mains.isEmpty()) {
+            View spacer = new View(this);
+            tileRow.addView(spacer, new LinearLayout.LayoutParams(previewFootprintPx, 1));
         }
     }
 
     private View makeTileView(final Tile t) {
+        int boxDp = t.preview ? PREVIEW_BOX_DP : MAIN_BOX_DP;
+        int imgDp = t.preview ? PREVIEW_IMG_DP : MAIN_IMG_DP;
+
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setGravity(Gravity.CENTER_HORIZONTAL);
-        LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(dp(180), LinearLayout.LayoutParams.WRAP_CONTENT);
-        bp.setMargins(dp(12), 0, dp(12), 0);
+        LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(dp(boxDp), LinearLayout.LayoutParams.WRAP_CONTENT);
+        bp.setMargins(dp(TILE_MARGIN_DP), 0, dp(TILE_MARGIN_DP), 0);
+        bp.gravity = Gravity.CENTER_VERTICAL;
         box.setLayoutParams(bp);
+
+        // Image (with an optional PREVIEW badge floated on top) inside a frame.
+        FrameLayout imgWrap = new FrameLayout(this);
+        box.addView(imgWrap, new LinearLayout.LayoutParams(dp(imgDp), dp(imgDp)));
 
         ImageView img = new ImageView(this);
         int res = getResources().getIdentifier(t.drawableName, "drawable", getPackageName());
@@ -218,11 +252,33 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         }
         img.setScaleType(ImageView.ScaleType.FIT_CENTER);
         img.setAdjustViewBounds(true);
-        LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(dp(168), dp(168));
-        box.addView(img, ip);
+        imgWrap.addView(img, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
+
+        if (t.preview) {
+            TextView badge = new TextView(this);
+            badge.setText("PREVIEW");
+            badge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+            badge.setTextColor(0xFF1B120A);
+            badge.setTypeface(Typeface.DEFAULT_BOLD);
+            badge.setAllCaps(true);
+            badge.setPadding(dp(8), dp(3), dp(8), dp(3));
+            GradientDrawable badgeBg = new GradientDrawable();
+            badgeBg.setColor(0xFFFFD24A);
+            badgeBg.setCornerRadius(dp(8));
+            badgeBg.setStroke(dp(1), 0xCCFFFFFF);
+            badge.setBackground(badgeBg);
+            FrameLayout.LayoutParams badgeLp = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT,
+                    Gravity.TOP | Gravity.CENTER_HORIZONTAL);
+            badgeLp.topMargin = dp(6);
+            imgWrap.addView(badge, badgeLp);
+        }
 
         FrameLayout under = new FrameLayout(this);
-        LinearLayout.LayoutParams up = new LinearLayout.LayoutParams(dp(168), ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout.LayoutParams up = new LinearLayout.LayoutParams(dp(imgDp), ViewGroup.LayoutParams.WRAP_CONTENT);
         up.topMargin = dp(6);
         under.setLayoutParams(up);
 
@@ -421,6 +477,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 t.drawableName = o.optString("tile", "tile_ants");
                 t.enterName = o.optString("enter_name", o.optString("title", ""));
                 t.enterLine = o.optString("enter_line", "");
+                t.preview = o.optBoolean("preview", false);
                 if (!t.packageName.isEmpty()) out.add(t);
             }
         } catch (Exception ignored) {}
@@ -532,6 +589,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         String drawableName;
         String enterName;
         String enterLine;
+        boolean preview;
 
         static Tile builtinAnts() {
             Tile t = new Tile();

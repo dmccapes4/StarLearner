@@ -55,19 +55,26 @@ the exact on-point 15–40 s before shipping.** Comment lines (`#`) are ignored 
 # id            start      end        url
 # --- Deep Look (3:30 total; everything here is on-point, pick tight windows) ---
 05_foraging     00:00:20   00:00:50   https://www.youtube.com/watch?v=-6oKJ5FGk24
-04_garden       00:01:40   00:02:15   https://www.youtube.com/watch?v=-6oKJ5FGk24
+04_garden       00:00:48   00:01:18   https://www.youtube.com/watch?v=-6oKJ5FGk24
+# (fungus garden — not the pupa window)
+03_pupae        00:01:38-00:01:53 + 00:02:21-00:02:30   https://www.youtube.com/watch?v=-6oKJ5FGk24
+# (pupae close-up, then caste sizes — farming mid-roll 01:53–02:21 skipped)
 09_labor        00:02:40   00:03:10   https://www.youtube.com/watch?v=-6oKJ5FGk24
 10_hygiene      00:01:15   00:01:40   https://www.youtube.com/watch?v=-6oKJ5FGk24
 # --- AntsCanada Dream Ant Farm (verify windows against the upload) ---
 11_tunnels      00:02:00   00:02:35   https://www.youtube.com/watch?v=VA_3ul0drnQ
 # --- BBC Planet Ant (~88 min; SCRUB to confirm each window) ---
-01_queen        00:14:00   00:14:35   https://www.youtube.com/watch?v=8n0SkIGARuo
-02_larvae       00:16:30   00:17:05   https://www.youtube.com/watch?v=8n0SkIGARuo
-03_pupae        00:18:00   00:18:30   https://www.youtube.com/watch?v=8n0SkIGARuo
-06_pheromone    00:33:00   00:33:40   https://www.youtube.com/watch?v=8n0SkIGARuo
-07_soldier      00:47:00   00:47:35   https://www.youtube.com/watch?v=8n0SkIGARuo
+01_queen        00:40:42   00:41:18   https://www.youtube.com/watch?v=8n0SkIGARuo
+# (leafcutter queen close-up + egg-laying — not dig/nest-size footage)
+02_larvae       00:44:10-18 + 00:44:33-40 + 00:45:13-22   https://www.youtube.com/watch?v=8n0SkIGARuo
+# (larva B-roll only — skip talking-head dig/caste chat)
+06_pheromone    00:56:00   00:56:40   https://www.youtube.com/watch?v=8n0SkIGARuo
+# (leafcutter pheromone Y-trail / scent-talk — not the Georgia Tech raft at ~33:00)
+07_soldiers     00:08:20   00:08:42   https://www.youtube.com/watch?v=8n0SkIGARuo
+# (live soldier bite on hand — skip amber B-roll ~08:00 and presenter wrap ~08:42)
 08_waste        00:52:00   00:52:30   https://www.youtube.com/watch?v=8n0SkIGARuo
-12_invaders     01:02:00   01:02:40   https://www.youtube.com/watch?v=8n0SkIGARuo
+12_invaders     01:14:50   01:15:20   https://www.youtube.com/watch?v=8n0SkIGARuo
+# (nest defense combat — swarm + predator fight; NOT plaster cast at ~01:02)
 ```
 
 > The BBC timestamps above are **placeholders to be verified** — open the video, find the exact

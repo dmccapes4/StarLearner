@@ -29,17 +29,17 @@ const PLACE_LABELS := {
 ## kid-short topic names for "Tap again to watch the {X} video."
 const TOPIC_SHORT := {
 	"01_queen": "queen",
-	"02_larvae": "baby ant",
-	"03_pupae": "growing up",
-	"04_fungus": "mushroom garden",
+	"02_larvae": "larvae",
+	"03_pupae": "pupae & castes",
+	"04_fungus": "fungus garden",
 	"05_forage": "leaf cutter",
 	"06_pheromone": "ant talk",
 	"07_soldiers": "soldier ant",
-	"08_waste": "clean up crew",
-	"09_labor": "teamwork",
-	"10_bacteria": "tiny helpers",
-	"11_architecture": "ant tunnels",
-	"12_invaders": "brave ants",
+	"08_waste": "fungus farm",
+	"09_labor": "cut and carry",
+	"10_bacteria": "garden tending",
+	"11_architecture": "desert gardeners",
+	"12_invaders": "nest defense",
 }
 
 var _db: StarDB

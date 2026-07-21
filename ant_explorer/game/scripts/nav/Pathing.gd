@@ -20,14 +20,50 @@ func find_path(from_pos: Vector2, to_pos: Vector2) -> PackedVector2Array:
 		return path
 
 	var from_ch := graph.chamber_for_point(from_pos)
-	var to_ch := graph.chamber_for_point(to_pos)
-	if from_ch == null or to_ch == null:
+	if from_ch == null:
 		path.append(from_pos)
 		return path
 
-	# Snap endpoints into walkable rooms (taps in void/wall → nearest room).
+	# Snap start into the walkable room.
 	var start := from_ch.clamp_point(from_pos)
-	var goal := to_ch.clamp_point(to_pos)
+	var goal := to_pos
+	var to_ch: NavGraph.ChamberNode = graph.chamber_containing(to_pos)
+
+	# Tapping a drawn corridor (void between rooms) used to snap to the wrong
+	# chamber center and die as a no-op. Prefer walking through that tunnel.
+	# Only when the tap is outside every room — in-room taps stay local.
+	if to_ch == null:
+		var hit := graph.nearest_tunnel(to_pos, 280.0)
+		if hit != null:
+			var from_id := from_ch.id
+			if hit.a == from_id or hit.b == from_id:
+				goal = graph.goal_past_tunnel(hit, from_id, TunnelTransit.PAST_EXIT)
+				to_ch = graph.get_chamber(hit.b if hit.a == from_id else hit.a)
+			else:
+				# Prefer the end farther from the player so the tap "pulls" through.
+				var ga := graph.get_chamber(hit.a)
+				var gb := graph.get_chamber(hit.b)
+				if ga != null and gb != null:
+					if start.distance_squared_to(ga.center) <= start.distance_squared_to(gb.center):
+						goal = graph.goal_past_tunnel(hit, hit.a, TunnelTransit.PAST_EXIT)
+						to_ch = gb
+					else:
+						goal = graph.goal_past_tunnel(hit, hit.b, TunnelTransit.PAST_EXIT)
+						to_ch = ga
+		# Missed the polyline (wide void / bent corridor): aim at the neighbor
+		# chamber whose center best matches the tap direction from the player.
+		if to_ch == null:
+			to_ch = _neighbor_toward(from_ch, to_pos)
+			if to_ch != null:
+				goal = to_ch.center
+		if to_ch == null:
+			to_ch = graph.chamber_for_point(to_pos)
+
+	if to_ch == null:
+		path.append(start)
+		return path
+
+	goal = to_ch.clamp_point(goal)
 
 	if from_ch.id == to_ch.id:
 		_append_unique(path, start)
@@ -77,6 +113,31 @@ func find_path_to_chamber(from_pos: Vector2, chamber_name: String) -> PackedVect
 	if ch == null:
 		return find_path(from_pos, from_pos)
 	return find_path(from_pos, ch.center)
+
+## Neighbor of `from_ch` best aligned with the direction from room center to `toward`.
+func _neighbor_toward(from_ch: NavGraph.ChamberNode, toward: Vector2) -> NavGraph.ChamberNode:
+	if graph == null or from_ch == null:
+		return null
+	var want := toward - from_ch.center
+	if want.length_squared() < 1.0:
+		return null
+	want = want.normalized()
+	var best: NavGraph.ChamberNode = null
+	var best_score := -0.15  ## require some forward alignment
+	for nid in from_ch.neighbors:
+		var nch := graph.get_chamber(nid)
+		if nch == null:
+			continue
+		var dir := nch.center - from_ch.center
+		if dir.length_squared() < 1.0:
+			continue
+		var score := want.dot(dir.normalized())
+		# Slight preference for nearer neighbors when scores are close.
+		score -= from_ch.center.distance_to(nch.center) * 0.00005
+		if score > best_score:
+			best_score = score
+			best = nch
+	return best
 
 ## Append waypoints from `from` to `to` that stay inside `ch`.
 ## Prefers a direct chord; only detours when the chord leaves the polygon.

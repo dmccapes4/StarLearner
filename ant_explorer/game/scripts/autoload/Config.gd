@@ -65,3 +65,18 @@ func get_pupa_ticks() -> int:
 
 func get_egg_interval() -> int:
 	return data.egg_interval
+
+func get_egg_ferry_min() -> int:
+	return data.egg_ferry_min
+
+func get_egg_ferry_max_nurses() -> int:
+	return data.egg_ferry_max_nurses
+
+func get_max_age() -> int:
+	return data.max_age
+
+func get_larva_passive_nutrition() -> float:
+	return data.larva_passive_nutrition
+
+func get_pupate_gap_ticks() -> int:
+	return data.pupate_gap_ticks

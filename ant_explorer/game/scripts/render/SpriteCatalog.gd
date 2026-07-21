@@ -25,16 +25,19 @@ func bootstrap() -> void:
 	_cache[AntEnums.Caste.SOLDIER] = _pack("army_ant_soldier_type_01", "army_ant_soldier_type_01", 0.24)
 	_cache[AntEnums.Caste.QUEEN] = _pack("queen_ant_red", "red_queen", 0.32)
 	_cache[AntEnums.Caste.INVADER] = _pack("fire_ant", "fire_ant", 0.22)
-	# Brood from props (still images)
+	# Brood from props (still images).
+	# egg.png = round pearl (egg pile / carried eggs only).
+	# larva_01/02 = segmented capsules — larvae stay warm/small; pupae use the
+	# same art cooler+taller so they read as cocoons, not eggs.
 	_cache[AntEnums.Caste.LARVA] = {
 		"idle": _load_props(["larva_01.png", "larva_02.png"]),
 		"move": [],
-		"scale": 0.13,
+		"scale": 0.12,
 	}
 	_cache[AntEnums.Caste.PUPA] = {
-		"idle": _load_props(["egg.png"]),
+		"idle": _load_props(["larva_01.png", "larva_02.png"]),
 		"move": [],
-		"scale": 0.15,
+		"scale": 0.18,
 	}
 	# Carry leaf forager / player variant
 	_cache["forager_leaf"] = _pack("leaf_cutter_ant_with_leaf", "leaf_cutter_with_leaf", 0.22)

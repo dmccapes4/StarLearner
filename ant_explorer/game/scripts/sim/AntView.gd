@@ -132,10 +132,18 @@ func _apply_look() -> void:
 		var sc: float = float(_pack.get("scale", 0.22))
 		if state.caste == AntEnums.Caste.LARVA:
 			sc *= 0.85 + float(state.larva_stage) * 0.08
-		_sprite.scale = Vector2(sc, sc)
+			_sprite.scale = Vector2(sc * 1.15, sc * 0.85)  # soft grub
+			_sprite.modulate = Color(1.05, 0.95, 0.8)
+		elif state.caste == AntEnums.Caste.PUPA:
+			_sprite.scale = Vector2(sc * 0.8, sc * 1.2)  # upright cocoon
+			_sprite.modulate = Color(0.88, 0.92, 1.05)
+		else:
+			_sprite.scale = Vector2(sc, sc)
 		_frame_i = 0
 		if state.caste == AntEnums.Caste.INVADER:
 			_sprite.modulate = AntEnums.enemy_color(state.enemy_kind)
+		elif state.caste == AntEnums.Caste.LARVA or state.caste == AntEnums.Caste.PUPA:
+			pass  # modulate already set
 		elif state.is_player:
 			_sprite.modulate = Color(1.15, 1.1, 1.0)
 		else:
@@ -219,6 +227,11 @@ func _update_carry() -> void:
 	if state.carry == AntEnums.Carry.NONE or AntEnums.is_brood(state.caste):
 		_carry.visible = false
 		return
+	# Larva/pupa ferry shows the real brood sprite riding with the nurse —
+	# skip the tiny mandible blob so cargo isn't double-drawn.
+	if state.carry == AntEnums.Carry.LARVA:
+		_carry.visible = false
+		return
 	_carry.visible = true
 	match state.carry:
 		AntEnums.Carry.FOOD:
@@ -229,10 +242,6 @@ func _update_carry() -> void:
 			_carry.color = Color(0.95, 0.9, 0.7)
 			_carry.polygon = _capsule(4.0, 3.0)
 			_carry.position = Vector2(8, -7)
-		AntEnums.Carry.LARVA:
-			_carry.color = Color(0.92, 0.85, 0.75)
-			_carry.polygon = _capsule(5.0, 3.5)
-			_carry.position = Vector2(6, -8)
 		AntEnums.Carry.LEAF:
 			_carry.color = Color(0.35, 0.75, 0.30)
 			_carry.polygon = _capsule(6.0, 4.0)

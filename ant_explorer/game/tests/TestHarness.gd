@@ -85,8 +85,7 @@ static func _spawn_phase1_headless(colony: Colony) -> void:
 		next_id += 1
 	colony.brood = Brood.new()
 	colony.brood.setup(colony, colony.nest_center, colony.queen_id)
-	for i in colony.brood.target_larvae():
-		colony.brood.spawn_larva(colony.brood.nest_spot(colony.rng))
+	_seed_dense_brood(colony)
 	colony.homeostasis = Homeostasis.new()
 	colony.homeostasis.enabled = Config.data.homeo_enabled
 	colony.invaders = Invaders.new()
@@ -116,10 +115,44 @@ static func _spawn_phase2_headless(colony: Colony) -> void:
 	next_id = _group(colony, next_id, AntEnums.Caste.SOLDIER, 6, "outpost")
 	colony.brood = Brood.new()
 	colony.brood.setup(colony, colony.nest_center, colony.queen_id)
-	for i in mini(10, colony.brood.target_larvae()):
-		colony.brood.spawn_larva(colony.brood.nest_spot(colony.rng))
+	_seed_dense_brood(colony)
 	colony.invaders = Invaders.new()
 	colony.invaders.setup(colony)
+
+static func _seed_dense_brood(colony: Colony) -> void:
+	## Mirror Colony.spawn_phase2: larvae + pupae + waiting eggs.
+	var want: int = maxi(0, colony.brood.target_larvae() - 3)
+	var n_pupae: int = maxi(6, int(round(float(want) * 0.22)))
+	var n_larvae: int = maxi(0, want - n_pupae)
+	var pupate_at: float = colony.brood.pupate_threshold()
+	var stages: PackedFloat32Array = Config.data.larva_nutrition_stage
+	for i in n_larvae:
+		var larva := colony.brood.spawn_larva(colony.brood.nest_spot(colony.rng))
+		if larva == null:
+			break
+		var t: float = 0.0 if n_larvae <= 1 else float(i) / float(n_larvae - 1)
+		larva.nutrition = lerpf(2.0, pupate_at * 0.92, t)
+		larva.larva_stage = 0
+		if stages.size() >= 2 and larva.nutrition >= stages[0]:
+			larva.larva_stage = 1
+		if stages.size() >= 3 and larva.nutrition >= stages[1]:
+			larva.larva_stage = 2
+	var destinies: Array[int] = [
+		AntEnums.Caste.NURSE,
+		AntEnums.Caste.FORAGER,
+		AntEnums.Caste.NURSE,
+		AntEnums.Caste.FORAGER,
+		AntEnums.Caste.SOLDIER,
+	]
+	for i in n_pupae:
+		var zone := "nursery" if i < 1 else "pupae"
+		var pupa := colony.brood.spawn_pupa(
+			colony.brood.chamber_spot(zone, colony.rng),
+			destinies[i % destinies.size()],
+		)
+		if pupa == null:
+			break
+	colony.brood.eggs_waiting = 5
 
 static func _group(colony: Colony, start: int, caste: int, count: int, zone: String) -> int:
 	var ch := colony.graph.get_chamber_by_name(zone)
@@ -142,6 +175,10 @@ static func _activate(colony: Colony, a: AntState, id: int, is_player: bool, cas
 	var ch := colony.graph.chamber_for_point(pos)
 	a.node_id = ch.id if ch else 0
 	a.state = AntEnums.State.IDLE
+	if not is_player and AntEnums.is_adult_worker(caste) \
+			and caste != AntEnums.Caste.QUEEN and caste != AntEnums.Caste.PLAYER:
+		var span: int = maxi(30, Config.get_max_age())
+		a.age_ticks = colony.rng.randi_range(0, int(span * 0.75))
 
 static func make_larva(colony: Colony, pos: Vector2 = Vector2.ZERO) -> AntState:
 	return colony.brood.spawn_larva(pos)

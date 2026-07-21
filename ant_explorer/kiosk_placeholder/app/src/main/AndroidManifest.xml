@@ -6,6 +6,7 @@
     <!-- Android 11+ package visibility: allow resolving game launch intents. -->
     <queries>
         <package android:name="com.dylan.antexplorer.colony" />
+        <package android:name="com.dylan.antexplorer.solar" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />

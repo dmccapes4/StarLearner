@@ -39,6 +39,12 @@ func _test_picks_feed_job(t: TestAssert, colony: Colony, nurse: AntState) -> voi
 	var queen := colony.get_ant(colony.queen_id)
 	if queen:
 		queen.intent = AntEnums.State.IDLE
+	if colony.brood != null:
+		colony.brood.eggs_waiting = 0
+	# Phase-1 map has no pupa room, but clear any stray ferry targets.
+	for a in colony.ants:
+		if a != null and a.alive and a.caste == AntEnums.Caste.PUPA:
+			a.alive = false
 	colony._nurse_pick_job(nurse)
 	t.ok(
 		nurse.intent == AntEnums.State.FETCH_FOOD
@@ -107,24 +113,43 @@ func _test_move_larva_pickup_drop(t: TestAssert, colony: Colony) -> void:
 
 func _test_carry_egg_cycle(t: TestAssert, colony: Colony) -> void:
 	var nurse := _any_nurse(colony)
-	var queen := colony.get_ant(colony.queen_id)
-	if nurse == null or queen == null:
-		t.ok(false, "nurse+queen for egg")
+	if nurse == null or colony.brood == null:
+		t.ok(false, "nurse+brood for egg")
 		return
 	var brood_before := colony.brood.living_brood()
-	queen.intent = AntEnums.State.LAY_EGG
+	colony.brood.eggs_waiting = 1
 	nurse.carry = AntEnums.Carry.NONE
 	nurse.intent = AntEnums.State.CARRY_EGG
-	nurse.cell = queen.cell
+	# Pickup is from the pile, not the queen.
+	nurse.cell = colony.brood.egg_pile_pos
 	colony._finish_carry_egg(nurse)
-	t.eq(nurse.carry, AntEnums.Carry.EGG, "picked egg from queen")
-	t.eq(queen.intent, AntEnums.State.IDLE, "queen intent cleared")
+	t.eq(nurse.carry, AntEnums.Carry.EGG, "picked egg from pile")
+	t.eq(colony.brood.eggs_waiting, 0, "egg taken from waiting pile")
+	t.ge(nurse.path.size(), 2, "nurse paths toward nursery with egg")
 	nurse.cell = colony.nest_center
 	nurse.clear_path(true)
 	colony._finish_carry_egg(nurse)
 	t.eq(nurse.carry, AntEnums.Carry.NONE, "delivered egg")
-	t.ge(colony.brood.living_brood(), brood_before, "brood count not decreased")
-	t.gt(colony.brood.living_brood(), brood_before - 0.1, "new larva spawned on delivery")
+	t.gt(colony.brood.living_brood(), brood_before, "new larva spawned on delivery")
+
+	# Job picker waits until the pile hits egg_ferry_min (so a heap can form).
+	colony.brood.eggs_waiting = Config.get_egg_ferry_min() - 1
+	nurse.carry = AntEnums.Carry.NONE
+	nurse.intent = AntEnums.State.IDLE
+	nurse.clear_path(true)
+	nurse.idle_ticks_left = 0
+	colony._nurse_pick_job(nurse)
+	t.neq(nurse.intent, AntEnums.State.CARRY_EGG, "below ferry min → no egg grab")
+
+	colony.brood.eggs_waiting = Config.get_egg_ferry_min()
+	nurse.intent = AntEnums.State.IDLE
+	nurse.clear_path(true)
+	nurse.idle_ticks_left = 0
+	colony._nurse_pick_job(nurse)
+	t.eq(nurse.intent, AntEnums.State.CARRY_EGG, "at ferry min → egg ferry")
+	t.ok(not nurse.path.is_empty(), "pick_job paths to egg pile")
+	var dest: Vector2 = nurse.path[nurse.path.size() - 1]
+	t.lt(dest.distance_to(colony.brood.egg_pile_pos), 8.0, "path ends at egg pile")
 
 func _test_auto_nurse_over_ticks(t: TestAssert, colony: Colony) -> void:
 	## Over many ticks, some larva should gain nutrition from NPC nurses.

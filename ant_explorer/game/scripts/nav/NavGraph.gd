@@ -22,10 +22,33 @@ class ChamberNode:
 	func clamp_point(p: Vector2) -> Vector2:
 		if contains_point(p):
 			return p
+		# Prefer the walkable boundary in the tap's direction (mouth / east wall),
+		# not chamber center — AABB clamp often lands outside the hex and used
+		# to fall through to center, making tunnel taps look dead.
+		var on_ray := portal_toward(p)
+		if on_ray.distance_squared_to(center) > 1.0:
+			return on_ray
 		var c := p.clamp(world_rect.position, world_rect.end)
 		if contains_point(c):
 			return c
-		return center
+		return _closest_on_walkable(p)
+
+	## Nearest point on the walkable polygon boundary (or center if degenerate).
+	func _closest_on_walkable(p: Vector2) -> Vector2:
+		if walkable.size() < 2:
+			return center
+		var best := center
+		var best_d := INF
+		var n := walkable.size()
+		for i in n:
+			var a: Vector2 = walkable[i]
+			var b: Vector2 = walkable[(i + 1) % n]
+			var q := Geometry2D.get_closest_point_to_segment(p, a, b)
+			var d := p.distance_squared_to(q)
+			if d < best_d:
+				best_d = d
+				best = q
+		return best
 
 	func random_point(rng: RandomNumberGenerator) -> Vector2:
 		for _i in 32:
@@ -151,11 +174,18 @@ func get_chamber_by_name(name: String) -> ChamberNode:
 func default_chamber() -> ChamberNode:
 	return get_chamber(_default_id)
 
-func chamber_for_point(p: Vector2) -> ChamberNode:
+## Chamber whose walkable polygon contains `p`, or null if the tap is in void.
+func chamber_containing(p: Vector2) -> ChamberNode:
 	for id in chambers:
 		var ch: ChamberNode = chambers[id]
 		if ch.contains_point(p):
 			return ch
+	return null
+
+func chamber_for_point(p: Vector2) -> ChamberNode:
+	var inside := chamber_containing(p)
+	if inside != null:
+		return inside
 	# Void / wall tap: nearest chamber by center (caller should clamp).
 	var best: ChamberNode = null
 	var best_d := INF
@@ -173,6 +203,49 @@ func tunnel_between(a_id: int, b_id: int) -> TunnelEdge:
 		if (e.a == a_id and e.b == b_id) or (e.a == b_id and e.b == a_id):
 			return e
 	return null
+
+## Hit-test a tap against corridor polylines. Returns the closest edge within
+## `max_dist`, or null. Used so tapping a drawn tunnel walks through it.
+func nearest_tunnel(p: Vector2, max_dist: float = 140.0) -> TunnelEdge:
+	var best: TunnelEdge = null
+	var best_d := max_dist
+	for t in tunnels:
+		var e: TunnelEdge = t
+		var wps := e.waypoints
+		if wps.size() < 2:
+			continue
+		for i in range(wps.size() - 1):
+			var q := Geometry2D.get_closest_point_to_segment(p, wps[i], wps[i + 1])
+			var d := p.distance_to(q)
+			if d <= best_d:
+				best_d = d
+				best = e
+	return best
+
+## Goal just inside the chamber on the far side of `edge` from `from_chamber_id`.
+func goal_past_tunnel(edge: TunnelEdge, from_chamber_id: int, past: float = 160.0) -> Vector2:
+	if edge == null:
+		return Vector2.ZERO
+	var far: Vector2
+	var dest_id: int
+	if edge.a == from_chamber_id:
+		far = edge.mouth_b()
+		dest_id = edge.b
+	elif edge.b == from_chamber_id:
+		far = edge.mouth_a()
+		dest_id = edge.a
+	else:
+		# Tap on a tunnel the player is not standing in — pick the end farther
+		# from the player's chamber if known, else mouth_b's chamber.
+		far = edge.mouth_b()
+		dest_id = edge.b
+	var dest := get_chamber(dest_id)
+	if dest == null:
+		return far
+	var into := dest.center - far
+	if into.length_squared() < 1.0:
+		return dest.clamp_point(far)
+	return dest.clamp_point(far + into.normalized() * past)
 
 func bfs_chamber_path(from_id: int, to_id: int) -> PackedInt32Array:
 	var out := PackedInt32Array()

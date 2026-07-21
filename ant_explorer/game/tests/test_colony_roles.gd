@@ -12,7 +12,11 @@ func run() -> TestAssert:
 
 	t.eq(colony.living_count() > 0, true, "colony has living ants")
 	t.ge(TestHarness.count_caste(colony, AntEnums.Caste.NURSE), Config.get_phase1_nurse_count(), "nurse count")
-	t.ge(TestHarness.count_caste(colony, AntEnums.Caste.LARVA), Config.get_brood_min(), "larva count")
+	var brood_n := TestHarness.count_caste(colony, AntEnums.Caste.LARVA) \
+		+ TestHarness.count_caste(colony, AntEnums.Caste.PUPA)
+	t.ge(brood_n, Config.get_brood_min() - 3, "larva+pupa brood seeded densely")
+	t.ge(TestHarness.count_caste(colony, AntEnums.Caste.PUPA), 6, "pupa room seeded")
+	t.ge(colony.brood.eggs_waiting, 5, "egg pile seeded")
 
 	var player := colony.get_player()
 	t.ok(player != null and player.is_player, "player exists")

@@ -48,7 +48,7 @@ Each star plays a curated short clip (ideally offline MP4s you extract and store
 | 3 | Pupae & caste determination | BBC *Planet Ant* + educational segments on size-based castes |
 | 4 | Fungal garden cultivation | AntsCanada “My Dream Ant Farm: Leafcutter Ants”, Canadian Museum of Nature leafcutter feature, Deep Look / PBS |
 | 5 | Leaf cutting & foraging trails | National Geographic *A Real Bug’s Life* leafcutter episode, AntsCanada foraging footage |
-| 6 | Pheromone communication | BBC *Planet Ant* (explicit pheromone trail experiments) + NSF / Science Nation clips |
+| 6 | Pheromone communication | BBC *Planet Ant* leafcutter Y-trail / scent-talk (~56:00) |
 | 7 | Soldier caste & defense | BBC *Planet Ant* defense sequences + general leafcutter soldier footage |
 | 8 | Waste management / dump | AntsCanada and museum exhibit videos showing refuse chambers |
 | 9 | Division of labor / social structure | Deep Look “Where Are the Ants Carrying All Those Leaves?”, Science Nation |

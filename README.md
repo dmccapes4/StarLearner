@@ -43,10 +43,14 @@ in [`ant_explorer/docs/KIOSK_APPLIANCE.md`](ant_explorer/docs/KIOSK_APPLIANCE.md
 | # | Game | Tile | Status | Details |
 |---|------|------|--------|---------|
 | 1 | **Ant Explorer** | `ants` | ✅ Available | [full detail below](#1-ant-explorer) · [`ant_explorer/`](ant_explorer/) |
-| 2 | *(planned)* | — | 🕓 Idea | future title (e.g. bees, tide pools, the night sky) |
+| 2 | **Solar System Explorer** | `planets` | 🔬 Preview | tour of the Sun + planets (incl. Pluto) · [`solar_system_explorer/`](solar_system_explorer/) |
+| 3 | *(planned)* | — | 🕓 Idea | future title (e.g. bees, tide pools, the night sky) |
 
 New titles are added as folders beside `ant_explorer/`, each a self-contained Godot project that
-plugs into the Star Learner home shell and the stars format.
+plugs into the Star Learner home shell and the stars format. **Solar System Explorer** is a small
+*preview* title added to prove the console holds multiple subjects: it boots into the same landscape
+shell, appears as its own **planets** tile, and reuses the offline video mechanic (a START button →
+a narrated top-down orrery → a horizontal scroll of the Sun and planets → tap a body for a clip).
 
 ---
 

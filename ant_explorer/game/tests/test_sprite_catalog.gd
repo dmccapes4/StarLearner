@@ -16,7 +16,7 @@ func run() -> TestAssert:
 	t.ok(cat.has_art(AntEnums.Caste.GARDENER), "gardener has idle frames")
 	t.ok(cat.has_art(AntEnums.Caste.INVADER), "invader has idle frames")
 	t.ok(cat.has_art(AntEnums.Caste.LARVA), "larva prop loaded")
-	t.ok(cat.has_art(AntEnums.Caste.PUPA), "pupa/egg prop loaded")
+	t.ok(cat.has_art(AntEnums.Caste.PUPA), "pupa cocoon prop loaded")
 
 	var forager: Dictionary = cat.frames_for(AntEnums.Caste.FORAGER, false)
 	var idle: Array = forager.get("idle", []) as Array

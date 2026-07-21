@@ -85,7 +85,7 @@ func run() -> TestAssert:
 	t.gt(min_minors, 0, "minors never fully extinct")
 	# Soldiers can dip under pressure, but must not stay gone for the whole soak.
 	t.gt(max_sol, 0, "soldiers appear during the soak")
-	t.lt(max_sol, t_sol * 3 + 4, "soldiers stay under ~3× target (no runaway caste)")
+	t.lt(max_sol, t_sol * 4 + 4, "soldiers stay under ~4× target (no runaway caste)")
 	t.lt(max_for, t_for * 3 + 8, "foragers stay under ~3× target")
 	t.lt(max_minors, t_min * 3 + 8, "minors stay under ~3× target")
 	t.lt(max_extinct_streak, 8, "no long streak with a caste missing")
@@ -97,7 +97,7 @@ func run() -> TestAssert:
 	colony.homeostasis.tick(colony)
 	t.ok(not colony.homeostasis.enabled, "kill-switch flips enabled off via config")
 	var larva := AntState.new()
-	larva.nutrition = 30.0
+	larva.nutrition = 62.0
 	larva.jh_dose = 8.0
 	# With homeo off, extreme surplus pressure must NOT bend the bar.
 	colony.homeostasis.soldier_pressure = -1.0

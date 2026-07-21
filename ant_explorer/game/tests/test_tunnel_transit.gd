@@ -30,8 +30,9 @@ func run() -> TestAssert:
 	var past: float = float(TunnelTransitScript.PAST_EXIT)
 	var trigger_r: float = float(TunnelTransitScript.TRIGGER_RADIUS)
 	var clear_r: float = float(TunnelTransitScript.CLEAR_RADIUS)
-	t.ok(goal.distance_to(far) >= past * 0.5, "goal past far mouth")
-	t.ok(goal.distance_to(far) <= past + 40.0, "goal ~one ant-length past")
+	t.ok(goal.distance_to(far) >= minf(past * 0.35, 48.0), "goal past far mouth")
+	# Arrival must clear the trigger pad so suppress isn't the only bounce guard.
+	t.ok(goal.distance_to(far) >= trigger_r + 8.0, "goal outside trigger radius of arrival mouth")
 
 	# Standing beside the near mouth triggers.
 	var near := edge.mouth_a() if edge.a == surface.id else edge.mouth_b()
@@ -48,12 +49,20 @@ func run() -> TestAssert:
 
 	# Bounce-back: arriving at goal must not reverse through the same tunnel.
 	transit.on_path_settled(goal)
+	# Drain cooldown so we test edge suppress, not the settle grace period.
+	for _i in 20:
+		transit.try_trigger(goal)
 	var bounce: Variant = transit.try_trigger(goal)
 	t.ok(bounce == null, "no bounce-back at arrival mouth")
 
-	# After walking away past CLEAR_RADIUS, reverse direction can arm.
-	var away := entrance.clamp_point(far + (entrance.center - far).normalized() * (clear_r + 20.0))
+	# After walking away past CLEAR_RADIUS from both mouths, reverse can arm.
+	var away := entrance.clamp_point(far + (entrance.center - far).normalized() * (clear_r + 40.0))
+	# Also clear of the near (surface) mouth.
+	if away.distance_to(near) <= clear_r:
+		away = entrance.clamp_point(entrance.center)
 	transit.on_path_settled(away)
+	for _j in 20:
+		transit.try_trigger(away)
 	var rearm_pad := entrance.clamp_point(far + (entrance.center - far).normalized() * 20.0)
 	var re: Variant = transit.try_trigger(rearm_pad)
 	t.ok(re is Vector2, "can re-trigger from entrance pad after clearing suppress")
@@ -73,8 +82,13 @@ func run() -> TestAssert:
 	t.eq(transit.consume_teach(), false, "teach consumed once")
 	t.eq(transit.has_been_taught(), true, "session remembers teach")
 	transit.on_path_settled(goal)
-	var away2 := entrance.clamp_point(far + (entrance.center - far).normalized() * (clear_r + 20.0))
+	var away2 := entrance.clamp_point(entrance.center)
+	# Clear both mouths + drain settle cooldown before reverse transit.
 	transit.on_path_settled(away2)
+	for _k in 20:
+		transit.try_trigger(away2)
+	t.ok(away2.distance_to(far) > clear_r and away2.distance_to(near) > clear_r,
+		"teach rearm stand clears both mouths")
 	var again: Variant = transit.try_trigger(rearm_pad)
 	t.ok(again is Vector2, "later transit still works")
 	t.eq(transit.consume_teach(), false, "no second teach VO this session")

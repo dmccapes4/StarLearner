@@ -4,16 +4,24 @@
 # IDs must match game/data/stars.json (file: <id>.ogv).
 # --- Deep Look (3:30 total; all on-point) ---
 05_forage	00:00:20	00:00:50	https://www.youtube.com/watch?v=-6oKJ5FGk24
-04_fungus	00:01:40	00:02:15	https://www.youtube.com/watch?v=-6oKJ5FGk24
+# 04 = fungus garden close-ups (was wrongly the pupa window)
+04_fungus	00:00:48	00:01:18	https://www.youtube.com/watch?v=-6oKJ5FGk24
 09_labor	00:02:40	00:03:10	https://www.youtube.com/watch?v=-6oKJ5FGk24
 10_bacteria	00:01:15	00:01:40	https://www.youtube.com/watch?v=-6oKJ5FGk24
+# 03 = pupae + caste sizes (Deep Look) — NOT Planet Ant dig/queen find
 # --- AntsCanada Dream Ant Farm (verify windows) ---
 11_architecture	00:02:00	00:02:35	https://www.youtube.com/watch?v=VA_3ul0drnQ
 # --- BBC Planet Ant (~88 min; SCRUB to confirm each window) ---
-01_queen	00:14:00	00:14:35	https://www.youtube.com/watch?v=8n0SkIGARuo
-02_larvae	00:16:30	00:17:05	https://www.youtube.com/watch?v=8n0SkIGARuo
-03_pupae	00:18:00	00:18:30	https://www.youtube.com/watch?v=8n0SkIGARuo
-06_pheromone	00:33:00	00:33:40	https://www.youtube.com/watch?v=8n0SkIGARuo
-07_soldiers	00:47:00	00:47:35	https://www.youtube.com/watch?v=8n0SkIGARuo
+# 01 = leafcutter queen close-up + egg-laying rate (not nest-size dig footage)
+01_queen	00:40:42	00:41:18	https://www.youtube.com/watch?v=8n0SkIGARuo
+# 02 = larva B-roll only (comma = concat; skip talking heads)
+02_larvae	00:44:10,00:44:33,00:45:13	00:44:18,00:44:40,00:45:22	https://www.youtube.com/watch?v=8n0SkIGARuo
+# 03 = pupae close-up, then caste sizes; SKIP farming (01:53–02:21)
+03_pupae	00:01:38,00:02:21	00:01:53,00:02:30	https://www.youtube.com/watch?v=-6oKJ5FGk24
+# 06 = leafcutter pheromone Y-trail / scent-talk (Planet Ant ~56:00), NOT the Georgia Tech raft at ~33:00
+06_pheromone	00:56:00	00:56:40	https://www.youtube.com/watch?v=8n0SkIGARuo
+# 07 = live soldier biting hand (skip amber B-roll that opens ~08:00)
+07_soldiers	00:08:20	00:08:42	https://www.youtube.com/watch?v=8n0SkIGARuo
 08_waste	00:52:00	00:52:30	https://www.youtube.com/watch?v=8n0SkIGARuo
-12_invaders	01:02:00	01:02:40	https://www.youtube.com/watch?v=8n0SkIGARuo
+# 12 = nest defense combat (swarm + predator fight) — NOT plaster cast at ~01:02
+12_invaders	01:14:50	01:15:20	https://www.youtube.com/watch?v=8n0SkIGARuo

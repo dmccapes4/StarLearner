@@ -1,0 +1,7 @@
+# Secrets: ignore everything under any secrets/ dir except *.example
+secrets/*
+!secrets/*.example
+*.conf.local
+
+# Video pipeline cache (full YouTube sources) — clips in game/videos/ are kept.
+tools/build/

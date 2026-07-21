@@ -231,8 +231,16 @@ def star_entries() -> dict[str, str]:
 
 def main() -> None:
     load_secrets()
-    args = set(sys.argv[1:])
-    make_ogg = "--ogg" in args
+    argv = sys.argv[1:]
+    make_ogg = "--ogg" in argv
+    # Optional: ./gen_vo.py --stars --only 02_larvae,03_pupae
+    only_ids: set[str] | None = None
+    if "--only" in argv:
+        i = argv.index("--only")
+        if i + 1 >= len(argv):
+            sys.exit("ERROR: --only needs a comma-separated id list")
+        only_ids = {s.strip() for s in argv[i + 1].split(",") if s.strip()}
+    args = set(argv)
     explicit = args & {"--roles", "--chambers", "--intro", "--stars", "--trails", "--tunnels"}
     do_all = "--all" in args or not explicit
     do_roles = do_all or "--roles" in args
@@ -257,7 +265,13 @@ def main() -> None:
         total += gen(intro_entries(), INTRO_DIR, make_ogg)
     if do_stars:
         print("Stars:")
-        total += gen(star_entries(), STARS_DIR, make_ogg)
+        entries = star_entries()
+        if only_ids is not None:
+            entries = {k: v for k, v in entries.items() if k in only_ids}
+            missing = only_ids - set(entries)
+            if missing:
+                sys.exit(f"ERROR: unknown star ids for --only: {sorted(missing)}")
+        total += gen(entries, STARS_DIR, make_ogg)
     if do_tunnels:
         print("Tunnels:")
         total += gen(tunnel_entries(), VO_DIR, make_ogg)

@@ -121,7 +121,7 @@ func _test_surplus_lowers_soldier_rate(t: TestAssert) -> void:
 ## Count how many of a fixed spread of larva scores decide_caste sends to SOLDIER.
 func _count_soldier_destinies(colony: Colony) -> int:
 	var n := 0
-	for score in range(18, 29):  # 18..28, straddles the base thresholds
+	for score in range(48, 65):  # 48..64, straddles the base mid/high cutoffs
 		var larva := AntState.new()
 		larva.nutrition = float(score)
 		larva.jh_dose = 0.0

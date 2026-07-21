@@ -1,0 +1,26 @@
+# Solar System Explorer — video source manifest.
+# Tab-separated: id <TAB> start(HH:MM:SS) <TAB> end(HH:MM:SS) <TAB> url
+# Source download is cached by YouTube id, so re-cutting after tweaking a window
+# is seconds. IDs must match SolarData.gd (file written: game/videos/<id>.ogv).
+#
+# Windows come from the creator's own chapter markers on this single tour video:
+#   "The Solar System Explained (2026)" — VectorGlobe (@KnowtheWorld)
+#   https://www.youtube.com/watch?v=1wyr5rWonbE
+# Kid-clean narrated animation; used for the private family device, same posture
+# as ant_explorer's clips. Credit the channel; swap for public-domain NASA
+# footage if this ever ships beyond the gift.
+#
+# id <TAB> start <TAB> end <TAB> url
+sun	00:00:08	00:01:02	https://www.youtube.com/watch?v=1wyr5rWonbE
+mercury	00:01:29	00:02:25	https://www.youtube.com/watch?v=1wyr5rWonbE
+venus	00:02:25	00:03:19	https://www.youtube.com/watch?v=1wyr5rWonbE
+earth	00:03:19	00:04:36	https://www.youtube.com/watch?v=1wyr5rWonbE
+mars	00:04:36	00:05:37	https://www.youtube.com/watch?v=1wyr5rWonbE
+# Asteroid belt is a short on-point beat in the source (~14s); best clean footage.
+asteroid_belt	00:05:37	00:05:51	https://www.youtube.com/watch?v=1wyr5rWonbE
+jupiter	00:05:51	00:06:59	https://www.youtube.com/watch?v=1wyr5rWonbE
+saturn	00:06:59	00:08:07	https://www.youtube.com/watch?v=1wyr5rWonbE
+uranus	00:08:07	00:09:18	https://www.youtube.com/watch?v=1wyr5rWonbE
+neptune	00:09:18	00:10:30	https://www.youtube.com/watch?v=1wyr5rWonbE
+# Pluto lives in the Kuiper Belt / dwarf-planet beat.
+pluto	00:10:30	00:10:57	https://www.youtube.com/watch?v=1wyr5rWonbE

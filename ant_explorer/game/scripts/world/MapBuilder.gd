@@ -40,19 +40,32 @@ func build(parent: Node2D) -> NavGraph:
 		if str(c.get("star", "")) != "":
 			star_placements[node.name] = {
 				"star_id": str(c["star"]),
-				"pos": node.center + Vector2(0, -node.world_rect.size.y * 0.25),
+				"pos": node.center,  ## refined after tunnels exist
 			}
 	for t in data.get("tunnels", []):
 		graph.add_tunnel(str(t["a"]), str(t["b"]))
 		_add_tunnel_visual(parent, graph, str(t["a"]), str(t["b"]))
+	# Stars after tunnels so we can push them away from mouths (pupae trap).
+	for zone_name in star_placements.keys():
+		var ch_star := graph.get_chamber_by_name(zone_name)
+		if ch_star == null:
+			continue
+		star_placements[zone_name]["pos"] = _star_pos_away_from_mouths(ch_star, graph)
 	for ls in data.get("leaf_spots", []):
 		var ch := graph.get_chamber_by_name(str(ls["zone"]))
 		if ch == null:
 			continue
 		var off: Array = ls.get("offset", [0, 0])
 		var p := ch.center + Vector2(float(off[0]), float(off[1]))
+		p = ch.clamp_point(p)
 		leaf_spots.append(p)
-		parent.add_child(_make_leaf_marker(p))
+		parent.add_child(_make_leaf_pile(p, int(ch.id) + int(off[0])))
+	# Fungus / "mold" piles where gardeners work and foragers drop leaves.
+	for zone_name in ["garden_a", "garden_b", "hygiene"]:
+		var gch := graph.get_chamber_by_name(zone_name)
+		if gch == null:
+			continue
+		parent.add_child(_make_fungus_patch(gch))
 	for tr in data.get("trails", []):
 		trail_placements.append({
 			"role": str(tr.get("role", "")),
@@ -319,14 +332,96 @@ func _add_tunnel_tiles(parent: Node2D, pts: PackedVector2Array) -> void:
 		spr.position = Vector2((float(cell.x) + 0.5) * step, (float(cell.y) + 0.5) * step)
 		layer.add_child(spr)
 
-func _make_leaf_marker(pos: Vector2) -> Node2D:
+## Place the knowledge star opposite the average mouth pull so auto-transit
+## pads don't sit on top of the discovery dwell zone (pupae / nursery).
+func _star_pos_away_from_mouths(node: NavGraph.ChamberNode, graph: NavGraph = null) -> Vector2:
+	var pull := Vector2.ZERO
+	if graph != null:
+		for tid in node.tunnel_ids:
+			if tid < 0 or tid >= graph.tunnels.size():
+				continue
+			var edge: NavGraph.TunnelEdge = graph.tunnels[tid]
+			var mouth: Vector2 = edge.mouth_a() if edge.a == node.id else edge.mouth_b()
+			pull += mouth - node.center
+	var half := node.world_rect.size * 0.5
+	var pos: Vector2
+	if pull.length_squared() > 1.0:
+		pos = node.center - pull.normalized() * minf(half.x, half.y) * 0.42
+	else:
+		pos = node.center + Vector2(0, -half.y * 0.18)
+	return node.clamp_point(pos)
+
+func _atlas_sprite(sheet_path: String, region: Rect2, pos: Vector2, scale: float, z: int) -> Sprite2D:
+	if not ResourceLoader.exists(sheet_path) and not FileAccess.file_exists(sheet_path):
+		return null
+	var sheet: Texture2D = load(sheet_path) as Texture2D
+	if sheet == null:
+		return null
+	var atlas := AtlasTexture.new()
+	atlas.atlas = sheet
+	atlas.region = region
+	var spr := Sprite2D.new()
+	spr.texture = atlas
+	spr.centered = true
+	spr.scale = Vector2(scale, scale)
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.position = pos
+	spr.z_index = z
+	return spr
+
+func _make_leaf_pile(pos: Vector2, seed: int) -> Node2D:
+	## Leaf-cutter forage markers — leafy bush tiles from the objects pack.
 	var n := Node2D.new()
+	n.name = "LeafPile"
 	n.position = pos
-	n.z_index = -6
-	var leaf := Polygon2D.new()
-	leaf.color = Color(0.35, 0.75, 0.30)
-	leaf.polygon = PackedVector2Array([
-		Vector2(0, -14), Vector2(10, -4), Vector2(8, 10), Vector2(0, 14), Vector2(-8, 10), Vector2(-10, -4)
-	])
-	n.add_child(leaf)
+	n.z_index = 3
+	var bush_regions: Array = [
+		Rect2(0, 32, 16, 16),
+		Rect2(16, 32, 16, 16),
+		Rect2(32, 32, 16, 16),
+		Rect2(48, 32, 16, 16),
+	]
+	for i in 3:
+		var reg: Rect2 = bush_regions[(seed + i * 3) % bush_regions.size()]
+		var spr := _atlas_sprite(OBJECTS_SHEET, reg, Vector2((i - 1) * 14, (i % 2) * 6), 2.8, 3)
+		if spr == null:
+			continue
+		spr.modulate = Color(0.85, 1.0, 0.80, 1.0)
+		n.add_child(spr)
+	if n.get_child_count() == 0:
+		# Fallback polygon if the pack is missing.
+		var leaf := Polygon2D.new()
+		leaf.color = Color(0.35, 0.75, 0.30)
+		leaf.polygon = PackedVector2Array([
+			Vector2(0, -14), Vector2(10, -4), Vector2(8, 10), Vector2(0, 14), Vector2(-8, 10), Vector2(-10, -4)
+		])
+		n.add_child(leaf)
 	return n
+
+func _make_fungus_patch(ch: NavGraph.ChamberNode) -> Node2D:
+	## Garden "mold" / fungus farm — mushroom clusters where gardeners tend.
+	var root := Node2D.new()
+	root.name = "FungusPatch_%s" % ch.name
+	root.z_index = 3
+	var mush_regions: Array = [
+		Rect2(0, 0, 16, 16),
+		Rect2(16, 0, 16, 16),
+		Rect2(32, 0, 16, 16),
+		Rect2(48, 0, 16, 16),
+		Rect2(64, 0, 16, 16),
+		Rect2(80, 0, 16, 16),
+	]
+	var offsets: Array = [
+		Vector2(-90, -40), Vector2(70, -55), Vector2(-40, 60),
+		Vector2(100, 45), Vector2(0, -10), Vector2(-110, 50),
+	]
+	for i in offsets.size():
+		var p: Vector2 = ch.clamp_point(ch.center + offsets[i])
+		var reg: Rect2 = mush_regions[i % mush_regions.size()]
+		var spr := _atlas_sprite(OBJECTS_SHEET, reg, p, 3.2, 3)
+		if spr == null:
+			continue
+		# Soft fungus tint — pale / lilac so it reads as garden mold, not red toadstools.
+		spr.modulate = Color(0.92, 0.88, 1.0, 0.95) if i % 2 == 0 else Color(0.95, 0.98, 0.90, 0.95)
+		root.add_child(spr)
+	return root

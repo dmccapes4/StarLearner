@@ -126,23 +126,46 @@ while IFS=$'\t' read -r id start end url <&3 || [[ -n "${id:-}" ]]; do
   src="${src//$'\r'/}"
   src="${src##*$'\n'}"
 
-  start_s="$(hms_to_seconds "$start")"
-  end_s="$(hms_to_seconds "$end")"
-  dur_s=$((end_s - start_s))
-  if [[ "$dur_s" -le 0 ]]; then
-    echo "ERROR: bad window for $id ($start -> $end)" >&2
+  # Single window: start/end. Multi-window (skip off-topic mid-roll):
+  #   start = t1,t2,t3   end = u1,u2,u3   → concat those segments in order.
+  IFS=',' read -r -a starts <<<"$start"
+  IFS=',' read -r -a ends <<<"$end"
+  if [[ "${#starts[@]}" -ne "${#ends[@]}" ]]; then
+    echo "ERROR: $id start/end segment count mismatch ($start / $end)" >&2
     exit 1
   fi
 
-  # -ss/-t after -i = accurate cut. </dev/null = do not read the TSV.
-  # scale=trunc(...): avoid bare scale=-2 which some builds mishandle.
-  ffmpeg -hide_banner -loglevel error -nostdin -y -i "$src" \
-         -ss "$start_s" -t "$dur_s" \
-         -vf "scale=trunc(iw*min(1\\,720/ih)/2)*2:720" \
-         -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 23 -preset veryfast \
-         -c:a aac -b:a 96k -movflags +faststart \
-         "$mp4" </dev/null
-  echo "   wrote $mp4  ($(du -h "$mp4" | cut -f1))"
+  parts_dir="$(mktemp -d "${TMPDIR:-/tmp}/star_${id}.XXXXXX")"
+  part_list="$parts_dir/list.txt"
+  : > "$part_list"
+  for i in "${!starts[@]}"; do
+    s="$(hms_to_seconds "${starts[$i]}")"
+    e="$(hms_to_seconds "${ends[$i]}")"
+    dur=$((e - s))
+    if [[ "$dur" -le 0 ]]; then
+      echo "ERROR: bad window for $id segment $i (${starts[$i]} -> ${ends[$i]})" >&2
+      rm -rf "$parts_dir"
+      exit 1
+    fi
+    part="$parts_dir/part_${i}.mp4"
+    # -ss/-t after -i = accurate cut. </dev/null = do not read the TSV.
+    ffmpeg -hide_banner -loglevel error -nostdin -y -i "$src" \
+           -ss "$s" -t "$dur" \
+           -vf "scale=trunc(iw*min(1\\,720/ih)/2)*2:720" \
+           -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 23 -preset veryfast \
+           -c:a aac -b:a 96k -movflags +faststart \
+           "$part" </dev/null
+    printf "file '%s'\n" "$part" >> "$part_list"
+  done
+
+  if [[ "${#starts[@]}" -eq 1 ]]; then
+    mv -f "$parts_dir/part_0.mp4" "$mp4"
+  else
+    ffmpeg -hide_banner -loglevel error -nostdin -y -f concat -safe 0 \
+           -i "$part_list" -c copy "$mp4" </dev/null
+  fi
+  rm -rf "$parts_dir"
+  echo "   wrote $mp4  ($(du -h "$mp4" | cut -f1))  [${#starts[@]} segment(s)]"
 
   if [[ "$DO_OGV" -eq 1 ]]; then
     if ! ffmpeg -hide_banner -loglevel error -nostdin -y -i "$mp4" \

@@ -26,6 +26,7 @@ var enemy_kind: int = 0
 var larva_stage: int = 0
 var nutrition: float = 0.0
 var jh_dose: float = 0.0
+var growth_rate: float = 1.0  ## per-larva drip multiplier — desyncs cohorts
 var caste_destiny: int = AntEnums.Caste.FORAGER
 var pupa_ticks_left: int = 0
 var carried_by: int = -1
@@ -54,6 +55,7 @@ func reset() -> void:
 	larva_stage = 0
 	nutrition = 0.0
 	jh_dose = 0.0
+	growth_rate = 1.0
 	caste_destiny = AntEnums.Caste.FORAGER
 	pupa_ticks_left = 0
 	carried_by = -1

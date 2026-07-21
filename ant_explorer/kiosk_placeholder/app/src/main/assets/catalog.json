@@ -10,6 +10,16 @@
       "tile": "tile_ants",
       "enter_name": "Ant Explorer",
       "enter_line": "You are entering Ant Explorer"
+    },
+    {
+      "id": "solar",
+      "label": "preview",
+      "package": "com.dylan.antexplorer.solar",
+      "activity": "com.godot.game.GodotApp",
+      "tile": "tile_solar",
+      "preview": true,
+      "enter_name": "Solar System Explorer",
+      "enter_line": "Entering a preview of Solar System Explorer"
     }
   ]
 }
