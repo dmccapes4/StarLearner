@@ -108,32 +108,33 @@ func _run(gen: int) -> void:
 	_red.setup(0, MathTheme.RED)
 	_blue.setup(0, MathTheme.BLUE)
 
-	# 1) The first number.
-	Narrator.speak("Let's add %s plus %s." % [_a, _b])
-	if not await _wait(gen, 1.4): return
+	# 1) The first number. Waits are paced by the actual spoken duration so a
+	# longer clip is never cut off by the next line.
+	var d := Narrator.speak("Let's add %s plus %s." % [_a, _b])
+	if not await _wait(gen, maxf(1.4, d)): return
 	_eq.text = str(_a)
 	_red.setup(_a, MathTheme.RED, CubeGroup.HUE.GOLD)
 	_layout_groups()
-	Narrator.speak("Here are %s red squares. Let's count them." % _a)
-	if not await _wait(gen, 1.9): return
+	d = Narrator.speak("Here are %s red squares. Let's count them." % _a)
+	if not await _wait(gen, maxf(1.9, d)): return
 	if not await _count(gen, _red, 0, _a, 1, CubeGroup.HUE.GOLD): return
 
 	# 2) The plus and the second number.
 	_eq.text = "%s  +" % _a
 	_plus.visible = true
-	Narrator.speak("Plus")
-	if not await _wait(gen, 0.9): return
+	d = Narrator.speak("Plus")
+	if not await _wait(gen, maxf(0.9, d)): return
 	_eq.text = "%s  +  %s" % [_a, _b]
 	_blue.setup(_b, MathTheme.BLUE, CubeGroup.HUE.GREY)
 	_layout_groups()
-	Narrator.speak("And here are %s blue squares." % _b)
-	if not await _wait(gen, 1.7): return
+	d = Narrator.speak("And here are %s blue squares." % _b)
+	if not await _wait(gen, maxf(1.7, d)): return
 	if not await _count(gen, _blue, 0, _b, 1, CubeGroup.HUE.GREY): return
 
 	# 3) Count ON from A across the blue cubes — this is addition.
 	_eq.text = "%s  +  %s  =" % [_a, _b]
-	Narrator.speak("Now we keep counting. We already have %s, so we count on." % _a)
-	if not await _wait(gen, 2.6): return
+	d = Narrator.speak("Now we keep counting. We already have %s, so we count on." % _a)
+	if not await _wait(gen, maxf(2.6, d)): return
 	_red.set_all_state(CubeGroup.HL.DONE)
 	if not await _count(gen, _blue, 0, _b, _a + 1, CubeGroup.HUE.GOLD): return
 
@@ -145,8 +146,8 @@ func _run(gen: int) -> void:
 	_red.set_all_state(CubeGroup.HL.DONE)
 	_blue.set_all_state(CubeGroup.HL.DONE)
 	_join_groups()
-	Narrator.speak("%s plus %s equals %s! Great counting." % [_a, _b, total])
-	if not await _wait(gen, 2.6): return
+	d = Narrator.speak("%s plus %s equals %s! Great counting." % [_a, _b, total])
+	if not await _wait(gen, maxf(2.6, d)): return
 	_hint.text = "\u2713 done"
 	finished.emit()
 
@@ -156,16 +157,16 @@ func _count(gen: int, grp: CubeGroup, from_i: int, n: int, start_num: int, hue: 
 	for k in n:
 		var i := from_i + k
 		grp.set_state(i, CubeGroup.HL.CURRENT, hue)
-		_say_number(start_num + k)
-		if not await _wait(gen, CountBeat): return false
+		var d := _say_number(start_num + k)
+		# Steady rhythm, but never clip a longer number word.
+		if not await _wait(gen, maxf(CountBeat, d - 0.5)): return false
 		grp.set_state(i, CubeGroup.HL.DONE, hue)
 	return true
 
-func _say_number(v: int) -> void:
+func _say_number(v: int) -> float:
 	if v >= 0 and v < NUMBER_WORDS.size():
-		Narrator.speak(NUMBER_WORDS[v])
-	else:
-		Narrator.speak(str(v))
+		return Narrator.speak(NUMBER_WORDS[v])
+	return Narrator.speak(str(v))
 
 # ---- layout -----------------------------------------------------------------
 
