@@ -43,14 +43,17 @@ in [`ant_explorer/docs/KIOSK_APPLIANCE.md`](ant_explorer/docs/KIOSK_APPLIANCE.md
 | # | Game | Tile | Status | Details |
 |---|------|------|--------|---------|
 | 1 | **Ant Explorer** | `ants` | ✅ Available | [full detail below](#1-ant-explorer) · [`ant_explorer/`](ant_explorer/) |
-| 2 | **Solar System Explorer** | `planets` | 🔬 Preview | tour of the Sun + planets (incl. Pluto) · [`solar_system_explorer/`](solar_system_explorer/) |
+| 2 | **Solar System Explorer** | `preview` | 🔬 Preview | narrated tour of the Sun, planets, asteroid belt + Pluto, then fly a ship to open a clip · [`solar_system_explorer/`](solar_system_explorer/) |
 | 3 | *(planned)* | — | 🕓 Idea | future title (e.g. bees, tide pools, the night sky) |
 
 New titles are added as folders beside `ant_explorer/`, each a self-contained Godot project that
 plugs into the Star Learner home shell and the stars format. **Solar System Explorer** is a small
 *preview* title added to prove the console holds multiple subjects: it boots into the same landscape
-shell, appears as its own **planets** tile, and reuses the offline video mechanic (a START button →
-a narrated top-down orrery → a horizontal scroll of the Sun and planets → tap a body for a clip).
+shell and appears as its own tile — the **astronaut girl**, sat to the left of the ants and badged
+*preview*. Its flow: START → a narrated top-down orrery (Sun, the eight planets, and the asteroid
+belt) → an astronaut briefing that hands off to a horizontal **piloting** strip, where a spaceship
+marker flies between bodies (speeding up, then easing in to land) and each stop opens a real 1–2
+minute documentary clip — Sun through Pluto, plus the asteroid belt.
 
 ---
 
@@ -174,11 +177,14 @@ Documentary sourcing and the 12 topics:
 star_learning/                 ← platform / repo (this catalog)
 ├── NAMING.md
 ├── README.md                  ← you are here
-└── ant_explorer/              ← Game #1: Ant Explorer
-    ├── game/                  ← Godot 4.3 project (scripts, scenes, data, assets, tests)
-    ├── docs/                  ← design notes, simulation report, screenshots
-    ├── tools/                 ← video + narration pipelines, screenshot capture, device helpers
-    └── kiosk_placeholder/     ← Android launcher stub for the console
+├── ant_explorer/              ← Game #1: Ant Explorer
+│   ├── game/                  ← Godot 4.3 project (scripts, scenes, data, assets, tests)
+│   ├── docs/                  ← design notes, simulation report, screenshots
+│   ├── tools/                 ← video + narration pipelines, screenshot capture, device helpers
+│   └── kiosk_placeholder/     ← Android launcher shell for the console (tiles + catalog)
+└── solar_system_explorer/     ← Game #2: Solar System Explorer (preview)
+    ├── game/                  ← Godot 4.3 project (scripts, videos, images, tests)
+    └── tools/                 ← YouTube clip ingest pipeline + APK build
 ```
 
 Agents do not use host `sudo`; anything requiring root is handed to the maintainer as a script
