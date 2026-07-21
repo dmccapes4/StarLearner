@@ -55,3 +55,4 @@ ant_explorer/tools/antphone_tunnel/
 
 # Out of scope for the tracked repo (remote phone-update strategy)
 ant_explorer/docs/STRATEGY_ANT_PHONE_UPDATES.md
+**/export_credentials.cfg

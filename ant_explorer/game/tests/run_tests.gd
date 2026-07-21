@@ -32,6 +32,7 @@ const SUITES := [
 	"res://tests/test_star_rail_layout.gd",
 	"res://tests/test_star_rail_model.gd",
 	"res://tests/test_landscape_shell.gd",
+	"res://tests/test_idle_policy.gd",
 ]
 
 func _init() -> void:

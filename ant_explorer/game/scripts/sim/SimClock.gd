@@ -16,7 +16,8 @@ var _hz_window_time: float = 0.0
 var measured_hz: float = 0.0
 
 func _ready() -> void:
-	# Keep processing while the tree is paused for VO/video.
+	# Keep processing while the tree is paused for VO/video, but IdleGuard
+	# disables us when the app is backgrounded / screen-off.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 func _process(delta: float) -> void:
@@ -61,3 +62,10 @@ func reset() -> void:
 	measured_hz = 0.0
 	_enabled = true
 
+func _notification(what: int) -> void:
+	# Never tick while the OS has us backgrounded (power button / app switch).
+	# IdleGuard also gates this; both paths are intentional.
+	if what == NOTIFICATION_APPLICATION_PAUSED:
+		set_enabled(false)
+	elif what == NOTIFICATION_APPLICATION_RESUMED:
+		set_enabled(true)
