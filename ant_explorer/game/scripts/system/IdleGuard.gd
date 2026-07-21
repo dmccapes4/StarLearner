@@ -10,13 +10,36 @@ var _idle_sec: float = 0.0
 var _warned: bool = false
 var _app_bg: bool = false
 var _exiting: bool = false
+## Demo / MovieWriter recorders turn this off so FOCUS_OUT cannot freeze SimClock.
+var _active: bool = true
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process_input(true)
 	set_process_unhandled_input(true)
+	if OS.has_feature("movie"):
+		set_active(false)
+
+func set_active(on: bool) -> void:
+	_active = on
+	set_process(on)
+	set_process_input(on)
+	set_process_unhandled_input(on)
+	if not on:
+		_app_bg = false
+		_exiting = false
+		_idle_sec = 0.0
+		_warned = false
+		AudioServer.set_bus_mute(0, false)
+		SimClock.set_gate_on_app_pause(false)
+		SimClock.set_enabled(true)
+
+func is_active() -> bool:
+	return _active
 
 func _notification(what: int) -> void:
+	if not _active:
+		return
 	match what:
 		NOTIFICATION_APPLICATION_PAUSED, NOTIFICATION_APPLICATION_FOCUS_OUT:
 			_enter_background()

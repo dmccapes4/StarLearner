@@ -159,12 +159,14 @@ if [[ "${SKIP_HOMEO:-0}" != "1" ]]; then
   if [[ -f "$HOMEO_AVI" && -d "$HOMEO_VO" ]]; then
     HOMEO_WORK=/tmp/ant_homeo_mux
     rm -rf "$HOMEO_WORK" && mkdir -p "$HOMEO_WORK"
+    # Gaps match record_homeostasis_demo.gd: 0.6s open, 0.25s between clips
+    # (_speak trailer), plus 8s surplus hold after 04 so NEW eclosions land on camera.
     ffmpeg -y -hide_banner -loglevel error \
       -i "$HOMEO_VO/01_open.wav" -i "$HOMEO_VO/02_larval.wav" -i "$HOMEO_VO/03_shock.wav" \
       -i "$HOMEO_VO/04_surplus.wav" -i "$HOMEO_VO/05_wide.wav" -i "$HOMEO_VO/06_close.wav" \
       -filter_complex "\
         aevalsrc=0:d=0.6[g0];aevalsrc=0:d=0.25[g1];aevalsrc=0:d=0.25[g2];\
-        aevalsrc=0:d=0.25[g3];aevalsrc=0:d=0.25[g4];aevalsrc=0:d=0.25[g5];aevalsrc=0:d=0.8[g6];\
+        aevalsrc=0:d=0.25[g3];aevalsrc=0:d=8.25[g4];aevalsrc=0:d=0.25[g5];aevalsrc=0:d=0.8[g6];\
         [g0][0:a][g1][1:a][g2][2:a][g3][3:a][g4][4:a][g5][5:a][g6]concat=n=13:v=0:a=1[a]" \
       -map "[a]" "$HOMEO_WORK/narration.wav"
     ffmpeg -y -hide_banner -loglevel error \

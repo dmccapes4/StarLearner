@@ -35,11 +35,15 @@ func _run() -> void:
 	if hud:
 		hud.visible = false
 	_silence_idle()
+	_force_sim_running()
 
 	var intro := get_first_node_in_group("intro_panel")
 	if intro != null and intro.has_method("_finish"):
 		intro.call("_finish")
+	paused = false
 	await _sec(0.6)
+	_force_sim_running()
+	print("HOMEO: sim armed tick=%d enabled=%s" % [_sim_tick(), _sim_enabled()])
 
 	var world: Node = get_first_node_in_group("world")
 	if world == null:
@@ -71,11 +75,13 @@ func _run() -> void:
 	_set_hz(base_hz)
 	_look_at(cam, _chamber_center(world, "nursery"), base_zoom * 1.35)
 	await _speak(voice, "01_open")
+	_log_sim("after beat 1")
 
 	print("HOMEO: beat 2 — larval nutrition / JH")
 	viz.call("set_chrome", "LARVAL SPACE — nutrition & juvenile hormone", "score = nutrition + 2·JH  decides caste at pupation", "1×")
 	_look_at(cam, _chamber_center(world, "nursery"), base_zoom * 1.6)
 	await _speak(voice, "02_larval")
+	_log_sim("after beat 2")
 
 	print("HOMEO: beat 3 — food shock")
 	viz.call("set_chrome", "SHOCK — garden health drops", "food demand rises → foragers urged back to work", "1×")
@@ -84,35 +90,57 @@ func _run() -> void:
 		colony.garden.waste = 0.35
 	_look_at(cam, _chamber_center(world, "garden_a"), base_zoom * 1.15)
 	await _speak(voice, "03_shock")
+	_log_sim("after beat 3")
 
 	print("HOMEO: beat 4 — soldier surplus")
-	viz.call("set_chrome", "CASTE-MIX LOOP — soldier surplus", "threshold rises · JH scale falls · fewer new soldiers", "2×")
 	if colony.get("garden") != null:
 		colony.garden.health = 0.75
 		colony.garden.waste = 0.05
 	_cfg().target_soldiers = 4
-	_set_hz(base_hz * 2.0)
-	_look_at(cam, _chamber_center(world, "outpost"), base_zoom * 1.05)
+	# Apply surplus pressures before seeding so decide_caste sees the raised bar.
+	if colony.get("homeostasis") != null and colony.homeostasis.has_method("tick"):
+		colony.homeostasis.tick(colony)
+	viz.call("reset_new_counts")
+	viz.call("set_highlight_new", true)
+	viz.call("set_chrome",
+		"CASTE-MIX LOOP — soldier surplus",
+		"adults stay · soldier bar ↑ · JH scale ↓ · watch NEW eclosions",
+		"4×")
+	var seeded: int = _seed_surplus_cohort(colony)
+	print("HOMEO: seeded %d surplus-cohort pupae (score~60 → forager under raised bar)" % seeded)
+	_set_hz(base_hz * 4.0)
+	_look_at(cam, _chamber_center(world, "nursery"), base_zoom * 1.25)
 	await _speak(voice, "04_surplus")
+	# Hold so staggered pupae finish eclosing while the NEW counter is on screen.
+	await _sec(8.0)
+	var nc: Dictionary = viz.call("new_counts") if viz.has_method("new_counts") else {}
+	print("HOMEO: surplus NEW S=%s F=%s N=%s" % [
+		str(nc.get("soldiers", "?")), str(nc.get("foragers", "?")), str(nc.get("nurses", "?"))
+	])
+	_log_sim("after beat 4")
 
 	print("HOMEO: beat 5 — wide / fast")
+	viz.call("set_highlight_new", false)
+	viz.call("reset_new_counts")
 	viz.call("set_mode", 2)
 	viz.call("set_chrome", "WHOLE COLONY — time compressed", "pressures drift toward the target mix", "6×")
 	_cfg().target_soldiers = saved_tgt
 	_set_hz(base_hz * 6.0)
 	_look_at(cam, _nest_center(world), base_zoom * 0.40)
 	await _speak(voice, "05_wide")
+	_log_sim("after beat 5")
 
 	print("HOMEO: beat 6 — close")
 	viz.call("set_mode", 1)
-	viz.call("set_chrome", "LOOP CLOSED", "census → destiny · JH · urgency", "2×")
+	viz.call("set_chrome", "LOOP CLOSED", "census → destiny · JH · urgency · NEW tracks each beat", "2×")
 	_set_hz(base_hz * 2.0)
 	_look_at(cam, _nest_center(world), base_zoom * 0.52)
 	await _speak(voice, "06_close")
+	_log_sim("after beat 6")
 
 	_cfg().target_soldiers = saved_tgt
 	_set_hz(base_hz)
-	print("HOMEO: done")
+	print("HOMEO: done tick=%d" % _sim_tick())
 	await _sec(0.8)
 	quit(0)
 
@@ -191,9 +219,76 @@ func _silence_idle() -> void:
 	var ig := root.get_node_or_null("IdleGuard")
 	if ig == null:
 		return
-	ig.set_process(false)
-	ig.set_process_input(false)
-	ig.set_process_unhandled_input(false)
+	if ig.has_method("set_active"):
+		ig.call("set_active", false)
+	else:
+		ig.set_process(false)
+		ig.set_process_input(false)
+		ig.set_process_unhandled_input(false)
+
+func _force_sim_running() -> void:
+	var clock := root.get_node_or_null("SimClock")
+	if clock == null:
+		return
+	if clock.has_method("set_gate_on_app_pause"):
+		clock.call("set_gate_on_app_pause", false)
+	if clock.has_method("set_enabled"):
+		clock.call("set_enabled", true)
+
+func _sim_tick() -> int:
+	var clock := root.get_node_or_null("SimClock")
+	return int(clock.get("tick")) if clock != null else -1
+
+func _sim_enabled() -> bool:
+	var clock := root.get_node_or_null("SimClock")
+	if clock != null and clock.has_method("is_enabled"):
+		return bool(clock.call("is_enabled"))
+	return false
+
+func _log_sim(label: String) -> void:
+	print("HOMEO: %s tick=%d enabled=%s" % [label, _sim_tick(), _sim_enabled()])
+
+func _seed_surplus_cohort(colony: Node) -> int:
+	## Queue pupae whose score (~60) would be SOLDIER under the neutral bar (58)
+	## but FORAGER once surplus raises the soldier bar to 63. Plus a couple of
+	## low-score nurses. Short pupa timers so NEW eclosions land in-beat.
+	if colony == null or colony.get("brood") == null:
+		return 0
+	var brood: Object = colony.brood
+	if not brood.has_method("spawn_larva") or not brood.has_method("decide_caste"):
+		return 0
+	var rng: RandomNumberGenerator = colony.get("rng") as RandomNumberGenerator
+	if rng == null:
+		rng = RandomNumberGenerator.new()
+		rng.randomize()
+	# (nutrition, jh) → score = nut + 2·JH
+	var cohort: Array = [
+		[56.0, 2.0], [55.0, 2.5], [57.0, 1.5], [54.0, 3.0], [56.5, 2.0], [55.5, 2.2],
+		[40.0, 0.5], [38.0, 1.0],
+	]
+	var n := 0
+	for i in cohort.size():
+		var pair: Array = cohort[i]
+		var pos: Vector2 = brood.call("chamber_spot", "nursery", rng) if brood.has_method("chamber_spot") \
+			else _chamber_center(get_first_node_in_group("world"), "nursery")
+		var larva = brood.call("spawn_larva", pos)
+		if larva == null:
+			continue
+		larva.nutrition = float(pair[0])
+		larva.jh_dose = float(pair[1])
+		larva.larva_stage = 2
+		var destiny: int = int(brood.call("decide_caste", larva))
+		larva.caste_destiny = destiny
+		larva.caste = 6  # AntEnums.Caste.PUPA
+		larva.pupa_ticks_left = 8 + i * 4
+		larva.state = 0
+		larva.clear_path()
+		if colony.has_method("ensure_view"):
+			colony.call("ensure_view", larva)
+		var score: float = float(pair[0]) + 2.0 * float(pair[1])
+		print("HOMEO: cohort[%d] score=%.1f destiny=%d ticks=%d" % [i, score, destiny, larva.pupa_ticks_left])
+		n += 1
+	return n
 
 func _frames(seconds: float) -> int:
 	return maxi(1, int(ceil(seconds * FPS)))

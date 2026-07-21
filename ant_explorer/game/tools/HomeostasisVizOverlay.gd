@@ -1,15 +1,26 @@
 extends CanvasLayer
 ## Live overlay for the homeostasis demo: caste census, pressures, demands,
-## larva nutrition/JH histogram, and live controller readouts.
+## larva nutrition/JH histogram, live controller readouts, and a beat-scoped
+## NEW eclosion counter (the surplus beat's proof the loop is working).
 
 enum Mode { CLOSEUP, OVERVIEW, HISTOGRAM }
+
+const CASTE_SOLDIER := 1
+const CASTE_FORAGER := 2
+const CASTE_NURSE := 4
 
 var colony: Node = null
 var mode: int = Mode.CLOSEUP
 var title: String = "HOMEOSTASIS"
 var subtitle: String = ""
 var speed_label: String = "1×"
+var highlight_new: bool = false
 var _panel: Control
+var _new_soldiers: int = 0
+var _new_foragers: int = 0
+var _new_nurses: int = 0
+var _new_other: int = 0
+var _wired_events: bool = false
 
 func _ready() -> void:
 	layer = 80
@@ -20,6 +31,7 @@ func _ready() -> void:
 	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.draw.connect(_on_draw)
 	add_child(_panel)
+	_wire_eclosion_events()
 
 func _process(_delta: float) -> void:
 	if _panel:
@@ -27,6 +39,7 @@ func _process(_delta: float) -> void:
 
 func set_colony(c: Node) -> void:
 	colony = c
+	_wire_eclosion_events()
 
 func set_mode(m: int) -> void:
 	mode = m
@@ -36,6 +49,45 @@ func set_chrome(t: String, sub: String = "", speed: String = "") -> void:
 	subtitle = sub
 	if not speed.is_empty():
 		speed_label = speed
+
+func set_highlight_new(on: bool) -> void:
+	highlight_new = on
+
+func reset_new_counts() -> void:
+	_new_soldiers = 0
+	_new_foragers = 0
+	_new_nurses = 0
+	_new_other = 0
+
+func new_counts() -> Dictionary:
+	return {
+		"soldiers": _new_soldiers,
+		"foragers": _new_foragers,
+		"nurses": _new_nurses,
+		"other": _new_other,
+		"total": _new_soldiers + _new_foragers + _new_nurses + _new_other,
+	}
+
+func _wire_eclosion_events() -> void:
+	if _wired_events:
+		return
+	var ev := get_tree().root.get_node_or_null("Events")
+	if ev == null or not ev.has_signal("ant_eclosed"):
+		return
+	if not ev.ant_eclosed.is_connected(_on_ant_eclosed):
+		ev.ant_eclosed.connect(_on_ant_eclosed)
+	_wired_events = true
+
+func _on_ant_eclosed(_ant_id: int, caste: int) -> void:
+	match caste:
+		CASTE_SOLDIER:
+			_new_soldiers += 1
+		CASTE_FORAGER:
+			_new_foragers += 1
+		CASTE_NURSE, 3:  # NURSE or GARDENER (minor workers)
+			_new_nurses += 1
+		_:
+			_new_other += 1
 
 func _on_draw() -> void:
 	var c := _panel
@@ -50,8 +102,8 @@ func _on_draw() -> void:
 		h.call("tick", colony)
 	var snap: Dictionary = h.call("snapshot") if h.has_method("snapshot") else {}
 
-	# Dim strip so text reads over the nest.
-	var strip_h := size.y * (0.42 if mode == Mode.HISTOGRAM else 0.34)
+	# Dim strip so text reads over the nest (taller when NEW panel is highlighted).
+	var strip_h := size.y * (0.42 if mode == Mode.HISTOGRAM else (0.40 if highlight_new else 0.34))
 	c.draw_rect(Rect2(0, 0, size.x, strip_h), Color(0.05, 0.04, 0.03, 0.72))
 	c.draw_rect(Rect2(0, size.y - 36, size.x, 36), Color(0.05, 0.04, 0.03, 0.65))
 
@@ -93,6 +145,8 @@ func _on_draw() -> void:
 	_draw_caste_bar(c, font, bar_x, bar_y + 28, bar_w, "Foragers", foragers, t_for, Color(0.30, 0.72, 0.35), fp)
 	_draw_caste_bar(c, font, bar_x, bar_y + 56, bar_w, "Minors", gardeners + nurses, t_min, Color(0.35, 0.55, 0.90), mp)
 	c.draw_string(font, Vector2(bar_x, bar_y + 90), "  gardeners %d · nurses %d · brood %d" % [gardeners, nurses, brood_n], HORIZONTAL_ALIGNMENT_LEFT, -1, fs_sm, Color(0.75, 0.70, 0.60))
+	# NEW eclosions sit under the census — surplus beat's proof adults aren't culled.
+	_draw_new_panel(c, font, bar_x, bar_y + 108.0, mini(bar_w, 420.0))
 
 	# --- demand meters ---
 	var dx := size.x * 0.52
@@ -103,12 +157,14 @@ func _on_draw() -> void:
 	_draw_meter(c, font, dx, bar_y + 80, 200, "waste", waste, Color(0.70, 0.55, 0.30))
 
 	# --- controller readouts ---
+	var soldier_bar: float = float(th.get("high", 58.0))
+	var forager_bar: float = float(th.get("mid", 50.0))
 	var rx := dx + 220
 	if rx + 160 < size.x:
 		c.draw_string(font, Vector2(rx, bar_y), "CONTROLLER", HORIZONTAL_ALIGNMENT_LEFT, -1, fs_sm, Color(0.9, 0.82, 0.6))
 		c.draw_string(font, Vector2(rx, bar_y + 20), "JH scale  %.2f" % jh_scale, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.95, 0.88, 0.55))
-		c.draw_string(font, Vector2(rx, bar_y + 40), "soldier bar  %.1f" % float(th.get("high", 22)), HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.95, 0.55, 0.45))
-		c.draw_string(font, Vector2(rx, bar_y + 60), "forager bar  %.1f" % float(th.get("mid", 19)), HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.55, 0.85, 0.50))
+		c.draw_string(font, Vector2(rx, bar_y + 40), "soldier bar  %.1f" % soldier_bar, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.95, 0.55, 0.45))
+		c.draw_string(font, Vector2(rx, bar_y + 60), "forager bar  %.1f" % forager_bar, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.55, 0.85, 0.50))
 		var urg_f: int = int(h.call("idle_urgency", 2)) if h.has_method("idle_urgency") else 0  # FORAGER=2
 		var urg_n: int = int(h.call("idle_urgency", 4)) if h.has_method("idle_urgency") else 0  # NURSE=4
 		c.draw_string(font, Vector2(rx, bar_y + 80), "idle urg  F%d N%d" % [urg_f, urg_n], HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.8, 0.75, 0.65))
@@ -121,18 +177,39 @@ func _on_draw() -> void:
 	c.draw_string(font, Vector2(20, hy - 2), "LARVAE — nutrition (amber) · juvenile hormone (violet)", HORIZONTAL_ALIGNMENT_LEFT, -1, fs_sm, Color(0.9, 0.82, 0.65))
 	_draw_hist(c, Rect2(20, hy + 8, size.x - 40, hh), hist["nutrition"], Color(0.95, 0.72, 0.25, 0.85))
 	_draw_hist(c, Rect2(20, hy + 8, size.x - 40, hh), hist["jh"], Color(0.65, 0.40, 0.95, 0.55))
-	c.draw_string(font, Vector2(20, hy + hh + 4), "n=%d  mean nut %.1f  mean JH %.1f  → score = nut + 2·JH  (vs bars above)" % [
-		hist["count"], hist["mean_nut"], hist["mean_jh"]
+	var mean_score: float = float(hist["mean_nut"]) + 2.0 * float(hist["mean_jh"])
+	c.draw_string(font, Vector2(20, hy + hh + 4), "n=%d  mean score %.1f  (nut+2·JH)  ·  vs forager %.0f / soldier %.0f" % [
+		hist["count"], mean_score, forager_bar, soldier_bar
 	], HORIZONTAL_ALIGNMENT_LEFT, -1, fs_sm, Color(0.78, 0.72, 0.60))
 
 	# footer legend
-	c.draw_string(font, Vector2(16, size.y - 14), "pressure +deficit / −surplus   ·   bars: live vs target   ·   loop: census → destiny + JH + urgency", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.65, 0.60, 0.50))
+	var foot := "pressure +deficit / −surplus   ·   bars: live vs target   ·   NEW = eclosions this beat (not adult culls)"
+	if highlight_new:
+		foot = "adults stay put   ·   correction = NEW eclosions   ·   would-be soldiers → foragers when bar rises"
+	c.draw_string(font, Vector2(16, size.y - 14), foot, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.65, 0.60, 0.50))
 
 func _config() -> Object:
 	var cfg := get_tree().root.get_node_or_null("Config")
 	if cfg == null:
 		return null
 	return cfg.get("data")
+
+func _draw_new_panel(c: Control, font: Font, x: float, y: float, box_w: float) -> void:
+	var total: int = _new_soldiers + _new_foragers + _new_nurses + _new_other
+	var box_h := 44.0
+	var bg := Color(0.12, 0.18, 0.10, 0.92) if highlight_new else Color(0.08, 0.07, 0.06, 0.85)
+	var border := Color(0.55, 0.85, 0.45, 0.95) if highlight_new else Color(0.45, 0.40, 0.32, 0.7)
+	c.draw_rect(Rect2(x, y, box_w, box_h), bg)
+	c.draw_rect(Rect2(x, y, box_w, box_h), border, false, 2.0)
+	var label := "NEW ECLOSIONS this beat" if highlight_new else "NEW eclosions"
+	c.draw_string(font, Vector2(x + 10, y + 14), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.92, 0.88, 0.70))
+	var line := "S %d   F %d   N %d" % [_new_soldiers, _new_foragers, _new_nurses]
+	if _new_other > 0:
+		line += "   · %d" % _new_other
+	if total == 0 and highlight_new:
+		line += "   (waiting…)"
+	var lcol := Color(0.55, 0.95, 0.55) if highlight_new and _new_foragers > 0 and _new_soldiers == 0 else Color(0.95, 0.92, 0.85)
+	c.draw_string(font, Vector2(x + 10, y + 34), line, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, lcol)
 
 func _draw_caste_bar(c: Control, font: Font, x: float, y: float, w: float, name: String, count: int, target: int, col: Color, pressure: float) -> void:
 	var max_v := maxi(target * 2, maxi(count, 1))

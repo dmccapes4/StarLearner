@@ -185,9 +185,18 @@ func _silence_idle_guard() -> void:
 	var ig := root.get_node_or_null("IdleGuard")
 	if ig == null:
 		return
-	ig.set_process(false)
-	ig.set_process_input(false)
-	ig.set_process_unhandled_input(false)
+	if ig.has_method("set_active"):
+		ig.call("set_active", false)
+	else:
+		ig.set_process(false)
+		ig.set_process_input(false)
+		ig.set_process_unhandled_input(false)
+	var clock := root.get_node_or_null("SimClock")
+	if clock != null:
+		if clock.has_method("set_gate_on_app_pause"):
+			clock.call("set_gate_on_app_pause", false)
+		if clock.has_method("set_enabled"):
+			clock.call("set_enabled", true)
 
 func _bump_idle() -> void:
 	var ig := root.get_node_or_null("IdleGuard")
