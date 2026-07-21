@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.dylan.antexplorer'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.dylan.antexplorer"
+        minSdk 26
+        targetSdk 34
+        versionCode 3
+        versionName "0.3-progress"
+    }
+
+    signingConfigs {
+        debugants {
+            storeFile file("${System.getenv('HOME')}/moto_fogona_backup/ants-debug.keystore")
+            storePassword 'antsdebug'
+            keyAlias 'ants'
+            keyPassword 'antsdebug'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debugants
+        }
+        debug {
+            signingConfig signingConfigs.debugants
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // No AndroidX deps — plain Activity keeps the APK tiny and build simple.
+}

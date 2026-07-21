@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AntExplorer" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowBackground">#22552A</item>
+        <item name="android:navigationBarColor">#22552A</item>
+        <item name="android:statusBarColor">#22552A</item>
+    </style>
+</resources>
