@@ -80,7 +80,7 @@ format=yuv420p" \
     -c:v libx264 -pix_fmt yuv420p -preset fast -crf 18 "$out"
 }
 
-mkslide "$SHOTS/00_card.png" "$d0" "$WORK/s0.mp4" in
+mkslide "$SHOTS/00_home.png" "$d0" "$WORK/s0.mp4" in
 mkslide "$SHOTS/00_card_eggs.png" "$d1" "$WORK/s1.mp4" out
 mkslide "$SHOTS/10_tutorial_mul.png" "$d2" "$WORK/s2.mp4" in
 mkslide "$SHOTS/07_eggs_drag.png" "$d3" "$WORK/s3.mp4" out
