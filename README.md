@@ -43,14 +43,21 @@ in [`ant_explorer/docs/KIOSK_APPLIANCE.md`](ant_explorer/docs/KIOSK_APPLIANCE.md
 | # | Game | Tile | Status | Details |
 |---|------|------|--------|---------|
 | 1 | **Ant Explorer** | `ants` | ✅ Available | [full detail below](#1-ant-explorer) · [`ant_explorer/`](ant_explorer/) |
-| 2 | **Solar System Explorer** | `preview` | 🔬 Preview | narrated tour of the Sun, planets, asteroid belt + Pluto, then fly a ship to open a clip · [`solar_system_explorer/`](solar_system_explorer/) |
-| 3 | *(planned)* | — | 🕓 Idea | future title (e.g. bees, tide pools, the night sky) |
+| 2 | **Solar System Explorer** | `planets` | ✅ Available | pick a world, plot a course, fly the 3D hop, park in orbit (Sun included — safe standoff) · [`solar_system_explorer/`](solar_system_explorer/) |
+| 3 | **Math Explorer** | `preview` | 🔬 Preview | four tabs (`+ − × ÷`); numbers made visible as countable cubes; narrated, animated tutorials + sprite word problems · [`math_explorer/`](math_explorer/) |
+| 4 | *(planned)* | — | 🕓 Idea | future title (e.g. bees, tide pools, the night sky) |
+
+**Math Explorer** is a second *preview* title — a different subject (early math, not science) proving
+the console spans domains. It makes numbers **visible**: `7 + 4` becomes seven red cubes and four
+blue cubes, counted on together into gold. Four rounded tabs across the bottom cover addition,
+subtraction, multiplication, and division; the design adds practice mode and sprite-driven word
+problems (chickens & eggs, coins & change, sharing dolls, painting stones) plus a time-math thread.
+Design: [`math_explorer/docs/STRATEGY_MATH_EXPLORER.md`](math_explorer/docs/STRATEGY_MATH_EXPLORER.md).
 
 New titles are added as folders beside `ant_explorer/`, each a self-contained Godot project that
-plugs into the Star Learner home shell and the stars format. **Solar System Explorer** is a small
-*preview* title added to prove the console holds multiple subjects: it boots into the same landscape
+plugs into the Star Learner home shell and the stars format. **Solar System Explorer** is a second title on the console: it boots into the same landscape
 shell and appears as its own tile — the **astronaut girl**, sat to the left of the ants and badged
-*preview*. Its flow: START → a narrated top-down orrery (Sun, the eight planets, and the asteroid
+full flyer. Its flow: START → a narrated top-down orrery (Sun, the eight planets, and the asteroid
 belt) → an astronaut briefing that hands off to a horizontal **piloting** strip, where a spaceship
 marker flies between bodies (speeding up, then easing in to land) and each stop opens a real 1–2
 minute documentary clip — Sun through Pluto, plus the asteroid belt.
@@ -182,9 +189,12 @@ star_learning/                 ← platform / repo (this catalog)
 │   ├── docs/                  ← design notes, simulation report, screenshots
 │   ├── tools/                 ← video + narration pipelines, screenshot capture, device helpers
 │   └── kiosk_placeholder/     ← Android launcher shell for the console (tiles + catalog)
-└── solar_system_explorer/     ← Game #2: Solar System Explorer (preview)
-    ├── game/                  ← Godot 4.3 project (scripts, videos, images, tests)
-    └── tools/                 ← YouTube clip ingest pipeline + APK build
+├── solar_system_explorer/     ← Game #2: Solar System Explorer
+│   ├── game/                  ← Godot 4.3 project (scripts, videos, images, tests)
+│   └── tools/                 ← YouTube clip ingest pipeline + APK build
+└── math_explorer/             ← Game #3: Math Explorer (preview)
+    ├── docs/                  ← strategy + asset plan
+    └── game/                  ← Godot 4.3 project (scripts, tests, procedural cube widgets)
 ```
 
 Agents do not use host `sudo`; anything requiring root is handed to the maintainer as a script

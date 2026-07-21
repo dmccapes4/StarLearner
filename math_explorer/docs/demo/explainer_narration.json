@@ -1,0 +1,28 @@
+{
+  "lines": [
+    {
+      "key": "01_open",
+      "text": "This is Math Explorer, a Star Learner game that makes math visible. Every number is a set of blocks you can count, and every answer is spoken out loud."
+    },
+    {
+      "key": "02_tabs",
+      "text": "Four tabs across the bottom: addition, subtraction, multiplication, and division. Each one has a tutorial to watch, a story problem, and endless practice."
+    },
+    {
+      "key": "03_tutorial",
+      "text": "The addition tutorial brings seven plus four to life. She counts the red blocks, then keeps counting across the blue ones. Counting on is the whole secret of addition."
+    },
+    {
+      "key": "04_stories",
+      "text": "Story problems are little movies. Two trains race down the track until the fast one catches up. Chickens lay their eggs, and the eggs fill cartons of six. The equations build themselves as the story happens."
+    },
+    {
+      "key": "05_practice",
+      "text": "Practice mode asks fresh questions forever, with blocks to count and three big answers to choose from. A wrong answer is never just wrong. The blocks slowly count themselves out, so she sees exactly why."
+    },
+    {
+      "key": "06_close",
+      "text": "Math Explorer. Numbers she can see, touch, and count. Ready to play on the Star Learner console."
+    }
+  ]
+}

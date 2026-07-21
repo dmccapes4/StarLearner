@@ -1,0 +1,10 @@
+# Secrets: ignore everything under any secrets/ dir except *.example
+secrets/*
+!secrets/*.example
+*.conf.local
+
+# Build output + template caches
+tools/build/
+
+# Intermediate mp4 cuts from any clip pipeline; .ogv files are the finals.
+game/videos/*.mp4
