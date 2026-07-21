@@ -366,13 +366,12 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     }
 
     private Intent gameLaunchIntent(Tile t) {
-        Intent launch = null;
-        if (t.activity != null && !t.activity.isEmpty()) {
+        // Prefer the package-manager launcher intent (correct component + extras).
+        Intent launch = getPackageManager().getLaunchIntentForPackage(t.packageName);
+        if (launch == null && t.activity != null && !t.activity.isEmpty()) {
             launch = new Intent(Intent.ACTION_MAIN);
             launch.addCategory(Intent.CATEGORY_LAUNCHER);
             launch.setClassName(t.packageName, t.activity);
-        } else {
-            launch = getPackageManager().getLaunchIntentForPackage(t.packageName);
         }
         if (launch == null && COLONY_PACKAGE.equals(t.packageName)) {
             launch = new Intent(Intent.ACTION_MAIN);
@@ -417,6 +416,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 Toast.makeText(this, "coming soon", Toast.LENGTH_SHORT).show();
                 return;
             }
+            // Refresh lock-task whitelist so newly installed catalog games can open.
+            ensureLockTaskPackages();
             Intent launch = gameLaunchIntent(t);
             if (launch == null) {
                 Toast.makeText(this, "not installed yet", Toast.LENGTH_SHORT).show();
@@ -441,18 +442,27 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 String name = t.enterName != null && !t.enterName.isEmpty() ? t.enterName : t.label;
                 line = "You are entering " + name;
             }
+            // Speak first, then start immediately. A delayed startActivity loses the
+            // tap's "user gesture" token on modern Android and fails with can't-open.
             speak(line, "enter:" + t.id);
             activeGamePackage = t.packageName;
-            // Slight delay so TTS starts before the game covers the speaker.
-            final Intent go = launch;
-            handler.postDelayed(() -> {
-                try {
-                    startActivity(go);
-                } catch (Exception e) {
-                    Toast.makeText(this, "can't open", Toast.LENGTH_SHORT).show();
-                }
-            }, wipeSave ? 200 : 450);
+            startActivity(launch);
         } catch (Exception e) {
+            // One retry after leaving lock-task — covers whitelist race on first launch.
+            try {
+                stopLockTask();
+                Intent retry = gameLaunchIntent(t);
+                if (retry != null) {
+                    retry.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                    if (wipeSave) {
+                        retry.putExtra(EXTRA_WIPE_SAVE, true);
+                        retry.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    }
+                    startActivity(retry);
+                    return;
+                }
+            } catch (Exception ignored) {}
+            android.util.Log.e("StarLearner", "launch failed: " + t.packageName, e);
             Toast.makeText(this, "can't open", Toast.LENGTH_SHORT).show();
         }
     }
