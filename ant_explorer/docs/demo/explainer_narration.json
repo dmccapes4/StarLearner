@@ -1,0 +1,36 @@
+{
+  "title": "Ant Explorer — explainer overview",
+  "notes": "Warm gift framing + game overview. Synced 1:1 with screenshot slides in make_demo_videos.sh.",
+  "lines": [
+    {
+      "key": "01_gift",
+      "shot": "01_rails_soil.png",
+      "text": "This is Ant Explorer — a birthday present for a six-year-old girl who loves ants."
+    },
+    {
+      "key": "02_console",
+      "shot": "02_rails_revealed.png",
+      "text": "It lives on Star Learner, a homemade game console locked to a few calm, offline worlds. No browser. No store. Just play."
+    },
+    {
+      "key": "03_colony",
+      "shot": "05_nest_overview.png",
+      "text": "You guide one worker ant through a living leaf-cutter colony — chambers, tunnels, and dozens of busy nestmates."
+    },
+    {
+      "key": "04_jobs",
+      "shot": "03_garden.png",
+      "text": "Tap the ground to walk. Touch a glowing pheromone trail to join a job: forage, garden, nurse, or defend."
+    },
+    {
+      "key": "05_stars",
+      "shot": "04_surface.png",
+      "text": "Hidden golden stars hold short ant documentaries. Stop beside one, watch, and light it up on the side shelves."
+    },
+    {
+      "key": "06_close",
+      "shot": "02_rails_revealed.png",
+      "text": "Exploration is the loop. Learning is the reward. Built so she can discover ants at her own pace."
+    }
+  ]
+}

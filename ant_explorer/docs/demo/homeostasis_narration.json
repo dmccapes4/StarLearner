@@ -1,0 +1,29 @@
+{
+  "title": "Homeostasis — feedback loop demo",
+  "lines": [
+    {
+      "key": "01_open",
+      "text": "Homeostasis is the colony’s feedback nerve. Every tick it takes a census — soldiers, foragers, nurses — and turns shortages into pressure."
+    },
+    {
+      "key": "02_larval",
+      "text": "In the nursery, larvae gather nutrition and juvenile hormone. Their score at pupation chooses a caste. That destiny used to ignore the colony. Not anymore."
+    },
+    {
+      "key": "03_shock",
+      "text": "Watch a food shock. Garden health falls, food demand rises, and idle foragers are urged back to work. The shortage feeds back through delivery."
+    },
+    {
+      "key": "04_surplus",
+      "text": "Now a soldier surplus. The soldier bar rises. Hormone dosing falls. Fewer of the next larvae become soldiers — the Pheidole-style caste-mix loop."
+    },
+    {
+      "key": "05_wide",
+      "text": "Zoom out. Time runs fast. Pressures drift toward the target mix while the histogram shows nutrition and hormone flowing into the next generation."
+    },
+    {
+      "key": "06_close",
+      "text": "The loop is closed: census, caste destiny, hormone, urgency. Tunable, reversible, and covered by tests. The organ the review said was grown but not connected — now is."
+    }
+  ]
+}
