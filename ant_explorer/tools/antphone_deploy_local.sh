@@ -28,8 +28,19 @@ for v in "${VIDEOS[@]}"; do
   adb shell chmod 644 "/data/local/tmp/antphone_videos/$(basename "$v")" || true
 done
 
+# Prefer the gradle release kiosk build over a stale tools/build copy.
+# An old launcher APK lacks tile_solar/tile_math and falls back to tile_ants for every tile.
+KIOSK_RELEASE="$ROOT/kiosk_placeholder/app/build/outputs/apk/release/app-release.apk"
 for apk in "$@"; do
   [[ -f "$apk" ]] || { echo "missing $apk"; exit 1; }
+  base="$(basename "$apk")"
+  if [[ "$base" == "com.dylan.antexplorer.apk" && -f "$KIOSK_RELEASE" ]]; then
+    if [[ "$KIOSK_RELEASE" -nt "$apk" ]]; then
+      echo "refreshing stale kiosk APK from $KIOSK_RELEASE"
+      mkdir -p "$(dirname "$apk")"
+      cp -f "$KIOSK_RELEASE" "$apk"
+    fi
+  fi
   echo "installing $apk"
   adb install -r -g "$apk"
 done
