@@ -81,7 +81,7 @@ func _speak(zone: String, line1: String, line2: String) -> void:
 	if _cue_player and _cue_player.stream:
 		_cue_player.volume_db = -4.0
 		_cue_player.play()
-	if DisplayServer.tts_get_voices().size() > 0:
+	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_stop()
 		DisplayServer.tts_speak(full, "", 1.0, 1.0, 0.9)
 

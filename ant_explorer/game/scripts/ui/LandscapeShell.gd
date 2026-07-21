@@ -396,6 +396,6 @@ func _speak(stream: AudioStream, tts_text: String) -> void:
 		_voice.stream = stream
 		_voice.play()
 		return
-	if DisplayServer.tts_get_voices().size() > 0:
+	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_stop()
 		DisplayServer.tts_speak(tts_text, "", 1.0, 1.0, 0.95)

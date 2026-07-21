@@ -107,7 +107,7 @@ func _advance() -> void:
 		_player.play()  # _on_player_finished advances
 		return
 	# No baked clip: speak via OS TTS (if any) and advance on a word-count timer.
-	if DisplayServer.tts_get_voices().size() > 0:
+	if DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_stop()
 		DisplayServer.tts_speak(text, "", 1.0, 1.0, 0.95)
 	_wait_then_advance(_estimate_seconds(text))

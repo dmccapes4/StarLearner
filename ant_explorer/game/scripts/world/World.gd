@@ -326,7 +326,7 @@ func _maybe_tunnel_teach_vo() -> void:
 	var stream: AudioStream = _VoStream.load_path(wav_path) if not wav_path.is_empty() else null
 	if stream != null and narrator != null and narrator.has_method("speak"):
 		narrator.speak(stream, "tunnel:teach")
-	elif not text.is_empty() and DisplayServer.tts_get_voices().size() > 0:
+	elif not text.is_empty() and DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH):
 		DisplayServer.tts_speak(text, "", 1.0, 1.0, 0.9)
 
 func _tunnel_teach_text() -> String:
