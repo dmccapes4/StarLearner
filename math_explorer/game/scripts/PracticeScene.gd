@@ -1,12 +1,11 @@
 class_name PracticeScene
 extends Control
-## Practice & repetition — endless procedurally generated equations for every
-## tab, made of counting cubes. One round:
-##   1. A generated problem appears as cubes + the equation with a "?".
-##   2. She taps one of three big answer buttons.
-##   3. Right → cubes flash gold, praise, streak star, next problem.
-##      Wrong → never just "no": the cubes re-count themselves slowly to SHOW
-##      the answer, the equation completes, then the next problem comes.
+## Practice & repetition — procedurally generated equations with counting cubes.
+## One round:
+##   1. Cubes + equation with "?"; three answer buttons.
+##   2. Right → gold flash + praise. Wrong → cubes re-count the answer slowly.
+##   3. A gold **Practice ▶** button appears under the cubes for the next
+##      problem — Back is the only way out of the practice tile.
 ##
 ## Numbers are unbounded (fresh every round), so dynamic narration uses the OS
 ## TTS fallback; the fixed praise/coaching lines are baked ElevenLabs clips
@@ -41,6 +40,7 @@ var _eq: Label
 var _streak_lbl: Label
 var _groups: Array = []      # CubeGroup nodes for this round
 var _buttons: Array = []     # 3 answer Buttons
+var _again: Button           # Practice ▶ under the cubes after each round
 var _built := false
 
 func start(op: String) -> void:
@@ -49,6 +49,7 @@ func start(op: String) -> void:
 	_streak = 0
 	_update_streak()
 	visible = true
+	_again.visible = false
 	_gen += 1
 	var gen := _gen
 	# Let the opener finish — otherwise the equation speech cuts it off.
@@ -59,6 +60,7 @@ func start(op: String) -> void:
 
 func _next_round() -> void:
 	_gen += 1
+	_again.visible = false
 	_deal_round()
 
 func _build() -> void:
@@ -95,12 +97,23 @@ func _build() -> void:
 		b.size = Vector2(180, 92)
 		b.focus_mode = Control.FOCUS_NONE
 		b.add_theme_font_size_override("font_size", 44)
-		b.position = Vector2(640 - 310 + i * 220 - 90 + 220, 0)  # placed in _layout_buttons
 		var idx := i
 		b.pressed.connect(func() -> void: _on_answer(idx))
 		add_child(b)
 		_buttons.append(b)
 	_layout_buttons()
+
+	_again = Button.new()
+	_again.text = "Practice  \u25B6"
+	_again.custom_minimum_size = Vector2(340, 72)
+	_again.size = Vector2(340, 72)
+	_again.position = Vector2(640 - 170, 420)
+	_again.focus_mode = Control.FOCUS_NONE
+	_again.add_theme_font_size_override("font_size", 30)
+	_again.visible = false
+	_style_practice_btn(_again)
+	_again.pressed.connect(_on_practice_again)
+	add_child(_again)
 
 func _layout_buttons() -> void:
 	var w := 180.0
@@ -114,6 +127,7 @@ func _layout_buttons() -> void:
 
 func _deal_round() -> void:
 	_busy = false
+	_again.visible = false
 	_clear_groups()
 	_p = MathProblemGen.generate(TEMPLATES[_op], -1)
 	# Practice division stays exact — remainders belong to the tutorial, where
@@ -220,9 +234,7 @@ func _celebrate() -> void:
 		(g as CubeGroup).set_all_state(CubeGroup.HL.DONE)
 	Narrator.speak(PRAISE[randi() % PRAISE.size()])
 	if not await _wait(gen, 1.8): return
-	# One problem per Practice tap — return to the card so she can tap
-	# Practice again (no Back → re-select tile needed).
-	finished.emit()
+	_show_practice_again()
 
 ## Wrong answer → the cubes SHOW the truth, slowly, with the count spoken.
 func _explain(gen: int) -> void:
@@ -282,7 +294,20 @@ func _explain(gen: int) -> void:
 	_eq.text = _equation_text(true)
 	Narrator.speak(_equation_speech(true))
 	if not await _wait(gen, 2.6): return
-	finished.emit()
+	_show_practice_again()
+
+## Hide the three answers; offer Practice ▶ under the cubes for another go.
+func _show_practice_again() -> void:
+	for b in _buttons:
+		(b as Button).visible = false
+	_again.visible = true
+	_busy = false
+
+func _on_practice_again() -> void:
+	if not visible or _again.visible == false:
+		return
+	_again.visible = false
+	_next_round()
 
 # ---- text --------------------------------------------------------------------
 
@@ -335,6 +360,21 @@ func _style_answer(b: Button, correct: bool) -> void:
 	b.add_theme_color_override("font_disabled_color", fg)
 	for state in ["normal", "hover", "focus", "pressed", "disabled"]:
 		b.add_theme_stylebox_override(state, sb)
+
+func _style_practice_btn(b: Button) -> void:
+	b.add_theme_color_override("font_color", Color(0.06, 0.06, 0.12))
+	b.add_theme_color_override("font_hover_color", Color(0.06, 0.06, 0.12))
+	b.add_theme_color_override("font_pressed_color", Color(0.06, 0.06, 0.12))
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = MathTheme.GOLD
+	sb.set_corner_radius_all(22)
+	sb.shadow_color = Color(0, 0, 0, 0.35)
+	sb.shadow_size = 6
+	var pressed := sb.duplicate() as StyleBoxFlat
+	pressed.bg_color = MathTheme.GOLD.darkened(0.12)
+	for state in ["normal", "hover", "focus"]:
+		b.add_theme_stylebox_override(state, sb)
+	b.add_theme_stylebox_override("pressed", pressed)
 
 ## Await a timer but bail out if a newer round (or exit) superseded us.
 func _wait(gen: int, secs: float) -> bool:

@@ -105,7 +105,9 @@ static func _ensure_voice() -> Node:
 		return null
 	_voice = _NarratorVoice.new()
 	_voice.name = "NarratorVoice"
-	(loop as SceneTree).root.add_child.call_deferred(_voice)
+	# Add immediately (not deferred) so the first speak in the launch intro
+	# can play — call_deferred left the player null for the opening line.
+	(loop as SceneTree).root.add_child(_voice)
 	return _voice
 
 ## ~2.6 words/sec spoken, with a floor and a little trailing pause.

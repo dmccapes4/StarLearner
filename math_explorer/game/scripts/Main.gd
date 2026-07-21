@@ -134,7 +134,7 @@ func _ready() -> void:
 	_practice.visible = false
 	_practice.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ui.add_child(_practice)
-	_practice.finished.connect(_on_activity_finished)
+	# Practice stays on-tile with its own Practice ▶ button; only Back exits.
 
 	_coins = CoinsScene.new()
 	_coins.visible = false
@@ -145,13 +145,10 @@ func _ready() -> void:
 	_build_back_button()
 	_build_menu()
 
-	# No tile selected on launch — the intro tour points at each one, then asks
-	# her to pick. Skipping the tour (seen) still starts with an empty home.
+	# No tile selected on launch — the intro tour always plays on entry, then
+	# asks her to pick. Defer a frame so TabBar/_ready and audio exist first.
 	_tabs.clear_selection()
-	if _was_seen("intro"):
-		pass
-	else:
-		_run_intro()
+	call_deferred("_begin_intro")
 
 func _build_header() -> void:
 	_header = Label.new()
@@ -318,6 +315,12 @@ static func intro_lines() -> Array:
 	out.append(VO_FIRST_TUTORIAL)
 	return out
 
+func _begin_intro() -> void:
+	if _intro_running:
+		return
+	await get_tree().process_frame
+	_run_intro()
+
 func _run_intro() -> void:
 	_intro_running = true
 	_intro_gen += 1
@@ -329,15 +332,16 @@ func _run_intro() -> void:
 			return
 		_set_intro_highlight(str(step["hl"]))
 		var d := Narrator.speak(str(step["say"]))
-		if not await _wait_intro(gen, maxf(1.4, d)):
+		# Baked clips can be longer than the old 1.4s floor; never cut early.
+		if not await _wait_intro(gen, maxf(2.0, d)):
 			return
 	_set_intro_highlight("")
 	_intro_running = false
-	_mark_seen("intro")
 
 func _set_intro_highlight(hl: String) -> void:
 	_tabs.set_tour_highlight(hl if hl != "menu" else "")
-	MathTabBar.style_tour_control(_menu_btn, hl == "menu", _style_secondary)
+	MathTabBar.style_tour_control(
+		_menu_btn, hl == "menu", Callable(self, "_style_secondary"))
 
 func _skip_intro() -> void:
 	if not _intro_running:
@@ -346,7 +350,6 @@ func _skip_intro() -> void:
 	Narrator.stop()
 	_set_intro_highlight("")
 	_intro_running = false
-	_mark_seen("intro")
 
 func _wait_intro(gen: int, secs: float) -> bool:
 	await get_tree().create_timer(secs).timeout

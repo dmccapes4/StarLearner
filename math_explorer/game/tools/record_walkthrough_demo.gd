@@ -55,19 +55,19 @@ func _run() -> void:
 	_main._show_card()
 	await _sec(0.8)
 
-	# 4) Practice: one correct (returns to card), then one wrong with coaching.
+	# 4) Practice: correct → Practice ▶ under cubes → wrong with coaching.
 	print("DEMO: practice")
 	_main._tabs.select("add")
 	await _sec(1.2)
 	_main._on_primary()
 	await _sec(5.0)              # "Let's practice!" then the equation
 	_press_practice_answer(true)
-	await _wait_signal_or(_main._practice.finished, 8.0)
-	await _sec(1.2)              # card with Practice is back
-	_main._on_primary()
-	await _sec(5.0)
+	await _sec(3.5)              # praise + Practice ▶ appears
+	_main._practice._on_practice_again()
+	await _sec(2.5)
 	_press_practice_answer(false)
-	await _wait_signal_or(_main._practice.finished, 20.0)
+	await _sec(16.0)             # coaching + Practice ▶ again
+	_main._show_card()
 	await _sec(1.0)
 
 	# 5) Chickens & eggs, animated walkthrough (its own tab now).
