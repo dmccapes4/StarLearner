@@ -5,3 +5,6 @@ secrets/*
 
 # Video pipeline cache (full YouTube sources) — clips in game/videos/ are kept.
 tools/build/
+
+# Intermediate mp4 cuts from the clip pipeline; the .ogv files are the finals.
+game/videos/*.mp4
