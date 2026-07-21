@@ -26,6 +26,8 @@ Thumbs.db
 
 # Godot Android export template (regenerate via editor; overlay forced in separately)
 ant_explorer/game/android/
+math_explorer/game/android/
+solar_system_explorer/game/android/
 
 # Build / caches
 **/tools/build/
@@ -56,3 +58,7 @@ ant_explorer/tools/antphone_tunnel/
 # Out of scope for the tracked repo (remote phone-update strategy)
 ant_explorer/docs/STRATEGY_ANT_PHONE_UPDATES.md
 **/export_credentials.cfg
+
+# Local capture noise (trip verification stills under trips/ are kept when useful)
+solar_system_explorer/game/docs/screenshots/debug/
+solar_system_explorer/game/docs/screenshots/probe/

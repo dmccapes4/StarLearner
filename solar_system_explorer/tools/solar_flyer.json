@@ -1,0 +1,12 @@
+{
+  "_comment": "Optional overlay — adb push to /sdcard/AntPhone/solar_flyer.json (or /data/local/tmp/). First existing path wins; no APK rebuild.",
+  "cruise_speed": 11.0,
+  "focus_dist": 26.0,
+  "min_dot": 0.55,
+  "mesh_in": 60.0,
+  "mesh_out": 170.0,
+  "hop_min_s": 12.0,
+  "hop_max_s": 40.0,
+  "distance_span": 340.0,
+  "compression_exp": 0.45
+}

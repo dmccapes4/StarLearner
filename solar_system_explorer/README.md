@@ -1,24 +1,19 @@
-# Solar System Explorer (preview)
+# Solar System Explorer
 
-**Game #2 in the [Star Learner](../README.md) catalog** — a deliberately tiny *preview* title whose
-job is to prove the console holds more than one subject. A calm, guided tour of the Sun and its
-planets for a young child. Marked **PREVIEW** on every screen.
+**Game #2 in the [Star Learner](../README.md) catalog** — a calm, guided tour of the Sun and its
+planets for a young child, with a full 3D flyer loop (plot → fly → orbit).
 
 - **Engine:** Godot **4.3** (Mobile renderer), landscape 1280×600, offline-first.
-- **Assets:** bodies + orbits drawn procedurally; narration is the OS text-to-speech voice. Four
-  agent-generated image assets in `game/images/` — the astronaut girl, the ship marker, the
-  keyed-window cockpit frame (`cockpit.png`), and the `coming_soon.png` teaser (both for the planned
-  3D flyer — see [`docs/STRATEGY_3D_FLYER.md`](docs/STRATEGY_3D_FLYER.md)). Each body has a **real
-  1–2 minute `.ogv` clip** in `game/videos/` (see below).
-- **Package (planned):** `com.dylan.antexplorer.solar` · tile `tile_solar` · label **planets**.
+- **Assets:** bodies + orbits drawn procedurally; narration is the same warm baked ElevenLabs
+  voice as Ant Explorer (`tools/gen_solar_vo.py` → `game/audio/vo/`). Image assets in
+  `game/images/` — astronaut girl, ship marker, keyed cockpit (`cockpit.png`), and procedural
+  planet skins under `images/planets/` (see [`docs/STRATEGY_3D_FLYER.md`](docs/STRATEGY_3D_FLYER.md)
+  and [`docs/STRATEGY_SOLAR_SYSTEM_NAVIGATION_EXPERIENCE.md`](docs/STRATEGY_SOLAR_SYSTEM_NAVIGATION_EXPERIENCE.md)).
+  Each body has a **real 1–2 minute `.ogv` clip** in `game/videos/` (see below).
+- **Package:** `com.dylan.antexplorer.solar` · tile `tile_solar` · label **planets**.
 
 ## The flow
 
-0. **Coming-soon teaser.** The very first thing on launch: a concept frame for the planned 3D flyer
-   — an over-the-shoulder view of the astronaut girl piloting a cockpit toward the planets (Sun to
-   the right, a streaking starfield, one planet approaching), with a spoken *"Coming soon! …fly your
-   very own spaceship…"* line tuned for a six-year-old. Fades to the title. **Tap to skip.** *(The
-   girl appears only in this teaser and the briefing, never in gameplay.)*
 1. **Title → START.** A star-field title screen with one big START button.
 2. **Orrery (top-down).** The Sun with the eight planets tracing flattened ellipses, plus the
    **asteroid belt** as a scattered ring between Mars and Jupiter. A voice walks the tour
@@ -26,17 +21,16 @@ planets for a young child. Marked **PREVIEW** on every screen.
    one it's on. A **Skip ▶** jumps ahead; **◀** returns home.
 3. **Astronaut briefing.** A cartoon astronaut girl (helmet under one arm, waving) in front of her
    spaceship, with a spoken *"you are an astronaut…"* briefing. The overlay fades out to reveal the
-   piloting strip underneath — so it reads as changing into the fly screen. **Tap to skip.**
-4. **Piloting strip.** A horizontal, drag-to-scroll row of the Sun, all eight planets, the
-   **asteroid belt** (a rock cluster in place between Mars and Jupiter), **and Pluto** (*"not a
-   planet anymore"*). A **spaceship marker** hovers above the selected body (starts over Earth).
-   Tapping another body **flies the ship there** with a speed-up / slow-down glide (nose turns to
-   face the way it's going), then opens that body's video on arrival.
-5. **Body video.** Plays the body's `res://videos/<id>.ogv` clip. Big **◀** Back; the clip
-   auto-closes when it finishes. If a clip is ever missing it falls back to a spoken **"video coming
-   soon"** facts card, so the app never dead-ends.
+   fly screen underneath. **Tap to skip.**
+4. **3D flyer (default).** The original **horizontal ScrollView** strip (now with rotating planet
+   skins) — swipe, tap a world, watch the ship glide over. Then a **top-down** board charts the
+   intercept course. Cockpit flight with skinned spheres, course console, callouts, and **orbit**
+   on arrival. **Learn more** (optional video) or **Chart a new course** back to the strip.
+   Design: [`docs/STRATEGY_3D_FLYER.md`](docs/STRATEGY_3D_FLYER.md).
+5. **Body video (optional).** From orbit, **Learn more** plays `res://videos/<id>.ogv`. Big **◀**
+   Back; the clip auto-closes when it finishes. Missing clips fall back to a spoken **"video coming
+   soon"** facts card. You can skip videos and keep cruising.
 
-![Coming-soon 3D flyer teaser](game/docs/screenshots/00_coming_soon.png)
 ![Title](game/docs/screenshots/01_title.png)
 ![Orrery tour with asteroid belt](game/docs/screenshots/02_orrery.png)
 ![Astronaut briefing](game/docs/screenshots/03_astronaut.png)
@@ -55,6 +49,19 @@ DISPLAY=:1 godot --path . -s res://tools/make_tile.gd              # regenerate 
 
 `tests/run_tests.gd` also force-loads every view script, so a compile error anywhere fails the run
 (headless can't render the scenes themselves).
+
+### 3D flyer scale knobs (phase 4)
+
+Defaults live in [`game/data/solar_flyer_config.tres`](game/data/solar_flyer_config.tres)
+(`cruise_speed`, `focus_dist`, LOD band, hop duration band). `ScaleTune` asserts the happy-medium
+contracts in tests. To tweak on the phone without rebuilding the APK, push a JSON overlay:
+
+```bash
+adb push tools/solar_flyer.json /sdcard/AntPhone/solar_flyer.json
+# also accepted: /data/local/tmp/solar_flyer.json  or  user://solar_flyer.json
+```
+
+The next hop reloads knobs (`PlotBoard.begin` / `FlyScene.begin_flight`).
 
 ## The 1–2 minute videos (ingested)
 
@@ -101,13 +108,17 @@ The device work mirrors Ant Explorer (see `../ant_explorer/docs/STRATEGY_ANT_PHO
 
 ## Status / honesty
 
-This is a **preview**, on purpose:
+Honesty notes:
 
-- Orrery narration is live OS TTS, not the warm baked ElevenLabs voice the ants use.
+- Narration is the same warm baked ElevenLabs voice the ants use (`tools/gen_solar_vo.py`
+  bakes every possible sentence — including dynamic trip/arrival lines — to
+  `game/audio/vo/`; OS TTS remains only as a fallback for unbaked text).
 - Sizes and orbits are **not to scale** — chosen to read for a six-year-old, not for accuracy.
+- The Sun is a hop destination, but arrival parks at a safe standoff — narration says you can't
+  land on a star.
 - The clips are third-party YouTube footage cut for the private family device; re-source from
   public-domain NASA before any wider distribution.
 
-What it *does* prove: a second, different-subject title boots into the same landscape shell, uses
+What it proves: a second, different-subject title boots into the same landscape shell, uses
 the same video mechanic (real cut-and-transcoded `.ogv` clips, Sun through Pluto plus the asteroid
 belt), and appears as its own tile on the console — the multi-game claim, made concrete.

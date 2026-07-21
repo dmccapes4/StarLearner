@@ -48,9 +48,11 @@ func _ready() -> void:
 	center.add_child(start)
 	box.add_child(center)
 
+const WELCOME := "Welcome to Solar System Explorer. Press start to begin the tour."
+
 func set_active(on: bool) -> void:
 	if on:
-		Narrator.speak("Welcome to Solar System Explorer. Press start to begin the tour.")
+		Narrator.speak(WELCOME)
 	else:
 		Narrator.stop()
 

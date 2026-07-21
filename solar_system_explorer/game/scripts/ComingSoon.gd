@@ -26,6 +26,14 @@ func begin() -> void:
 	_root.modulate = Color(1, 1, 1, 0)
 	var fade_in := create_tween()
 	fade_in.tween_property(_root, "modulate:a", 1.0, 0.5)
+	# The OS TTS engine isn't bound yet on the very first frame; wait out the
+	# Narrator warmup (plus a hair) so this opening line is actually spoken, not
+	# skipped — and so we never touch TTS before it's ready (that crashes).
+	var warm := float(Narrator.warmup_remaining_ms()) / 1000.0 + 0.2
+	if warm > 0.0:
+		await get_tree().create_timer(warm).timeout
+	if _done:
+		return
 	var dur := Narrator.speak(NARRATION)
 	await get_tree().create_timer(maxf(dur, 4.0)).timeout
 	_advance()

@@ -25,6 +25,7 @@ var _xs: Array = []
 var _radii: Array = []
 var _ids: Array = []
 var _selected: int = -1
+var _ship_id: String = "earth"
 var _flying: bool = false
 var _flight: Tween
 var _pressing: bool = false
@@ -71,7 +72,7 @@ func _ready() -> void:
 	_strip.add_child(_ship)
 
 	var header := Label.new()
-	header.text = "Swipe to look around  \u2192  tap a planet to fly there and explore"
+	header.text = "Swipe to look around  \u2192  tap a planet to plot a course and fly"
 	header.add_theme_font_size_override("font_size", 22)
 	header.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
 	header.set_anchors_preset(Control.PRESET_TOP_WIDE)
@@ -82,10 +83,15 @@ func _ready() -> void:
 
 	add_child(_make_home_button())
 
+func set_ship_at(id: String) -> void:
+	_ship_id = id if not id.is_empty() else "earth"
+
 ## Called when entering the piloting screen (after the astronaut briefing):
-## park the ship above Earth and centre the view on it.
+## park the ship above the current world and centre the view on it.
 func begin_exploration() -> void:
-	var start := _index_of("earth")
+	var start := _index_of(_ship_id)
+	if start < 0:
+		start = _index_of("earth")
 	if start < 0:
 		start = 0
 	_selected = start

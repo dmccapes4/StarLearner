@@ -7,6 +7,7 @@ signal tour_finished()
 signal go_home()
 
 const OrreryBodies := preload("res://scripts/OrreryBodies.gd")
+const CLOSING := "That is the whole family of planets. Next you can scroll across the Sun and every planet, and tap one to learn more."
 
 var _bodies: OrreryBodies
 var _caption: Label
@@ -69,8 +70,7 @@ func _run_tour(gen: int) -> void:
 		return
 	_bodies.set_highlight("")
 	_caption.text = "Now let's look at them up close…"
-	var closing := "That is the whole family of planets. Next you can scroll across the Sun and every planet, and tap one to learn more."
-	var d := Narrator.speak(closing)
+	var d := Narrator.speak(CLOSING)
 	await get_tree().create_timer(d).timeout
 	if gen == _tour_gen:
 		tour_finished.emit()

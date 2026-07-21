@@ -4,6 +4,8 @@ extends CanvasLayer
 ## a friendly "video coming soon" card with facts and spoken narration. One
 ## decoder at a time; big Back button for kid thumbs.
 
+signal closed()
+
 var _dim: ColorRect
 var _player: VideoStreamPlayer
 var _card: Control
@@ -11,6 +13,7 @@ var _card_title: Label
 var _card_facts: Label
 var _back: Button
 var _open: bool = false
+var _current_id: String = ""
 
 func _ready() -> void:
 	layer = 20
@@ -45,6 +48,7 @@ func play_body(id: String) -> void:
 	if body.is_empty():
 		return
 	_open = true
+	_current_id = id
 	visible = true
 
 	var path := "res://videos/%s.ogv" % id
@@ -59,6 +63,9 @@ func play_body(id: String) -> void:
 		_player.play()
 	else:
 		_show_card(body)
+
+func current_id() -> String:
+	return _current_id
 
 func _show_card(body: Dictionary) -> void:
 	_player.visible = false
@@ -84,6 +91,9 @@ func _close() -> void:
 	_player.visible = false
 	_card.visible = false
 	visible = false
+	var done_id := _current_id
+	closed.emit()
+	_current_id = done_id  # keep last id for the flyer to park at
 
 func _find(id: String) -> Dictionary:
 	for b in SolarData.bodies():

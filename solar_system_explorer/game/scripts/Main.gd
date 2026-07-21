@@ -1,29 +1,33 @@
 extends Node
 ## Solar System Explorer — preview flow controller.
 ##
-##   Coming-soon teaser ─▶ Title (START) ─▶ Orrery tour ─▶ Astronaut briefing
-##                                                           ─▶ Piloting strip
-##                                                              │ tap → fly → video
-##                                                              ▼
-##                                                          Video / "coming soon"
+##   Title ─▶ Orrery tour ─▶ Astronaut briefing
+##      ─▶ [3D flyer] ScrollView strip ─▶ top-down PlotBoard ─▶ FlyScene (orbit)
+##           ─▶ optional Video ─▶ ScrollView again
+##      ─▶ [legacy]   ScrollView strip ─▶ Video
 ##
-## Bodies + orbits are drawn in code; the astronaut girl, the ship marker, and
-## the coming-soon teaser frame are the only image assets (res://images/).
+## Flip USE_3D_FLYER to false for strip → video only (no 3D hop).
+
+const USE_3D_FLYER := true
 
 const Starfield := preload("res://scripts/Starfield.gd")
 const TitleView := preload("res://scripts/TitleView.gd")
 const OrreryView := preload("res://scripts/OrreryView.gd")
 const ScrollView := preload("res://scripts/ScrollView.gd")
+const PlotBoard := preload("res://scripts/PlotBoard.gd")
+const FlyScene := preload("res://scripts/FlyScene.gd")
 const VideoPanel := preload("res://scripts/VideoPanel.gd")
 const AstronautIntro := preload("res://scripts/AstronautIntro.gd")
-const ComingSoon := preload("res://scripts/ComingSoon.gd")
 
 var _title: TitleView
 var _orrery: OrreryView
 var _scroll: ScrollView
+var _board: PlotBoard
+var _fly: FlyScene
 var _video: VideoPanel
 var _astro: AstronautIntro
-var _coming: ComingSoon
+var _ship_at: String = "earth"
+var _last_route: Dictionary = {}
 
 func _ready() -> void:
 	var starfield := Starfield.new()
@@ -32,29 +36,34 @@ func _ready() -> void:
 	_title = TitleView.new()
 	_orrery = OrreryView.new()
 	_scroll = ScrollView.new()
+	_board = PlotBoard.new()
+	_fly = FlyScene.new()
 	_video = VideoPanel.new()
 	_astro = AstronautIntro.new()
-	_coming = ComingSoon.new()
 	add_child(_title)
 	add_child(_orrery)
 	add_child(_scroll)
+	add_child(_board)
+	add_child(_fly)
 	add_child(_video)
 	add_child(_astro)
-	add_child(_coming)
 
 	_title.start_pressed.connect(_on_start)
 	_orrery.tour_finished.connect(_begin_astronaut)
 	_orrery.go_home.connect(_show_title)
 	_scroll.go_home.connect(_show_title)
 	_scroll.body_selected.connect(_on_body_selected)
+	_board.go_home.connect(_show_title)
+	_board.course_committed.connect(_on_course_committed)
+	_fly.go_home.connect(_show_title)
+	_fly.arrived.connect(_on_flight_arrived)
+	_fly.learn_more.connect(_on_learn_more)
+	_fly.chart_course.connect(_on_chart_new_course)
+	_video.closed.connect(_on_video_closed)
 	_astro.finished.connect(_on_astro_finished)
-	_coming.finished.connect(_show_title)
 
-	_add_preview_badge()
-
-	# The 3D-flyer teaser is the very first thing on launch; it fades to the title.
 	_hide_all_views()
-	_coming.begin()
+	_set_view(_title)
 
 func _on_start() -> void:
 	_set_view(_orrery)
@@ -62,55 +71,81 @@ func _on_start() -> void:
 
 func _show_title() -> void:
 	_orrery.stop_tour()
+	_fly.set_active(false)
 	_set_view(_title)
 
-## Orrery tour done → activate the piloting strip behind an astronaut briefing
-## overlay, which fades away to reveal it (feels like changing to the fly screen).
 func _begin_astronaut() -> void:
-	_set_view(_scroll)
-	_scroll.begin_exploration()
+	_show_scroll()
 	_astro.begin()
 
 func _on_astro_finished() -> void:
 	pass
 
+func _show_scroll() -> void:
+	_fly.set_active(false)
+	_board.set_active(false)
+	_set_view(_scroll)
+	_scroll.set_ship_at(_ship_at)
+	_scroll.begin_exploration()
+
 func _on_body_selected(id: String) -> void:
-	_video.play_body(id)
+	if not USE_3D_FLYER:
+		_ship_at = id
+		_video.play_body(id)
+		return
+	# Re-tap the world you're already at → optional documentary (including the Sun).
+	if id == _ship_at:
+		_video.play_body(id)
+		return
+	_board.set_ship_at(_ship_at)
+	_set_view(_board)
+	_board.begin_plot(id)
+
+func _on_course_committed(dest_id: String, route: Dictionary, t0: float) -> void:
+	_last_route = route
+	_board.set_active(false)
+	_fly.set_active(true)
+	_fly.begin_flight(dest_id, route, t0)
+
+func _on_flight_arrived(dest_id: String) -> void:
+	_ship_at = dest_id
+	var body := SolarData.flyer_body_by_id(dest_id)
+	var place := str(body.get("name", dest_id)) if not body.is_empty() else dest_id
+	var travel_au: float = float(_last_route.get("travel_au", 0.0))
+	if travel_au < 0.05 and not body.is_empty():
+		travel_au = absf(float(body.get("a_au", 1.0)) - 1.0)
+	var is_star: bool = (not body.is_empty()) and bool(body.get("is_star", false))
+	Narrator.speak(OrbitMath.arrival_narration(place, travel_au, is_star))
+	_fly.show_arrival_ui()
+
+func _on_learn_more(dest_id: String) -> void:
+	_ship_at = dest_id
+	_video.play_body(dest_id)
+
+func _on_chart_new_course(dest_id: String) -> void:
+	_ship_at = dest_id
+	_show_scroll()
+
+func _on_video_closed() -> void:
+	if USE_3D_FLYER:
+		_fly.set_active(false)
+		_show_scroll()
+	# 2D strip stays underneath; nothing else to do.
 
 func _set_view(active: Control) -> void:
-	for v in [_title, _orrery, _scroll]:
+	var views: Array = [_title, _orrery, _scroll, _board]
+	for v in views:
 		var on: bool = (v == active)
 		v.visible = on
 		if v.has_method("set_active"):
 			v.set_active(on)
+	if active != _fly:
+		_fly.set_active(false)
 
-## Hide every stacked view without activating one (so no view narrates behind the
-## coming-soon teaser on launch).
 func _hide_all_views() -> void:
-	for v in [_title, _orrery, _scroll]:
+	for v in [_title, _orrery, _scroll, _board]:
 		v.visible = false
 		if v.has_method("set_active"):
 			v.set_active(false)
+	_fly.set_active(false)
 
-func _add_preview_badge() -> void:
-	var layer := CanvasLayer.new()
-	layer.layer = 30
-	add_child(layer)
-	var badge := Label.new()
-	badge.text = "PREVIEW"
-	badge.add_theme_font_size_override("font_size", 22)
-	badge.add_theme_color_override("font_color", Color(0.06, 0.05, 0.02))
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(1.0, 0.82, 0.28, 0.95)
-	sb.set_corner_radius_all(10)
-	sb.content_margin_left = 14.0
-	sb.content_margin_right = 14.0
-	sb.content_margin_top = 6.0
-	sb.content_margin_bottom = 6.0
-	badge.add_theme_stylebox_override("normal", sb)
-	badge.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	badge.position = Vector2(-140, 16)
-	badge.size = Vector2(124, 36)
-	badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	layer.add_child(badge)

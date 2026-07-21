@@ -324,18 +324,26 @@ current `scroll_layout()` / `tour_sequence()` tests — no 3D node needed to ver
 
 ## 11. Phasing
 
-1. **Math core (headless).** Extend `SolarData`; implement compression, `omega`, intercept solve,
-   Bézier→`Curve3D` sampling. Unit tests for intercept convergence and "course never hits the Sun."
-2. **Plotting board.** Upgrade the overhead to live orbits + animated course line + arrival ghost +
-   GO. (2D; reuses today's orrery rendering.)
-3. **3D flight, autopilot.** `FlyScene` with compressed radii, hero spheres, LOD dots, `Path3D`
-   follow with eased speed, Sun light + starfield. No cockpit yet — just the window on space.
-4. **Scale tuning pass.** Nail §3.4 knobs on-device: the bloom-on-arrival should feel great.
-5. **Cockpit asset + HUD.** *Generate* the cockpit frame (agent), key the window transparent, wire
-   the overlay + icon HUD, and frame the arrival bloom.
-6. **Wire the bookends.** Title/astronaut briefing in front; documentary clip on arrival; belt as a
-   particle field you fly *through*.
-7. **Polish / optional big-kid manual mode.**
+1. **Math core (headless).** ✅ `SolarData.flyer_bodies`, `OrbitMath`, `SolarFlyerConfig.tres`;
+   unit tests for intercept, Sun clearance, hop band, apparent-size monotonicity.
+2. **Plotting board.** ✅ `OrreryBodies` PLOT mode + `PlotBoard` choreography — live orbits,
+   charted course, arrival ghost, fast-forward *aim-ahead* lead, ship preview, ETA pips, GO
+   (auto-advances after a short beat).
+3. **3D flight, autopilot.** ✅ `FlyScene.gd` — cubic ease progress driver (BOOST-safe),
+   LOD hysteresis, destination look-blend + bloom, banded gas-giant shader, MultiMesh belt;
+   headless coverage in `_test_flight()` (path endpoints, clock, LOD, boost, belt seed).
+4. **Scale tuning pass.** ✅ Calibrated `solar_flyer_config.tres` (`cruise_speed=8`,
+   `focus_dist=22`, LOD band 30–48); `ScaleTune.evaluate` happy-medium tests; optional JSON
+   overlay at `/sdcard/AntPhone/solar_flyer.json` (see `tools/solar_flyer.json`).
+5. **Cockpit asset + HUD.** ✅ `CockpitHud` over keyed `cockpit.png` (Pillow verify composite);
+   icon HUD — planet thumb, emptying distance bar, heading arrow, arrival vignette; BOOST + home;
+   procedural fallback frame; headless `_test_cockpit_hud()`.
+6. **Wire the bookends.** ✅ `Main.gd` `USE_3D_FLYER` — title/orrery/astronaut → board → fly →
+   `VideoPanel` → board; 2D strip kept behind the flag.
+7. **UX cruise loop.** ✅ Original horizontal `ScrollView` (rotating skinned discs) → true top-down
+   course plot (duration scales with hop) → skinned spheres + approach bloom → cockpit course
+   console → enter orbit → arrival TTS (AU/miles) → optional Learn more / Chart new course.
+8. **Polish / optional big-kid manual mode.** ☐ next.
 
 Each phase is shippable-in-preview and independently testable; keep the 2D strip available behind a
 flag until the 3D loop clears the "calm + clear on-device" bar.

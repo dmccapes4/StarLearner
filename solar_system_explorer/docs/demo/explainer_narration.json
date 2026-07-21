@@ -1,0 +1,36 @@
+{
+  "title": "Solar System Explorer — explainer overview",
+  "notes": "Warm gift framing + navigation overview. Synced 1:1 with slides in tools/make_demo_videos.sh.",
+  "lines": [
+    {
+      "key": "01_gift",
+      "shot": "01_title.png",
+      "text": "This is Solar System Explorer — another world on Star Learner, made for a six-year-old who wants to fly among the planets."
+    },
+    {
+      "key": "02_tour",
+      "shot": "02_orrery.png",
+      "text": "It opens with a quiet tour of the solar system. Watch the planets circle the Sun, then pick up the controls yourself."
+    },
+    {
+      "key": "03_pick",
+      "shot": "04_scroll.png",
+      "text": "Swipe across the planets. Tap one to plot a course. The Sun is fair game too — we fly close, but we never land on a star."
+    },
+    {
+      "key": "04_plot",
+      "shot": "earth_to_jupiter_0_plot.png",
+      "text": "A top-down map draws the path. Worlds are moving, so the ship aims ahead of where the destination will be."
+    },
+    {
+      "key": "05_fly",
+      "shot": "earth_to_jupiter_1_fly_u040.png",
+      "text": "Then you fly it — cockpit view, a little course console over the wheel, and planets that grow as you arrive."
+    },
+    {
+      "key": "06_close",
+      "shot": "earth_to_jupiter_2_orbit.png",
+      "text": "Park in orbit, learn more with a short video, or chart a new course. Exploration is the loop. Wonder is the reward."
+    }
+  ]
+}
