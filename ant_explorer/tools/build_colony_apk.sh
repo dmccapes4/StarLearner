@@ -52,8 +52,8 @@ cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
   -Pexport_package_name=com.dylan.antexplorer.colony \
-  -Pexport_version_code=10 \
-  -Pexport_version_name=0.10 \
+  -Pexport_version_code=12 \
+  -Pexport_version_name=0.12 \
   -Pexport_enabled_abis=arm64-v8a \
   -Prelease_keystore_file="$KS" \
   -Prelease_keystore_alias=ants \

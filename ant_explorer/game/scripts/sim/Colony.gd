@@ -83,6 +83,7 @@ func spawn_phase2(parent: Node2D, scene: PackedScene, leaves: Array = []) -> voi
 	garden.setup(Config.data.garden_health)
 	garden.health_changed.connect(func(h: float) -> void: Events.garden_health_changed.emit(h))
 	homeostasis = Homeostasis.new()
+	homeostasis.enabled = Config.data.homeo_enabled
 	invaders = Invaders.new()
 
 	var next_id := 0
@@ -300,6 +301,20 @@ func _sync_node(a: AntState) -> void:
 	if ch:
 		a.node_id = ch.id
 
+## Per-tick idle drain: an idling worker in a caste the colony is short on comes
+## back to work faster (consumes Homeostasis.bias_* via idle_urgency).
+func _idle_drain(a: AntState) -> int:
+	if homeostasis == null or not homeostasis.enabled:
+		return 1
+	return 1 + homeostasis.idle_urgency(a.caste)
+
+## JH dose multiplier for NPC nurses — soldier surplus dampens it, deficit
+## boosts it (the caste-mix loop). Player dosing is deliberate and left as-is.
+func _npc_jh_scale() -> float:
+	if homeostasis == null or not homeostasis.enabled:
+		return 1.0
+	return homeostasis.jh_dose_scale()
+
 func _step_queen(a: AntState) -> void:
 	a.state = AntEnums.State.LAY_EGG
 
@@ -312,7 +327,12 @@ func _step_invader(a: AntState, speed: float) -> void:
 func _maybe_tunnel_transit(a: AntState) -> void:
 	if tunnel_transit == null or pathing == null:
 		return
-	if not a.path.is_empty() and tunnel_transit.is_committed():
+	# Never hijack an in-progress walk (manual tap or committed transit).
+	# Old logic only skipped when committed, so a tap near a mouth could still
+	# yank the ant backwards into a full tunnel crossing mid-path.
+	if not a.path.is_empty():
+		return
+	if tunnel_transit.is_committed():
 		return
 	var goal: Variant = tunnel_transit.try_trigger(a.cell)
 	if goal == null:
@@ -375,7 +395,7 @@ func _step_nurse(a: AntState, speed: float) -> void:
 		if a.path.is_empty() and a.intent != AntEnums.State.IDLE:
 			_finish_intent(a, a.is_player)
 		return
-	a.idle_ticks_left -= 1
+	a.idle_ticks_left -= _idle_drain(a)
 	if a.idle_ticks_left <= 0:
 		_nurse_pick_job(a)
 
@@ -394,7 +414,7 @@ func _step_forager(a: AntState, speed: float) -> void:
 		if a.path.is_empty() and a.intent != AntEnums.State.IDLE:
 			_finish_forager(a)
 		return
-	a.idle_ticks_left -= 1
+	a.idle_ticks_left -= _idle_drain(a)
 	if a.idle_ticks_left <= 0:
 		_forager_pick_job(a)
 
@@ -412,7 +432,7 @@ func _step_gardener(a: AntState, speed: float) -> void:
 		if a.path.is_empty() and a.intent != AntEnums.State.IDLE:
 			_finish_gardener(a)
 		return
-	a.idle_ticks_left -= 1
+	a.idle_ticks_left -= _idle_drain(a)
 	if a.idle_ticks_left <= 0:
 		_gardener_pick_job(a)
 
@@ -641,7 +661,7 @@ func _finish_intent(a: AntState, is_player_feed: bool) -> void:
 			var larva := get_ant(a.target_ant_id)
 			if larva != null and larva.alive and larva.caste == AntEnums.Caste.LARVA:
 				var n_amt: float = Config.data.player_feed_nutrition if is_player_feed else Config.data.feed_nutrition
-				var j_amt: float = Config.data.player_jh_step if is_player_feed else Config.data.jh_step * 0.35
+				var j_amt: float = Config.data.player_jh_step if is_player_feed else Config.data.jh_step * 0.35 * _npc_jh_scale()
 				brood.feed(larva, n_amt, j_amt)
 			a.carry = AntEnums.Carry.NONE
 			a.action_ticks_left = Config.data.nurse_action_pause
@@ -649,7 +669,8 @@ func _finish_intent(a: AntState, is_player_feed: bool) -> void:
 		AntEnums.State.DOSE_JH:
 			var larva2 := get_ant(a.target_ant_id)
 			if larva2 != null and larva2.alive and larva2.caste == AntEnums.Caste.LARVA:
-				brood.feed(larva2, 0.15, Config.data.jh_step)
+				# DOSE_JH is only ever picked by NPC nurses; scale by colony pressure.
+				brood.feed(larva2, 0.15, Config.data.jh_step * _npc_jh_scale())
 			a.action_ticks_left = Config.data.nurse_action_pause + 2
 			a.state = AntEnums.State.DOSE_JH
 		AntEnums.State.MOVE_LARVA:

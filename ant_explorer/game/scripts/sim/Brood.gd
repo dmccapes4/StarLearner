@@ -86,10 +86,19 @@ func _pupate(larva: AntState) -> void:
 
 func decide_caste(larva: AntState) -> int:
 	## High nutrition + JH → soldier; mid → forager; modest → nurse/minor.
+	## Thresholds are bent by colony pressure (Homeostasis): a soldier surplus
+	## raises the soldier bar so fewer new larvae become soldiers, and vice versa
+	## — this is the caste-mix feedback loop that self-corrects the colony.
 	var score: float = larva.nutrition + larva.jh_dose * 2.0
-	if score >= Config.data.caste_destiny_high:
+	var high: float = Config.data.caste_destiny_high
+	var mid: float = Config.data.caste_destiny_mid
+	if colony != null and colony.homeostasis != null and colony.homeostasis.enabled:
+		var th: Dictionary = colony.homeostasis.caste_thresholds()
+		high = th["high"]
+		mid = th["mid"]
+	if score >= high:
 		return AntEnums.Caste.SOLDIER
-	if score >= Config.data.caste_destiny_mid:
+	if score >= mid:
 		return AntEnums.Caste.FORAGER
 	return AntEnums.Caste.NURSE
 

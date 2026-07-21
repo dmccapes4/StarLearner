@@ -47,3 +47,6 @@ target_soldiers = 14
 target_foragers = 32
 target_minors = 28
 target_brood = 20
+homeo_enabled = true
+homeo_caste_bias_strength = 5.0
+homeo_jh_bias_strength = 0.5

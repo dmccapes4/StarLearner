@@ -56,3 +56,10 @@ extends Resource
 @export var target_foragers: int = 32
 @export var target_minors: int = 28
 @export var target_brood: int = 20
+
+# Homeostasis feedback — the closed-loop colony controller (shipped ON).
+# Set homeo_enabled = false (or both strengths to 0) to revert to fixed-ratio
+# destiny thresholds. See scripts/sim/Homeostasis.gd and REPORT_SIMULATION §4a.
+@export var homeo_enabled: bool = true  ## kill-switch: false → old fixed-threshold colony
+@export var homeo_caste_bias_strength: float = 5.0  ## score-units the pressure can shift caste thresholds
+@export var homeo_jh_bias_strength: float = 0.5     ## ±fraction the pressure scales JH dosing

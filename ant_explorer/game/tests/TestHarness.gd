@@ -88,6 +88,7 @@ static func _spawn_phase1_headless(colony: Colony) -> void:
 	for i in colony.brood.target_larvae():
 		colony.brood.spawn_larva(colony.brood.nest_spot(colony.rng))
 	colony.homeostasis = Homeostasis.new()
+	colony.homeostasis.enabled = Config.data.homeo_enabled
 	colony.invaders = Invaders.new()
 	colony.invaders.setup(colony)
 	colony.invaders.cooldown = 99999  ## keep idle in Phase-1-style tests
@@ -99,6 +100,7 @@ static func _spawn_phase2_headless(colony: Colony) -> void:
 	colony.garden = Garden.new()
 	colony.garden.setup(0.75)
 	colony.homeostasis = Homeostasis.new()
+	colony.homeostasis.enabled = Config.data.homeo_enabled
 	var next_id := 0
 	var entrance := colony.graph.get_chamber_by_name("entrance")
 	_activate(colony, colony.ants[next_id], next_id, true, AntEnums.Caste.PLAYER, entrance.center if entrance else colony.nest_center)

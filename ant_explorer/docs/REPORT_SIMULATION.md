@@ -15,7 +15,7 @@
 | **Orchestrator** | `scripts/sim/Colony.gd` | Agent pool, spawn, per-tick caste FSMs, player intents |
 | **Larval space** | `scripts/sim/Brood.gd` | Eggs → larvae → pupae → eclosion + caste destiny |
 | **Food economy** | `scripts/sim/Garden.gd` | Leaf deposits, tend, waste, health decay |
-| **Colony pressure** | `scripts/sim/Homeostasis.gd` | Demand signals (food / care / defense / waste) |
+| **Colony pressure** | `scripts/sim/Homeostasis.gd` | Census → demand + caste pressure → bends caste destiny, JH dosing, task urgency (§4a) |
 | **Defense vignettes** | `scripts/sim/Invaders.gd` | Spawn → soldiers swarm → shake → flee (no deaths) |
 | **Agent record** | `scripts/sim/AntState.gd` | Pooled fields: path, carry, nutrition, JH, etc. |
 | **Enums** | `scripts/sim/AntEnums.gd` | Caste, Role, Carry, State |
@@ -85,6 +85,10 @@ It lives in **`scripts/sim/Brood.gd`** (file header: *“Larval-space engine”*
    - high → **soldier**
    - mid → **forager**
    - low → **nurse**
+   The two score thresholds are **not fixed** — `Homeostasis` shifts them by the
+   colony's current caste pressure (see §4a). A soldier surplus raises the soldier
+   bar so fewer new larvae become soldiers; a deficit lowers it. This is the
+   caste-mix feedback loop.
 6. **Pupa timer** — `pupa_ticks` (~30 ticks ≈ 6 s at 5 Hz), then **eclose** into the destined adult and walk toward a nest-edge job spot.
 7. **Move larva** — nurses can pick up and reposition larvae inside the nest cluster.
 
@@ -92,10 +96,52 @@ It lives in **`scripts/sim/Brood.gd`** (file header: *“Larval-space engine”*
 
 - No deep “substrate metaphor” UI beyond nursery play.
 - No true pheromone diffusion field — role trails are mostly **authored markers** (e.g. `NurseTrail.gd`); full trail chemistry is aspirational in the strategy docs.
-- `Homeostasis` computes care/food/defense demand each tick, but caste pick-jobs are only lightly biased by it today (signals exist; not a full market of task reassignment).
 - Documentary **stars** are placed; playback pipeline is separate from brood math.
 
 So: **yes — larval space dynamics are in the running sim**, as brood nutrition / JH / pupation / eclosion. That is the intentional emotional core from `IMPLEMENTATION_PLAN_ANT_EXPLORER.md` Phase 1.
+
+---
+
+## 4a. Homeostasis — the feedback loop (now wired)
+
+`scripts/sim/Homeostasis.gd` runs first thing every tick (`Colony.on_sim_tick`). It
+takes a **census** of the colony and turns shortages/surpluses into signals that
+actually change behaviour — closing the loop the whole design rests on: *the
+shortage feeds back through delivery.* (Earlier this organ sensed demand and threw
+it away; it is now connected — see `tests/test_homeostasis.gd`.)
+
+Each tick it computes:
+
+- **Scalar demands (0..1):** `food` (from garden health), `care` (brood per nurse),
+  `defense` (active invaders), `waste` (uncleared garden waste).
+- **Per-caste pressure (−1 surplus … +1 deficit):** live counts vs. the
+  `target_soldiers / target_foragers / target_minors` config targets.
+
+Those signals are consumed in three places:
+
+1. **Caste destiny** — `Brood.decide_caste` reads `Homeostasis.caste_thresholds()`.
+   Soldier pressure bends the soldier bar (surplus → higher → fewer soldiers);
+   forager pressure bends the forager bar. *(caste-mix loop)*
+2. **JH dosing** — NPC nurses scale their juvenile-hormone dose by
+   `jh_dose_scale()`; a soldier surplus dampens JH (JH pushes larvae toward
+   soldier), a deficit boosts it. Player dosing stays deliberate/unscaled.
+3. **Task urgency** — idling foragers/nurses/gardeners drain their idle timer
+   faster when their caste (or its resource) is in demand
+   (`idle_urgency` via `bias_forager()` / `bias_nurse()`), so a shortage visibly
+   pulls that caste back to work.
+
+**Shipped ON.** The gift runs the closed-loop controller (`homeo_enabled = true`
+in `data/config.tres`). Tunables: `homeo_caste_bias_strength` (how far pressure
+can move the caste thresholds) and `homeo_jh_bias_strength` (± fraction on JH).
+
+**Kill-switch:** set `homeo_enabled = false` (or both strengths to 0) to fall back
+to the old fixed-threshold colony instantly — same path the pre-homeostasis suite
+already greened. The flag is re-read every tick from config.
+
+**Soak:** `tests/test_homeostasis_soak.gd` runs one simulated hour with the loop
+armed and asserts bounded self-regulation (no runaway caste, no long extinction
+streak, garden stays alive). Correct-sign unit tests alone are not enough for a
+device you can’t easily patch mid-birthday; the soak is the stability check.
 
 ---
 
@@ -110,6 +156,9 @@ So: **yes — larval space dynamics are in the running sim**, as brood nutrition
 | `larva_nutrition_stage` | 6, 12, 18 | Stage / pupate thresholds |
 | `pupa_ticks` | 30 | Time as pupa |
 | `caste_destiny_high` / `mid` | 22 / 19 | Soldier vs forager vs nurse cutoffs |
+| `homeo_enabled` | **true** | Closed-loop controller (kill-switch → false) |
+| `homeo_caste_bias_strength` | 5.0 | How far pressure moves destiny bars |
+| `homeo_jh_bias_strength` | 0.5 | ± JH dose scale from pressure |
 | `garden_health` | 0.75 | Starting fungus health |
 | `egg_interval` | 50 | Ticks between egg opportunities |
 
