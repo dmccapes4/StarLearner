@@ -8,8 +8,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Outline;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,6 +20,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -190,12 +193,15 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
     }
 
-    // Tile sizing (dp). Preview tiles are slightly smaller than the main game(s).
-    private static final int MAIN_BOX_DP = 180;
-    private static final int MAIN_IMG_DP = 168;
-    private static final int PREVIEW_BOX_DP = 150;
-    private static final int PREVIEW_IMG_DP = 136;
+    // All catalog tiles share one size (dp). Silver rounded frame on the art.
+    private static final int TILE_BOX_DP = 180;
+    private static final int TILE_IMG_DP = 168;
     private static final int TILE_MARGIN_DP = 12;
+    private static final int TILE_CORNER_DP = 24;
+    private static final int TILE_BORDER_DP = 7;
+    private static final int SILVER = 0xFFE8ECF2;
+    // Match the silver plate so clip/AA hairlines don't flash a dark ring.
+    private static final int FRAME_FILL = 0xFFE8ECF2;
 
     private void rebuildTiles() {
         tileRow.removeAllViews();
@@ -203,33 +209,14 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         if (tiles.isEmpty()) {
             tiles.add(Tile.builtinAnts());
         }
-
-        // Preview tiles sit to the LEFT (smaller); the finished game(s) stay
-        // centered on screen. A right-side spacer equal to the previews' width
-        // balances the row so the main tile lands dead-center.
-        List<Tile> previews = new ArrayList<>();
-        List<Tile> mains = new ArrayList<>();
         for (Tile t : tiles) {
-            if (t.preview) previews.add(t); else mains.add(t);
-        }
-
-        int previewFootprintPx = 0;
-        for (Tile t : previews) {
             tileRow.addView(makeTileView(t));
-            previewFootprintPx += dp(PREVIEW_BOX_DP) + dp(TILE_MARGIN_DP) * 2;
-        }
-        for (Tile t : mains) {
-            tileRow.addView(makeTileView(t));
-        }
-        if (previewFootprintPx > 0 && !mains.isEmpty()) {
-            View spacer = new View(this);
-            tileRow.addView(spacer, new LinearLayout.LayoutParams(previewFootprintPx, 1));
         }
     }
 
     private View makeTileView(final Tile t) {
-        int boxDp = t.preview ? PREVIEW_BOX_DP : MAIN_BOX_DP;
-        int imgDp = t.preview ? PREVIEW_IMG_DP : MAIN_IMG_DP;
+        int boxDp = TILE_BOX_DP;
+        int imgDp = TILE_IMG_DP;
 
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
@@ -239,8 +226,26 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         bp.gravity = Gravity.CENTER_VERTICAL;
         box.setLayoutParams(bp);
 
-        // Image (with an optional PREVIEW badge floated on top) inside a frame.
+        // Layered frame: full silver outer plate + inset dark fill. A GradientDrawable
+        // stroke is centered on the edge and gets half-clipped by the view bounds;
+        // the inset layer keeps the entire silver ring visible.
         FrameLayout imgWrap = new FrameLayout(this);
+        final int borderPx = dp(TILE_BORDER_DP);
+        final float outerR = dp(TILE_CORNER_DP);
+        final float innerR = Math.max(0f, outerR - borderPx);
+        GradientDrawable silver = new GradientDrawable();
+        silver.setShape(GradientDrawable.RECTANGLE);
+        silver.setCornerRadius(outerR);
+        silver.setColor(SILVER);
+        GradientDrawable fill = new GradientDrawable();
+        fill.setShape(GradientDrawable.RECTANGLE);
+        fill.setCornerRadius(innerR);
+        fill.setColor(FRAME_FILL);
+        LayerDrawable frame = new LayerDrawable(new android.graphics.drawable.Drawable[]{silver, fill});
+        frame.setLayerInset(1, borderPx, borderPx, borderPx, borderPx);
+        imgWrap.setBackground(frame);
+        imgWrap.setPadding(borderPx, borderPx, borderPx, borderPx);
+        imgWrap.setClipToOutline(false);
         box.addView(imgWrap, new LinearLayout.LayoutParams(dp(imgDp), dp(imgDp)));
 
         ImageView img = new ImageView(this);
@@ -250,32 +255,18 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         } else {
             img.setImageResource(R.drawable.tile_ants);
         }
-        img.setScaleType(ImageView.ScaleType.FIT_CENTER);
-        img.setAdjustViewBounds(true);
+        img.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        img.setAdjustViewBounds(false);
+        img.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), innerR);
+            }
+        });
+        img.setClipToOutline(true);
         imgWrap.addView(img, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
-
-        if (t.preview) {
-            TextView badge = new TextView(this);
-            badge.setText("PREVIEW");
-            badge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
-            badge.setTextColor(0xFF1B120A);
-            badge.setTypeface(Typeface.DEFAULT_BOLD);
-            badge.setAllCaps(true);
-            badge.setPadding(dp(8), dp(3), dp(8), dp(3));
-            GradientDrawable badgeBg = new GradientDrawable();
-            badgeBg.setColor(0xFFFFD24A);
-            badgeBg.setCornerRadius(dp(8));
-            badgeBg.setStroke(dp(1), 0xCCFFFFFF);
-            badge.setBackground(badgeBg);
-            FrameLayout.LayoutParams badgeLp = new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.WRAP_CONTENT,
-                    FrameLayout.LayoutParams.WRAP_CONTENT,
-                    Gravity.TOP | Gravity.CENTER_HORIZONTAL);
-            badgeLp.topMargin = dp(6);
-            imgWrap.addView(badge, badgeLp);
-        }
 
         FrameLayout under = new FrameLayout(this);
         LinearLayout.LayoutParams up = new LinearLayout.LayoutParams(dp(imgDp), ViewGroup.LayoutParams.WRAP_CONTENT);

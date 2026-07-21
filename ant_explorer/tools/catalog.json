@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T02:30:00Z",
+  "updated_at": "2026-07-21T18:40:00Z",
   "apps": [
     {
       "id": "colony",
@@ -13,13 +13,12 @@
     },
     {
       "id": "solar",
-      "label": "preview",
+      "label": "planets",
       "package": "com.dylan.antexplorer.solar",
       "activity": "com.godot.game.GodotApp",
       "tile": "tile_solar",
-      "preview": true,
       "enter_name": "Solar System Explorer",
-      "enter_line": "Entering a preview of Solar System Explorer"
+      "enter_line": "You are entering Solar System Explorer"
     }
   ]
 }
