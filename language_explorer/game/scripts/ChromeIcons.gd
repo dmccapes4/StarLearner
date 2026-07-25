@@ -1,15 +1,20 @@
 class_name ChromeIcons
 extends RefCounted
-## Procedural chrome icons so pre-readers tap pictures, not words.
-## Lesson content (alphabet letters, sentence words) stays as glyphs elsewhere.
+## Chrome icons for pre-readers. Prefer painted PNGs under res://images/ui/;
+## fall back to procedural draw if a file is missing.
 
 const SIZE := 128
+const UI_DIR := "res://images/ui"
 
 static var _cache: Dictionary = {}
 
 static func texture(id: String) -> Texture2D:
 	if _cache.has(id):
 		return _cache[id]
+	var from_disk := _load_png(id)
+	if from_disk != null:
+		_cache[id] = from_disk
+		return from_disk
 	var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	match id:
@@ -45,21 +50,32 @@ static func texture(id: String) -> Texture2D:
 			_draw_lang(img, "Aa")
 		"spanish":
 			_draw_lang(img, "Ñ")
-		"spell_demo":
+		"spell_demo", "apple_en", "apple_es":
 			_draw_apple_badge(img)
 		"credits":
 			_draw_star(img)
 		"hear":
 			_draw_note(img)
-		"apple_en":
-			_draw_apple_flag(img, Color(0.30, 0.55, 0.95))
-		"apple_es":
-			_draw_apple_flag(img, Color(0.90, 0.30, 0.28))
 		_:
 			_fill_round_rect(img, Rect2(16, 16, 96, 96), 18, Color(0.45, 0.55, 0.80))
 	var tex := ImageTexture.create_from_image(img)
 	_cache[id] = tex
 	return tex
+
+static func _load_png(id: String) -> Texture2D:
+	var path := "%s/%s.png" % [UI_DIR, id]
+	if not ResourceLoader.exists(path) and not FileAccess.file_exists(path):
+		return null
+	# Prefer imported Texture2D when the editor/export has scanned the PNG.
+	if ResourceLoader.exists(path):
+		var res: Resource = load(path)
+		if res is Texture2D:
+			return res as Texture2D
+	var abs_path := ProjectSettings.globalize_path(path)
+	var img := Image.new()
+	if img.load(abs_path) != OK:
+		return null
+	return ImageTexture.create_from_image(img)
 
 static func apply_button(b: Button, id: String, icon_max: int = 72) -> void:
 	b.text = ""

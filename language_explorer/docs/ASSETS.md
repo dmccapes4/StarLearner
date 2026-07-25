@@ -6,9 +6,11 @@ Provenance and packing notes for art, books, video, and VO.
 
 | Need | Source | License |
 |------|--------|---------|
-| Buttons, frames, icons | Kenney UI Pack | CC0 |
-| Read / Write tile icons | Agent-generated flat icons or Kenney | CC0 / original |
+| Mode tile icons (read/write/sentences/books/images/narration/read_slowly) | Agent-generated flat icons in `game/images/ui/` | original |
+| Alphabet / sketch / chrome (back, next, menu, …) | Agent-painted PNGs in `game/images/ui/` (letter-free) | original |
 | Theme colors | Fork of Math Explorer `MathTheme` | original |
+
+`ChromeIcons.gd` loads `res://images/ui/<id>.png` first, then falls back to procedural draw.
 
 ## Sprites & word images
 

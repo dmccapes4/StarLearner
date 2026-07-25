@@ -1,0 +1,27 @@
+Animal sound credits (Garden Explorer)
+
+chicken.ogg
+  Source: "Chicken Sound Effect" by IMadeIt — OpenGameArt
+  https://opengameart.org/content/chicken-sound-effect
+  License: CC-BY 3.0
+
+cow.ogg
+  Source: BigSoundBank recording #0287 (cow)
+  https://bigsoundbank.com/
+  License: CC0
+
+pig.ogg
+  Source: "Pig SFX Pack" (pig_idle) by IMadeIt — OpenGameArt
+  https://opengameart.org/content/pig-sfx-pack
+  License: CC0 / as stated on page
+
+dog.ogg
+  Source: "Dog barking mono" — OpenGameArt
+  https://opengameart.org/content/dog-barking-mono
+  License: as stated on page (CC-BY / see asset page)
+
+rabbit.ogg
+  Short pitched clip derived from a CC0 pig idle sample (BigSoundBank / OGA pack)
+  for a soft nibble-like cue.
+
+Trimmed / loudness-normalized for short in-game playback.

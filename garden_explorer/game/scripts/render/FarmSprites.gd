@@ -41,7 +41,11 @@ var _fence_tex: Texture2D
 var _chicken_sheets: Dictionary = {}
 var _barn_tex: Texture2D
 var _coop_tex: Texture2D
+var _tools_tex: Texture2D
+var _door_tex: Texture2D
+var _cow_tex: Texture2D
 var _crop_sheets: Dictionary = {} ## sheet_name -> Texture2D
+var _action_icon_cache: Dictionary = {}
 
 func set_seed_db(db: SeedDB) -> void:
 	seed_db = db
@@ -53,6 +57,9 @@ func bootstrap() -> void:
 	_fence_tex = _load(SPROUT_PACK + "/Tilesets/Building parts/Fences.png")
 	_barn_tex = _load(SPROUT_PACK + "/Tilesets/Building parts/Animal Structures/Barn structures.png")
 	_coop_tex = _load(SPROUT_PACK + "/Tilesets/Building parts/Animal Structures/Chikcen_Houses.png")
+	_tools_tex = _load(SPROUT_PACK + "/Characters/Tools.png")
+	_door_tex = _load(SPROUT_PACK + "/Tilesets/Building parts/door animation sprites.png")
+	_cow_tex = _load(SPROUT_PACK + "/Animals/Cow/Free Cow Sprites.png")
 	for color in ["default", "brown", "red", "blue", "green"]:
 		_chicken_sheets[color] = _load(SPROUT_PACK + "/Animals/Chicken/chicken %s.png" % color)
 	_preload_mana_crops()
@@ -133,6 +140,73 @@ func chicken_coop_texture() -> Texture2D:
 	if _coop_tex == null:
 		return null
 	return _atlas(_coop_tex, Rect2(64 * 3, 0, 64, 80))
+
+func cow_texture() -> Texture2D:
+	var packed := _load("res://assets/animals/cow_idle.png")
+	if packed:
+		return packed
+	if _cow_tex == null:
+		return null
+	return _atlas(_cow_tex, Rect2(0, 0, 32, 32))
+
+func pig_texture() -> Texture2D:
+	return _load("res://assets/animals/pig_idle.png")
+
+func rabbit_texture() -> Texture2D:
+	return _load("res://assets/animals/rabbit_idle.png")
+
+func dog_texture() -> Texture2D:
+	return _load("res://assets/animals/dog_idle.png")
+
+func dog_walk_sheet() -> Texture2D:
+	return _load("res://assets/animals/dog_walk.png")
+
+func shed_texture() -> Texture2D:
+	return _load("res://assets/buildings/shed.png")
+
+func door_texture() -> Texture2D:
+	if _door_tex == null:
+		return null
+	return _atlas(_door_tex, Rect2(0, 0, 48, 32))
+
+func watering_can_icon() -> Texture2D:
+	var ui := _load("res://assets/ui/icon_water.png")
+	if ui:
+		return ui
+	if _tools_tex == null:
+		return null
+	return _atlas(_tools_tex, Rect2(0, 0, 16, 16))
+
+func action_icon(kind: String, plant_id: String = "") -> Texture2D:
+	## Big readable icons for interaction tiles.
+	var key := "%s:%s" % [kind, plant_id]
+	if _action_icon_cache.has(key):
+		return _action_icon_cache[key]
+	var tex: Texture2D = null
+	match kind:
+		"plant":
+			tex = seed_icon(plant_id) if not plant_id.is_empty() else null
+		"harvest":
+			## Prefer plant produce; fall back to basket glyph.
+			tex = harvest_icon(plant_id) if not plant_id.is_empty() else null
+			if tex == null:
+				tex = _load("res://assets/ui/icon_harvest.png")
+		"water":
+			tex = watering_can_icon()
+		"uproot":
+			tex = _load("res://assets/ui/icon_uproot.png")
+			if tex == null and _tools_tex:
+				tex = _atlas(_tools_tex, Rect2(0, 64, 16, 16))
+		"open_shed":
+			tex = door_texture()
+			if tex == null:
+				tex = shed_texture()
+		"media":
+			tex = harvest_icon(plant_id) if not plant_id.is_empty() else seed_icon(plant_id)
+		_:
+			tex = null
+	_action_icon_cache[key] = tex
+	return tex
 
 func character_walk_sheet() -> Texture2D:
 	## Animated gardener girl (Mana Seed farmer base, palette-matched):

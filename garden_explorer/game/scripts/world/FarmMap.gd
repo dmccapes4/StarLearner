@@ -26,8 +26,10 @@ var bed_halves: Dictionary = {} ## id -> Vector2
 var slot_positions: Dictionary = {} ## bed_id -> Array[Vector2]
 var animal_positions: Dictionary = {} ## id -> Vector2
 var shed_center: Vector2 = Vector2.ZERO
+var shed_door_world: Vector2 = Vector2.ZERO ## Walk-to point just outside the door (faces garden).
 var fence_center: Vector2 = Vector2.ZERO
 var spawn_world: Vector2 = Vector2.ZERO
+var dog_spawn_world: Vector2 = Vector2.ZERO
 var walk_bounds: Rect2 = Rect2()
 var _built: bool = false
 var _astar: AStar2D = AStar2D.new()
@@ -60,6 +62,13 @@ func build_from_file(path: String = MAP_PATH) -> void:
 	_rebuild_nav()
 	var spawn: Dictionary = data.get("player_spawn_tile", {"x": 2, "y": 4})
 	spawn_world = nearest_walkable(IsoUtil.tile_to_world(Vector2(float(spawn.x), float(spawn.y))))
+	if shed_door_world != Vector2.ZERO:
+		shed_door_world = nearest_walkable(shed_door_world)
+	else:
+		shed_door_world = nearest_walkable(shed_center + Vector2(36, 20))
+	if dog_spawn_world != Vector2.ZERO:
+		dog_spawn_world = nearest_walkable(dog_spawn_world)
+		animal_positions["dog"] = dog_spawn_world
 	_built = true
 
 func bed_ids() -> PackedStringArray:
@@ -309,51 +318,81 @@ func _draw_fence_loop(prefix: String, corners: Array, posts_per_edge: int) -> vo
 func _build_shed() -> void:
 	var shed: Dictionary = data.get("shed", {})
 	var tile := _vec2(shed.get("tile", {"x": -7, "y": 2}))
-	var half := _vec2(shed.get("half_tiles", {"x": 2.2, "y": 2.0}))
+	var half := _vec2(shed.get("half_tiles", {"x": 2.0, "y": 1.7}))
 	var base := IsoUtil.diamond_polygon(tile, half)
 	shed_poly = base
 	shed_center = IsoUtil.tile_to_world(tile)
 	var z := IsoUtil.depth_from_y(shed_center.y)
 
+	## Door faces the garden (toward positive tile-x / beds). Snapped after nav build.
+	var door_tile := tile + Vector2(half.x * 0.95, half.y * 0.15)
+	shed_door_world = IsoUtil.tile_to_world(door_tile) + Vector2(28, 18)
+
 	## Ground pad under shed
-	_add_poly("ShedPad", base, Color(0.42, 0.32, 0.20, 1.0), z - 1)
+	_add_poly("ShedPad", IsoUtil.diamond_polygon(tile, half * 1.08),
+		Color(0.40, 0.30, 0.18, 1.0), z - 1)
 
-	## Extruded walls (fake-3D)
+	## Extruded wood walls
 	var faces: Array = IsoUtil.extrusion_side_faces(base, SHED_WALL_H)
-	_add_poly("ShedWallW", faces[0], Color(0.58, 0.38, 0.22, 1.0), z + 1)
-	_add_poly("ShedWallE", faces[1], Color(0.48, 0.30, 0.16, 1.0), z + 2)
+	_add_poly("ShedWallW", faces[0], Color(0.62, 0.42, 0.24, 1.0), z + 1)
+	_add_poly("ShedWallE", faces[1], Color(0.50, 0.32, 0.16, 1.0), z + 2)
 
-	## Wall top rim (eave line)
 	var wall_top := IsoUtil.raise_poly(base, SHED_WALL_H)
-	_add_poly("ShedEave", wall_top, Color(0.50, 0.32, 0.18, 1.0), z + 3)
+	_add_poly("ShedEave", wall_top, Color(0.52, 0.34, 0.18, 1.0), z + 3)
 
-	## Door on near face
-	var door_c: Vector2 = base[2].lerp((base[1] + base[3]) * 0.5, 0.35)
-	var door := Polygon2D.new()
-	door.name = "ShedDoor"
-	door.z_index = z + 4
-	door.color = Color(0.28, 0.16, 0.08, 1.0)
-	door.polygon = PackedVector2Array([
-		door_c + Vector2(-14, -6),
-		door_c + Vector2(14, -6),
-		door_c + Vector2(12, -SHED_WALL_H * 0.72),
-		door_c + Vector2(-12, -SHED_WALL_H * 0.72),
-	])
-	add_child(door)
+	## Door sprite on the garden-facing face (near/east).
+	var door_anchor: Vector2 = IsoUtil.tile_to_world(tile + Vector2(half.x * 0.55, half.y * 0.55))
+	door_anchor.y -= SHED_WALL_H * 0.22
+	## Wood plank texture on the near wall face when available.
+	if sprites:
+		var wall_tex := sprites.shed_texture()
+		if wall_tex:
+			var face_spr := Sprite2D.new()
+			face_spr.name = "ShedFace"
+			face_spr.texture = wall_tex
+			face_spr.centered = true
+			face_spr.position = shed_center + Vector2(10, -SHED_WALL_H * 0.35)
+			face_spr.z_index = z + 4
+			face_spr.scale = Vector2(2.2, 2.2)
+			face_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			add_child(face_spr)
+		var dtex := sprites.door_texture()
+		if dtex:
+			var door_spr := Sprite2D.new()
+			door_spr.name = "ShedDoor"
+			door_spr.texture = dtex
+			door_spr.centered = true
+			door_spr.position = door_anchor
+			door_spr.z_index = z + 6
+			door_spr.scale = Vector2(2.8, 2.8)
+			door_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			add_child(door_spr)
+	if get_node_or_null("ShedDoor") == null:
+		## Fallback painted door if sprites missing.
+		var door := Polygon2D.new()
+		door.name = "ShedDoor"
+		door.z_index = z + 5
+		door.color = Color(0.30, 0.18, 0.10, 1.0)
+		door.polygon = PackedVector2Array([
+			door_anchor + Vector2(-16, 8),
+			door_anchor + Vector2(16, 8),
+			door_anchor + Vector2(14, -SHED_WALL_H * 0.55),
+			door_anchor + Vector2(-14, -SHED_WALL_H * 0.55),
+		])
+		add_child(door)
 
-	## Pitched roof (two faces meeting at a ridge)
-	var ridge_h := SHED_WALL_H + SHED_ROOF_H
+	## Pitched roof
 	var far := wall_top[0]
 	var east := wall_top[1]
 	var near := wall_top[2]
 	var west := wall_top[3]
-	var ridge := (far + near) * 0.5 + Vector2(0, -(SHED_ROOF_H * 0.15))
+	var ridge := (far + near) * 0.5
 	ridge.y = minf(far.y, near.y) - SHED_ROOF_H
-	_add_poly("ShedRoofW", PackedVector2Array([west, near, ridge]), Color(0.72, 0.32, 0.22, 1.0), z + 6)
-	_add_poly("ShedRoofE", PackedVector2Array([near, east, ridge]), Color(0.58, 0.24, 0.16, 1.0), z + 7)
-	_add_poly("ShedRoofBack", PackedVector2Array([west, far, ridge]), Color(0.65, 0.28, 0.18, 1.0), z + 5)
+	_add_poly("ShedRoofW", PackedVector2Array([west, near, ridge]), Color(0.70, 0.34, 0.20, 1.0), z + 7)
+	_add_poly("ShedRoofE", PackedVector2Array([near, east, ridge]), Color(0.56, 0.26, 0.14, 1.0), z + 8)
+	_add_poly("ShedRoofBack", PackedVector2Array([west, far, ridge]), Color(0.62, 0.30, 0.16, 1.0), z + 6)
 
-	_add_label("ShedLabel", shed_center + Vector2(0, 10), "SHED", Color(1, 0.95, 0.8, 0.9))
+	_add_label("ShedLabel", shed_center + Vector2(0, 14), "SHED", Color(1, 0.95, 0.8, 0.9))
 
 func _build_beds() -> void:
 	var beds: Array = data.get("beds", [])
@@ -455,44 +494,55 @@ func _build_animals() -> void:
 	for a in animals:
 		var d: Dictionary = a
 		var id := str(d.get("id", "animal"))
+		## Dog is spawned by World as a roaming actor (not a static pen sprite).
+		if id.begins_with("dog"):
+			var dog_tile := _vec2(d.get("tile", {"x": 2, "y": 5}))
+			dog_spawn_world = nearest_walkable(IsoUtil.tile_to_world(dog_tile))
+			animal_positions[id] = dog_spawn_world
+			continue
 		var tile := _vec2(d.get("tile", {"x": 12, "y": 2}))
 		var pos := IsoUtil.tile_to_world(tile)
 		animal_positions[id] = pos
 		var z := IsoUtil.depth_from_y(pos.y) + 5
-
-		if id.begins_with("chicken") and sprites:
-			var color := str(colors.get(id, "default"))
-			var chicken_tex := sprites.chicken_texture(color)
-			if chicken_tex:
-				var spr := Sprite2D.new()
-				spr.name = id
-				spr.texture = chicken_tex
-				spr.centered = true
-				## 16×16 frame scaled up; sit feet on grass in front of the coop.
-				spr.position = pos + Vector2(0, -6)
-				spr.z_index = z + 6
-				spr.scale = Vector2(3.5, 3.5)
-				spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-				add_child(spr)
-				continue
-
+		var tex: Texture2D = null
+		var sc := 3.2
+		if sprites:
+			if id.begins_with("chicken"):
+				tex = sprites.chicken_texture(str(colors.get(id, "default")))
+				sc = 3.5
+			elif id.begins_with("cow"):
+				tex = sprites.cow_texture()
+				sc = 3.8
+			elif id.begins_with("pig"):
+				tex = sprites.pig_texture()
+				sc = 3.0
+			elif id.begins_with("rabbit"):
+				tex = sprites.rabbit_texture()
+				sc = 3.2
+		if tex:
+			var spr := Sprite2D.new()
+			spr.name = id
+			spr.texture = tex
+			spr.centered = true
+			spr.position = pos + Vector2(0, -8)
+			spr.z_index = z + 6
+			spr.scale = Vector2(sc, sc)
+			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			add_child(spr)
+			continue
+		## Placeholder poly if art missing.
 		var body := Polygon2D.new()
 		body.name = id
 		body.z_index = z
 		body.position = pos
-		if id.begins_with("chicken"):
-			body.color = Color(0.95, 0.85, 0.55, 1.0)
-			body.polygon = PackedVector2Array([
-				Vector2(-10, 0), Vector2(-4, -12), Vector2(8, -8),
-				Vector2(12, 2), Vector2(0, 8), Vector2(-10, 4),
-			])
-		else:
-			body.color = Color(0.85, 0.78, 0.70, 1.0)
-			body.polygon = PackedVector2Array([
-				Vector2(-12, 2), Vector2(-6, -10), Vector2(8, -8),
-				Vector2(12, 2), Vector2(4, 10), Vector2(-8, 8),
-			])
+		body.color = Color(0.90, 0.75, 0.55, 1.0)
+		body.polygon = PackedVector2Array([
+			Vector2(-12, 2), Vector2(-6, -10), Vector2(8, -8),
+			Vector2(12, 2), Vector2(4, 10), Vector2(-8, 8),
+		])
 		add_child(body)
+	if dog_spawn_world == Vector2.ZERO:
+		dog_spawn_world = nearest_walkable(spawn_world + Vector2(40, 30))
 
 func _compute_bounds() -> void:
 	var corners: Array[Vector2] = [

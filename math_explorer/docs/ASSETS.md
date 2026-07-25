@@ -62,8 +62,18 @@ generators in the tests. Contact sheet: `docs/screenshots/story_contact.png`.
 ## Still procedural (no file, on purpose)
 
 Drawn in-engine, mapped to `""` in `StorySprites.gd`: **coins** (penny/nickel/dime),
-**counting cubes**, the **clock face**, the **rail track**. The kiosk tile
-`game/images/tile_math.png` (four coloured `+ − × ÷` cubes) is also done.
+**counting cubes**, the **clock face**, the **rail track**. The unused
+`game/images/tile_math.png` (four coloured `+ − × ÷` cubes) is also procedural.
+
+## Kiosk tile
+
+The Star Learner launcher tile is an illustration (the girl packing eggs into a
+carton, with a hen and the knowledge star), matching the ants/solar/garden/language
+set. Source art: `tools/tile_math_source.png` → `python3 tools/make_tile.py`, which
+writes the 512×512
+`../ant_explorer/kiosk_placeholder/app/src/main/res/drawable/tile_math.png`.
+The launcher resolves it by name from `catalog.json` (`"tile": "tile_math"`), so
+keep the filename; rebuild the kiosk APK to pick up a new tile.
 
 ## Optional video cutaways
 

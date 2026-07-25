@@ -2,6 +2,7 @@
 game/assets/tiles/mana_seed_crops/
 game/assets/characters/mana_farmer/
 game/assets/characters/gardener_walk.png
+game/assets/audio/animals/_dl/
 
 # Godot / Android local artifacts
 game/.godot/

@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "notes": "Wide farm in iso tile space. Screen-left = shed, middle = 2x3 beds, right = animal pen. Perimeter fence + meadows outside. Shed/beds/pen are solid for walking; avatar routes around.",
+  "version": 3,
+  "notes": "Wide farm in iso tile space. Screen-left = shed (door faces garden), middle = 2x3 beds, right = animal pen. Dog roams the yard. Perimeter fence + meadows outside.",
   "bounds_tiles": {"min_x": -10, "min_y": -4, "max_x": 16, "max_y": 10},
   "meadow_pad_tiles": 5,
   "player_spawn_tile": {"x": 2, "y": 4},
@@ -22,19 +22,15 @@
   "fence": {
     "id": "fence",
     "tile": {"x": 12, "y": 2},
-    "half_tiles": {"x": 2.2, "y": 2.4},
+    "half_tiles": {"x": 2.6, "y": 2.6},
     "label": "Animals"
   },
   "animals": [
-    {"id": "chicken_a", "tile": {"x": 11.2, "y": 3.0}},
-    {"id": "chicken_b", "tile": {"x": 13.2, "y": 3.2}},
-    {"id": "rabbit", "tile": {"x": 12.2, "y": 3.7}}
+    {"id": "chicken_a", "tile": {"x": 10.8, "y": 1.4}},
+    {"id": "chicken_b", "tile": {"x": 13.4, "y": 1.5}},
+    {"id": "rabbit", "tile": {"x": 11.0, "y": 3.8}},
+    {"id": "pig", "tile": {"x": 13.5, "y": 3.6}},
+    {"id": "cow", "tile": {"x": 12.0, "y": 4.0}},
+    {"id": "dog", "tile": {"x": 3.0, "y": 5.5}}
   ]
 }
-
-
-
-
-
-
-

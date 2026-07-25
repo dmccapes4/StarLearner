@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-25T17:28:00Z",
+  "updated_at": "2026-07-25T18:55:00Z",
   "apps": [
     {
       "id": "colony",
@@ -13,8 +13,18 @@
       "video": "ant_explorer_explainer.mp4"
     },
     {
+      "id": "garden",
+      "label": "garden",
+      "package": "com.dylan.antexplorer.garden",
+      "activity": "com.godot.game.GodotApp",
+      "tile": "tile_garden",
+      "enter_name": "Garden Explorer",
+      "enter_line": "You are entering Garden Explorer",
+      "video": "garden_explorer_playthrough.mp4"
+    },
+    {
       "id": "solar",
-      "label": "planets",
+      "label": "space",
       "package": "com.dylan.antexplorer.solar",
       "activity": "com.godot.game.GodotApp",
       "tile": "tile_solar",
@@ -31,16 +41,6 @@
       "enter_name": "Math Explorer",
       "enter_line": "You are entering Math Explorer",
       "video": "math_explorer_explainer.mp4"
-    },
-    {
-      "id": "garden",
-      "label": "garden",
-      "package": "com.dylan.antexplorer.garden",
-      "activity": "com.godot.game.GodotApp",
-      "tile": "tile_garden",
-      "enter_name": "Garden Explorer",
-      "enter_line": "You are entering Garden Explorer",
-      "video": "garden_explorer_playthrough.mp4"
     },
     {
       "id": "language",

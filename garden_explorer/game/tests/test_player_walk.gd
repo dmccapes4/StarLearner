@@ -19,8 +19,8 @@ func run() -> TestAssert:
 	var dest := farm.nearest_walkable(farm.fence_center)
 	Events.player_path_requested.emit(farm.fence_center)
 	t.ok(player.moving, "starts moving after path request")
-	# Step ~3 seconds of movement
-	for i in 180:
+	# Step ~7 seconds of movement (walk speed is intentionally leisurely).
+	for i in 420:
 		player._process(1.0 / 60.0)
 		## Never stride into the animal pen.
 		if farm.is_blocked(player.global_position) and player.global_position.distance_to(dest) >= 8.0:

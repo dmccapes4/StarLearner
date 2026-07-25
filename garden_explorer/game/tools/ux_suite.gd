@@ -98,7 +98,6 @@ func _run() -> void:
 	# Clear seed so bed taps don't try to plant
 	if shed and shed.has_method("clear_selection"):
 		shed.call("clear_selection")
-	world.call("set_tool", "water")
 	await _settle(2)
 
 	for i in 4:
@@ -117,13 +116,12 @@ func _run() -> void:
 	_check("stage_or_water_log", stage_hit, "saw stage/water events")
 	await _shot("grown")
 
-	world.call("set_tool", "harvest")
 	var before_total := _sum_totals(world.harvest_totals)
 	for i in 4:
-		## First interact may open grown media; second harvests.
+		## First interact may open grown media; second picks Harvest from action tiles.
 		await _tap_and_confirm(main, farm.slot_world("bed_0", i))
 		_close_any_media(main)
-		await _tap_and_confirm(main, farm.slot_world("bed_0", i))
+		await _tap_and_confirm_kind(main, farm.slot_world("bed_0", i), "harvest")
 	var after_total := _sum_totals(world.harvest_totals)
 	_check("harvest_stored", after_total >= before_total + 4, "totals %d→%d" % [before_total, after_total])
 	_check_log_contains("harvest_log", "harvest:")
@@ -164,12 +162,13 @@ func _run() -> void:
 		"01_seeds collected")
 
 	_events().world_tapped.emit(farm.fence_center)
-	await _wait_and_confirm(main)
+	await _settle(12)
 	await _shot("animals")
 
-	# Phase 4 — animal tap + season flip (seed list changes)
+	# Phase 4 — animal tap plays real SFX (no confirm chip)
 	var chick_pos: Vector2 = farm.animal_positions.get("chicken_a", farm.fence_center)
-	await _tap_and_confirm(main, chick_pos)
+	_events().world_tapped.emit(chick_pos)
+	await _settle(40)
 	_check_log_contains("animal_tap_log", "animal:")
 	await _shot("animal_tap")
 
@@ -206,16 +205,22 @@ func _sum_totals(totals: Dictionary) -> int:
 		n += int(totals[k])
 	return n
 
-func _confirm_prompt(main: Node) -> void:
+func _confirm_prompt(main: Node, kind: String = "") -> void:
 	var ap: Node = main.get_node_or_null("ActionPrompt")
 	if ap == null:
 		return
 	if ap.has_method("is_open") and not bool(ap.call("is_open")):
 		return
+	if kind != "" and ap.get("_actions") != null:
+		var acts: Array = ap.get("_actions")
+		for a in acts:
+			if typeof(a) == TYPE_DICTIONARY and str(a.get("kind", "")) == kind:
+				ap.call("_pick", a)
+				return
 	if ap.has_method("confirm_current"):
 		ap.call("confirm_current")
 
-func _wait_and_confirm(main: Node) -> void:
+func _wait_and_confirm(main: Node, kind: String = "") -> void:
 	## Wait for walk → ActionPrompt, then confirm.
 	for _i in 90:
 		await process_frame
@@ -223,12 +228,16 @@ func _wait_and_confirm(main: Node) -> void:
 		if ap and ap.has_method("is_open") and bool(ap.call("is_open")):
 			break
 	await _settle(2)
-	_confirm_prompt(main)
+	_confirm_prompt(main, kind)
 	await _settle(4)
 
 func _tap_and_confirm(main: Node, world_pos: Vector2) -> void:
 	_events().world_tapped.emit(world_pos)
 	await _wait_and_confirm(main)
+
+func _tap_and_confirm_kind(main: Node, world_pos: Vector2, kind: String) -> void:
+	_events().world_tapped.emit(world_pos)
+	await _wait_and_confirm(main, kind)
 
 func _check_chickens_are_frames(farm: FarmMap) -> void:
 	if farm == null:

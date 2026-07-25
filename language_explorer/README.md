@@ -59,8 +59,9 @@ godot --headless --path language_explorer/game -s res://tests/run_tests.gd   # 2
 #   language_explorer/tools/gen_vo.sh
 # Build signed Android APK:
 #   language_explorer/tools/build_language_apk.sh
-# Regenerate screenshots / explainer:
+# Demo videos (playthrough + explainer; see docs/demo/README.md):
 #   godot --path language_explorer/game -s res://tools/capture_shots.gd
+#   python3 language_explorer/tools/gen_explainer_vo.py
 #   language_explorer/tools/make_demo_videos.sh
 ```
 

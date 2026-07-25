@@ -1,9 +1,9 @@
 extends Node
 ## Autoload tunables.
 
-var walk_speed: float = 220.0
+var walk_speed: float = 105.0
 var camera_lerp: float = 0.08
-var camera_zoom: float = 2.65
+var camera_zoom: float = 2.05
 var arrive_eps: float = 14.0
 ## How close the gardener must be (world px) before an action prompt may open.
 var interact_arrive_eps: float = 28.0

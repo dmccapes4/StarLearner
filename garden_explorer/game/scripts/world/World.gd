@@ -5,6 +5,8 @@ const SeasonClockScript := preload("res://scripts/sim/SeasonClock.gd")
 const GoldOutlineScript := preload("res://scripts/ui/GoldOutline.gd")
 const StarProgressScript := preload("res://scripts/sim/StarProgress.gd")
 const SpeakScript := preload("res://scripts/audio/Speak.gd")
+const AnimalSfxScript := preload("res://scripts/audio/AnimalSfx.gd")
+const RoamingDogScript := preload("res://scripts/world/RoamingDog.gd")
 
 @onready var farm_map: FarmMap = $FarmMap
 @onready var player: Player = $Player
@@ -29,17 +31,12 @@ var star_menu: Node
 var harvest_totals: Dictionary = {} ## plant_id -> int
 var tool_id: String = "water"
 var action_prompt: Node
+var roaming_dog: Node2D
 ## Pending interactable: walk there first, then show ActionPrompt.
 var _pending: Dictionary = {}
 
 var _ripple_left: float = 0.0
 var _guide_return_left: float = 0.0
-
-const ANIMAL_LINES := {
-	"chicken_a": "Cluck cluck! I'm pecking for seeds.",
-	"chicken_b": "Hello! Chickens love a sunny garden.",
-	"rabbit": "Hop hop! I like crunchy carrots and lettuce.",
-}
 
 func _ready() -> void:
 	seed_db.load_all()
@@ -97,6 +94,7 @@ func _ready() -> void:
 		camera.snap_to_target()
 
 	farm_map.apply_season_tint(seed_db.current_season)
+	_spawn_roaming_dog()
 	call_deferred("_bind_ui")
 
 	if not Events.world_tapped.is_connected(_on_world_tapped):
@@ -117,8 +115,11 @@ func _bind_ui() -> void:
 		if shed_ui.has_method("set_harvest_totals"):
 			shed_ui.call("set_harvest_totals", harvest_totals)
 	tool_bar = get_tree().get_first_node_in_group("tool_bar")
-	if tool_bar and tool_bar.has_method("set_tool"):
-		tool_bar.call("set_tool", tool_id, false)
+	if tool_bar:
+		if tool_bar.has_method("hide_bar"):
+			tool_bar.call("hide_bar")
+		else:
+			tool_bar.visible = false
 	stage_media = get_tree().get_first_node_in_group("stage_media")
 	if stage_media and stage_media.has_method("setup"):
 		stage_media.call("setup", seed_db, sprites)
@@ -176,12 +177,30 @@ func _process(delta: float) -> void:
 		if _guide_return_left <= 0.0 and camera and camera.has_method("resume_follow"):
 			camera.resume_follow(player)
 
+func _spawn_roaming_dog() -> void:
+	if roaming_dog and is_instance_valid(roaming_dog):
+		return
+	roaming_dog = RoamingDogScript.new()
+	roaming_dog.name = "RoamingDog"
+	add_child(roaming_dog)
+	var spawn: Vector2 = farm_map.dog_spawn_world if farm_map.dog_spawn_world != Vector2.ZERO \
+		else farm_map.spawn_world + Vector2(40, 20)
+	roaming_dog.setup(farm_map, sprites, spawn)
+	farm_map.animal_positions["dog"] = spawn
+
 func _on_world_tapped(world_pos: Vector2) -> void:
 	_show_ripple(world_pos)
+	## Action chip is non-blocking: tap elsewhere cancels and navigates.
 	if action_prompt and action_prompt.has_method("is_open") and bool(action_prompt.call("is_open")):
-		return
+		action_prompt.call("close_prompt")
+		_on_action_cancelled()
 	if shed_ui and shed_ui.has_method("is_open") and shed_ui.call("is_open"):
 		return
+	## Prefer live dog hit-test (roams).
+	if roaming_dog and is_instance_valid(roaming_dog):
+		if world_pos.distance_to(roaming_dog.global_position) <= Config.get_animal_tap_radius():
+			_queue_interact("animal", "dog", roaming_dog.global_position)
+			return
 	var zone := farm_map.zone_at(world_pos)
 	if zone.is_empty():
 		## Tap = navigate (immersive multi-tap walks).
@@ -202,19 +221,28 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 	var slot := -1
 	match kind:
 		"shed":
-			approach = farm_map.nearest_walkable(farm_map.shed_center)
+			approach = farm_map.shed_door_world if farm_map.shed_door_world != Vector2.ZERO \
+				else farm_map.nearest_walkable(farm_map.shed_center + Vector2(36, 20))
 		"bed":
 			slot = farm_map.nearest_slot(zid, world_pos)
 			approach = farm_map.nearest_walkable(farm_map.slot_world(zid, slot))
 		"fence":
-			approach = farm_map.nearest_walkable(farm_map.fence_center)
 			var near := farm_map.animal_at(world_pos, _cfg_animal_radius() * 1.6)
 			if not near.is_empty():
 				kind = "animal"
 				zid = near
 				approach = farm_map.nearest_walkable(farm_map.animal_positions.get(near, farm_map.fence_center))
+			else:
+				## Fence alone: just walk over; no blocking prompt.
+				approach = farm_map.nearest_walkable(world_pos)
+				Events.player_path_requested.emit(approach)
+				_pending.clear()
+				return
 		"animal":
-			approach = farm_map.nearest_walkable(farm_map.animal_positions.get(zid, farm_map.fence_center))
+			if zid == "dog" and roaming_dog and is_instance_valid(roaming_dog):
+				approach = farm_map.nearest_walkable(roaming_dog.global_position)
+			else:
+				approach = farm_map.nearest_walkable(farm_map.animal_positions.get(zid, farm_map.fence_center))
 		_:
 			approach = farm_map.nearest_walkable(world_pos)
 	_pending = {
@@ -239,120 +267,110 @@ func _on_player_arrived() -> void:
 	_open_pending_prompt()
 
 func _open_pending_prompt() -> void:
-	if _pending.is_empty() or action_prompt == null:
+	if _pending.is_empty():
 		return
-	var action := _build_action_for_pending()
-	if action.is_empty():
+	## Animals: play real SFX immediately — no confirm tile in the way.
+	if str(_pending.get("kind", "")) == "animal":
+		var aid := str(_pending.get("id", ""))
+		AnimalSfxScript.play(aid)
+		Events.animal_tapped.emit(aid)
+		print("Garden Explorer: animal:%s" % aid)
 		_pending.clear()
 		return
-	action_prompt.call("show_action", action)
+	if action_prompt == null:
+		return
+	var actions := _build_actions_for_pending()
+	if actions.is_empty():
+		_pending.clear()
+		return
+	if action_prompt.has_method("show_actions"):
+		action_prompt.call("show_actions", actions)
+	else:
+		action_prompt.call("show_action", actions[0])
 
-func _build_action_for_pending() -> Dictionary:
+func _build_actions_for_pending() -> Array:
 	var kind := str(_pending.get("kind", ""))
 	var zid := str(_pending.get("id", ""))
 	var slot := int(_pending.get("slot", -1))
 	match kind:
 		"shed":
-			return {
+			return [{
 				"kind": "open_shed",
-				"label": "Open shed",
+				"label": "Seeds",
 				"narration": "Open the shed to pick a seed.",
-			}
-		"animal":
-			return {
-				"kind": "pet_animal",
-				"id": zid,
-				"label": "Say hi",
-				"narration": str(ANIMAL_LINES.get(zid, "Hello, little friend!")),
-			}
-		"fence":
-			return {
-				"kind": "look_animals",
-				"label": "Animals",
-				"narration": "Tap a chicken or rabbit to say hi.",
-			}
+			}]
 		"bed":
-			return _build_bed_action(zid, slot)
+			return _build_bed_actions(zid, slot)
 		_:
-			return {}
+			return []
 
-func _build_bed_action(bed_id: String, slot: int) -> Dictionary:
+func _build_bed_actions(bed_id: String, slot: int) -> Array:
+	## No carried tool intent — offer every valid action for this slot.
 	if slot < 0:
 		slot = 0
+	var out: Array = []
 	var held := ""
 	if shed_ui and shed_ui.has_method("selected_seed"):
 		held = str(shed_ui.call("selected_seed"))
-	var tool := _current_tool()
 	if garden.is_empty(bed_id, slot):
 		if held.is_empty():
 			SpeakScript.line("Pick a seed at the shed first.")
-			return {}
+			return []
 		var pname := seed_db.display_name(held)
-		return {
+		out.append({
 			"kind": "plant",
 			"bed_id": bed_id,
 			"slot": slot,
 			"plant_id": held,
-			"label": "Plant %s" % pname,
+			"label": "Plant",
 			"narration": "Plant the %s seed here?" % pname,
-		}
+		})
+		return out
 	var st := garden.get_slot(bed_id, slot)
 	var stage := str(st.get("stage", ""))
 	var pid := str(st.get("plant_id", ""))
 	var pname := seed_db.display_name(pid)
 	var awaiting := str(st.get("awaiting_media", ""))
 	if awaiting == GardenState.STAGE_SPROUT or awaiting == GardenState.STAGE_GROWN:
-		return {
+		out.append({
 			"kind": "media",
 			"bed_id": bed_id,
 			"slot": slot,
 			"plant_id": pid,
 			"media_kind": awaiting,
-			"label": "Look at %s" % pname,
+			"label": "Look",
 			"narration": "Look at the %s!" % pname,
-		}
-	if tool == "uproot":
-		return {
-			"kind": "uproot",
-			"bed_id": bed_id,
-			"slot": slot,
-			"plant_id": pid,
-			"label": "Uproot",
-			"narration": "Pull out the %s?" % pname,
-		}
-	if stage == GardenState.STAGE_GROWN and tool != "water":
-		return {
-			"kind": "harvest",
-			"bed_id": bed_id,
-			"slot": slot,
-			"plant_id": pid,
-			"label": "Harvest",
-			"narration": "Harvest the %s?" % pname,
-		}
-	if tool == "harvest":
-		if stage == GardenState.STAGE_GROWN:
-			return {
-				"kind": "harvest",
-				"bed_id": bed_id,
-				"slot": slot,
-				"plant_id": pid,
-				"label": "Harvest",
-				"narration": "Harvest the %s?" % pname,
-			}
-		SpeakScript.line("Not ready to harvest yet.")
-		return {}
-	## Default: water
+		})
 	if bool(st.get("thirsty", false)):
-		return {
+		out.append({
 			"kind": "water",
 			"bed_id": bed_id,
 			"slot": slot,
 			"plant_id": pid,
 			"label": "Water",
 			"narration": "Water the %s?" % pname,
-		}
-	SpeakScript.line("The %s is not thirsty yet." % pname)
-	return {}
+		})
+	if stage == GardenState.STAGE_GROWN:
+		out.append({
+			"kind": "harvest",
+			"bed_id": bed_id,
+			"slot": slot,
+			"plant_id": pid,
+			"label": "Harvest",
+			"narration": "Harvest the %s?" % pname,
+		})
+	## Always allow uprooting an occupied slot (with the other options).
+	out.append({
+		"kind": "uproot",
+		"bed_id": bed_id,
+		"slot": slot,
+		"plant_id": pid,
+		"label": "Uproot",
+		"narration": "Pull out the %s?" % pname,
+	})
+	if out.is_empty():
+		SpeakScript.line("The %s is growing." % pname)
+	return out
 
 func _on_action_cancelled() -> void:
 	_pending.clear()
@@ -365,11 +383,6 @@ func _on_action_confirmed(action: Dictionary) -> void:
 			if shed_ui and shed_ui.has_method("open_shed"):
 				shed_ui.call("open_shed")
 				print("Garden Explorer: open shed (%s)" % seed_db.current_season)
-		"pet_animal":
-			var aid := str(action.get("id", ""))
-			Events.animal_tapped.emit(aid)
-		"look_animals":
-			pass
 		"plant":
 			_do_plant(str(action.bed_id), int(action.slot), str(action.plant_id))
 		"water":

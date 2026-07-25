@@ -48,6 +48,23 @@ if [[ -d "$CHAR_SRC" ]]; then
   echo "Characters → $CHAR_DST ($(find "$CHAR_DST" -name '*.png' | wc -l) png)"
 fi
 
+## Animals / shed / SFX (may lack .import)
+for pair in \
+  "animals:animals" \
+  "buildings:buildings" \
+  "audio/animals:audio/animals" \
+  "ui:ui"; do
+  SRC_REL="${pair%%:*}"
+  DST_REL="${pair##*:}"
+  SRC="$GAME/assets/$SRC_REL"
+  DST="$ASSETS/assets/$DST_REL"
+  if [[ -d "$SRC" ]]; then
+    mkdir -p "$DST"
+    rsync -a --exclude '_dl' "$SRC/" "$DST/"
+    echo "$SRC_REL → $DST"
+  fi
+done
+
 python3 - "$ASSETS/_cl_" <<'PY'
 import struct, sys
 from pathlib import Path

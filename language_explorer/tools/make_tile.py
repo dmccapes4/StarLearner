@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
-"""Generate the 512×512 Star Learner tile_language drawable."""
+"""Install / document the Star Learner tile_language drawable.
+
+Preferred art is the cinematic agent-generated tile (Pixar-like 3D, glowing
+knowledge star) kept beside the ants/garden tiles. This script only copies a
+source PNG into the kiosk drawable path when provided.
+
+  python3 tools/make_tile.py [path/to/tile_language.png]
+"""
+from __future__ import annotations
+
+import sys
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = (
@@ -10,38 +20,15 @@ OUT = (
 )
 
 
-def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
-    name = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
-    return ImageFont.truetype(f"/usr/share/fonts/truetype/dejavu/{name}", size)
-
-
 def main() -> None:
-    image = Image.new("RGB", (512, 512), "#191f34")
-    draw = ImageDraw.Draw(image)
-    gold = "#ffd14d"
-    cream = "#f6f7ff"
-    blue = "#4d8cf2"
-    red = "#e64d47"
-    green = "#5cc772"
-
-    draw.rounded_rectangle((24, 24, 488, 488), radius=56, fill="#292f4c", outline=gold, width=10)
-    # Open book.
-    draw.rounded_rectangle((68, 132, 252, 340), radius=24, fill="#f1f1e8", outline=gold, width=7)
-    draw.rounded_rectangle((260, 132, 444, 340), radius=24, fill="#f1f1e8", outline=gold, width=7)
-    draw.polygon([(252, 146), (260, 146), (260, 348), (256, 362), (252, 348)], fill="#bd9a33")
-    for y, color in [(190, red), (236, blue), (282, green)]:
-        draw.rounded_rectangle((96, y, 224, y + 18), radius=9, fill=color)
-        draw.rounded_rectangle((288, y, 416, y + 18), radius=9, fill=color)
-
-    # Bilingual letter badge.
-    draw.ellipse((164, 66, 348, 250), fill="#202642", outline=gold, width=8)
-    draw.text((256, 150), "A  Ñ", anchor="mm", font=font(54, True), fill=gold)
-
-    draw.text((256, 395), "WORDS", anchor="mm", font=font(54, True), fill=cream)
-    draw.text((256, 447), "PALABRAS", anchor="mm", font=font(29, True), fill=gold)
-
+    if len(sys.argv) < 2:
+        print(f"current tile: {OUT} exists={OUT.exists()}")
+        print("usage: python3 tools/make_tile.py <source.png>")
+        return
+    src = Path(sys.argv[1]).expanduser().resolve()
+    im = Image.open(src).convert("RGB").resize((512, 512), Image.Resampling.LANCZOS)
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    image.save(OUT, optimize=True)
+    im.save(OUT, optimize=True)
     print(f"wrote {OUT}")
 
 

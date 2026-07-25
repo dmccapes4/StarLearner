@@ -1,17 +1,17 @@
 class_name ActionPrompt
 extends CanvasLayer
-## Center-screen confirm tile after the gardener arrives at an interactable.
-## Tap the tile to apply; tap outside (dim) to cancel.
+## Context action tiles that appear after arriving at an interactable.
+## Player has no carried tool intent — choose from available actions.
+## Tap a tile to apply; tap elsewhere cancels and lets TapRouter navigate.
 
 signal confirmed(action: Dictionary)
 signal cancelled()
 
 var _open: bool = false
-var _action: Dictionary = {}
-var _dim: ColorRect
-var _tile: Button
-var _icon: TextureRect
-var _label: Label
+var _actions: Array = []
+var _root: Control
+var _row: HBoxContainer
+var _hint: Label
 var sprites: FarmSprites
 
 func _ready() -> void:
@@ -27,109 +27,142 @@ func is_open() -> bool:
 	return _open
 
 func show_action(action: Dictionary) -> void:
-	_action = action.duplicate(true)
+	## Back-compat: single action.
+	show_actions([action])
+
+func show_actions(actions: Array) -> void:
+	_actions.clear()
+	for a in actions:
+		if typeof(a) == TYPE_DICTIONARY and not a.is_empty():
+			_actions.append((a as Dictionary).duplicate(true))
+	if _actions.is_empty():
+		close_prompt()
+		return
 	_open = true
 	visible = true
-	_dim.visible = true
-	_tile.visible = true
-	var title := str(action.get("label", "Do it?"))
-	_label.text = title
-	_icon.texture = null
-	var tex = action.get("texture", null)
-	if tex is Texture2D:
-		_icon.texture = tex
-	elif sprites and str(action.get("plant_id", "")) != "":
-		var pid := str(action.plant_id)
-		match str(action.get("kind", "")):
-			"plant":
-				_icon.texture = sprites.seed_icon(pid)
-			"harvest":
-				_icon.texture = sprites.harvest_icon(pid)
-			_:
-				_icon.texture = sprites.seed_icon(pid)
+	_rebuild_tiles()
+	## Narrate the choice once (first action's line, or a short chooser line).
 	var SpeakScript := preload("res://scripts/audio/Speak.gd")
-	var line := str(action.get("narration", title))
-	if not line.is_empty():
-		SpeakScript.line(line)
+	if _actions.size() == 1:
+		var line := str(_actions[0].get("narration", _actions[0].get("label", "")))
+		if not line.is_empty() and not bool(_actions[0].get("silent", false)):
+			SpeakScript.line(line)
+	else:
+		SpeakScript.line("What do you want to do?")
 
 func close_prompt() -> void:
 	_open = false
 	visible = false
-	_dim.visible = false
-	_tile.visible = false
-	_action = {}
+	_actions.clear()
+	_clear_tiles()
 
 func confirm_current() -> void:
-	## Test / automation hook — same as tapping the center tile.
-	_on_confirm()
+	## Test hook — confirms the first available action.
+	if _actions.is_empty():
+		return
+	_pick(_actions[0])
 
 func _build() -> void:
-	var root := Control.new()
-	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	root.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(root)
+	_root = Control.new()
+	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_root)
 
-	_dim = ColorRect.new()
-	_dim.color = Color(0.04, 0.08, 0.05, 0.45)
-	_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_dim.gui_input.connect(_on_dim)
-	_dim.process_mode = Node.PROCESS_MODE_ALWAYS
-	root.add_child(_dim)
+	var panel := VBoxContainer.new()
+	panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	panel.offset_left = -320
+	panel.offset_right = 320
+	panel.offset_top = -240
+	panel.offset_bottom = -28
+	panel.alignment = BoxContainer.ALIGNMENT_CENTER
+	panel.add_theme_constant_override("separation", 10)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(panel)
 
-	_tile = Button.new()
-	_tile.focus_mode = Control.FOCUS_NONE
-	_tile.custom_minimum_size = Vector2(200, 200)
-	_tile.set_anchors_preset(Control.PRESET_CENTER)
-	_tile.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_tile.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_tile.offset_left = -100
-	_tile.offset_right = 100
-	_tile.offset_top = -100
-	_tile.offset_bottom = 100
-	_tile.pressed.connect(_on_confirm)
-	_tile.process_mode = Node.PROCESS_MODE_ALWAYS
+	_hint = Label.new()
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.add_theme_font_size_override("font_size", 22)
+	_hint.add_theme_color_override("font_color", Color(1, 0.96, 0.85, 1))
+	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hint.text = "Choose"
+	panel.add_child(_hint)
+
+	_row = HBoxContainer.new()
+	_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_row.add_theme_constant_override("separation", 16)
+	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(_row)
+
+func _clear_tiles() -> void:
+	if _row == null:
+		return
+	for c in _row.get_children():
+		c.queue_free()
+
+func _rebuild_tiles() -> void:
+	_clear_tiles()
+	_hint.text = "Choose" if _actions.size() > 1 else str(_actions[0].get("label", "Do it?"))
+	for a in _actions:
+		_row.add_child(_mk_tile(a as Dictionary))
+
+func _mk_tile(action: Dictionary) -> Button:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(148, 148)
+	b.process_mode = Node.PROCESS_MODE_ALWAYS
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.16, 0.26, 0.14, 0.96)
-	sb.set_corner_radius_all(22)
-	sb.set_border_width_all(6)
-	sb.border_color = Color(1.0, 0.82, 0.2, 1.0)
-	_tile.add_theme_stylebox_override("normal", sb)
-	_tile.add_theme_stylebox_override("hover", sb)
-	_tile.add_theme_stylebox_override("pressed", sb)
-	root.add_child(_tile)
+	sb.bg_color = Color(0.12, 0.20, 0.12, 0.94)
+	sb.set_corner_radius_all(20)
+	sb.set_border_width_all(5)
+	sb.border_color = Color(1.0, 0.84, 0.25, 1.0)
+	b.add_theme_stylebox_override("normal", sb)
+	b.add_theme_stylebox_override("hover", sb)
+	b.add_theme_stylebox_override("pressed", sb)
+	var act := action.duplicate(true)
+	b.pressed.connect(func() -> void: _pick(act))
 
 	var v := VBoxContainer.new()
 	v.alignment = BoxContainer.ALIGNMENT_CENTER
 	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_tile.add_child(v)
+	v.add_theme_constant_override("separation", 4)
+	b.add_child(v)
 
-	_icon = TextureRect.new()
-	_icon.custom_minimum_size = Vector2(96, 96)
-	_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(_icon)
+	var icon := TextureRect.new()
+	icon.custom_minimum_size = Vector2(80, 80)
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	icon.texture = _resolve_icon(action)
+	v.add_child(icon)
 
-	_label = Label.new()
-	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label.add_theme_font_size_override("font_size", 22)
-	_label.add_theme_color_override("font_color", Color(1, 0.96, 0.85, 1))
-	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	v.add_child(_label)
+	var lab := Label.new()
+	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lab.add_theme_font_size_override("font_size", 18)
+	lab.add_theme_color_override("font_color", Color(1, 0.96, 0.85, 1))
+	lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lab.text = str(action.get("label", "?"))
+	v.add_child(lab)
+	return b
 
-func _on_dim(event: InputEvent) -> void:
+func _resolve_icon(action: Dictionary) -> Texture2D:
+	var tex = action.get("texture", null)
+	if tex is Texture2D:
+		return tex
+	if sprites == null:
+		return null
+	if sprites.has_method("action_icon"):
+		return sprites.action_icon(str(action.get("kind", "")), str(action.get("plant_id", "")))
+	return null
+
+func _pick(action: Dictionary) -> void:
 	if not _open:
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		close_prompt()
-		cancelled.emit()
-
-func _on_confirm() -> void:
-	if not _open:
-		return
-	var act := _action.duplicate(true)
+	var act := action.duplicate(true)
 	close_prompt()
 	confirmed.emit(act)

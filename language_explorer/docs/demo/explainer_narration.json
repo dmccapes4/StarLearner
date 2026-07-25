@@ -1,0 +1,28 @@
+{
+  "lines": [
+    {
+      "key": "01_open",
+      "text": "This is Language Explorer, a Star Learner game for reading and writing in English and Spanish. Big picture buttons lead the way, and every step is spoken out loud."
+    },
+    {
+      "key": "02_read",
+      "text": "The Read tile opens sentences and books. Match pictures to red words, or open a cover twice to read a story one page at a time."
+    },
+    {
+      "key": "03_write",
+      "text": "The Write tile practices letters. Choose a picture or hear the word first, then tap alphabet tiles or trace the grey outlines with a finger."
+    },
+    {
+      "key": "04_alphabet",
+      "text": "Alphabet tiles follow the word’s capital and small letters. After three tries or three hints, the right letter glows gold so she can finish the word."
+    },
+    {
+      "key": "05_menu",
+      "text": "The menu holds picture tutorials, English or Spanish, and letter-input choices. Nothing on the chrome asks her to read a button label."
+    },
+    {
+      "key": "06_close",
+      "text": "Language Explorer. Words she can hear, tap, and write. Ready to play on the Star Learner console."
+    }
+  ]
+}

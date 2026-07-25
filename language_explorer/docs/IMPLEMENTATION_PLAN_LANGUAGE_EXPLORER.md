@@ -506,9 +506,9 @@ finish one word via sketch; three wrongs reveal gold hint; incomplete never fals
 - [x] Hamburger tutorials + EN/ES toggle persistence
 - [x] APK script `build_language_apk.sh` → `com.dylan.antexplorer.language`
 - [x] Catalog entries in `ant_explorer/tools/catalog.json` **and** kiosk `assets/catalog.json`
-- [x] Tile art `tile_language` + `language_explorer_explainer.mp4`
+- [x] Tile art `tile_language` + explainer / playthrough demos (`docs/demo/`)
 - [x] Root `star_learning/README.md` catalog row
-- [x] UX screenshots + demo capture scripts
+- [x] UX screenshots + demo capture scripts (Math/Ant-style dual cuts)
 - [x] Compact 9-column alphabet layout (all three rows visible at 1280×600)
 - [x] Five-title kiosk layout compacted so no catalog tile is clipped
 
