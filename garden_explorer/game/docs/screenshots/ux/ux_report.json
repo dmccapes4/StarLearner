@@ -16,7 +16,7 @@
 			"ok": true
 		},
 		{
-			"detail": "rabbit placeholder ok",
+			"detail": "no scene chickens; atlas frame ok=true",
 			"name": "chicken_frames",
 			"ok": true
 		},
@@ -76,6 +76,16 @@
 			"ok": true
 		},
 		{
+			"detail": "thirsty after bed water=0",
+			"name": "bed_watered",
+			"ok": true
+		},
+		{
+			"detail": "needle='watered:' in 12 events",
+			"name": "water_log",
+			"ok": true
+		},
+		{
 			"detail": "grown_slots=4",
 			"name": "grown_after_water",
 			"ok": true
@@ -96,7 +106,7 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='harvest:' in 27 events",
+			"detail": "needle='harvest:' in 32 events",
 			"name": "harvest_log",
 			"ok": true
 		},
@@ -116,7 +126,7 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='guide:' in 28 events",
+			"detail": "needle='guide:' in 33 events",
 			"name": "guide_log",
 			"ok": true
 		},
@@ -136,7 +146,7 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='star_collected:01_seeds' in 29 events",
+			"detail": "needle='star_collected:01_seeds' in 34 events",
 			"name": "star_collected_log",
 			"ok": true
 		},
@@ -151,7 +161,7 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='animal:' in 31 events",
+			"detail": "needle='animal:' in 35 events",
 			"name": "animal_tap_log",
 			"ok": true
 		},
@@ -166,12 +176,12 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='season:' in 33 events",
+			"detail": "needle='season:' in 37 events",
 			"name": "season_log",
 			"ok": true
 		},
 		{
-			"detail": "season=summer seeds=7",
+			"detail": "season=summer seeds=8",
 			"name": "season_seed_list_changed",
 			"ok": true
 		},
@@ -190,6 +200,11 @@
 		"planted:lettuce:bed_0:1",
 		"planted:lettuce:bed_0:2",
 		"planted:lettuce:bed_0:3",
+		"watered:lettuce:bed_0:0:seed",
+		"revealed:04_watering",
+		"watered:lettuce:bed_0:1:seed",
+		"watered:lettuce:bed_0:2:seed",
+		"watered:lettuce:bed_0:3:seed",
 		"stage:lettuce:bed_0:0:sprout",
 		"revealed:05_sprouting",
 		"stage:lettuce:bed_0:0:growing",
@@ -212,12 +227,11 @@
 		"harvest:lettuce:4",
 		"guide:08_weeding",
 		"star_collected:01_seeds",
-		"animal:chicken_b",
 		"animal:chicken_a",
 		"season:summer",
 		"revealed:10_seasons",
 		"shed_opened"
 	],
-	"passed": 36,
+	"passed": 38,
 	"shots": 12
 }

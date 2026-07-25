@@ -5,12 +5,14 @@ const SeasonClockScript := preload("res://scripts/sim/SeasonClock.gd")
 const GoldOutlineScript := preload("res://scripts/ui/GoldOutline.gd")
 const StarProgressScript := preload("res://scripts/sim/StarProgress.gd")
 const SpeakScript := preload("res://scripts/audio/Speak.gd")
+const NarratorScript := preload("res://scripts/audio/Narrator.gd")
 const AnimalSfxScript := preload("res://scripts/audio/AnimalSfx.gd")
 const RoamingAnimalScript := preload("res://scripts/world/RoamingAnimal.gd")
 const PenGateScript := preload("res://scripts/world/PenGate.gd")
 const AnimalCatalogScript := preload("res://scripts/content/AnimalCatalog.gd")
 const BugCatalogScript := preload("res://scripts/content/BugCatalog.gd")
 const BugSpawnerScript := preload("res://scripts/world/BugSpawner.gd")
+const GameFreezeScript := preload("res://scripts/sim/GameFreeze.gd")
 
 @onready var farm_map: FarmMap = $FarmMap
 @onready var player: Player = $Player
@@ -206,7 +208,12 @@ func _on_seed_cleared() -> void:
 	pass
 
 func _process(delta: float) -> void:
-	if garden and seed_db:
+	## Game time (growth + season) freezes with the player: narration locks
+	## and full-screen panels stop the clock; routine actions do not.
+	var time_frozen := GameFreezeScript.frozen(get_tree())
+	if season_clock:
+		season_clock.paused = time_frozen
+	if garden and seed_db and not time_frozen:
 		garden.tick(delta, seed_db)
 	if tap_marker and _ripple_left > 0.0:
 		_ripple_left -= delta
@@ -219,6 +226,11 @@ func _process(delta: float) -> void:
 		_guide_return_left -= delta
 		if _guide_return_left <= 0.0 and camera and camera.has_method("resume_follow"):
 			camera.resume_follow(player)
+	## Taps made while narration froze the player: walk once the lock releases.
+	if not _pending.is_empty() and bool(_pending.get("deferred_path", false)) \
+			and not NarratorScript.blocks_movement():
+		_pending.erase("deferred_path")
+		Events.player_path_requested.emit(farm_map.nearest_walkable(_pending.get("approach", Vector2.ZERO)))
 	_update_animal_follow(delta)
 
 func _spawn_bug_spawner() -> void:
@@ -412,6 +424,10 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 		## narration movement-lock releases.
 		var dur := SpeakScript.line("Walking to %s." % animal_db.display_name(zid))
 		_follow_delay = maxf(dur, 0.1) + 0.05
+	elif NarratorScript.blocks_movement():
+		## Player is frozen by narration — Player would drop the path request,
+		## leaving the tap dead. Defer it until the lock releases (_process).
+		_pending["deferred_path"] = true
 	else:
 		Events.player_path_requested.emit(farm_map.nearest_walkable(approach))
 
@@ -616,76 +632,66 @@ func _build_actions_for_pending() -> Array:
 			return []
 
 func _build_bed_actions(bed_id: String, slot: int) -> Array:
-	## No carried tool intent — offer every valid action for this slot.
+	## Bed-level actions: Plant fills plots in fixed order (back-left →
+	## back-right → front-left → front-right, no plot choice), Water soaks
+	## every thirsty plot in the bed. Look/Harvest/Uproot stay per tapped plant.
 	if slot < 0:
 		slot = 0
 	var out: Array = []
 	var held := ""
 	if shed_ui and shed_ui.has_method("selected_seed"):
 		held = str(shed_ui.call("selected_seed"))
-	if garden.is_empty(bed_id, slot):
-		if not held.is_empty():
-			var pname := seed_db.display_name(held)
-			out.append({
-				"kind": "plant",
-				"bed_id": bed_id,
-				"slot": slot,
-				"plant_id": held,
-				"label": "Plant",
-				"narration": "Plant the %s seed here?" % pname,
-			})
-		## Empty soil can still hide bugs.
+	var next_empty := garden.first_empty_slot(bed_id)
+	if not held.is_empty() and next_empty >= 0:
 		out.append({
-			"kind": "bugs",
+			"kind": "plant",
 			"bed_id": bed_id,
-			"slot": slot,
-			"label": "Bugs",
-			"narration": "Let's look for bugs in the garden!",
-			"silent": true,
+			"slot": next_empty,
+			"plant_id": held,
+			"label": "Plant",
+			"narration": "Plant the %s seed here?" % seed_db.display_name(held),
 		})
-		return out
-	var st := garden.get_slot(bed_id, slot)
-	var stage := str(st.get("stage", ""))
-	var pid := str(st.get("plant_id", ""))
-	var pname := seed_db.display_name(pid)
-	var awaiting := str(st.get("awaiting_media", ""))
-	if awaiting == GardenState.STAGE_SPROUT or awaiting == GardenState.STAGE_GROWN:
-		out.append({
-			"kind": "media",
-			"bed_id": bed_id,
-			"slot": slot,
-			"plant_id": pid,
-			"media_kind": awaiting,
-			"label": "Look",
-			"narration": "Look at the %s!" % pname,
-		})
-	if bool(st.get("thirsty", false)):
+	if _bed_thirsty_count(bed_id) > 0:
 		out.append({
 			"kind": "water",
 			"bed_id": bed_id,
-			"slot": slot,
-			"plant_id": pid,
+			"slot": -1,
 			"label": "Water",
-			"narration": "Water the %s?" % pname,
+			"narration": "Water the bed?",
 		})
-	if stage == GardenState.STAGE_GROWN:
+	if not garden.is_empty(bed_id, slot):
+		var st := garden.get_slot(bed_id, slot)
+		var stage := str(st.get("stage", ""))
+		var pid := str(st.get("plant_id", ""))
+		var pname := seed_db.display_name(pid)
+		var awaiting := str(st.get("awaiting_media", ""))
+		if awaiting == GardenState.STAGE_SPROUT or awaiting == GardenState.STAGE_GROWN:
+			out.append({
+				"kind": "media",
+				"bed_id": bed_id,
+				"slot": slot,
+				"plant_id": pid,
+				"media_kind": awaiting,
+				"label": "Look",
+				"narration": "Look at the %s!" % pname,
+			})
+		if stage == GardenState.STAGE_GROWN:
+			out.append({
+				"kind": "harvest",
+				"bed_id": bed_id,
+				"slot": slot,
+				"plant_id": pid,
+				"label": "Harvest",
+				"narration": "Harvest the %s?" % pname,
+			})
 		out.append({
-			"kind": "harvest",
+			"kind": "uproot",
 			"bed_id": bed_id,
 			"slot": slot,
 			"plant_id": pid,
-			"label": "Harvest",
-			"narration": "Harvest the %s?" % pname,
+			"label": "Uproot",
+			"narration": "Pull out the %s?" % pname,
 		})
-	## Always allow uprooting an occupied slot (with the other options).
-	out.append({
-		"kind": "uproot",
-		"bed_id": bed_id,
-		"slot": slot,
-		"plant_id": pid,
-		"label": "Uproot",
-		"narration": "Pull out the %s?" % pname,
-	})
 	## Bugs discovery — always available on a planted or empty plot interaction.
 	out.append({
 		"kind": "bugs",
@@ -695,9 +701,14 @@ func _build_bed_actions(bed_id: String, slot: int) -> Array:
 		"narration": "Let's look for bugs in the garden!",
 		"silent": true, ## Narrate on confirm in _start_bug_hunt.
 	})
-	if out.is_empty():
-		SpeakScript.line("The %s is growing." % pname)
 	return out
+
+func _bed_thirsty_count(bed_id: String) -> int:
+	var n := 0
+	for i in garden.slots_per_bed:
+		if garden.is_thirsty(bed_id, i):
+			n += 1
+	return n
 
 func _on_action_cancelled() -> void:
 	_pending.clear()
@@ -804,11 +815,19 @@ func _do_plant(bed_id: String, slot: int, plant_id: String) -> void:
 			SpeakScript.line("This garden box is full.")
 
 func _do_water(bed_id: String, slot: int) -> void:
-	var result := garden.water(bed_id, slot, seed_db)
-	if bool(result.get("ok", false)):
-		Events.plant_watered.emit(bed_id, slot, str(result.plant_id), str(result.stage))
-		print("Garden Explorer: watered %s → %s" % [result.plant_id, result.stage])
-	elif bool(result.get("not_thirsty", false)):
+	## One Water action soaks every thirsty plot in the bed (slot < 0), or a
+	## single plot when a specific slot is given (legacy path).
+	var watered := 0
+	var slots := range(garden.slots_per_bed) if slot < 0 else [slot]
+	for i in slots:
+		if not garden.is_thirsty(bed_id, i):
+			continue
+		var result := garden.water(bed_id, i, seed_db)
+		if bool(result.get("ok", false)):
+			watered += 1
+			Events.plant_watered.emit(bed_id, i, str(result.plant_id), str(result.stage))
+			print("Garden Explorer: watered %s → %s" % [result.plant_id, result.stage])
+	if watered == 0:
 		SpeakScript.line("Not thirsty yet.")
 
 func _handle_animal_tap(animal_id: String) -> void:

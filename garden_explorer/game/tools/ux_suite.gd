@@ -8,6 +8,7 @@ extends SceneTree
 ## Exit 0 = all checks passed.
 
 const OUT_DIR := "res://docs/screenshots/ux"
+const NarratorLib := preload("res://scripts/audio/Narrator.gd")
 
 var _logs: PackedStringArray = PackedStringArray()
 var _checks: Array = []
@@ -77,9 +78,9 @@ func _run() -> void:
 	var pick := "lettuce" if seeds.has("lettuce") else str(seeds[0])
 	if shed and shed.has_method("_on_seed_pressed"):
 		shed.call("_on_seed_pressed", pick)
-	## MediaPanel pauses the tree on first-seed discovery — close before any await.
-	_close_any_media(main)
-	await _settle(4)
+	## First-seed discovery narrates ~10 s, then opens a tree-pausing
+	## MediaPanel and only then emits seed_selected — drain all of it.
+	await _drain_freezes(main, 1200)
 	_check("seed_selected", str(shed.call("selected_seed")) == pick, "holding %s" % pick)
 	_check_log_contains("seed_selected_log", "seed_selected:%s" % pick)
 	await _shot("seed_selected")
@@ -99,6 +100,15 @@ func _run() -> void:
 	if shed and shed.has_method("clear_selection"):
 		shed.call("clear_selection")
 	await _settle(2)
+
+	## Per-bed watering: one Water action soaks every thirsty plot in the bed.
+	await _tap_and_confirm_kind(main, farm.slot_world("bed_0", 0), "water")
+	var still_thirsty := 0
+	for i in 4:
+		if garden.is_thirsty("bed_0", i):
+			still_thirsty += 1
+	_check("bed_watered", still_thirsty == 0, "thirsty after bed water=%d" % still_thirsty)
+	_check_log_contains("water_log", "watered:")
 
 	for i in 4:
 		_force_grown(garden, db, "bed_0", i)
@@ -120,8 +130,14 @@ func _run() -> void:
 	for i in 4:
 		## First interact may open grown media; second picks Harvest from action tiles.
 		await _tap_and_confirm(main, farm.slot_world("bed_0", i))
-		_close_any_media(main)
-		await _tap_and_confirm_kind(main, farm.slot_world("bed_0", i), "harvest")
+		await _drain_freezes(main, 900)
+		## Retry: a roaming animal near the bed can steal a tap.
+		for _try in 3:
+			if garden.is_empty("bed_0", i):
+				break
+			await _tap_and_confirm_kind(main, farm.slot_world("bed_0", i), "harvest")
+			## First harvest runs the full ceremony (grid + video) — drain it.
+			await _drain_freezes(main, 1800)
 	var after_total := _sum_totals(world.harvest_totals)
 	_check("harvest_stored", after_total >= before_total + 4, "totals %d→%d" % [before_total, after_total])
 	_check_log_contains("harvest_log", "harvest:")
@@ -168,7 +184,9 @@ func _run() -> void:
 	# Phase 4 — animal tap plays real SFX (no confirm chip)
 	var chick_pos: Vector2 = farm.animal_positions.get("chicken_a", farm.fence_center)
 	_events().world_tapped.emit(chick_pos)
-	await _settle(40)
+	## Walking into the pen (gate detour + "Walking to ..." narration) takes a
+	## while — wait for the tap event rather than a fixed settle.
+	await _wait_log("animal:", 1500)
 	_check_log_contains("animal_tap_log", "animal:")
 	await _shot("animal_tap")
 
@@ -205,6 +223,43 @@ func _sum_totals(totals: Dictionary) -> int:
 		n += int(totals[k])
 	return n
 
+func _drain_freezes(main: Node, max_frames: int) -> void:
+	## Close media/video panels as they appear and wait until the game has been
+	## free of panels and narration locks for ~half a second.
+	var clear := 0
+	for _i in max_frames:
+		await process_frame
+		var busy := NarratorLib.blocks_movement()
+		for n in ["MediaPanel", "VideoPanel"]:
+			var p: Node = main.get_node_or_null(n)
+			if p and p.has_method("is_open") and bool(p.call("is_open")):
+				busy = true
+				if p.has_method("close_panel"):
+					p.call("close_panel")
+		var rt: Node = main.get_node_or_null("RevealTile")
+		if rt and rt.has_method("is_open") and bool(rt.call("is_open")):
+			busy = true
+			if rt.has_method("close_reveal"):
+				rt.call("close_reveal")
+		## Celebration grids self-close a few seconds after the tree unpauses.
+		for g in ["PlantGrid", "BugGrid"]:
+			var grid: Node = main.get_node_or_null(g)
+			if grid and grid.has_method("is_open") and bool(grid.call("is_open")):
+				busy = true
+		if paused:
+			busy = true
+			paused = false
+		clear = 0 if busy else clear + 1
+		if clear >= 30:
+			return
+
+func _wait_log(needle: String, max_frames: int) -> void:
+	for _i in max_frames:
+		await process_frame
+		for line in _logs:
+			if str(line).findn(needle) >= 0:
+				return
+
 func _confirm_prompt(main: Node, kind: String = "") -> void:
 	var ap: Node = main.get_node_or_null("ActionPrompt")
 	if ap == null:
@@ -221,8 +276,9 @@ func _confirm_prompt(main: Node, kind: String = "") -> void:
 		ap.call("confirm_current")
 
 func _wait_and_confirm(main: Node, kind: String = "") -> void:
-	## Wait for walk → ActionPrompt, then confirm.
-	for _i in 90:
+	## Wait for walk → ActionPrompt, then confirm. Walks + narration locks can
+	## take several seconds, so wait generously (600 frames ≈ 10 s).
+	for _i in 600:
 		await process_frame
 		var ap: Node = main.get_node_or_null("ActionPrompt")
 		if ap and ap.has_method("is_open") and bool(ap.call("is_open")):

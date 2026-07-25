@@ -116,5 +116,28 @@ original list.
   Explainer narration updated (hold-a-seed planting, Buddy the puppy, fill all
   six beds); intro.ogv + explainer.mp4 rebuilt.
 
+## Round 5 mechanics (2026-07-25 night)
+- Game clock: garden growth + season timer freeze whenever the player is
+  frozen — narration movement-locks and full-screen panels (videos, media,
+  season card, celebration grids, intro). Routine actions (planting, shed
+  browsing) keep time running. Shared logic in scripts/sim/GameFreeze.gd
+  (World pauses the clock, Music pauses the track). Verified by
+  tools/probe_time_freeze.gd.
+- Watering: one Water action per bed — soaks every thirsty plot at once
+  (sim showed per-plot watering made a full garden impossible at kid pace).
+- Planting: no plot choice. Tap the bed → Plant fills the next empty plot in
+  fixed order (back-left → back-right → front-left → front-right); tap again
+  for the next plot.
+- Bug fix: taps made during a narration lock used to die silently (Player
+  dropped the path request). World now defers the walk until the lock
+  releases.
+- VO: baked the action-prompt confirm lines (Plant/Harvest/Pull out/Look ×
+  32 plants, "Water the bed?", "What do you want to do?", "Not thirsty
+  yet.") — 132 new ElevenLabs clips; these previously fell back to OS TTS.
+- ux_suite: 38/38 green (was 26/36 — pre-existing failures from short waits
+  racing the new narration locks + first-seed media). Suite now drains
+  freeze panels, waits for logs instead of fixed settles, retries taps a
+  roaming animal stole, and asserts per-bed watering.
+
 ## Always
 - Headless unit tests + ux_suite after each phase; rebuild APK & install last.

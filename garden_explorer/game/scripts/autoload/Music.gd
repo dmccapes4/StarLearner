@@ -10,6 +10,7 @@ extends Node
 ## Season changes crossfade between the two players.
 
 const NarratorScript := preload("res://scripts/audio/Narrator.gd")
+const GameFreezeScript := preload("res://scripts/sim/GameFreeze.gd")
 
 const MUSIC_DIR := "res://audio/music"
 const BASE_DB := -10.0
@@ -88,14 +89,5 @@ func _process(delta: float) -> void:
 		out.stop()
 
 func _freeze_panel_open() -> bool:
-	for grp in ["video_panel", "media_panel", "season_card", "bug_grid", "plant_grid", "intro_panel"]:
-		var n := get_tree().get_first_node_in_group(grp)
-		if n and n.has_method("is_open") and bool(n.call("is_open")):
-			return true
-		if grp == "intro_panel" and n and n.get("visible") == true:
-			return true
-	## Reveal tile freezes only while its narration is playing.
-	var rt := get_tree().get_first_node_in_group("reveal_tile")
-	if rt and rt.has_method("is_narrating") and bool(rt.call("is_narrating")):
-		return true
-	return false
+	## Shared with World's game-time freeze (scripts/sim/GameFreeze.gd).
+	return GameFreezeScript.panels_open(get_tree())

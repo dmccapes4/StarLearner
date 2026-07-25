@@ -114,6 +114,11 @@ func _run() -> void:
 	for season in ["Spring", "Summer", "Fall", "Winter"]:
 		for y in range(1, 11):
 			_add("It's %s, year %d!" % [season, y])
+	## ---- Action prompt confirms (previously OS-TTS fallback) ----
+	_add("What do you want to do?")
+	_add("Water the bed?")
+	_add("Not thirsty yet.")
+	_add("Open the shed to pick a seed.")
 	var seeds_raw = JSON.parse_string(FileAccess.get_file_as_string("res://data/seeds.json"))
 	if typeof(seeds_raw) == TYPE_DICTIONARY:
 		for p in seeds_raw.get("plants", []):
@@ -124,6 +129,10 @@ func _run() -> void:
 			_add("Farmers pick %s gently when it is ripe, so the plant is not hurt." % pn)
 			_add("Fresh %s is full of vitamins that help you grow strong." % pn)
 			_add("You picked %s!" % pn)
+			_add("Plant the %s seed here?" % pn)
+			_add("Harvest the %s?" % pn)
+			_add("Pull out the %s?" % pn)
+			_add("Look at the %s!" % pn)
 
 	var abs_path := ProjectSettings.globalize_path(OUT)
 	var f := FileAccess.open(OUT, FileAccess.WRITE)
