@@ -1,0 +1,15 @@
+# Licensed / local-only art (not redistributed in git)
+game/assets/tiles/mana_seed_crops/
+game/assets/characters/mana_farmer/
+game/assets/characters/gardener_walk.png
+
+# Godot / Android local artifacts
+game/.godot/
+game/android/
+tools/build/
+*.apk
+*.pck
+
+# Editor host-local config (do not ship)
+.cache/
+.config/

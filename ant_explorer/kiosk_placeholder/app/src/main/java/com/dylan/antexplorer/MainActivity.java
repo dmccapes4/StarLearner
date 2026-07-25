@@ -220,20 +220,25 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         if (tiles.isEmpty()) {
             tiles.add(Tile.builtinAnts());
         }
+        final boolean compact = tiles.size() >= 5;
         for (Tile t : tiles) {
-            tileRow.addView(makeTileView(t));
+            tileRow.addView(makeTileView(t, compact));
         }
     }
 
-    private View makeTileView(final Tile t) {
-        int boxDp = TILE_BOX_DP;
-        int imgDp = TILE_IMG_DP;
+    private View makeTileView(final Tile t, boolean compact) {
+        // Five-title catalogs fit the Moto G Play's ~800 dp landscape width
+        // without clipping either edge. Four-title catalogs keep the original,
+        // larger presentation.
+        int boxDp = compact ? 140 : TILE_BOX_DP;
+        int imgDp = compact ? 128 : TILE_IMG_DP;
+        int marginDp = compact ? 6 : TILE_MARGIN_DP;
 
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setGravity(Gravity.CENTER_HORIZONTAL);
         LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(dp(boxDp), LinearLayout.LayoutParams.WRAP_CONTENT);
-        bp.setMargins(dp(TILE_MARGIN_DP), 0, dp(TILE_MARGIN_DP), 0);
+        bp.setMargins(dp(marginDp), 0, dp(marginDp), 0);
         bp.gravity = Gravity.CENTER_VERTICAL;
         box.setLayoutParams(bp);
 
@@ -286,7 +291,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
         TextView label = new TextView(this);
         label.setText(t.label);
-        label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+        label.setTextSize(TypedValue.COMPLEX_UNIT_SP, compact ? 16 : 18);
         label.setTextColor(Color.WHITE);
         label.setTypeface(Typeface.DEFAULT_BOLD);
         label.setGravity(Gravity.CENTER);
@@ -311,7 +316,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         final File video = resolveVideo(t.videoName);
         if (video != null) {
             Button play = makePlayChip();
-            LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(dp(40), dp(40));
+            int playDp = compact ? 36 : 40;
+            LinearLayout.LayoutParams pp = new LinearLayout.LayoutParams(dp(playDp), dp(playDp));
             pp.topMargin = dp(6);
             pp.gravity = Gravity.CENTER_HORIZONTAL;
             box.addView(play, pp);

@@ -1,0 +1,19 @@
+{
+  "id": "peter_rabbit",
+  "lang": "en",
+  "title": "The Tale of Peter Rabbit",
+  "description": "A little rabbit goes into Mr. McGregor's garden.",
+  "license": "US public domain (Beatrix Potter, 1902)",
+  "source_url": "https://www.gutenberg.org/ebooks/14838",
+  "retrieved_on": "2026-07-25",
+  "notes": "Short opening excerpt only (kid-session length). Full text is US public domain; packaged wording is a lightly paginated excerpt of the Gutenberg #14838 text.\n",
+  "cover": "res://books/peter_rabbit/cover.png",
+  "cover_motif": "rabbit",
+  "pages": [
+    "res://books/peter_rabbit/pages/000.json",
+    "res://books/peter_rabbit/pages/001.json",
+    "res://books/peter_rabbit/pages/002.json",
+    "res://books/peter_rabbit/pages/003.json"
+  ],
+  "ship": true
+}

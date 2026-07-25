@@ -19,6 +19,8 @@ VIDEOS=(
   "$ROOT/docs/demo/ant_explorer_explainer.mp4"
   "$STAR/solar_system_explorer/docs/demo/solar_system_explorer_explainer.mp4"
   "$STAR/math_explorer/docs/demo/math_explorer_explainer.mp4"
+  "$STAR/garden_explorer/docs/demo/garden_explorer_playthrough.mp4"
+  "$STAR/language_explorer/docs/demo/language_explorer_explainer.mp4"
 )
 adb shell mkdir -p /sdcard/AntPhone/videos /data/local/tmp/antphone_videos
 for v in "${VIDEOS[@]}"; do

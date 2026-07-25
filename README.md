@@ -45,7 +45,8 @@ in [`ant_explorer/docs/KIOSK_APPLIANCE.md`](ant_explorer/docs/KIOSK_APPLIANCE.md
 | 1 | **Ant Explorer** | `ants` | ✅ Available | [full detail below](#1-ant-explorer) · [`ant_explorer/`](ant_explorer/) |
 | 2 | **Solar System Explorer** | `planets` | ✅ Available | pick a world, plot a course, fly the 3D hop, park in orbit (Sun included — safe standoff) · [`solar_system_explorer/`](solar_system_explorer/) |
 | 3 | **Math Explorer** | `preview` | 🔬 Preview | four tabs (`+ − × ÷`); numbers made visible as countable cubes; narrated, animated tutorials + sprite word problems · [`math_explorer/`](math_explorer/) |
-| 4 | *(planned)* | — | 🕓 Idea | future title (e.g. bees, tide pools, the night sky) |
+| 4 | **Garden Explorer** | `garden` | ✅ Available | plant, water, grow, harvest, and learn from an offline seasonal garden · [`garden_explorer/`](garden_explorer/) |
+| 5 | **Language Explorer** | `words` | ✅ Available | bilingual EN/ES sentence matching, books, alphabet writing, and finger tracing · [`language_explorer/`](language_explorer/) |
 
 **Math Explorer** is a second *preview* title — a different subject (early math, not science) proving
 the console spans domains. It makes numbers **visible**: `7 + 4` becomes seven red cubes and four

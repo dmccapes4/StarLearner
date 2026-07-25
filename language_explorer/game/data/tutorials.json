@@ -1,0 +1,100 @@
+[
+  {
+    "id": "tut_read",
+    "title": "How to read",
+    "title_es": "Cómo leer",
+    "steps": {
+      "en": [
+        {"target": "Sentences", "say": "Choose Sentences to match pictures with red words."},
+        {"target": "Books", "say": "Choose Books to read a story one page at a time."}
+      ],
+      "es": [
+        {"target": "Oraciones", "say": "Elige Oraciones para unir imágenes con palabras rojas."},
+        {"target": "Libros", "say": "Elige Libros para leer un cuento página por página."}
+      ]
+    }
+  },
+  {
+    "id": "tut_sentences",
+    "title": "Sentence matching",
+    "title_es": "Unir oraciones",
+    "steps": {
+      "en": [
+        {"target": "Red word", "say": "Tap a red word to hear every letter."},
+        {"target": "Picture chip", "say": "Tap a picture, then its red word, or drag the picture onto the word."},
+        {"target": "Clear buttons", "say": "When every word is green, read it slowly or go to the next sentence."}
+      ],
+      "es": [
+        {"target": "Palabra roja", "say": "Toca una palabra roja para oír cada letra."},
+        {"target": "Imagen", "say": "Toca una imagen y luego su palabra roja, o arrastra la imagen."},
+        {"target": "Botones", "say": "Cuando todo esté verde, lee despacio o sigue a la próxima oración."}
+      ]
+    }
+  },
+  {
+    "id": "tut_books",
+    "title": "Opening a book",
+    "title_es": "Abrir un libro",
+    "steps": {
+      "en": [
+        {"target": "Book cover", "say": "Tap a cover once to hear about the book."},
+        {"target": "Tap again", "say": "Tap the same cover again within five seconds to open it."},
+        {"target": "Words and pages", "say": "Tap a word to spell it. Read the page slowly, or go to the next page."}
+      ],
+      "es": [
+        {"target": "Portada", "say": "Toca una portada una vez para oír sobre el libro."},
+        {"target": "Toca otra vez", "say": "Toca la misma portada otra vez en cinco segundos para abrir."},
+        {"target": "Palabras y páginas", "say": "Toca una palabra para deletrear. Lee despacio o sigue a la próxima página."}
+      ]
+    }
+  },
+  {
+    "id": "tut_write",
+    "title": "How to write",
+    "title_es": "Cómo escribir",
+    "steps": {
+      "en": [
+        {"target": "Images", "say": "Images gives you a picture for the word you will write."},
+        {"target": "Narration", "say": "Narration says and spells the word before you write it."},
+        {"target": "Letter input", "say": "Choose Alphabet tiles or Sketch before you begin."}
+      ],
+      "es": [
+        {"target": "Imágenes", "say": "Imágenes te da un dibujo de la palabra que escribirás."},
+        {"target": "Narración", "say": "Narración dice y deletrea la palabra antes de escribir."},
+        {"target": "Entrada de letras", "say": "Elige fichas del alfabeto o trazado antes de empezar."}
+      ]
+    }
+  },
+  {
+    "id": "tut_alphabet",
+    "title": "How alphabet tiles work",
+    "title_es": "Cómo funcionan las fichas",
+    "steps": {
+      "en": [
+        {"target": "A | a", "say": "The board follows the word's uppercase and lowercase letters. You can switch it too."},
+        {"target": "Grey underline", "say": "Tap the letter that belongs on the current grey underline."},
+        {"target": "Gold hint", "say": "After three tries or three hints, the correct letter glows gold."}
+      ],
+      "es": [
+        {"target": "A | a", "say": "El tablero sigue las mayúsculas y minúsculas de la palabra. También puedes cambiarlo."},
+        {"target": "Línea gris", "say": "Toca la letra que va en la línea gris actual."},
+        {"target": "Pista dorada", "say": "Después de tres intentos o pistas, la letra correcta brilla dorada."}
+      ]
+    }
+  },
+  {
+    "id": "tut_sketch",
+    "title": "Sketch letters",
+    "title_es": "Trazar letras",
+    "steps": {
+      "en": [
+        {"target": "Grey letter", "say": "Trace the current grey letter with one finger."},
+        {"target": "Music button", "say": "Tap the music button to hear the current letter again."}
+      ],
+      "es": [
+        {"target": "Letra gris", "say": "Traza la letra gris actual con un dedo."},
+        {"target": "Botón de música", "say": "Toca el botón de música para oír la letra actual otra vez."}
+      ]
+    }
+  }
+]

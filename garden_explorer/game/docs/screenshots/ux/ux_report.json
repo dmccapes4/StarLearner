@@ -1,0 +1,223 @@
+{
+	"checks": [
+		{
+			"detail": "World node",
+			"name": "world_present",
+			"ok": true
+		},
+		{
+			"detail": "Sprout Lands available",
+			"name": "sprites_ready",
+			"ok": true
+		},
+		{
+			"detail": "bed_count=6",
+			"name": "six_beds",
+			"ok": true
+		},
+		{
+			"detail": "rabbit placeholder ok",
+			"name": "chicken_frames",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/01_farm_boot.png",
+			"name": "shot_farm_boot",
+			"ok": true
+		},
+		{
+			"detail": "needle='shed_opened' in 1 events",
+			"name": "open_shed_log",
+			"ok": true
+		},
+		{
+			"detail": "shed panel open",
+			"name": "shed_open",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/02_shed_open.png",
+			"name": "shot_shed_open",
+			"ok": true
+		},
+		{
+			"detail": "count=8",
+			"name": "seasonal_seeds",
+			"ok": true
+		},
+		{
+			"detail": "holding lettuce",
+			"name": "seed_selected",
+			"ok": true
+		},
+		{
+			"detail": "needle='seed_selected:lettuce' in 2 events",
+			"name": "seed_selected_log",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/03_seed_selected.png",
+			"name": "shot_seed_selected",
+			"ok": true
+		},
+		{
+			"detail": "occupied=4",
+			"name": "planted_four",
+			"ok": true
+		},
+		{
+			"detail": "needle='planted:' in 7 events",
+			"name": "plant_log",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/04_bed_full.png",
+			"name": "shot_bed_full",
+			"ok": true
+		},
+		{
+			"detail": "grown_slots=4",
+			"name": "grown_after_water",
+			"ok": true
+		},
+		{
+			"detail": "saw stage/water events",
+			"name": "stage_or_water_log",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/05_grown.png",
+			"name": "shot_grown",
+			"ok": true
+		},
+		{
+			"detail": "totals 0→4",
+			"name": "harvest_stored",
+			"ok": true
+		},
+		{
+			"detail": "needle='harvest:' in 27 events",
+			"name": "harvest_log",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/06_after_harvest.png",
+			"name": "shot_after_harvest",
+			"ok": true
+		},
+		{
+			"detail": "hamburger open",
+			"name": "star_menu_open",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/07_star_menu.png",
+			"name": "shot_star_menu",
+			"ok": true
+		},
+		{
+			"detail": "needle='guide:' in 28 events",
+			"name": "guide_log",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/08_star_guidance.png",
+			"name": "shot_star_guidance",
+			"ok": true
+		},
+		{
+			"detail": "video or media panel open",
+			"name": "video_open",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/09_star_video.png",
+			"name": "shot_star_video",
+			"ok": true
+		},
+		{
+			"detail": "needle='star_collected:01_seeds' in 29 events",
+			"name": "star_collected_log",
+			"ok": true
+		},
+		{
+			"detail": "01_seeds collected",
+			"name": "star_collected",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/10_animals.png",
+			"name": "shot_animals",
+			"ok": true
+		},
+		{
+			"detail": "needle='animal:' in 31 events",
+			"name": "animal_tap_log",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/11_animal_tap.png",
+			"name": "shot_animal_tap",
+			"ok": true
+		},
+		{
+			"detail": "spring→summer",
+			"name": "season_flipped",
+			"ok": true
+		},
+		{
+			"detail": "needle='season:' in 33 events",
+			"name": "season_log",
+			"ok": true
+		},
+		{
+			"detail": "season=summer seeds=7",
+			"name": "season_seed_list_changed",
+			"ok": true
+		},
+		{
+			"detail": "/home/dylanmccapes/dev/star_learning/garden_explorer/game/docs/screenshots/ux/12_shed_new_season.png",
+			"name": "shot_shed_new_season",
+			"ok": true
+		}
+	],
+	"failed": 0,
+	"logs": [
+		"shed_opened",
+		"seed_selected:lettuce",
+		"planted:lettuce:bed_0:0",
+		"revealed:03_planting",
+		"planted:lettuce:bed_0:1",
+		"planted:lettuce:bed_0:2",
+		"planted:lettuce:bed_0:3",
+		"stage:lettuce:bed_0:0:sprout",
+		"revealed:05_sprouting",
+		"stage:lettuce:bed_0:0:growing",
+		"revealed:07_growing",
+		"stage:lettuce:bed_0:0:grown",
+		"stage:lettuce:bed_0:1:sprout",
+		"stage:lettuce:bed_0:1:growing",
+		"stage:lettuce:bed_0:1:grown",
+		"stage:lettuce:bed_0:2:sprout",
+		"stage:lettuce:bed_0:2:growing",
+		"stage:lettuce:bed_0:2:grown",
+		"stage:lettuce:bed_0:3:sprout",
+		"stage:lettuce:bed_0:3:growing",
+		"stage:lettuce:bed_0:3:grown",
+		"harvest:lettuce:1",
+		"revealed:09_harvest",
+		"revealed:12_store",
+		"harvest:lettuce:2",
+		"harvest:lettuce:3",
+		"harvest:lettuce:4",
+		"guide:08_weeding",
+		"star_collected:01_seeds",
+		"animal:chicken_b",
+		"animal:chicken_a",
+		"season:summer",
+		"revealed:10_seasons",
+		"shed_opened"
+	],
+	"passed": 36,
+	"shots": 12
+}

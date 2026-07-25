@@ -1,0 +1,65 @@
+{
+  "version": 2,
+  "season_order": [
+    "spring",
+    "summer",
+    "fall",
+    "winter"
+  ],
+  "season_duration_sec": 180,
+  "notes": "Disjoint 8 seeds per season. Winter includes hardy crops, overwinterers, and windowsill gardening.",
+  "seasons": {
+    "spring": {
+      "label": "Spring",
+      "seed_ids": [
+        "lettuce",
+        "pea",
+        "radish",
+        "carrot",
+        "spinach",
+        "onion",
+        "cabbage",
+        "strawberry"
+      ]
+    },
+    "summer": {
+      "label": "Summer",
+      "seed_ids": [
+        "tomato",
+        "corn",
+        "cucumber",
+        "bean",
+        "bell_pepper",
+        "zucchini",
+        "melon",
+        "eggplant"
+      ]
+    },
+    "fall": {
+      "label": "Fall",
+      "seed_ids": [
+        "pumpkin",
+        "potato",
+        "broccoli",
+        "cauliflower",
+        "grape",
+        "raspberry",
+        "turnip",
+        "celery"
+      ]
+    },
+    "winter": {
+      "label": "Winter",
+      "seed_ids": [
+        "garlic",
+        "leek",
+        "kale",
+        "artichoke",
+        "wheat",
+        "chili",
+        "blueberry",
+        "oats"
+      ]
+    }
+  }
+}

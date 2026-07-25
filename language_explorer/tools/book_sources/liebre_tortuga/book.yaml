@@ -1,0 +1,17 @@
+id: liebre_tortuga
+lang: es
+title: La liebre y la tortuga
+description: Una carrera entre una liebre rápida y una tortuga paciente.
+license: Public-domain Aesop motif; original short Spanish retelling (Star Learner, 2026)
+source_url: https://en.wikipedia.org/wiki/The_Tortoise_and_the_Hare
+retrieved_on: "2026-07-25"
+notes: >
+  Classic Aesop fable plot is ancient/public domain. Page text is an original
+  short Spanish retelling written for Literacy Explorer (not a verbatim reprint
+  of a modern translation). Safe to ship on the family kiosk.
+cover_motif: tortoise
+pages:
+  - Una liebre se burlaba de una tortuga.
+  - La tortuga la retó a una carrera.
+  - La liebre corrió muy rápido y se durmió.
+  - La tortuga caminó despacio y llegó primero.

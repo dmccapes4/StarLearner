@@ -1,0 +1,9 @@
+# Godot / Android local artifacts
+game/.godot/
+game/android/
+tools/build/
+*.apk
+*.pck
+
+# Secrets (use ant_explorer shared ElevenLabs env)
+tools/secrets/

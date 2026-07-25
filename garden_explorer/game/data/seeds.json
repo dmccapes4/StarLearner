@@ -1,0 +1,1990 @@
+{
+  "version": 3,
+  "notes": "32 Mana Seed crops, 8 per season. sheet= per-crop PNG stem under mana_seed_crops/crops/. Slides use stage sprites.",
+  "plants": [
+    {
+      "id": "lettuce",
+      "name": "Lettuce",
+      "seasons": [
+        "spring"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "lettuce",
+      "blurb": "Lettuce likes cool spring days and grows quickly.",
+      "tile": "tiles/lettuce.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Lettuce seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Lettuce in spring.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Lettuce likes cool spring days and grows quickly.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Lettuce sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Lettuce is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 1,
+      "waters_to_growing": 2,
+      "waters_to_grown": 2,
+      "seconds_seed": 4,
+      "seconds_sprout": 5,
+      "seconds_growing": 6,
+      "thirst_interval": 4.0
+    },
+    {
+      "id": "pea",
+      "name": "Pea",
+      "seasons": [
+        "spring"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "peasgreen",
+      "blurb": "Peas climb and like to be planted as soon as the ground wakes up.",
+      "tile": "tiles/pea.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Pea seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Pea in spring.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Peas climb and like to be planted as soon as the ground wakes up.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Pea sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Pea is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 1,
+      "waters_to_growing": 2,
+      "waters_to_grown": 2,
+      "seconds_seed": 4,
+      "seconds_sprout": 5,
+      "seconds_growing": 6,
+      "thirst_interval": 4.0
+    },
+    {
+      "id": "radish",
+      "name": "Radish",
+      "seasons": [
+        "spring"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "radish",
+      "blurb": "Radishes are the fastest seed-to-harvest \u2014 great first crop!",
+      "tile": "tiles/radish.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Radish seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Radish in spring.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Radishes are the fastest seed-to-harvest \u2014 great first crop!",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Radish sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Radish is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 1,
+      "waters_to_growing": 2,
+      "waters_to_grown": 2,
+      "seconds_seed": 4,
+      "seconds_sprout": 5,
+      "seconds_growing": 6,
+      "thirst_interval": 4.0
+    },
+    {
+      "id": "carrot",
+      "name": "Carrot",
+      "seasons": [
+        "spring"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "carrot",
+      "blurb": "Carrot roots grow hidden underground until harvest.",
+      "tile": "tiles/carrot.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Carrot seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Carrot in spring.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Carrot roots grow hidden underground until harvest.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Carrot sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Carrot is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "spinach",
+      "name": "Spinach",
+      "seasons": [
+        "spring"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "spinach",
+      "blurb": "Spinach loves cool days and bolts when it gets hot.",
+      "tile": "tiles/spinach.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Spinach seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Spinach in spring.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Spinach loves cool days and bolts when it gets hot.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Spinach sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Spinach is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 1,
+      "waters_to_growing": 2,
+      "waters_to_grown": 2,
+      "seconds_seed": 4,
+      "seconds_sprout": 5,
+      "seconds_growing": 6,
+      "thirst_interval": 4.0
+    },
+    {
+      "id": "onion",
+      "name": "Onion",
+      "seasons": [
+        "spring"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "onionyellow",
+      "blurb": "Onions start early in spring and make bulbs by summer.",
+      "tile": "tiles/onion.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Onion seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Onion in spring.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Onions start early in spring and make bulbs by summer.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Onion sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Onion is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "cabbage",
+      "name": "Cabbage",
+      "seasons": [
+        "spring"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "cabbage",
+      "blurb": "Cabbage grows a big leafy head and can handle a little frost.",
+      "tile": "tiles/cabbage.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Cabbage seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Cabbage in spring.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Cabbage grows a big leafy head and can handle a little frost.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Cabbage sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Cabbage is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "strawberry",
+      "name": "Strawberry",
+      "seasons": [
+        "spring"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "strawberry",
+      "blurb": "Strawberries flower in spring and make sweet June berries.",
+      "tile": "tiles/strawberry.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Strawberry seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Strawberry in spring.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Strawberries flower in spring and make sweet June berries.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Strawberry sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Strawberry is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "tomato",
+      "name": "Tomato",
+      "seasons": [
+        "summer"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "tomato",
+      "blurb": "Tomatoes love sun and summer. They need more water as they grow big.",
+      "tile": "tiles/tomato.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Tomato seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Tomato in summer.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Tomatoes love sun and summer. They need more water as they grow big.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Tomato sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Tomato is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 3,
+      "seconds_seed": 7,
+      "seconds_sprout": 9,
+      "seconds_growing": 12,
+      "thirst_interval": 4.0
+    },
+    {
+      "id": "corn",
+      "name": "Corn",
+      "seasons": [
+        "summer"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "cornyellow",
+      "blurb": "Corn grows tall \u2014 knee-high by the Fourth of July!",
+      "tile": "tiles/corn.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Corn seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Corn in summer.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Corn grows tall \u2014 knee-high by the Fourth of July!",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Corn sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Corn is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "cucumber",
+      "name": "Cucumber",
+      "seasons": [
+        "summer"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "cucumber",
+      "blurb": "Cucumbers are vines and get thirsty in the heat.",
+      "tile": "tiles/cucumber.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Cucumber seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Cucumber in summer.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Cucumbers are vines and get thirsty in the heat.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Cucumber sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Cucumber is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 3,
+      "seconds_seed": 7,
+      "seconds_sprout": 9,
+      "seconds_growing": 12,
+      "thirst_interval": 4.0
+    },
+    {
+      "id": "bean",
+      "name": "Bean",
+      "seasons": [
+        "summer"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "beanspinto",
+      "blurb": "Beans grow fast and you can pick them again and again.",
+      "tile": "tiles/bean.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Bean seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Bean in summer.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Beans grow fast and you can pick them again and again.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Bean sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Bean is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 1,
+      "waters_to_growing": 2,
+      "waters_to_grown": 2,
+      "seconds_seed": 4,
+      "seconds_sprout": 5,
+      "seconds_growing": 6,
+      "thirst_interval": 4.0
+    },
+    {
+      "id": "bell_pepper",
+      "name": "Bell Pepper",
+      "seasons": [
+        "summer"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "bellpeppergreen",
+      "blurb": "Bell peppers turn from green to yellow to red as they ripen.",
+      "tile": "tiles/bell_pepper.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Bell Pepper seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Bell Pepper in summer.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Bell peppers turn from green to yellow to red as they ripen.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Bell Pepper sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Bell Pepper is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "zucchini",
+      "name": "Zucchini",
+      "seasons": [
+        "summer"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "zucchini",
+      "blurb": "Zucchini plants make lots of squash in hot weather.",
+      "tile": "tiles/zucchini.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Zucchini seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Zucchini in summer.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Zucchini plants make lots of squash in hot weather.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Zucchini sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Zucchini is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "melon",
+      "name": "Melon",
+      "seasons": [
+        "summer"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "watermelon",
+      "blurb": "Melons need a long hot summer to grow big and sweet.",
+      "tile": "tiles/melon.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Melon seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Melon in summer.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Melons need a long hot summer to grow big and sweet.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Melon sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Melon is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "eggplant",
+      "name": "Eggplant",
+      "seasons": [
+        "summer"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "eggplant",
+      "blurb": "Eggplants love heat and grow glossy purple fruit.",
+      "tile": "tiles/eggplant.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Eggplant seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Eggplant in summer.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Eggplants love heat and grow glossy purple fruit.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Eggplant sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Eggplant is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "pumpkin",
+      "name": "Pumpkin",
+      "seasons": [
+        "fall"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "pumpkin",
+      "blurb": "Pumpkins are the big fall harvest \u2014 perfect for autumn.",
+      "tile": "tiles/pumpkin.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Pumpkin seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Pumpkin in fall.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Pumpkins are the big fall harvest \u2014 perfect for autumn.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Pumpkin sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Pumpkin is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "potato",
+      "name": "Potato",
+      "seasons": [
+        "fall"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "potatobrown",
+      "blurb": "Potatoes hide underground like buried treasure until fall.",
+      "tile": "tiles/potato.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Potato seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Potato in fall.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Potatoes hide underground like buried treasure until fall.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Potato sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Potato is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "broccoli",
+      "name": "Broccoli",
+      "seasons": [
+        "fall"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "broccoli",
+      "blurb": "We eat the flower buds of broccoli!",
+      "tile": "tiles/broccoli.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Broccoli seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Broccoli in fall.",
+            "stage": "sprout"
+          },
+          {
+            "text": "We eat the flower buds of broccoli!",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Broccoli sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Broccoli is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "cauliflower",
+      "name": "Cauliflower",
+      "seasons": [
+        "fall"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "cauliflower",
+      "blurb": "Cauliflower is a cousin of broccoli with a white head.",
+      "tile": "tiles/cauliflower.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Cauliflower seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Cauliflower in fall.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Cauliflower is a cousin of broccoli with a white head.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Cauliflower sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Cauliflower is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "grape",
+      "name": "Grape",
+      "seasons": [
+        "fall"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "grapesblue",
+      "blurb": "Grapes ripen on the vine in autumn.",
+      "tile": "tiles/grape.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Grape seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Grape in fall.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Grapes ripen on the vine in autumn.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Grape sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Grape is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "raspberry",
+      "name": "Raspberry",
+      "seasons": [
+        "fall"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "raspberries",
+      "blurb": "Raspberries grow on canes you can pick in fall.",
+      "tile": "tiles/raspberry.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Raspberry seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Raspberry in fall.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Raspberries grow on canes you can pick in fall.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Raspberry sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Raspberry is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "turnip",
+      "name": "Turnip",
+      "seasons": [
+        "fall"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "turnip",
+      "blurb": "Turnips are old-fashioned storage roots for cool weather.",
+      "tile": "tiles/turnip.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Turnip seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Turnip in fall.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Turnips are old-fashioned storage roots for cool weather.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Turnip sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Turnip is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 1,
+      "waters_to_growing": 2,
+      "waters_to_grown": 2,
+      "seconds_seed": 4,
+      "seconds_sprout": 5,
+      "seconds_growing": 6,
+      "thirst_interval": 4.0
+    },
+    {
+      "id": "celery",
+      "name": "Celery",
+      "seasons": [
+        "fall"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "celery",
+      "blurb": "Celery needs a long cool season and is harvested late.",
+      "tile": "tiles/celery.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Celery seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Celery in fall.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Celery needs a long cool season and is harvested late.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Celery sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Celery is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "garlic",
+      "name": "Garlic",
+      "seasons": [
+        "winter"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "garlic",
+      "blurb": "Plant garlic before winter \u2014 it sleeps under snow and is ready in summer.",
+      "tile": "tiles/garlic.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Garlic seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Garlic in winter.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Plant garlic before winter \u2014 it sleeps under snow and is ready in summer.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Garlic sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Garlic is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "leek",
+      "name": "Leek",
+      "seasons": [
+        "winter"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "leek",
+      "blurb": "Leeks stand in the cold and get sweeter with frost.",
+      "tile": "tiles/leek.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Leek seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Leek in winter.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Leeks stand in the cold and get sweeter with frost.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Leek sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Leek is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "kale",
+      "name": "Kale",
+      "seasons": [
+        "winter"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "kale",
+      "blurb": "Frost makes kale even sweeter to eat.",
+      "tile": "tiles/kale.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Kale seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Kale in winter.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Frost makes kale even sweeter to eat.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Kale sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Kale is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "artichoke",
+      "name": "Artichoke",
+      "seasons": [
+        "winter"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "artichoke",
+      "blurb": "Artichokes are hardy buds we cook and eat.",
+      "tile": "tiles/artichoke.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Artichoke seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Artichoke in winter.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Artichokes are hardy buds we cook and eat.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Artichoke sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Artichoke is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "wheat",
+      "name": "Wheat",
+      "seasons": [
+        "winter"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "wheat",
+      "blurb": "Farmers plant winter wheat before the cold arrives!",
+      "tile": "tiles/wheat.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Wheat seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Wheat in winter.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Farmers plant winter wheat before the cold arrives!",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Wheat sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Wheat is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "chili",
+      "name": "Chili Pepper",
+      "seasons": [
+        "winter"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "chilipepperred",
+      "blurb": "Chili peppers can grow in a sunny windowsill pot in winter.",
+      "tile": "tiles/chili.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Chili Pepper seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Chili Pepper in winter.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Chili peppers can grow in a sunny windowsill pot in winter.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Chili Pepper sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Chili Pepper is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    },
+    {
+      "id": "blueberry",
+      "name": "Blueberry",
+      "seasons": [
+        "winter"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "blueberries",
+      "blurb": "Winter is when blueberry bushes sleep \u2014 spring brings berries.",
+      "tile": "tiles/blueberry.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Blueberry seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Blueberry in winter.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Winter is when blueberry bushes sleep \u2014 spring brings berries.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Blueberry sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Blueberry is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 3,
+      "waters_to_grown": 4,
+      "seconds_seed": 8,
+      "seconds_sprout": 10,
+      "seconds_growing": 14,
+      "thirst_interval": 6.0
+    },
+    {
+      "id": "oats",
+      "name": "Oats",
+      "seasons": [
+        "winter"
+      ],
+      "slots_per_plant": 1,
+      "water_need": 1.0,
+      "ticks_to_sprout": 8,
+      "ticks_to_growing": 16,
+      "ticks_to_grown": 28,
+      "harvest_yield": 1,
+      "sheet": "oats",
+      "blurb": "Oats are a hardy grain that likes cool weather.",
+      "tile": "tiles/oats.png",
+      "media": {
+        "seed": {
+          "type": "slides"
+        },
+        "sprout": {
+          "type": "slides"
+        },
+        "grown": {
+          "type": "slides"
+        }
+      },
+      "slides": {
+        "seed": [
+          {
+            "text": "This is a Oats seed.",
+            "stage": "seed"
+          },
+          {
+            "text": "Plant Oats in winter.",
+            "stage": "sprout"
+          },
+          {
+            "text": "Oats are a hardy grain that likes cool weather.",
+            "stage": "grown"
+          }
+        ],
+        "sprout": [
+          {
+            "text": "The Oats sprout is waking up!",
+            "stage": "sprout"
+          }
+        ],
+        "grown": [
+          {
+            "text": "The Oats is ready to harvest.",
+            "stage": "grown"
+          }
+        ]
+      },
+      "waters_to_sprout": 2,
+      "waters_to_growing": 2,
+      "waters_to_grown": 3,
+      "seconds_seed": 6,
+      "seconds_sprout": 8,
+      "seconds_growing": 10,
+      "thirst_interval": 5.0
+    }
+  ]
+}

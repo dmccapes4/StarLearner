@@ -1,0 +1,82 @@
+[
+  {
+    "id": "en_apple",
+    "lang": "en",
+    "word": "Apple",
+    "letters": ["A", "p", "p", "l", "e"],
+    "image": "res://images/words/apple.png",
+    "image_id": "apple",
+    "narration_word": "Apple",
+    "pair_id": "es_manzana"
+  },
+  {
+    "id": "es_manzana",
+    "lang": "es",
+    "word": "Manzana",
+    "letters": ["M", "a", "n", "z", "a", "n", "a"],
+    "image": "res://images/words/apple.png",
+    "image_id": "apple",
+    "narration_word": "Manzana",
+    "pair_id": "en_apple"
+  },
+  {
+    "id": "en_cat",
+    "lang": "en",
+    "word": "Cat",
+    "letters": ["C", "a", "t"],
+    "image": "res://images/words/cat.png",
+    "image_id": "cat",
+    "narration_word": "Cat",
+    "pair_id": "es_gato"
+  },
+  {
+    "id": "es_gato",
+    "lang": "es",
+    "word": "Gato",
+    "letters": ["G", "a", "t", "o"],
+    "image": "res://images/words/cat.png",
+    "image_id": "cat",
+    "narration_word": "Gato",
+    "pair_id": "en_cat"
+  },
+  {
+    "id": "en_sun",
+    "lang": "en",
+    "word": "Sun",
+    "letters": ["S", "u", "n"],
+    "image": "res://images/words/sun.png",
+    "image_id": "sun",
+    "narration_word": "Sun",
+    "pair_id": "es_sol"
+  },
+  {
+    "id": "es_sol",
+    "lang": "es",
+    "word": "Sol",
+    "letters": ["S", "o", "l"],
+    "image": "res://images/words/sun.png",
+    "image_id": "sun",
+    "narration_word": "Sol",
+    "pair_id": "en_sun"
+  },
+  {
+    "id": "en_hat",
+    "lang": "en",
+    "word": "Hat",
+    "letters": ["H", "a", "t"],
+    "image": "res://images/words/hat.png",
+    "image_id": "hat",
+    "narration_word": "Hat",
+    "pair_id": "es_sombrero"
+  },
+  {
+    "id": "es_sombrero",
+    "lang": "es",
+    "word": "Sombrero",
+    "letters": ["S", "o", "m", "b", "r", "e", "r", "o"],
+    "image": "res://images/words/hat.png",
+    "image_id": "hat",
+    "narration_word": "Sombrero",
+    "pair_id": "en_hat"
+  }
+]

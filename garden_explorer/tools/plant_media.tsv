@@ -1,0 +1,61 @@
+# plant_id	kind	start	end	url
+# kind ∈ seed | howto | sprout | grown
+# Output: game/assets/plants/<plant_id>/<kind>.ogv
+# Windows are FIRST-GUESSES — scrub and tighten (prefer seed close-ups / stage-clear shots).
+# Prefer video; if a row is later marked image-only, put path in BIBLIOGRAPHY fallbacks.
+#
+# --- tomato ---
+tomato	seed	00:00:20	00:00:50	https://www.youtube.com/watch?v=ed8OR49Bj4k
+tomato	howto	00:00:30	00:01:10	https://www.youtube.com/watch?v=aPETi8dWJUU
+tomato	sprout	00:00:20	00:00:55	https://www.youtube.com/watch?v=zsp15ttcbFA
+tomato	grown	00:01:30	00:02:10	https://www.youtube.com/watch?v=KwQSjAAIqDo
+# --- carrot ---
+carrot	seed	00:00:20	00:00:50	https://www.youtube.com/watch?v=H2CLPX21KGA
+carrot	howto	00:00:30	00:01:10	https://www.youtube.com/watch?v=mcW9bQd8YuY
+carrot	sprout	00:00:15	00:00:50	https://www.youtube.com/watch?v=tRxyDLX0p1E
+carrot	grown	00:01:00	00:01:40	https://www.youtube.com/watch?v=gVqAymctyn8
+# --- lettuce ---
+lettuce	seed	00:00:20	00:00:50	https://www.youtube.com/watch?v=8zdLBtb6lCs
+lettuce	howto	00:00:20	00:01:00	https://www.youtube.com/watch?v=wj6hN9oQ4d4
+lettuce	sprout	00:00:15	00:00:50	https://www.youtube.com/watch?v=zXmPIGRUIDM
+lettuce	grown	00:01:20	00:02:00	https://www.youtube.com/watch?v=zXmPIGRUIDM
+# --- sunflower ---
+sunflower	seed	00:00:15	00:00:45	https://www.youtube.com/watch?v=iX-w1xmUXMA
+sunflower	howto	00:00:20	00:01:00	https://www.youtube.com/watch?v=TyeBjNDGwkk
+sunflower	sprout	00:00:10	00:00:45	https://www.youtube.com/watch?v=D-hvtJPGK6A
+sunflower	grown	00:01:20	00:02:00	https://www.youtube.com/watch?v=x5mHzwEOpp4
+# --- pumpkin ---
+pumpkin	seed	00:00:15	00:00:50	https://www.youtube.com/watch?v=GOY2T_7bx-A
+pumpkin	howto	00:00:30	00:01:10	https://www.youtube.com/watch?v=CtH0NEkllbQ
+pumpkin	sprout	00:00:20	00:00:55	https://www.youtube.com/watch?v=yHaPDJCLCqM
+pumpkin	grown	00:01:40	00:02:20	https://www.youtube.com/watch?v=yHaPDJCLCqM
+# --- strawberry ---
+strawberry	seed	00:00:20	00:00:55	https://www.youtube.com/watch?v=avL2vSrzg0w
+strawberry	howto	00:00:20	00:01:00	https://www.youtube.com/watch?v=nkTyayBzkT0
+strawberry	sprout	00:00:30	00:01:05	https://www.youtube.com/watch?v=-QbIdk6aQvI
+strawberry	grown	00:00:40	00:01:20	https://www.youtube.com/watch?v=34EBkXgazEY
+# --- pea ---
+pea	seed	00:00:15	00:00:45	https://www.youtube.com/watch?v=TWPu3MNsIY0
+pea	howto	00:00:30	00:01:10	https://www.youtube.com/watch?v=jWb97D8kHyc
+pea	sprout	00:00:10	00:00:45	https://www.youtube.com/watch?v=eDA8rmUP5ZM
+pea	grown	00:01:00	00:01:40	https://www.youtube.com/watch?v=UGFxz6iuvb8
+# --- radish ---
+radish	seed	00:00:15	00:00:45	https://www.youtube.com/watch?v=nUfubGjJmMc
+radish	howto	00:00:20	00:01:00	https://www.youtube.com/watch?v=v-j5holM8Es
+radish	sprout	00:00:10	00:00:40	https://www.youtube.com/watch?v=4EbpN0ghH9A
+radish	grown	00:00:40	00:01:15	https://www.youtube.com/watch?v=4EbpN0ghH9A
+# --- corn ---
+corn	seed	00:00:15	00:00:50	https://www.youtube.com/watch?v=TDDs0rjKcWk
+corn	howto	00:00:30	00:01:10	https://www.youtube.com/watch?v=3kFUMKVzG9I
+corn	sprout	00:00:15	00:00:50	https://www.youtube.com/watch?v=Mf3tI1u3CP4
+corn	grown	00:01:20	00:02:00	https://www.youtube.com/watch?v=Mf3tI1u3CP4
+# --- cucumber ---
+cucumber	seed	00:00:15	00:00:50	https://www.youtube.com/watch?v=aP-uk1S7D_g
+cucumber	howto	00:00:30	00:01:10	https://www.youtube.com/watch?v=hATTga9A-7M
+cucumber	sprout	00:00:15	00:00:50	https://www.youtube.com/watch?v=NgK-Z5Gs67E
+cucumber	grown	00:01:20	00:02:00	https://www.youtube.com/watch?v=NgK-Z5Gs67E
+# --- bean ---
+bean	seed	00:00:15	00:00:45	https://www.youtube.com/watch?v=KLa3bV2F_Mo
+bean	howto	00:00:20	00:01:00	https://www.youtube.com/watch?v=kEZy95aqGCA
+bean	sprout	00:00:10	00:00:45	https://www.youtube.com/watch?v=w77zPAtVTuI
+bean	grown	00:01:00	00:01:40	https://www.youtube.com/watch?v=WeNFjpl5mOo

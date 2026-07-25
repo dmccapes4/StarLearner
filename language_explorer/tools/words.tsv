@@ -1,0 +1,9 @@
+id	lang	word	letters	image_id	pair_id
+en_apple	en	Apple	A|p|p|l|e	apple	es_manzana
+es_manzana	es	Manzana	M|a|n|z|a|n|a	apple	en_apple
+en_cat	en	Cat	C|a|t	cat	es_gato
+es_gato	es	Gato	G|a|t|o	cat	en_cat
+en_sun	en	Sun	S|u|n	sun	es_sol
+es_sol	es	Sol	S|o|l	sun	en_sun
+en_hat	en	Hat	H|a|t	hat	es_sombrero
+es_sombrero	es	Sombrero	S|o|m|b|r|e|r|o	hat	en_hat

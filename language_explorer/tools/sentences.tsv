@@ -1,0 +1,7 @@
+id	lang	text	matchable	sprite_ids	video_id	pair_id
+en_apple_red	en	The apple is red.	apple|red	apple,swatch_red	en_apple_red	es_manzana_roja
+es_manzana_roja	es	La manzana es roja.	manzana|roja	apple,swatch_red	es_manzana_roja	en_apple_red
+en_cat_hat	en	The cat has a hat.	cat|hat	cat,hat	en_cat_hat	es_gato_sombrero
+es_gato_sombrero	es	El gato tiene un sombrero.	gato|sombrero	cat,hat	es_gato_sombrero	en_cat_hat
+en_sun_big	en	The sun is big.	sun|big	sun,swatch_gold	en_sun_big	es_sol_grande
+es_sol_grande	es	El sol es grande.	sol|grande	sun,swatch_gold	es_sol_grande	en_sun_big

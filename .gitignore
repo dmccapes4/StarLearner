@@ -28,6 +28,8 @@ Thumbs.db
 ant_explorer/game/android/
 math_explorer/game/android/
 solar_system_explorer/game/android/
+garden_explorer/game/android/
+language_explorer/game/android/
 
 # Build / caches
 **/tools/build/

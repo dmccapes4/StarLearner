@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-07-21T20:50:00Z",
+  "updated_at": "2026-07-25T17:28:00Z",
   "apps": [
     {
       "id": "colony",
@@ -31,6 +31,26 @@
       "enter_name": "Math Explorer",
       "enter_line": "You are entering Math Explorer",
       "video": "math_explorer_explainer.mp4"
+    },
+    {
+      "id": "garden",
+      "label": "garden",
+      "package": "com.dylan.antexplorer.garden",
+      "activity": "com.godot.game.GodotApp",
+      "tile": "tile_garden",
+      "enter_name": "Garden Explorer",
+      "enter_line": "You are entering Garden Explorer",
+      "video": "garden_explorer_playthrough.mp4"
+    },
+    {
+      "id": "language",
+      "label": "words",
+      "package": "com.dylan.antexplorer.language",
+      "activity": "com.godot.game.GodotApp",
+      "tile": "tile_language",
+      "enter_name": "Language Explorer",
+      "enter_line": "You are entering Language Explorer",
+      "video": "language_explorer_explainer.mp4"
     }
   ]
 }

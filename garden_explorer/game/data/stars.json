@@ -1,0 +1,94 @@
+{
+  "stars": [
+    {
+      "id": "01_seeds",
+      "topic": "What is a seed?",
+      "zone": "shed",
+      "reveal": "always",
+      "file": "01_seeds.ogv"
+    },
+    {
+      "id": "02_soil",
+      "topic": "Soil & garden beds",
+      "zone": "beds",
+      "reveal": "always",
+      "file": "02_soil.ogv"
+    },
+    {
+      "id": "03_planting",
+      "topic": "How to plant a seed",
+      "zone": "beds",
+      "reveal": "gameplay:planted_once",
+      "file": "03_planting.ogv"
+    },
+    {
+      "id": "04_watering",
+      "topic": "Watering plants",
+      "zone": "beds",
+      "reveal": "gameplay:watered_once",
+      "file": "04_watering.ogv"
+    },
+    {
+      "id": "05_sprouting",
+      "topic": "Seeds sprouting",
+      "zone": "beds",
+      "reveal": "gameplay:sprout_seen",
+      "file": "05_sprouting.ogv"
+    },
+    {
+      "id": "06_sunlight",
+      "topic": "Sunlight & growing",
+      "zone": "beds",
+      "reveal": "always",
+      "file": "06_sunlight.ogv"
+    },
+    {
+      "id": "07_growing",
+      "topic": "Watching plants grow",
+      "zone": "beds",
+      "reveal": "gameplay:growing_seen",
+      "file": "07_growing.ogv"
+    },
+    {
+      "id": "08_weeding",
+      "topic": "Uprooting & clearing space",
+      "zone": "beds",
+      "reveal": "gameplay:uprooted_once",
+      "file": "08_weeding.ogv"
+    },
+    {
+      "id": "09_harvest",
+      "topic": "Harvesting the garden",
+      "zone": "beds",
+      "reveal": "gameplay:harvested_once",
+      "file": "09_harvest.ogv"
+    },
+    {
+      "id": "10_seasons",
+      "topic": "Seasons in the garden",
+      "zone": "map",
+      "reveal": "gameplay:season_changed",
+      "file": "10_seasons.ogv"
+    },
+    {
+      "id": "11_animals",
+      "topic": "Garden animals",
+      "zone": "fence",
+      "reveal": "always",
+      "file": "11_animals.ogv"
+    },
+    {
+      "id": "12_store",
+      "topic": "Storing the harvest",
+      "zone": "shed",
+      "reveal": "gameplay:stored_once",
+      "file": "12_store.ogv"
+    }
+  ],
+  "intro": {
+    "id": "intro",
+    "topic": "Welcome to the garden",
+    "file": "intro.ogv",
+    "notes": "Instructive intro of avatar planting, watering, harvesting, shed, animals."
+  }
+}

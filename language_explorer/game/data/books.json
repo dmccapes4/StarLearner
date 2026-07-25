@@ -1,0 +1,36 @@
+[
+  {
+    "id": "liebre_tortuga",
+    "lang": "es",
+    "title": "La liebre y la tortuga",
+    "description": "Una carrera entre una liebre rápida y una tortuga paciente.",
+    "cover": "res://books/liebre_tortuga/cover.png",
+    "cover_motif": "tortoise",
+    "pages": [
+      "res://books/liebre_tortuga/pages/000.json",
+      "res://books/liebre_tortuga/pages/001.json",
+      "res://books/liebre_tortuga/pages/002.json",
+      "res://books/liebre_tortuga/pages/003.json"
+    ],
+    "license": "Public-domain Aesop motif; original short Spanish retelling (Star Learner, 2026)",
+    "source_url": "https://en.wikipedia.org/wiki/The_Tortoise_and_the_Hare",
+    "ship": true
+  },
+  {
+    "id": "peter_rabbit",
+    "lang": "en",
+    "title": "The Tale of Peter Rabbit",
+    "description": "A little rabbit goes into Mr. McGregor's garden.",
+    "cover": "res://books/peter_rabbit/cover.png",
+    "cover_motif": "rabbit",
+    "pages": [
+      "res://books/peter_rabbit/pages/000.json",
+      "res://books/peter_rabbit/pages/001.json",
+      "res://books/peter_rabbit/pages/002.json",
+      "res://books/peter_rabbit/pages/003.json"
+    ],
+    "license": "US public domain (Beatrix Potter, 1902)",
+    "source_url": "https://www.gutenberg.org/ebooks/14838",
+    "ship": true
+  }
+]

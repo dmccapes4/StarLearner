@@ -1,0 +1,11 @@
+.godot/
+*.translation
+export_presets.cfg
+android/
+*.apk
+*.aab
+.import/
+tools/build/
+
+# Mana Seed / Seliel crop sheets — licensed, do not redistribute
+assets/tiles/mana_seed_crops/

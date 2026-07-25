@@ -1,0 +1,197 @@
+extends SceneTree
+## Full gameplay playthrough + screenshots for docs/demo.
+##
+##   DISPLAY=:1 godot --path game --fixed-fps 24 --disable-vsync \
+##     --write-movie /tmp/garden_playthrough.avi \
+##     -s res://tools/record_playthrough_demo.gd
+
+const SpeakScript := preload("res://scripts/audio/Speak.gd")
+const NarratorScript := preload("res://scripts/audio/Narrator.gd")
+
+var _main: Node
+var _world: Node2D
+var _ev: Node
+var _shot_i: int = 0
+
+func _init() -> void:
+	call_deferred("_run")
+
+func _events() -> Node:
+	if _ev == null:
+		_ev = root.get_node_or_null("/root/Events")
+	return _ev
+
+func _run() -> void:
+	root.get_viewport().size = Vector2i(1280, 600)
+	var save := root.get_node_or_null("/root/Save")
+	if save:
+		save.clear_all()
+	var ig := root.get_node_or_null("/root/IdleGuard")
+	if ig and ig.has_method("set_active"):
+		ig.set_active(false)
+
+	_main = (load("res://scenes/Main.tscn") as PackedScene).instantiate()
+	root.add_child(_main)
+	await _sec(0.8)
+	_world = _main.get_node_or_null("World") as Node2D
+	var farm: FarmMap = _world.get_node_or_null("FarmMap") as FarmMap
+	var shed: Node = _main.get_node_or_null("ShedUI")
+	var intro: Node = _main.get_node_or_null("IntroPanel")
+	self.paused = false
+
+	print("DEMO: intro")
+	if intro and intro.has_method("_on_start"):
+		intro.visible = true
+		if intro.get("_panel") != null:
+			intro._panel.visible = true
+		self.paused = false
+		intro.call("_on_start")
+		await _sec(2.0)
+		var video: Node = _main.get_node_or_null("VideoPanel")
+		if video and video.has_method("is_open") and bool(video.call("is_open")):
+			await _sec(2.0)
+			if video.has_method("_close"):
+				video.call("_close")
+		await _wait_narration()
+		self.paused = false
+	await _shot("01_intro")
+
+	print("DEMO: shed + first seed media")
+	_events().world_tapped.emit(farm.shed_center)
+	await _sec(1.2)
+	var db: SeedDB = _world.seed_db
+	var seeds := db.available_seed_ids()
+	var pick := "lettuce" if seeds.has("lettuce") else str(seeds[0])
+	if shed and shed.has_method("_on_seed_pressed"):
+		shed.call("_on_seed_pressed", pick)
+	await _sec(0.8)
+	## Close first-time seed media if it opened
+	await _close_media_if_open()
+	await _wait_narration()
+	await _shot("02_seed_media")
+	if shed and shed.has_method("close_shed"):
+		shed.call("close_shed")
+	await _sec(0.5)
+
+	print("DEMO: plant")
+	for i in 2:
+		_events().world_tapped.emit(farm.slot_world("bed_0", i))
+		await _wait_narration()
+		await _sec(0.7)
+	await _shot("03_planted_thirst")
+
+	print("DEMO: water → sprout (respect thirst + time)")
+	if shed and shed.has_method("clear_selection"):
+		shed.call("clear_selection")
+	_world.call("set_tool", "water")
+	var garden: GardenState = _world.garden
+	await _grow_to_stage(garden, db, "bed_0", 0, GardenState.STAGE_SPROUT)
+	await _shot("04_sprout")
+	## Tap plant → sprout media (first time)
+	_events().world_tapped.emit(farm.slot_world("bed_0", 0))
+	await _sec(1.0)
+	await _close_media_if_open()
+	await _wait_narration()
+	await _shot("05_sprout_media")
+
+	print("DEMO: grow to harvest")
+	await _grow_to_stage(garden, db, "bed_0", 0, GardenState.STAGE_GROWN)
+	await _grow_to_stage(garden, db, "bed_0", 1, GardenState.STAGE_GROWN)
+	await _shot("06_grown_harvest_icon")
+	_events().world_tapped.emit(farm.slot_world("bed_0", 0))
+	await _sec(1.0)
+	await _close_media_if_open()
+	_world.call("set_tool", "harvest")
+	_events().world_tapped.emit(farm.slot_world("bed_0", 0))
+	await _wait_narration()
+	_events().world_tapped.emit(farm.slot_world("bed_0", 1))
+	await _wait_narration()
+	await _shot("07_harvested")
+
+	print("DEMO: animals")
+	var chick: Vector2 = farm.animal_positions.get("chicken_a", farm.fence_center)
+	_events().world_tapped.emit(chick)
+	await _wait_narration()
+	await _shot("08_animals")
+
+	print("DEMO: season")
+	_world.call("advance_season")
+	await _wait_narration()
+	await _shot("09_season")
+
+	print("DEMO: hamburger library")
+	_events().hamburger_pressed.emit()
+	await _sec(1.2)
+	await _shot("10_concepts_tab")
+	var menu: Node = _main.get_node_or_null("HamburgerUI")
+	if menu and menu.has_method("_set_tab"):
+		menu.call("_set_tab", "seeds")
+		await _sec(1.0)
+		await _shot("11_seeds_tab")
+		menu.call("_set_tab", "concepts")
+	if menu and menu.has_method("_on_concept"):
+		menu.call("_on_concept", "01_seeds")
+		await _wait_narration()
+		menu.call("_on_concept", "01_seeds")
+		await _sec(1.5)
+		await _close_media_if_open()
+	if menu and menu.has_method("is_open") and bool(menu.call("is_open")):
+		_events().hamburger_pressed.emit()
+	await _sec(0.8)
+
+	print("DEMO: done")
+	await _shot("12_end")
+	await _sec(1.5)
+	quit(0)
+
+func _grow_to_stage(garden: GardenState, db: SeedDB, bed_id: String, slot: int, target: String) -> void:
+	for _i in 50:
+		var s: Dictionary = garden.get_slot(bed_id, slot)
+		if str(s.get("stage", "")) == target or str(s.get("stage", "")) == GardenState.STAGE_GROWN and target == GardenState.STAGE_GROWN:
+			if str(s.get("stage", "")) == target:
+				return
+		if str(s.get("plant_id", "")).is_empty():
+			return
+		s["thirsty"] = true
+		s["stage_time"] = 999.0
+		garden.beds[bed_id][slot] = s
+		garden.water(bed_id, slot, db)
+		s = garden.get_slot(bed_id, slot)
+		s["stage_time"] = 999.0
+		garden.beds[bed_id][slot] = s
+		garden._try_advance(bed_id, slot, db)
+		await _sec(0.12)
+		if str(garden.get_slot(bed_id, slot).get("stage", "")) == target:
+			return
+
+func _close_media_if_open() -> void:
+	for name in ["MediaPanel", "VideoPanel"]:
+		var n: Node = _main.get_node_or_null(name)
+		if n and n.has_method("is_open") and bool(n.call("is_open")):
+			await _sec(2.2)
+			if n.has_method("_close"):
+				n.call("_close")
+			self.paused = false
+			await _sec(0.3)
+
+func _wait_narration() -> void:
+	var guard := 0
+	while NarratorScript.blocks_movement() and guard < 120:
+		await _sec(0.1)
+		guard += 1
+	await _sec(0.25)
+
+func _shot(name: String) -> void:
+	_shot_i += 1
+	var dir := "res://docs/screenshots/playthrough"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
+	var path := "%s/%02d_%s.png" % [dir, _shot_i, name]
+	await process_frame
+	await process_frame
+	var img: Image = root.get_viewport().get_texture().get_image()
+	if img:
+		img.save_png(ProjectSettings.globalize_path(path))
+		print("DEMO shot → ", ProjectSettings.globalize_path(path))
+
+func _sec(t: float) -> void:
+	await create_timer(t, true, false, true).timeout

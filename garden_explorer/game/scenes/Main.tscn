@@ -1,0 +1,46 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/Main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/World.tscn" id="2_world"]
+[ext_resource type="Script" path="res://scripts/input/TapRouter.gd" id="3_tap"]
+[ext_resource type="Script" path="res://scripts/ui/HamburgerUI.gd" id="4_ham"]
+[ext_resource type="Script" path="res://scripts/ui/ShedUI.gd" id="5_shed"]
+[ext_resource type="Script" path="res://scripts/ui/ToolBar.gd" id="6_tools"]
+[ext_resource type="Script" path="res://scripts/ui/MediaPanel.gd" id="7_media"]
+[ext_resource type="Script" path="res://scripts/ui/SeasonHUD.gd" id="8_season"]
+[ext_resource type="Script" path="res://scripts/ui/VideoPanel.gd" id="9_video"]
+[ext_resource type="Script" path="res://scripts/ui/IntroPanel.gd" id="10_intro"]
+[ext_resource type="Script" path="res://scripts/ui/ActionPrompt.gd" id="11_act"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_main")
+
+[node name="World" parent="." instance=ExtResource("2_world")]
+
+[node name="TapRouter" type="Node" parent="."]
+script = ExtResource("3_tap")
+camera_path = NodePath("../World/CameraFollow")
+
+[node name="HamburgerUI" type="CanvasLayer" parent="." groups=["star_menu"]]
+script = ExtResource("4_ham")
+
+[node name="ShedUI" type="CanvasLayer" parent="." groups=["shed_ui"]]
+script = ExtResource("5_shed")
+
+[node name="ToolBar" type="CanvasLayer" parent="." groups=["tool_bar"]]
+script = ExtResource("6_tools")
+
+[node name="ActionPrompt" type="CanvasLayer" parent="." groups=["action_prompt"]]
+script = ExtResource("11_act")
+
+[node name="MediaPanel" type="CanvasLayer" parent="." groups=["stage_media", "media_panel"]]
+script = ExtResource("7_media")
+
+[node name="SeasonHUD" type="CanvasLayer" parent="." groups=["season_hud"]]
+script = ExtResource("8_season")
+
+[node name="VideoPanel" type="CanvasLayer" parent="." groups=["video_panel"]]
+script = ExtResource("9_video")
+
+[node name="IntroPanel" type="CanvasLayer" parent="." groups=["intro_panel"]]
+script = ExtResource("10_intro")

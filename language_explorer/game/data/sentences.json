@@ -1,0 +1,80 @@
+[
+  {
+    "id": "en_apple_red",
+    "lang": "en",
+    "text": "The apple is red.",
+    "tokens": ["The", "apple", "is", "red."],
+    "matchable": ["apple", "red"],
+    "sprites": [
+      {"id": "apple", "token": "apple", "image": "res://images/sprites/apple.png"},
+      {"id": "red", "token": "red", "image": "res://images/sprites/swatch_red.png"}
+    ],
+    "video": "res://videos/sentences/en_apple_red.ogv",
+    "pair_id": "es_manzana_roja"
+  },
+  {
+    "id": "es_manzana_roja",
+    "lang": "es",
+    "text": "La manzana es roja.",
+    "tokens": ["La", "manzana", "es", "roja."],
+    "matchable": ["manzana", "roja"],
+    "sprites": [
+      {"id": "apple", "token": "manzana", "image": "res://images/sprites/apple.png"},
+      {"id": "red", "token": "roja", "image": "res://images/sprites/swatch_red.png"}
+    ],
+    "video": "res://videos/sentences/es_manzana_roja.ogv",
+    "pair_id": "en_apple_red"
+  },
+  {
+    "id": "en_cat_hat",
+    "lang": "en",
+    "text": "The cat has a hat.",
+    "tokens": ["The", "cat", "has", "a", "hat."],
+    "matchable": ["cat", "hat"],
+    "sprites": [
+      {"id": "cat", "token": "cat", "image": "res://images/sprites/cat.png"},
+      {"id": "hat", "token": "hat", "image": "res://images/sprites/hat.png"}
+    ],
+    "video": "res://videos/sentences/en_cat_hat.ogv",
+    "pair_id": "es_gato_sombrero"
+  },
+  {
+    "id": "es_gato_sombrero",
+    "lang": "es",
+    "text": "El gato tiene un sombrero.",
+    "tokens": ["El", "gato", "tiene", "un", "sombrero."],
+    "matchable": ["gato", "sombrero"],
+    "sprites": [
+      {"id": "cat", "token": "gato", "image": "res://images/sprites/cat.png"},
+      {"id": "hat", "token": "sombrero", "image": "res://images/sprites/hat.png"}
+    ],
+    "video": "res://videos/sentences/es_gato_sombrero.ogv",
+    "pair_id": "en_cat_hat"
+  },
+  {
+    "id": "en_sun_big",
+    "lang": "en",
+    "text": "The sun is big.",
+    "tokens": ["The", "sun", "is", "big."],
+    "matchable": ["sun", "big"],
+    "sprites": [
+      {"id": "sun", "token": "sun", "image": "res://images/sprites/sun.png"},
+      {"id": "big", "token": "big", "image": "res://images/sprites/swatch_gold.png"}
+    ],
+    "video": "res://videos/sentences/en_sun_big.ogv",
+    "pair_id": "es_sol_grande"
+  },
+  {
+    "id": "es_sol_grande",
+    "lang": "es",
+    "text": "El sol es grande.",
+    "tokens": ["El", "sol", "es", "grande."],
+    "matchable": ["sol", "grande"],
+    "sprites": [
+      {"id": "sun", "token": "sol", "image": "res://images/sprites/sun.png"},
+      {"id": "big", "token": "grande", "image": "res://images/sprites/swatch_gold.png"}
+    ],
+    "video": "res://videos/sentences/es_sol_grande.ogv",
+    "pair_id": "en_sun_big"
+  }
+]
