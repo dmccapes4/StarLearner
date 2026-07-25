@@ -42,10 +42,27 @@ func run() -> TestAssert:
 	var kept: String = shell._handle_side_touch(0.2)
 	t.eq(kept, shell.ACT_KEPT, "side touch while revealed keeps rails up")
 
-	# Undiscovered tap (revealed) → guidance only.
+	# Undiscovered tap (revealed) → arms "tap again to reveal" (3 s window).
 	var g: String = shell._handle_tile_tap("11_architecture", 0.3)
-	t.eq(g, shell.ACT_GUIDANCE, "undiscovered tap gives guidance")
+	t.eq(g, shell.ACT_REVEAL_ARMED, "undiscovered tap arms reveal")
+	t.ok(shell.reveal_arm.is_armed_for("11_architecture"), "reveal armed for tile")
 	t.ok(not shell.video_arm.is_armed(), "undiscovered tap does not arm video")
+
+	# Second tap within 3 s requests the camera reveal tour (and tucks rails).
+	var g2: String = shell._handle_tile_tap("11_architecture", 1.0)
+	t.eq(g2, shell.ACT_REVEAL_TOUR, "second undiscovered tap starts reveal tour")
+	t.ok(not shell.reveal_arm.is_armed(), "reveal trigger clears arm")
+	t.ok(not shell.revealed, "reveal tour tucks rails under soil")
+
+	# After tour, rails are occluded — first touch only re-reveals.
+	var reopen: String = shell._handle_tile_tap("11_architecture", 5.0)
+	t.eq(reopen, shell.ACT_REVEALED, "tap while occluded re-reveals rails")
+
+	# Slow second tap past 3 s re-arms instead of touring.
+	var g3: String = shell._handle_tile_tap("11_architecture", 5.2)
+	t.eq(g3, shell.ACT_REVEAL_ARMED, "first tap arms reveal again")
+	var g4: String = shell._handle_tile_tap("11_architecture", 8.5)
+	t.eq(g4, shell.ACT_REVEAL_ARMED, "tap after 3 s window re-arms, no tour")
 
 	# Collected tile (revealed): first tap arms, second within 1 s triggers video.
 	var r1: String = shell._handle_tile_tap("02_larvae", 1.0)

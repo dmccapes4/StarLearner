@@ -1,5 +1,5 @@
 {
-  "_comment": "Guidance VO for undiscovered rail tiles. `place` overrides the zone->label map; `line` overrides the whole sentence. Optional baked WAVs live at assets/audio/vo/star_rail/<id>.wav (VoStream raw-loads them); text is the TTS fallback + on-screen intent.",
+  "_comment": "Guidance VO for undiscovered rail tiles (legacy place lines). Locked tiles now arm a 3s 'tap again to reveal star location' confirm (TTS); second tap starts the camera tour. Optional baked WAVs live at assets/audio/vo/star_rail/<id>.wav.",
   "stars": {
     "01_queen": {"place": "queen's room", "line": "Find the queen's room and look for the golden star!"},
     "02_larvae": {"place": "nursery", "line": "Visit the nursery where the baby ants grow and look for the golden star!"},

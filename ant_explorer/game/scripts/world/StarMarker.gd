@@ -1,6 +1,8 @@
 extends Node2D
 ## Glowing knowledge-star marker — documentary plays on player approach (Phase 5).
 
+const TAP_RADIUS := 120.0
+
 var star_id: String = ""
 var collected: bool = false
 var _pulse: float = 0.0
@@ -37,6 +39,10 @@ func set_collected(on: bool) -> void:
 		_pulse_amp = 0.18
 		if _body:
 			_body.color = Color(1.0, 0.9, 0.35, 0.95)
+
+
+func hit_test(world_pos: Vector2) -> bool:
+	return global_position.distance_to(world_pos) <= TAP_RADIUS
 
 
 func _process(delta: float) -> void:

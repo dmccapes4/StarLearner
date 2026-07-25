@@ -78,8 +78,9 @@ the product's life).
   they keep the **dim (locked) vs. full-colour (collected)** distinction. With no interaction they
   tuck back under the soil after 5 seconds.
 - **Tap to watch.** On a collected tile, the first tap says "Tap again to watch the … video"; a
-  second tap within ~1 s plays it fullscreen. Tapping a still-locked tile speaks guidance ("Explore
-  the … and look for the golden star!") instead of opening a video.
+  second tap within ~1 s plays it fullscreen. Tapping a still-locked tile says "Tap again to reveal
+  star location"; a second tap within 3 s sends the camera to that star so she can tap it and walk
+  there (or the camera returns if she waits).
 - **Taught in the intro.** The launch narration explains all of this: the sides start as soil,
   brighten in while the narrator says the shelves are hiding there, and the child hears that stars
   light up only by finding them in the nest — then the shelves settle back under the soil.

@@ -17,8 +17,8 @@ extends Resource
 @export var camera_zoom: float = 0.72  ## chamber fills the view; click-to-move only
 @export var tap_target_px: float = 96.0
 @export var larva_tap_radius: float = 48.0
-@export var star_approach_radius: float = 90.0
-@export var star_dwell_seconds: float = 0.75
+@export var star_approach_radius: float = 120.0
+@export var star_dwell_seconds: float = 0.55
 @export var star_visual_scale: float = 2.4
 
 # Brood — denser nursery/pupa rooms; pupae linger so castes-in-waiting stay visible

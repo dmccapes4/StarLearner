@@ -3,8 +3,9 @@ extends CanvasLayer
 ## 6+6 star rails. The rails sit OCCLUDED behind bright brown soil by default;
 ## touching a side brightens/reveals them (keeping the grey-vs-colour discovered
 ## variation) and makes the tiles clickable. With no interaction they slide back
-## under the soil after REVEAL_SECONDS. Double-tap (1 s) a collected tile to play
-## its video. See docs/STRATEGY_LANDSCAPE_STAR_RAILS.md.
+## under the soil after REVEAL_SECONDS. Locked tiles arm a 3 s "tap again to
+## reveal star location" confirm, then request a camera tour. Double-tap (1 s) a
+## collected tile to play its video. See docs/STRATEGY_LANDSCAPE_STAR_RAILS.md.
 ##
 ## Built in code (no fragile .tscn paths) and driven by pure helpers
 ## (StarRailLayout / StarRailModel / DoubleTapArm) so the logic is unit-tested.
@@ -29,6 +30,8 @@ const HINT := Color(1.0, 0.86, 0.4, 0.32)         # faint "there are stars here"
 
 # Action codes returned by the tap handlers (also handy for tests).
 const ACT_GUIDANCE := "guidance"
+const ACT_REVEAL_ARMED := "reveal_armed"
+const ACT_REVEAL_TOUR := "reveal_tour"
 const ACT_ARMED := "armed"
 const ACT_VIDEO := "video"
 const ACT_VIDEO_UNAVAILABLE := "video_unavailable"
@@ -36,8 +39,11 @@ const ACT_BLOCKED := "blocked"
 const ACT_REVEALED := "revealed"
 const ACT_KEPT := "kept"
 
+const REVEAL_ARM_SECONDS := 3.0
+
 var model: StarRailModel
 var video_arm: DoubleTapArm
+var reveal_arm: DoubleTapArm  ## locked-tile "tap again to reveal" (3 s)
 var revealed: bool = false
 var tiles: Dictionary = {}  ## star_id -> StarRailTile
 
@@ -66,6 +72,7 @@ func build() -> void:
 	_built = true
 	model = _Model.new()
 	video_arm = _Arm.new(1.0)
+	reveal_arm = _Arm.new(REVEAL_ARM_SECONDS)
 	revealed = false
 
 	_voice = AudioStreamPlayer.new()
@@ -222,6 +229,8 @@ func _now() -> float:
 func tick(now: float) -> void:
 	if video_arm != null:
 		video_arm.poll(now)
+	if reveal_arm != null:
+		reveal_arm.poll(now)
 	if _intro_hold:
 		return  # intro narration owns the reveal until it releases
 	if revealed and not _video_is_open() and now >= _reveal_until:
@@ -273,6 +282,8 @@ func occlude(animate: bool) -> void:
 	_set_hints_visible(true)
 	if video_arm:
 		video_arm.clear()
+	if reveal_arm:
+		reveal_arm.clear()
 	if _left_soil:
 		_left_soil.color = SOIL
 	if _right_soil:
@@ -328,8 +339,8 @@ func _handle_side_touch(now: float) -> String:
 	return ACT_KEPT
 
 ## Tap on a star tile. While occluded, the first tap only reveals (never fires an
-## action). While revealed: undiscovered → guidance VO; collected → arm, then a
-## second tap within 1 s plays the video. Any tap keeps the rails up.
+## action). While revealed: undiscovered → arm "tap again to reveal" (3 s), then
+## request a camera tour; collected → arm watch (1 s), then play video.
 func _handle_tile_tap(star_id: String, now: float) -> String:
 	if _video_is_open():
 		return ACT_BLOCKED
@@ -339,13 +350,23 @@ func _handle_tile_tap(star_id: String, now: float) -> String:
 	_bump_reveal(now)
 	if model.tile_state(star_id) == _Model.TILE_UNDISCOVERED:
 		video_arm.clear()
-		_speak_guidance(star_id)
-		return ACT_GUIDANCE
+		var reveal_result: String = reveal_arm.press(star_id, now)
+		if reveal_result == _Arm.RESULT_TRIGGER:
+			_request_reveal_tour(star_id)
+			return ACT_REVEAL_TOUR
+		_speak_reveal_prompt(star_id)
+		return ACT_REVEAL_ARMED
+	reveal_arm.clear()
 	var result: String = video_arm.press(star_id, now)
 	if result == _Arm.RESULT_TRIGGER:
 		return _play_video(star_id)
 	_speak_watch_prompt(star_id)
 	return ACT_ARMED
+
+func _request_reveal_tour(star_id: String) -> void:
+	print("Rail reveal tour [%s]" % star_id)
+	occlude(false)  # tuck rails so the camera tour owns the screen
+	Events.star_reveal_requested.emit(star_id)
 
 # --- collection feedback ----------------------------------------------------
 
@@ -383,6 +404,11 @@ func _speak_guidance(star_id: String) -> void:
 	var wav: String = _VoStream.resolve_vo(RAIL_VO_DIR, star_id)
 	var stream: AudioStream = _VoStream.load_path(wav) if not wav.is_empty() else null
 	_speak(stream, line)
+
+func _speak_reveal_prompt(star_id: String) -> void:
+	var line: String = model.reveal_prompt(star_id)
+	print("Rail reveal arm [%s]: %s" % [star_id, line])
+	_speak(null, line)
 
 func _speak_watch_prompt(star_id: String) -> void:
 	var line: String = model.watch_prompt(star_id)

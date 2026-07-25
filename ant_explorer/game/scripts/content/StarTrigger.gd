@@ -18,6 +18,18 @@ static func player_stationary(player: AntState) -> bool:
 	return true
 
 
+static func path_settled(player: AntState) -> bool:
+	## Arrived (or never walking) — used so dwell can accumulate while walking
+	## toward a star and fire once the path empties (kid taps no longer wipe it).
+	if player == null:
+		return false
+	if player.state == AntEnums.State.WALK:
+		return false
+	if not player.path.is_empty():
+		return false
+	return true
+
+
 static func should_trigger_dwell(
 		player: AntState,
 		player_pos: Vector2,
@@ -27,19 +39,40 @@ static func should_trigger_dwell(
 		accumulated: float,
 		delta: float,
 ) -> Dictionary:
+	## Time-inside-radius accumulates while approaching; only leaving the radius
+	## clears it. Discovery fires once the ant has settled (path empty) after
+	## enough time inside — so tap-spam toward the star still discovers.
 	var inside := inside_radius(player_pos, star_pos, radius)
 	var stationary := player_stationary(player)
+	var settled := path_settled(player)
 	var next_accum := accumulated
-	if inside and stationary:
+	if inside:
 		next_accum += delta
 	else:
 		next_accum = 0.0
 	return {
-		"trigger": inside and stationary and next_accum >= dwell_seconds,
+		"trigger": inside and settled and next_accum >= dwell_seconds,
 		"inside": inside,
 		"stationary": stationary,
+		"settled": settled,
 		"accumulated": next_accum,
 	}
+
+
+static func should_trigger_arrival(
+		player: AntState,
+		player_pos: Vector2,
+		star_pos: Vector2,
+		radius: float,
+		pending_star_id: String,
+		star_id: String,
+) -> bool:
+	## Intentional tap-star approach: discover as soon as the ant settles in range.
+	if pending_star_id.is_empty() or pending_star_id != star_id:
+		return false
+	if not inside_radius(player_pos, star_pos, radius):
+		return false
+	return path_settled(player)
 
 
 static func resolve_video_path(file_name: String) -> String:

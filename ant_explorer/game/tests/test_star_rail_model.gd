@@ -34,6 +34,9 @@ func run() -> TestAssert:
 		t.ok(prompt.to_lower().contains("watch"), "watch prompt says watch (%s)" % id)
 		t.ok(not m.topic_short(id).is_empty(), "topic short for %s" % id)
 		t.ok(m.file_for(id).ends_with(".ogv"), "file resolves to ogv (%s)" % id)
+		t.ok(m.reveal_prompt(id).to_lower().contains("reveal"), "reveal prompt (%s)" % id)
+		t.ok(m.reveal_travel_prompt(id).to_lower().contains("tap the star"), "travel prompt (%s)" % id)
+		t.ok(m.reveal_cancel_hint(id).to_lower().contains("tap anywhere"), "cancel hint (%s)" % id)
 
 	# Zone label mapping is defined for the known zone.
 	t.eq(m.zone_for("01_queen"), "queen", "zone for queen star")

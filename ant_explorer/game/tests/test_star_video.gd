@@ -52,21 +52,39 @@ func run() -> TestAssert:
 	t.ok(not first["trigger"], "half dwell does not trigger")
 	t.ok(first["inside"], "inside during dwell")
 	t.ok(first["stationary"], "stationary during dwell")
+	t.ok(first["settled"], "settled during dwell")
 
 	var ready: Dictionary = StarTriggerScript.should_trigger_dwell(
 		idle, inside, star_pos, radius, dwell, 0.5, 0.3)
 	t.ok(ready["trigger"], "full dwell triggers discovery")
 	t.approx(ready["accumulated"], 0.8, 0.001, "accumulated dwell time")
 
+	# Walking inside the radius still accumulates — kid taps must not wipe progress.
 	var moving_pass: Dictionary = StarTriggerScript.should_trigger_dwell(
 		moving, inside, star_pos, radius, dwell, 0.6, 0.2)
-	t.ok(not moving_pass["trigger"], "moving resets dwell trigger")
-	t.eq(moving_pass["accumulated"], 0.0, "moving clears dwell accumulator")
+	t.ok(not moving_pass["trigger"], "still walking: no trigger yet")
+	t.ok(not moving_pass["settled"], "walker is not settled")
+	t.approx(moving_pass["accumulated"], 0.8, 0.001, "walking inside keeps accumulating")
+
+	# After walking in range long enough, settling fires immediately.
+	var arrive: Dictionary = StarTriggerScript.should_trigger_dwell(
+		idle, inside, star_pos, radius, dwell, 0.8, 0.05)
+	t.ok(arrive["trigger"], "settling after approach triggers")
 
 	var leave: Dictionary = StarTriggerScript.should_trigger_dwell(
 		idle, outside, star_pos, radius, dwell, 0.6, 0.2)
 	t.ok(not leave["trigger"], "leaving radius clears dwell")
 	t.eq(leave["accumulated"], 0.0, "outside clears accumulator")
+
+	t.ok(StarTriggerScript.should_trigger_arrival(
+		idle, inside, star_pos, radius, "01_queen", "01_queen"),
+		"pending approach discovers on settle")
+	t.ok(not StarTriggerScript.should_trigger_arrival(
+		moving, inside, star_pos, radius, "01_queen", "01_queen"),
+		"pending approach waits until settled")
+	t.ok(not StarTriggerScript.should_trigger_arrival(
+		idle, inside, star_pos, radius, "01_queen", "02_larvae"),
+		"pending approach ignores other stars")
 
 	var ogv_path: String = StarTriggerScript.resolve_video_path("01_queen.ogv")
 	t.ok(ogv_path.ends_with("01_queen.ogv"), "ogv path resolves")

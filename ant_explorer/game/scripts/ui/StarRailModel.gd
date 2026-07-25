@@ -79,6 +79,18 @@ func guidance_line(star_id: String) -> String:
 		return line
 	return "Explore the %s and look for the golden star!" % place_label(star_id)
 
+## First tap on a locked tile — arms the 3 s reveal confirm.
+func reveal_prompt(_star_id: String = "") -> String:
+	return "Tap again to reveal star location."
+
+## Spoken while the camera pans to an undiscovered star.
+func reveal_travel_prompt(_star_id: String = "") -> String:
+	return "Tap the star to travel all the way there."
+
+## Spoken when the ant auto-walks after a reveal confirm (or on camera return).
+func reveal_cancel_hint(_star_id: String = "") -> String:
+	return "Tap anywhere to explore on your own."
+
 func topic_short(star_id: String) -> String:
 	if TOPIC_SHORT.has(star_id):
 		return str(TOPIC_SHORT[star_id])

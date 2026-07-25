@@ -36,6 +36,7 @@ const SUITES := [
 	"res://tests/test_star_rail_layout.gd",
 	"res://tests/test_star_rail_model.gd",
 	"res://tests/test_landscape_shell.gd",
+	"res://tests/test_camera_follow.gd",
 	"res://tests/test_idle_policy.gd",
 ]
 
@@ -97,7 +98,8 @@ func _make_suite(script: GDScript, path: String, host: Node) -> RefCounted:
 			or path.ends_with("test_player_role_bot.gd") \
 			or path.ends_with("test_invaders.gd") \
 			or path.ends_with("test_chamber_vo.gd") \
-			or path.ends_with("test_landscape_shell.gd"):
+			or path.ends_with("test_landscape_shell.gd") \
+			or path.ends_with("test_camera_follow.gd"):
 		return script.new(host)
 	return script.new()
 
