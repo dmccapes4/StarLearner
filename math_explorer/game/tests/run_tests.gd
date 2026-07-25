@@ -24,6 +24,7 @@ func _run() -> void:
 	_test_generator()
 	_test_vo_coverage()
 	_test_scripts_compile()
+	_test_save()
 	print("======== TOTAL: %d passed, %d failed ========" % [_pass, _fail])
 	quit(1 if _fail > 0 else 0)
 
@@ -170,6 +171,35 @@ func _test_scripts_compile() -> void:
 		"res://scripts/EggsScene.gd", "res://scripts/EggsDragScene.gd",
 		"res://scripts/VoStream.gd", "res://scripts/NarratorVoice.gd",
 		"res://scripts/PracticeScene.gd", "res://scripts/BlockTutorial.gd",
-		"res://scripts/CoinsScene.gd",
+		"res://scripts/CoinsScene.gd", "res://scripts/Save.gd",
 	]:
 		_ok(load(path) != null, "compiles: %s" % path)
+
+## The Save autoload: seen flags, the one-time intro gate, hidden stats, and the
+## kiosk "Start over" wipe (clear_all mirrors what the .antphone_wipe flag does).
+func _test_save() -> void:
+	var save := root.get_node_or_null("/root/Save")
+	_ok(save != null, "Save autoload is registered")
+	if save == null:
+		return
+	save.call("clear_all")
+	_ok(not save.call("is_intro_done"), "fresh state: intro not done")
+	_ok(not save.call("was_seen", "tut_add"), "fresh state: nothing seen")
+
+	save.call("set_intro_done", true)
+	_ok(save.call("is_intro_done"), "intro marked done sticks")
+	save.call("mark_seen", "tut_add")
+	_ok(save.call("was_seen", "tut_add"), "seen flag sticks")
+
+	save.call("record_practice_answer", "add", true, 3)
+	save.call("record_practice_answer", "add", false, 0)
+	var stats: Dictionary = save.get("stats")
+	var add_bucket: Dictionary = stats.get("practice", {}).get("add", {})
+	_ok(int(add_bucket.get("seen", 0)) == 2, "practice answers counted")
+	_ok(int(add_bucket.get("correct", 0)) == 1, "correct answer counted")
+	_ok(int(add_bucket.get("best_streak", 0)) == 3, "best streak tracked")
+
+	save.call("clear_all")
+	_ok(not save.call("is_intro_done"), "clear_all resets intro (wipe)")
+	_ok(not save.call("was_seen", "tut_add"), "clear_all resets seen (wipe)")
+	_ok((save.get("stats") as Dictionary).is_empty(), "clear_all resets stats (wipe)")

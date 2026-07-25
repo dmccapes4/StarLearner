@@ -19,11 +19,11 @@ func _init() -> void:
 
 func _run() -> void:
 	root.get_viewport().size = Vector2i(1280, 600)
-	# Wipe the "intro seen" flag so this recording always plays the launch tour.
-	var cfg := ConfigFile.new()
-	cfg.load("user://seen.cfg")
-	cfg.set_value("seen", "intro", false)
-	cfg.save("user://seen.cfg")
+	# Wipe saved state so this recording always plays the launch tour + the
+	# first-time tutorials from a clean slate.
+	var save := root.get_node_or_null("/root/Save")
+	if save != null:
+		save.call("clear_all")
 
 	_main = (load("res://scenes/Main.tscn") as PackedScene).instantiate()
 	root.add_child(_main)

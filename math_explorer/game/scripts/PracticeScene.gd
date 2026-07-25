@@ -14,6 +14,8 @@ extends Control
 signal finished()
 
 const CountBeat := 0.55
+const NUMBER_WORDS := ["zero", "one", "two", "three", "four", "five", "six",
+	"seven", "eight", "nine", "ten", "eleven", "twelve"]
 
 ## Fixed lines (baked ElevenLabs). Dynamic equation text falls back to OS TTS.
 const VO_FIXED := [
@@ -219,9 +221,11 @@ func _on_answer(idx: int) -> void:
 	if picked == answer:
 		_streak += 1
 		_update_streak()
+		Save.record_practice_answer(_op, true, _streak)
 		_style_answer(b, true)
 		_celebrate()
 	else:
+		Save.record_practice_answer(_op, false, _streak)
 		_streak = 0
 		_update_streak()
 		_explain(_gen)
@@ -250,8 +254,10 @@ func _explain(gen: int) -> void:
 				for i in cg.count():
 					n += 1
 					cg.set_state(i, CubeGroup.HL.CURRENT, CubeGroup.HUE.GOLD)
-					Narrator.speak(str(n))
-					if not await _wait(gen, CountBeat): return
+					var d := _say_number(n)
+					# Pace by the spoken length so each number is never cut off
+					# mid-word by the next one.
+					if not await _wait(gen, maxf(CountBeat, d - 0.3)): return
 					cg.set_state(i, CubeGroup.HL.DONE, CubeGroup.HUE.GOLD)
 		"sub":
 			# Grey cubes leave one by one, then count what's left.
@@ -265,8 +271,8 @@ func _explain(gen: int) -> void:
 			for i in range(0, total - take):
 				n2 += 1
 				a.set_state(i, CubeGroup.HL.CURRENT, CubeGroup.HUE.GOLD)
-				Narrator.speak(str(n2))
-				if not await _wait(gen, CountBeat): return
+				var d := _say_number(n2)
+				if not await _wait(gen, maxf(CountBeat, d - 0.3)): return
 				a.set_state(i, CubeGroup.HL.DONE, CubeGroup.HUE.GOLD)
 		"mul":
 			# Count group by group so "g groups of n" is felt.
@@ -276,9 +282,12 @@ func _explain(gen: int) -> void:
 				for i in cg.count():
 					n3 += 1
 					cg.set_state(i, CubeGroup.HL.CURRENT, CubeGroup.HUE.GOLD)
-					if n3 % maxi(1, int(q["n"])) == 0 or n3 == 1:
-						Narrator.speak(str(n3))
-					if not await _wait(gen, CountBeat * 0.6): return
+					var say := n3 % maxi(1, int(q["n"])) == 0 or n3 == 1
+					if say:
+						var d := _say_number(n3)
+						if not await _wait(gen, maxf(CountBeat, d - 0.3)): return
+					else:
+						if not await _wait(gen, CountBeat * 0.6): return
 					cg.set_state(i, CubeGroup.HL.DONE, CubeGroup.HUE.GOLD)
 		"div":
 			# Deal into buckets: recolour cube i by which bucket it lands in.
@@ -340,6 +349,14 @@ func _equation_speech(with_answer: bool) -> String:
 	return ""
 
 # ---- helpers -----------------------------------------------------------------
+
+## Speak a count as a word ("one".."twelve") so it matches the baked tutorial
+## clips; larger counts fall back to the digit (OS TTS). Returns the spoken
+## duration so the caller can pace the count and never clip a number mid-word.
+func _say_number(v: int) -> float:
+	if v >= 0 and v < NUMBER_WORDS.size():
+		return Narrator.speak(NUMBER_WORDS[v])
+	return Narrator.speak(str(v))
 
 func _update_streak() -> void:
 	if _streak <= 0:

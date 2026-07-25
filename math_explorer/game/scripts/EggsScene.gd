@@ -90,15 +90,24 @@ static func vo_lines(seed: int) -> Array:
 	var q: Dictionary = p["params"]
 	var per_day: int = int(q["white"]) * int(q["w_eggs"]) + int(q["yellow"]) * int(q["y_eggs"])
 	var total: int = p["answer"]
-	var cartons := int(ceil(float(total) / CARTON))
 	return [
 		"%d white chickens each lay %d eggs a day. %d yellow chickens each lay %d." % [q["white"], q["w_eggs"], q["yellow"], q["y_eggs"]],
 		"That is %d eggs every day." % per_day,
 		"For %d days, that is %d eggs in all." % [q["days"], total],
 		"Now pack them into cartons of %d." % CARTON,
-		"%d eggs make %d full cartons. Great job!" % [total, cartons],
-		"%d eggs need %d cartons." % [total, cartons],
+		_cartons_line(total),
 	]
+
+## The closing sentence. When the eggs don't divide evenly, spell out WHY there
+## is an extra carton (the leftover) — that is the whole division lesson.
+static func _cartons_line(total: int) -> String:
+	var cartons := int(ceil(float(total) / CARTON))
+	var rem := total % CARTON
+	if rem == 0:
+		return "%d eggs make %d full cartons. Great job!" % [total, cartons]
+	var filled := (cartons - 1) * CARTON
+	return "It takes %d cartons, because %d is more than %d, leaving %d %s in the last carton." % [
+		cartons, total, filled, rem, "egg" if rem == 1 else "eggs"]
 
 # ---- choreography -----------------------------------------------------------
 
@@ -139,7 +148,9 @@ func _run(gen: int) -> void:
 		if not await _wait(gen, 0.08): return
 	if not await _wait(gen, 0.8): return
 
-	# 4) Cartons appear; eggs fly in; each snaps shut at 6.
+	# 4) Cartons appear; eggs fly in one at a time. Each carton shows how full it
+	# is (carton_open_N), snapping shut only when a full six is reached — so the
+	# last, partly-filled carton stays open and the leftover is visible.
 	Narrator.speak("Now pack them into cartons of %d." % CARTON)
 	_lay_out_cartons(cartons)
 	if not await _wait(gen, 1.0): return
@@ -147,14 +158,18 @@ func _run(gen: int) -> void:
 		var carton_idx := i / CARTON
 		var slot := i % CARTON
 		await _fly_egg_to_carton(gen, _tray_eggs[i], carton_idx, slot)
-		if slot == CARTON - 1 or i == _tray_eggs.size() - 1:
-			_snap_carton(carton_idx)
+		_tray_eggs[i].visible = false
+		var count_in := slot + 1
+		if count_in >= CARTON:
+			_close_carton(carton_idx)
 			if not await _wait(gen, 0.5): return
+		else:
+			_set_carton_fill(carton_idx, count_in)
+			if not await _wait(gen, 0.12): return
 
 	# 5) The answer.
 	_eq2.text = "%d \u00F7 %d = %d cartons" % [total, CARTON, cartons]
-	Narrator.speak("%d eggs make %d full cartons. Great job!" % [total, cartons]) if total % CARTON == 0 \
-		else Narrator.speak("%d eggs need %d cartons." % [total, cartons])
+	Narrator.speak(_cartons_line(total))
 	_hint.text = "\u2713 done"
 	_done = true
 	finished.emit()
@@ -240,18 +255,23 @@ func _fly_egg_to_carton(gen: int, egg: TextureRect, carton_idx: int, slot: int) 
 	tw.tween_property(egg, "scale", Vector2(0.7, 0.7), 0.28)
 	await tw.finished
 
-func _snap_carton(carton_idx: int) -> void:
+## Show the open carton holding `n` eggs (n = 1..5). The loose flying eggs are
+## hidden by the caller; this sprite is what she now sees in the cups.
+func _set_carton_fill(carton_idx: int, n: int) -> void:
 	if carton_idx >= _cartons.size():
 		return
-	var c: Dictionary = _cartons[carton_idx]
+	var tex := StorySprites.texture("carton_open_%d" % n)
+	if tex:
+		(_cartons[carton_idx]["node"] as TextureRect).texture = tex
+
+## A carton reached six eggs → snap the lid shut with a little bounce.
+func _close_carton(carton_idx: int) -> void:
+	if carton_idx >= _cartons.size():
+		return
+	var node: TextureRect = _cartons[carton_idx]["node"]
 	var closed := StorySprites.texture("carton_closed")
 	if closed:
-		(c["node"] as TextureRect).texture = closed
-	# Eggs are now hidden under the lid.
-	var start := carton_idx * CARTON
-	for j in range(start, mini(start + CARTON, _tray_eggs.size())):
-		_tray_eggs[j].visible = false
-	var node: TextureRect = c["node"]
+		node.texture = closed
 	var tw := create_tween()
 	tw.tween_property(node, "scale", Vector2(1.12, 1.12), 0.12)
 	tw.tween_property(node, "scale", Vector2.ONE, 0.12)
@@ -275,8 +295,13 @@ func _skip() -> void:
 	_reset()
 	_lay_out_chickens(q["white"], q["yellow"])
 	_lay_out_cartons(cartons)
-	for c in _cartons:
-		(c["node"] as TextureRect).texture = StorySprites.texture("carton_closed")
+	# Full cartons closed; a leftover last carton stays open showing its eggs.
+	var rem := total % CARTON
+	for idx in _cartons.size():
+		if rem > 0 and idx == cartons - 1:
+			_set_carton_fill(idx, rem)
+		else:
+			(_cartons[idx]["node"] as TextureRect).texture = StorySprites.texture("carton_closed")
 	_eq0.text = "(%d\u00D7%d) + (%d\u00D7%d) = %d eggs a day" % [q["white"], q["w_eggs"], q["yellow"], q["y_eggs"], per_day]
 	_eq1.text = "%d \u00D7 %d days = %d eggs" % [per_day, q["days"], total]
 	_eq2.text = "%d \u00F7 %d = %d cartons" % [total, CARTON, cartons]

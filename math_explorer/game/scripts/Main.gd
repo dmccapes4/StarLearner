@@ -7,8 +7,9 @@ extends Node
 ##   ☰ (top-left) opens the Math Concepts Library: block tutorials on top, then
 ##   the games, then concept videos (two trains) and what's coming.
 ##
-##   First time an activity is opened, its tutorial plays first (tracked in
-##   user://seen.cfg), so she is never dropped into a game cold.
+##   First time an activity is opened, its tutorial plays first (tracked in the
+##   Save autoload), so she is never dropped into a game cold. The launch tour
+##   likewise fires only on fresh game state (see _begin_intro).
 
 const MathTabBar := preload("res://scripts/TabBar.gd")
 const AdditionTutorial := preload("res://scripts/AdditionTutorial.gd")
@@ -18,8 +19,6 @@ const EggsScene := preload("res://scripts/EggsScene.gd")
 const EggsDragScene := preload("res://scripts/EggsDragScene.gd")
 const PracticeScene := preload("res://scripts/PracticeScene.gd")
 const CoinsScene := preload("res://scripts/CoinsScene.gd")
-
-const SEEN_PATH := "user://seen.cfg"
 
 ## Card copy for the game tabs.
 const GAME_CARDS := {
@@ -73,14 +72,11 @@ var _practice: PracticeScene
 var _coins: CoinsScene
 var _back: Button
 var _current_op: String = ""
-var _seen := ConfigFile.new()
 var _intro_running: bool = false
 var _intro_gen: int = 0
 var _first_tut_gen: int = 0
 
 func _ready() -> void:
-	_seen.load(SEEN_PATH)
-
 	var bg := ColorRect.new()
 	bg.color = MathTheme.BG
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -318,6 +314,13 @@ static func intro_lines() -> Array:
 func _begin_intro() -> void:
 	if _intro_running:
 		return
+	# The launch tour is a one-time orientation: play it only on fresh game
+	# state (first ever launch, or after a kiosk "Start over"). Returning
+	# players land straight on the tiles.
+	if Save.is_intro_done():
+		_set_intro_highlight("")
+		_tabs.clear_selection()
+		return
 	await get_tree().process_frame
 	_run_intro()
 
@@ -337,6 +340,7 @@ func _run_intro() -> void:
 			return
 	_set_intro_highlight("")
 	_intro_running = false
+	Save.set_intro_done(true)
 
 func _set_intro_highlight(hl: String) -> void:
 	_tabs.set_tour_highlight(hl if hl != "menu" else "")
@@ -350,6 +354,8 @@ func _skip_intro() -> void:
 	Narrator.stop()
 	_set_intro_highlight("")
 	_intro_running = false
+	# She engaged with a tile — count the tour as seen so it doesn't replay.
+	Save.set_intro_done(true)
 
 func _wait_intro(gen: int, secs: float) -> bool:
 	await get_tree().create_timer(secs).timeout
@@ -413,6 +419,7 @@ func _set_hero_box(color: Color) -> void:
 
 func _on_primary() -> void:
 	if MathTheme.OPS.has(_current_op):
+		Save.record_activity_started("practice_" + _current_op)
 		_enter_scene(_practice)
 		_practice.start(_current_op)
 	else:
@@ -459,6 +466,7 @@ func _start_first_eggs() -> void:
 
 func _play_tutorial_for(op: String) -> void:
 	_mark_seen("tut_" + op)
+	Save.record_activity_started("tutorial_" + op)
 	if op == "add":
 		_enter_scene(_tutorial)
 		_tutorial.start(7, 4)
@@ -467,6 +475,7 @@ func _play_tutorial_for(op: String) -> void:
 		_block_tut.start(op)
 
 func _launch_game(game: String) -> void:
+	Save.record_activity_started("game_" + game)
 	match game:
 		"eggs":
 			_enter_scene(_eggs_drag)
@@ -486,6 +495,7 @@ func _on_activity_finished() -> void:
 	if _current_op.is_empty():
 		_show_home()
 		return
+	Save.record_activity_finished(_current_op)
 	_fill_card(_current_op)
 	# Don't Narrator.stop() here — praise / "Let's practice!" may still be
 	# draining; _reveal_card keeps the chrome without cutting the voice.
@@ -551,11 +561,10 @@ func _show_home() -> void:
 # ---- seen flags -----------------------------------------------------------------
 
 func _was_seen(key: String) -> bool:
-	return bool(_seen.get_value("seen", key, false))
+	return Save.was_seen(key)
 
 func _mark_seen(key: String) -> void:
-	_seen.set_value("seen", key, true)
-	_seen.save(SEEN_PATH)
+	Save.mark_seen(key)
 
 # ---- styles ---------------------------------------------------------------------
 

@@ -12,11 +12,12 @@ const AdditionTutorial := preload("res://scripts/AdditionTutorial.gd")
 const TrainsScene := preload("res://scripts/TrainsScene.gd")
 const EggsScene := preload("res://scripts/EggsScene.gd")
 const EggsDragScene := preload("res://scripts/EggsDragScene.gd")
-const PracticeScene := preload("res://scripts/PracticeScene.gd")
 const BlockTutorial := preload("res://scripts/BlockTutorial.gd")
 const CoinsScene := preload("res://scripts/CoinsScene.gd")
-const MainScript := preload("res://scripts/Main.gd")
 const NarratorScript := preload("res://scripts/Narrator.gd")
+# Main.gd + PracticeScene.gd reference the `Save` autoload singleton, which is
+# only registered as a global once the tree is up — so we load them lazily in
+# _run (after _init's deferred call), never as a top-level preload.
 
 const OUT_PATH := "res://data/math_vo_manifest.json"
 
@@ -26,6 +27,9 @@ func _init() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	var MainScript: GDScript = load("res://scripts/Main.gd")
+	var PracticeScene: GDScript = load("res://scripts/PracticeScene.gd")
+
 	# Main.gd: tab labels + coming-soon lines.
 	for op in MathTheme.OP_ORDER:
 		var label := str(MathTheme.OPS[op]["label"])

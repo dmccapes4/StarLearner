@@ -19,6 +19,12 @@ const EGG := 34.0
 const CARTON := 6
 const CARTON_W := 150.0
 
+## Tap-to-pack: a tapped egg grows + gets a gold ring; then a tap on a nest or
+## carton sends it there (dragging still works too). A press that moves more
+## than this many pixels is a drag, not a tap.
+const SELECT_SCALE := 1.34
+const DRAG_THRESHOLD := 12.0
+
 ## Fixed seed pool so every narration line can be baked ahead of time with
 ## ElevenLabs (tools/dump_vo_lines.gd enumerates vo_lines() for each seed).
 const SEED_POOL: Array = [0, 4, 9, 17, 26, 38, 49, 61, 77, 90]
@@ -30,6 +36,10 @@ var _zones: Array = []       # {node, kind, cap, count, slots, complete, idx}
 var _chickens: Array = []
 var _dragging: TextureRect = null
 var _drag_off: Vector2 = Vector2.ZERO
+var _selected: TextureRect = null   # tapped egg, waiting to be sent to a zone
+var _sel_ring: Panel = null         # gold outline around the selected egg
+var _drag_start: Vector2 = Vector2.ZERO
+var _moved: bool = false            # did this press turn into a drag?
 var _instr: Label
 var _eq0: Label
 var _eq1: Label
@@ -64,12 +74,24 @@ func _build() -> void:
 	_hint.size = Vector2(190, 26)
 	add_child(_hint)
 
+	_sel_ring = Panel.new()
+	_sel_ring.visible = false
+	_sel_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var ring := StyleBoxFlat.new()
+	ring.bg_color = Color(1, 1, 1, 0)
+	ring.set_corner_radius_all(12)
+	ring.set_border_width_all(5)
+	ring.border_color = MathTheme.GOLD
+	_sel_ring.add_theme_stylebox_override("panel", ring)
+	add_child(_sel_ring)
+
 func _reset() -> void:
 	for e in _eggs: e.queue_free()
 	for z in _zones: z["node"].queue_free()
 	for c in _chickens: c.queue_free()
 	_eggs.clear(); _zones.clear(); _chickens.clear()
 	_dragging = null
+	_deselect()
 	_eq0.text = ""; _eq1.text = ""; _eq2.text = ""
 	_hint.text = ""
 
@@ -91,13 +113,23 @@ static func vo_lines(seed: int) -> Array:
 	var p := _pick(seed)
 	var q: Dictionary = p["params"]
 	var total: int = p["answer"]
-	var cartons := int(ceil(float(total) / CARTON))
 	return [
 		"Each white hen lays %d eggs. Each yellow hen lays %d. Drag the right number into every nest." % [q["w_eggs"], q["y_eggs"]],
 		"Great! Over %d days that is %d eggs. Now fill the cartons. Each holds %d." % [q["days"], total, CARTON],
 		"That nest is full!",
-		"You did it! %d eggs make %d cartons." % [total, cartons],
+		_result_line(total),
 	]
+
+## Closing line. On a remainder, name WHY there's an extra carton and how many
+## eggs sit in the last one — the leftover made audible.
+static func _result_line(total: int) -> String:
+	var cartons := int(ceil(float(total) / CARTON))
+	var rem := total % CARTON
+	if rem == 0:
+		return "You did it! %d eggs make %d full cartons." % [total, cartons]
+	var filled := (cartons - 1) * CARTON
+	return "You did it! It takes %d cartons, because %d is more than %d, leaving %d %s in the last carton." % [
+		cartons, total, filled, rem, "egg" if rem == 1 else "eggs"]
 
 # ---- Phase 1: lay eggs into nests -------------------------------------------
 
@@ -108,7 +140,7 @@ func _start_lay() -> void:
 	var yellow: int = q["yellow"]
 	var w_eggs: int = q["w_eggs"]
 	var y_eggs: int = q["y_eggs"]
-	_instr.text = "Drag each hen's eggs into her nest  (white lay %d, yellow lay %d)" % [w_eggs, y_eggs]
+	_instr.text = "Tap an egg, then tap a nest  (white lay %d, yellow lay %d)" % [w_eggs, y_eggs]
 	Narrator.speak("Each white hen lays %d eggs. Each yellow hen lays %d. Drag the right number into every nest." % [w_eggs, y_eggs])
 
 	var n := white + yellow
@@ -175,10 +207,11 @@ func _start_pack() -> void:
 	var cartons := int(ceil(float(total) / CARTON))
 	_eq0.text = "(%d\u00D7%d) + (%d\u00D7%d) = %d eggs a day" % [q["white"], q["w_eggs"], q["yellow"], q["y_eggs"], per_day]
 	_eq1.text = "%d \u00D7 %d days = %d eggs" % [per_day, days, total]
-	_instr.text = "Now drag the eggs into cartons of %d" % CARTON
+	_instr.text = "Tap an egg, then tap a carton of %d" % CARTON
 	Narrator.speak("Great! Over %d days that is %d eggs. Now fill the cartons. Each holds %d." % [days, total, CARTON])
 
 	# clear phase-1 nests + eggs
+	_deselect()
 	for z in _zones: z["node"].queue_free()
 	for e in _eggs: e.queue_free()
 	for c in _chickens: c.queue_free()
@@ -238,20 +271,33 @@ func _on_gui_input(event: InputEvent) -> void:
 func _begin_drag(pos: Vector2) -> void:
 	if _phase == Phase.DONE:
 		return
-	# topmost free egg under the pointer
-	for i in range(_eggs.size() - 1, -1, -1):
-		var e: TextureRect = _eggs[i]
-		if e.get_meta("placed"):
-			continue
-		if Rect2(e.position, e.size).has_point(pos):
-			_dragging = e
-			_drag_off = pos - e.position
-			move_child(e, get_child_count() - 1)  # bring to front
-			e.scale = Vector2(1.1, 1.1)
-			return
+	var e := _egg_at(pos)
+	if e != null:
+		# Start a potential drag; a release without much movement becomes a tap.
+		_dragging = e
+		_drag_off = pos - e.position
+		_drag_start = pos
+		_moved = false
+		move_child(e, get_child_count() - 1)  # bring to front
+		return
+	# Not on an egg: if one is selected, a tap on a nest/carton sends it there.
+	if _selected != null:
+		var z := _zone_at(pos)
+		if not z.is_empty() and not z["complete"] and z["count"] < z["cap"]:
+			_send_selected_to(z)
+		else:
+			_deselect()
 
 func _move_drag(pos: Vector2) -> void:
-	if _dragging:
+	if _dragging == null:
+		return
+	if not _moved and (pos - _drag_start).length() > DRAG_THRESHOLD:
+		_moved = true
+		# A real drag cancels any selection and lifts the egg.
+		if _selected == _dragging:
+			_deselect()
+		_dragging.scale = Vector2(1.1, 1.1)
+	if _moved:
 		_dragging.position = pos - _drag_off
 
 func _end_drag(pos: Vector2) -> void:
@@ -259,42 +305,109 @@ func _end_drag(pos: Vector2) -> void:
 		return
 	var e := _dragging
 	_dragging = null
+	if not _moved:
+		# It was a tap on the egg → toggle its selection.
+		if _selected == e:
+			_deselect()
+		else:
+			_select(e)
+		return
+	# A drag ended → drop into a zone under the egg, else snap home.
 	e.scale = Vector2.ONE
 	var center := e.position + e.size * 0.5
 	for z in _zones:
 		if z["complete"] or z["count"] >= z["cap"]:
 			continue
 		if (z["rect"] as Rect2).has_point(center):
-			_place_in_zone(e, z)
+			_place_in_zone(e, z, false)
 			return
-	# no valid drop -> snap home
 	var tw := create_tween()
 	tw.tween_property(e, "position", e.get_meta("home"), 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
-func _place_in_zone(e: TextureRect, z: Dictionary) -> void:
+## Topmost draggable egg under `pos` (skips ones already placed/hidden).
+func _egg_at(pos: Vector2) -> TextureRect:
+	for i in range(_eggs.size() - 1, -1, -1):
+		var e: TextureRect = _eggs[i]
+		if e.get_meta("placed") or not e.visible:
+			continue
+		if Rect2(e.position, e.size).has_point(pos):
+			return e
+	return null
+
+## First zone whose box contains `pos` (empty dict if none).
+func _zone_at(pos: Vector2) -> Dictionary:
+	for z in _zones:
+		if (z["rect"] as Rect2).has_point(pos):
+			return z
+	return {}
+
+# ---- selection --------------------------------------------------------------
+
+func _select(e: TextureRect) -> void:
+	_deselect()
+	_selected = e
+	e.scale = Vector2(SELECT_SCALE, SELECT_SCALE)
+	_sel_ring.size = e.size * SELECT_SCALE + Vector2(16, 16)
+	_sel_ring.position = e.position + e.size * 0.5 - _sel_ring.size * 0.5
+	_sel_ring.visible = true
+	# Keep the ring just behind the grown egg.
+	move_child(e, get_child_count() - 1)
+	move_child(_sel_ring, get_child_count() - 1)
+	move_child(e, get_child_count() - 1)
+
+func _deselect() -> void:
+	if _selected != null and is_instance_valid(_selected):
+		_selected.scale = Vector2.ONE
+	_selected = null
+	if _sel_ring != null:
+		_sel_ring.visible = false
+
+func _send_selected_to(z: Dictionary) -> void:
+	var e := _selected
+	_deselect()
+	_place_in_zone(e, z, true)
+
+# ---- placement --------------------------------------------------------------
+
+func _place_in_zone(e: TextureRect, z: Dictionary, fly: bool) -> void:
 	var slot: Vector2 = z["slots"][z["count"]]
 	e.set_meta("placed", true)
 	z["count"] += 1
+	var count_now: int = z["count"]
+	var dur := 0.34 if fly else 0.18
 	var tw := create_tween()
-	tw.tween_property(e, "position", slot - e.size * 0.5, 0.18).set_trans(Tween.TRANS_QUAD)
-	if z["count"] >= z["cap"]:
+	tw.set_parallel(true)
+	tw.tween_property(e, "position", slot - e.size * 0.5, dur).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(e, "scale", Vector2.ONE, dur)
+	if z["kind"] == "carton":
+		# When the egg lands, it "goes into" the cup: hide the loose egg and show
+		# the carton holding N eggs (or snap it shut at six).
+		tw.chain().tween_callback(func() -> void: _egg_landed_in_carton(e, z, count_now))
+		if z["count"] >= z["cap"]:
+			_complete_zone(z)
+	elif z["count"] >= z["cap"]:
 		_complete_zone(z)
+
+func _egg_landed_in_carton(e: TextureRect, z: Dictionary, count_now: int) -> void:
+	e.visible = false
+	var node: TextureRect = z["node"]
+	if count_now >= CARTON:
+		node.texture = StorySprites.texture("carton_closed")
+		var t := create_tween()
+		t.tween_property(node, "scale", Vector2(1.12, 1.12), 0.1)
+		t.tween_property(node, "scale", Vector2.ONE, 0.1)
+	else:
+		var tex := StorySprites.texture("carton_open_%d" % count_now)
+		if tex:
+			node.texture = tex
 
 func _complete_zone(z: Dictionary) -> void:
 	z["complete"] = true
 	if z["kind"] == "nest":
 		(z["node"] as Panel).add_theme_stylebox_override("panel", _nest_box(true))
 		Narrator.speak("That nest is full!")
-	else:
-		var node: TextureRect = z["node"]
-		node.texture = StorySprites.texture("carton_closed")
-		# hide the eggs now under the lid
-		for e in _eggs:
-			if e.get_meta("placed") and (z["rect"] as Rect2).has_point(e.position + e.size * 0.5):
-				e.visible = false
-		var t := create_tween()
-		t.tween_property(node, "scale", Vector2(1.12, 1.12), 0.1)
-		t.tween_property(node, "scale", Vector2.ONE, 0.1)
+	# Carton visuals (fill / snap shut) are handled per egg in
+	# _egg_landed_in_carton, so a leftover last carton stays open.
 	_check_phase_done()
 
 func _check_phase_done() -> void:
@@ -311,7 +424,7 @@ func _check_phase_done() -> void:
 		_instr.text = "You packed them all!"
 		_hint.text = "\u2713 done"
 		_phase = Phase.DONE
-		Narrator.speak("You did it! %d eggs make %d cartons." % [total, cartons])
+		Narrator.speak(_result_line(total))
 		finished.emit()
 
 # ---- helpers ----------------------------------------------------------------
