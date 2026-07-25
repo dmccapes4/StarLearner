@@ -18,8 +18,8 @@ func run() -> TestAssert:
 	t.ok(farm.animal_positions.size() >= 2, "animal placeholders")
 	## Extruded beds expose side walls + raised soil top.
 	t.ok(farm.get_node_or_null("bed_0_wall_w") != null, "bed has 3D wall")
-	t.ok(farm.get_node_or_null("ShedWallW") != null, "shed has 3D wall")
-	t.ok(farm.get_node_or_null("ShedRoofE") != null, "shed has pitched roof")
+	t.ok(farm.get_node_or_null("ShedSprite") != null or farm.get_node_or_null("ShedWallW") != null,
+		"shed sprite (or fallback walls) present")
 	t.ok(farm.get_node_or_null("Meadow") != null, "meadows outside fence")
 	t.ok(farm.get_node_or_null("YardPost_0_0") != null, "perimeter fence posts")
 
@@ -37,7 +37,9 @@ func run() -> TestAssert:
 	t.eq(beds_hit, 6, "all bed centers resolve as beds")
 
 	t.ok(farm.is_blocked(farm.shed_center), "shed is solid")
-	t.ok(farm.is_blocked(farm.fence_center), "animal pen is solid")
+	t.ok(not farm.is_blocked(farm.fence_center), "animal pen is walkable via gate")
+	t.ok(farm.has_method("in_pen") and farm.in_pen(farm.fence_center), "fence center is inside pen")
+	t.ok(farm.gate_world != Vector2.ZERO, "pen gate placed")
 	t.ok(farm.is_blocked(farm.bed_centers["bed_1"]), "garden bed is solid")
 	t.ok(not farm.is_blocked(farm.spawn_world), "spawn is walkable")
 
@@ -68,7 +70,37 @@ func run() -> TestAssert:
 	t.ok(not through_shed, "path routes around shed")
 
 	var pen_approach := farm.nearest_walkable(farm.fence_center)
-	t.ok(not farm.is_blocked(pen_approach), "pen approach is outside the rail")
+	t.ok(not farm.is_blocked(pen_approach), "pen interior / approach is walkable")
+	t.ok(farm.pen_roam_poly.size() >= 3, "animal roam bound")
+
+	## UI validation: slot markers sit fully inside the bed lip, no overlap.
+	for bid in farm.bed_ids():
+		var soil_top: PackedVector2Array = farm.bed_soil_top_poly(bid)
+		var markers: Array = []
+		for s in 4:
+			var mp: PackedVector2Array = farm.slot_marker_poly(bid, s)
+			t.ok(mp.size() >= 3, "%s slot %d marker exists" % [bid, s])
+			markers.append(mp)
+			for p in mp:
+				t.ok(IsoUtil.point_in_polygon(p, soil_top),
+					"%s slot %d marker inside soil top" % [bid, s])
+		for a in 4:
+			for b in range(a + 1, 4):
+				var overlap := Geometry2D.intersect_polygons(markers[a], markers[b])
+				t.ok(overlap.is_empty(), "%s slots %d/%d do not overlap" % [bid, a, b])
+		break ## beds share geometry — validating one is representative
+
+	## Pen routing: any path into the pen must cross the fence only at the gate.
+	var outside := farm.nearest_walkable(farm.gate_world + Vector2(-140, 0))
+	var inside := farm.nearest_walkable(farm.fence_center)
+	var pen_path := farm.find_path(outside, inside)
+	t.ok(pen_path.size() >= 2, "path into pen exists")
+	var bad_cross := false
+	for i in range(pen_path.size() - 1):
+		if not farm.crossing_allowed(pen_path[i], pen_path[i + 1]):
+			bad_cross = true
+			break
+	t.ok(not bad_cross, "pen entry only through the gate")
 
 	host.free()
 	return t

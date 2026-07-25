@@ -6,7 +6,11 @@ const GoldOutlineScript := preload("res://scripts/ui/GoldOutline.gd")
 const StarProgressScript := preload("res://scripts/sim/StarProgress.gd")
 const SpeakScript := preload("res://scripts/audio/Speak.gd")
 const AnimalSfxScript := preload("res://scripts/audio/AnimalSfx.gd")
-const RoamingDogScript := preload("res://scripts/world/RoamingDog.gd")
+const RoamingAnimalScript := preload("res://scripts/world/RoamingAnimal.gd")
+const PenGateScript := preload("res://scripts/world/PenGate.gd")
+const AnimalCatalogScript := preload("res://scripts/content/AnimalCatalog.gd")
+const BugCatalogScript := preload("res://scripts/content/BugCatalog.gd")
+const BugSpawnerScript := preload("res://scripts/world/BugSpawner.gd")
 
 @onready var farm_map: FarmMap = $FarmMap
 @onready var player: Player = $Player
@@ -17,6 +21,8 @@ const StarDBScript := preload("res://scripts/content/StarDB.gd")
 
 var seed_db: SeedDB = SeedDB.new()
 var star_db = StarDBScript.new()
+var animal_db = AnimalCatalogScript.new()
+var bug_db = BugCatalogScript.new()
 var progress: RefCounted
 var garden: GardenState = GardenState.new()
 var sprites: FarmSprites = FarmSprites.new()
@@ -31,9 +37,26 @@ var star_menu: Node
 var harvest_totals: Dictionary = {} ## plant_id -> int
 var tool_id: String = "water"
 var action_prompt: Node
-var roaming_dog: Node2D
-## Pending interactable: walk there first, then show ActionPrompt.
+var reveal_tile: Node
+var video_panel: Node
+var bug_grid: Node
+var plant_grid: Node
+var season_card: Node
+var pen_gate: Node2D
+var bug_spawner: Node2D
+var roaming_animals: Dictionary = {} ## id -> RoamingAnimal
+## Context of the currently open reveal (for catch-on-close behavior).
+var _reveal_ctx: Dictionary = {}
+## Bug id waiting for its "You caught it!" grid after a video closes.
+var _grid_after_video: String = ""
+## Pending interactable: walk there first, then show ActionPrompt / RevealTile.
 var _pending: Dictionary = {}
+## Animal follow: first path leg waits for the "Walking to X" narration, then
+## at most a few repath legs when the player is idle (no per-frame repathing).
+var _follow_delay: float = 0.0
+var _follow_legs: int = 0
+const FOLLOW_MAX_LEGS := 4
+var _animal_sfx_played: bool = false
 
 var _ripple_left: float = 0.0
 var _guide_return_left: float = 0.0
@@ -41,6 +64,8 @@ var _guide_return_left: float = 0.0
 func _ready() -> void:
 	seed_db.load_all()
 	star_db.load_all()
+	animal_db.load_all()
+	bug_db.load_all()
 	progress = StarProgressScript.new()
 	progress.setup(star_db, _save())
 	progress.bind_events(Events)
@@ -94,7 +119,9 @@ func _ready() -> void:
 		camera.snap_to_target()
 
 	farm_map.apply_season_tint(seed_db.current_season)
-	_spawn_roaming_dog()
+	_spawn_pen_gate()
+	_spawn_roaming_animals()
+	_spawn_bug_spawner()
 	call_deferred("_bind_ui")
 
 	if not Events.world_tapped.is_connected(_on_world_tapped):
@@ -138,6 +165,22 @@ func _bind_ui() -> void:
 			action_prompt.confirmed.connect(_on_action_confirmed)
 		if action_prompt.has_signal("cancelled") and not action_prompt.cancelled.is_connected(_on_action_cancelled):
 			action_prompt.cancelled.connect(_on_action_cancelled)
+	reveal_tile = get_tree().get_first_node_in_group("reveal_tile")
+	if reveal_tile:
+		if reveal_tile.has_signal("confirmed") and not reveal_tile.confirmed.is_connected(_on_reveal_confirmed):
+			reveal_tile.confirmed.connect(_on_reveal_confirmed)
+		if reveal_tile.has_signal("cancelled") and not reveal_tile.cancelled.is_connected(_on_reveal_cancelled):
+			reveal_tile.cancelled.connect(_on_reveal_cancelled)
+	video_panel = get_tree().get_first_node_in_group("video_panel")
+	if video_panel and video_panel.has_signal("closed") and not video_panel.closed.is_connected(_on_video_closed):
+		video_panel.closed.connect(_on_video_closed)
+	bug_grid = get_tree().get_first_node_in_group("bug_grid")
+	if bug_grid and bug_grid.has_method("setup"):
+		bug_grid.call("setup", bug_db, sprites)
+	plant_grid = get_tree().get_first_node_in_group("plant_grid")
+	if plant_grid and plant_grid.has_method("setup"):
+		plant_grid.call("setup", seed_db, sprites)
+	season_card = get_tree().get_first_node_in_group("season_card")
 
 func set_tool(id: String) -> void:
 	tool_id = id
@@ -176,17 +219,91 @@ func _process(delta: float) -> void:
 		_guide_return_left -= delta
 		if _guide_return_left <= 0.0 and camera and camera.has_method("resume_follow"):
 			camera.resume_follow(player)
+	_update_animal_follow(delta)
 
-func _spawn_roaming_dog() -> void:
-	if roaming_dog and is_instance_valid(roaming_dog):
+func _spawn_bug_spawner() -> void:
+	if bug_spawner and is_instance_valid(bug_spawner):
 		return
-	roaming_dog = RoamingDogScript.new()
-	roaming_dog.name = "RoamingDog"
-	add_child(roaming_dog)
-	var spawn: Vector2 = farm_map.dog_spawn_world if farm_map.dog_spawn_world != Vector2.ZERO \
-		else farm_map.spawn_world + Vector2(40, 20)
-	roaming_dog.setup(farm_map, sprites, spawn)
-	farm_map.animal_positions["dog"] = spawn
+	bug_spawner = BugSpawnerScript.new()
+	bug_spawner.name = "BugSpawner"
+	add_child(bug_spawner)
+	bug_spawner.setup(farm_map, bug_db, sprites, garden)
+
+func _spawn_pen_gate() -> void:
+	if pen_gate and is_instance_valid(pen_gate):
+		return
+	pen_gate = PenGateScript.new()
+	pen_gate.name = "PenGate"
+	add_child(pen_gate)
+	var gpos: Vector2 = farm_map.gate_world if farm_map.gate_world != Vector2.ZERO \
+		else farm_map.fence_center + Vector2(-90, 0)
+	pen_gate.setup(sprites, gpos)
+	pen_gate.bind_player(player)
+
+func _spawn_roaming_animals() -> void:
+	for id in roaming_animals.keys():
+		var old: Node = roaming_animals[id]
+		if old and is_instance_valid(old):
+			old.queue_free()
+	roaming_animals.clear()
+	for a in animal_db.animals:
+		var d: Dictionary = a
+		var id := str(d.get("id", ""))
+		if id.is_empty():
+			continue
+		var actor: Node2D = RoamingAnimalScript.new()
+		actor.name = "Animal_%s" % id
+		add_child(actor)
+		var spawn: Vector2 = farm_map.animal_positions.get(id, farm_map.fence_center)
+		var bound := PackedVector2Array()
+		if bool(d.get("pen", true)):
+			bound = farm_map.pen_roam_poly
+			if bound.is_empty():
+				bound = farm_map.fence_poly
+		else:
+			## Dog: yard wander (empty bound → yard logic). Prefer map spawn.
+			spawn = farm_map.dog_spawn_world if farm_map.dog_spawn_world != Vector2.ZERO \
+				else farm_map.spawn_world + Vector2(40, 20)
+		actor.setup(
+			id, farm_map, sprites, spawn, bound,
+			float(d.get("scale", 3.5)),
+			str(d.get("kind", "")),
+			str(d.get("color", "default"))
+		)
+		roaming_animals[id] = actor
+		farm_map.animal_positions[id] = spawn
+
+func _animal_node(animal_id: String) -> Node2D:
+	var n: Node = roaming_animals.get(animal_id, null)
+	if n and is_instance_valid(n):
+		return n
+	return null
+
+func _update_animal_follow(delta: float) -> void:
+	if _pending.is_empty() or str(_pending.get("kind", "")) != "animal":
+		return
+	if reveal_tile and reveal_tile.has_method("is_open") and bool(reveal_tile.call("is_open")):
+		return
+	var aid := str(_pending.get("id", ""))
+	var actor := _animal_node(aid)
+	if actor == null:
+		return
+	var goal: Vector2 = actor.global_position
+	_pending["approach"] = goal
+	if player and player.global_position.distance_to(goal) <= Config.get_interact_arrive_eps() * 1.35:
+		_open_pending_prompt()
+		return
+	## First leg: wait for the "Walking to X" narration to release movement.
+	if _follow_delay > 0.0:
+		_follow_delay -= delta
+		if _follow_delay <= 0.0:
+			_follow_legs = 1
+			Events.player_path_requested.emit(farm_map.nearest_walkable(goal))
+		return
+	## Later legs: only repath when the player finished the previous leg.
+	if player and not player.moving and _follow_legs < FOLLOW_MAX_LEGS:
+		_follow_legs += 1
+		Events.player_path_requested.emit(farm_map.nearest_walkable(goal))
 
 func _on_world_tapped(world_pos: Vector2) -> void:
 	_show_ripple(world_pos)
@@ -196,15 +313,33 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 		_on_action_cancelled()
 	if shed_ui and shed_ui.has_method("is_open") and shed_ui.call("is_open"):
 		return
-	## Prefer live dog hit-test (roams).
-	if roaming_dog and is_instance_valid(roaming_dog):
-		if world_pos.distance_to(roaming_dog.global_position) <= Config.get_animal_tap_radius():
-			_queue_interact("animal", "dog", roaming_dog.global_position)
+	if bug_grid and bug_grid.has_method("is_open") and bool(bug_grid.call("is_open")):
+		return
+	if plant_grid and plant_grid.has_method("is_open") and bool(plant_grid.call("is_open")):
+		return
+	if season_card and season_card.has_method("is_open") and bool(season_card.call("is_open")):
+		return
+	## Roaming bugs first (small + temporary), then animals.
+	if bug_spawner and bug_spawner.has_method("bug_at"):
+		var bug: Node2D = bug_spawner.bug_at(world_pos, 34.0)
+		if bug != null:
+			_queue_bug_interact(bug)
 			return
+	## Prefer live roaming animal hit-test.
+	var hit_animal := _nearest_roaming_animal(world_pos, Config.get_animal_tap_radius())
+	if not hit_animal.is_empty():
+		var actor := _animal_node(hit_animal)
+		_queue_interact("animal", hit_animal, actor.global_position if actor else world_pos)
+		return
+	## Chicken coop look — egg-collecting video.
+	if farm_map.coop_world != Vector2.ZERO and world_pos.distance_to(farm_map.coop_world) <= 60.0:
+		_queue_interact("coop", "coop", farm_map.nearest_walkable(farm_map.coop_world + Vector2(0, 40)))
+		return
 	var zone := farm_map.zone_at(world_pos)
 	if zone.is_empty():
 		## Tap = navigate (immersive multi-tap walks).
 		_pending.clear()
+		_animal_sfx_played = false
 		if not farm_map.is_blocked(world_pos):
 			Events.player_path_requested.emit(world_pos)
 		else:
@@ -215,6 +350,19 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 	Events.zone_tapped.emit(zid, kind)
 	## Walk to the interactable first; action tile opens on arrive.
 	_queue_interact(kind, zid, world_pos)
+
+func _nearest_roaming_animal(world_pos: Vector2, radius: float) -> String:
+	var best := ""
+	var best_d := radius
+	for id in roaming_animals.keys():
+		var actor: Node2D = roaming_animals[id]
+		if actor == null or not is_instance_valid(actor):
+			continue
+		var d := world_pos.distance_to(actor.global_position)
+		if d <= best_d:
+			best_d = d
+			best = str(id)
+	return best
 
 func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 	var approach := world_pos
@@ -231,18 +379,18 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 			if not near.is_empty():
 				kind = "animal"
 				zid = near
-				approach = farm_map.nearest_walkable(farm_map.animal_positions.get(near, farm_map.fence_center))
+				var a := _animal_node(near)
+				approach = a.global_position if a else farm_map.animal_positions.get(near, farm_map.fence_center)
 			else:
-				## Fence alone: just walk over; no blocking prompt.
+				## Fence alone: walk through gate / pen.
 				approach = farm_map.nearest_walkable(world_pos)
 				Events.player_path_requested.emit(approach)
 				_pending.clear()
+				_animal_sfx_played = false
 				return
 		"animal":
-			if zid == "dog" and roaming_dog and is_instance_valid(roaming_dog):
-				approach = farm_map.nearest_walkable(roaming_dog.global_position)
-			else:
-				approach = farm_map.nearest_walkable(farm_map.animal_positions.get(zid, farm_map.fence_center))
+			var actor := _animal_node(zid)
+			approach = actor.global_position if actor else farm_map.animal_positions.get(zid, farm_map.fence_center)
 		_:
 			approach = farm_map.nearest_walkable(world_pos)
 	_pending = {
@@ -252,14 +400,66 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 		"approach": approach,
 		"tap": world_pos,
 	}
+	_animal_sfx_played = false
+	_follow_delay = 0.0
+	_follow_legs = 0
 	## Already close enough → prompt immediately.
 	if player and player.global_position.distance_to(approach) <= Config.get_interact_arrive_eps():
+		_open_pending_prompt()
+		return
+	if kind == "animal":
+		## Narrate first; the follow updater issues the path once the
+		## narration movement-lock releases.
+		var dur := SpeakScript.line("Walking to %s." % animal_db.display_name(zid))
+		_follow_delay = maxf(dur, 0.1) + 0.05
+	else:
+		Events.player_path_requested.emit(farm_map.nearest_walkable(approach))
+
+func _queue_bug_interact(bug: Node2D) -> void:
+	var approach := farm_map.nearest_walkable(bug.global_position)
+	_pending = {
+		"kind": "bug",
+		"id": str(bug.bug_id),
+		"bug_iid": bug.get_instance_id(),
+		"slot": -1,
+		"approach": approach,
+		"tap": bug.global_position,
+		"legs": 0,
+	}
+	if player and player.global_position.distance_to(bug.global_position) <= Config.get_interact_arrive_eps() * 1.4:
 		_open_pending_prompt()
 	else:
 		Events.player_path_requested.emit(approach)
 
+func _pending_bug_node() -> Node2D:
+	var iid := int(_pending.get("bug_iid", 0))
+	if iid == 0:
+		return null
+	var obj := instance_from_id(iid)
+	if obj is Node2D and is_instance_valid(obj):
+		return obj as Node2D
+	return null
+
 func _on_player_arrived() -> void:
 	if _pending.is_empty():
+		return
+	## Animal follow: _update_animal_follow opens the prompt / repaths.
+	if str(_pending.get("kind", "")) == "animal":
+		return
+	if str(_pending.get("kind", "")) == "bug":
+		var bug := _pending_bug_node()
+		if bug == null:
+			_pending.clear()
+			return
+		if player and player.global_position.distance_to(bug.global_position) > Config.get_interact_arrive_eps() * 1.6:
+			var legs := int(_pending.get("legs", 0))
+			if legs < 2:
+				_pending["legs"] = legs + 1
+				Events.player_path_requested.emit(farm_map.nearest_walkable(bug.global_position))
+			else:
+				_pending.clear()
+			return
+		_open_pending_prompt()
 		return
 	var approach: Vector2 = _pending.get("approach", Vector2.ZERO)
 	if player and player.global_position.distance_to(approach) > Config.get_interact_arrive_eps() * 1.5:
@@ -269,13 +469,17 @@ func _on_player_arrived() -> void:
 func _open_pending_prompt() -> void:
 	if _pending.is_empty():
 		return
-	## Animals: play real SFX immediately — no confirm tile in the way.
+	## Animals: SFX → named portrait tile → tap for video.
 	if str(_pending.get("kind", "")) == "animal":
 		var aid := str(_pending.get("id", ""))
-		AnimalSfxScript.play(aid)
-		Events.animal_tapped.emit(aid)
-		print("Garden Explorer: animal:%s" % aid)
+		_show_animal_reveal(aid)
+		return
+	if str(_pending.get("kind", "")) == "bug":
+		_show_roaming_bug_reveal()
+		return
+	if str(_pending.get("kind", "")) == "coop":
 		_pending.clear()
+		_show_coop_look()
 		return
 	if action_prompt == null:
 		return
@@ -287,6 +491,113 @@ func _open_pending_prompt() -> void:
 		action_prompt.call("show_actions", actions)
 	else:
 		action_prompt.call("show_action", actions[0])
+
+var _interacting_animal: String = ""
+
+func _release_interacting_animal() -> void:
+	if _interacting_animal.is_empty():
+		return
+	var actor := _animal_node(_interacting_animal)
+	if actor and actor.has_method("set_interacting"):
+		actor.set_interacting(false)
+	_interacting_animal = ""
+
+func _show_animal_reveal(animal_id: String) -> void:
+	if not _animal_sfx_played:
+		AnimalSfxScript.play(animal_id)
+		_animal_sfx_played = true
+	Events.animal_tapped.emit(animal_id)
+	print("Garden Explorer: animal:%s" % animal_id)
+	## Pet greets the player: pause + happy stance for the whole interaction.
+	var greet := _animal_node(animal_id)
+	if greet and greet.has_method("set_interacting"):
+		greet.set_interacting(true, player.global_position if player else greet.global_position)
+		_interacting_animal = animal_id
+	var name := animal_db.display_name(animal_id)
+	var tex: Texture2D = sprites.portrait_texture(animal_db.portrait_path(animal_id))
+	if tex == null:
+		## Fallback: live sprite sheet / idle.
+		var kind := animal_db.kind_of(animal_id)
+		match kind:
+			"chicken":
+				tex = sprites.chicken_texture(animal_db.color_of(animal_id))
+			"cow":
+				tex = sprites.cow_texture()
+			"pig":
+				tex = sprites.pig_texture()
+			"rabbit":
+				tex = sprites.rabbit_texture()
+			"dog":
+				tex = sprites.dog_texture()
+	var line := animal_db.tap_line(animal_id)
+	_pending.clear()
+	_reveal_ctx = {"kind": "animal", "id": animal_id}
+	if reveal_tile and reveal_tile.has_method("show_reveal"):
+		## Brief delay so animal SFX leads the narration.
+		await get_tree().create_timer(0.45).timeout
+		if reveal_tile and reveal_tile.has_method("show_reveal"):
+			reveal_tile.call("show_reveal", {
+				"kind": "animal_video",
+				"id": animal_id,
+				"title": name,
+				"texture": tex,
+				"narration": line,
+				"hint": "Tap to learn more",
+				"video": animal_db.video_file(animal_id),
+				"topic": "%s the %s" % [name, animal_db.kind_of(animal_id)],
+			})
+	else:
+		SpeakScript.line(line)
+
+func _show_roaming_bug_reveal() -> void:
+	var bug := _pending_bug_node()
+	var bid := str(_pending.get("id", ""))
+	_pending.clear()
+	if bug == null or bid.is_empty():
+		return
+	if bug.has_method("set_interacting"):
+		bug.set_interacting(true)
+	var d: Dictionary = bug_db.get_bug(bid)
+	var bname := str(d.get("name", bid.capitalize()))
+	var tex: Texture2D = sprites.portrait_texture(str(d.get("portrait", "")))
+	_reveal_ctx = {"kind": "bug", "id": bid, "bug_iid": bug.get_instance_id(), "roaming": true}
+	print("Garden Explorer: bug_tap:%s" % bid)
+	if reveal_tile and reveal_tile.has_method("show_reveal"):
+		reveal_tile.call("show_reveal", {
+			"kind": "bug_video",
+			"id": bid,
+			"title": bname,
+			"texture": tex,
+			"narration": str(d.get("line", "A garden bug! Tap to learn more.")),
+			"hint": "Tap to learn more",
+			"video": str(d.get("video", "")),
+			"topic": "%s in the garden" % bname,
+		})
+
+func _finish_bug_catch(launched_video: bool) -> void:
+	## Roaming bug is caught when its interaction ends (either way).
+	var bid := str(_reveal_ctx.get("id", ""))
+	if bool(_reveal_ctx.get("roaming", false)):
+		var iid := int(_reveal_ctx.get("bug_iid", 0))
+		var obj := instance_from_id(iid)
+		if obj is Node2D and is_instance_valid(obj) and obj.has_method("catch_and_free"):
+			obj.catch_and_free()
+	var save := _save()
+	var is_new: bool = save != null and save.has_method("catch_bug") and save.catch_bug(bid)
+	if is_new:
+		if launched_video:
+			_grid_after_video = bid
+		elif bug_grid and bug_grid.has_method("show_catch"):
+			bug_grid.call("show_catch", bid)
+	_reveal_ctx.clear()
+
+func _on_video_closed() -> void:
+	if _grid_after_video.is_empty():
+		return
+	var bid := _grid_after_video
+	_grid_after_video = ""
+	if bug_grid and bug_grid.has_method("show_catch"):
+		bug_grid.call("show_catch", bid)
 
 func _build_actions_for_pending() -> Array:
 	var kind := str(_pending.get("kind", ""))
@@ -313,17 +624,24 @@ func _build_bed_actions(bed_id: String, slot: int) -> Array:
 	if shed_ui and shed_ui.has_method("selected_seed"):
 		held = str(shed_ui.call("selected_seed"))
 	if garden.is_empty(bed_id, slot):
-		if held.is_empty():
-			SpeakScript.line("Pick a seed at the shed first.")
-			return []
-		var pname := seed_db.display_name(held)
+		if not held.is_empty():
+			var pname := seed_db.display_name(held)
+			out.append({
+				"kind": "plant",
+				"bed_id": bed_id,
+				"slot": slot,
+				"plant_id": held,
+				"label": "Plant",
+				"narration": "Plant the %s seed here?" % pname,
+			})
+		## Empty soil can still hide bugs.
 		out.append({
-			"kind": "plant",
+			"kind": "bugs",
 			"bed_id": bed_id,
 			"slot": slot,
-			"plant_id": held,
-			"label": "Plant",
-			"narration": "Plant the %s seed here?" % pname,
+			"label": "Bugs",
+			"narration": "Let's look for bugs in the garden!",
+			"silent": true,
 		})
 		return out
 	var st := garden.get_slot(bed_id, slot)
@@ -368,12 +686,22 @@ func _build_bed_actions(bed_id: String, slot: int) -> Array:
 		"label": "Uproot",
 		"narration": "Pull out the %s?" % pname,
 	})
+	## Bugs discovery — always available on a planted or empty plot interaction.
+	out.append({
+		"kind": "bugs",
+		"bed_id": bed_id,
+		"slot": slot,
+		"label": "Bugs",
+		"narration": "Let's look for bugs in the garden!",
+		"silent": true, ## Narrate on confirm in _start_bug_hunt.
+	})
 	if out.is_empty():
 		SpeakScript.line("The %s is growing." % pname)
 	return out
 
 func _on_action_cancelled() -> void:
 	_pending.clear()
+	_animal_sfx_played = false
 
 func _on_action_confirmed(action: Dictionary) -> void:
 	_pending.clear()
@@ -396,8 +724,67 @@ func _on_action_confirmed(action: Dictionary) -> void:
 		"media":
 			garden.clear_awaiting_media(str(action.bed_id), int(action.slot))
 			_offer_plant_media(str(action.plant_id), str(action.media_kind), true)
+		"bugs":
+			_start_bug_hunt(str(action.get("bed_id", "")))
 		_:
 			pass
+
+func _start_bug_hunt(bed_id: String) -> void:
+	SpeakScript.line("We'll look carefully for bugs that live with our plants.")
+	await get_tree().create_timer(1.1).timeout
+	var plants := PackedStringArray()
+	if not bed_id.is_empty() and garden:
+		var slots := int(farm_map.data.get("slots_per_bed", 4))
+		for s in slots:
+			var st := garden.get_slot(bed_id, s)
+			var pid := str(st.get("plant_id", ""))
+			if not pid.is_empty():
+				plants.append(pid)
+	var bug: Dictionary = bug_db.pick_weighted(plants)
+	if bug.is_empty():
+		SpeakScript.line("No bugs today — try again later.")
+		return
+	var bid := str(bug.get("id", ""))
+	var bname := str(bug.get("name", bid))
+	var tex: Texture2D = sprites.portrait_texture(str(bug.get("portrait", "")))
+	print("Garden Explorer: bug:%s bed:%s" % [bid, bed_id])
+	_reveal_ctx = {"kind": "bug", "id": bid, "roaming": false}
+	if reveal_tile and reveal_tile.has_method("show_reveal"):
+		reveal_tile.call("show_reveal", {
+			"kind": "bug_video",
+			"id": bid,
+			"title": bname,
+			"texture": tex,
+			"narration": str(bug.get("line", "A garden bug! Tap to learn more.")),
+			"hint": "Tap to learn more",
+			"video": str(bug.get("video", "")),
+			"topic": "%s in the garden" % bname,
+		})
+
+func _on_reveal_confirmed(payload: Dictionary) -> void:
+	_release_interacting_animal()
+	var kind := str(payload.get("kind", ""))
+	var file_name := str(payload.get("video", ""))
+	var topic := str(payload.get("topic", payload.get("title", "")))
+	var id := str(payload.get("id", kind))
+	var launched := false
+	if video_panel == null:
+		video_panel = get_tree().get_first_node_in_group("video_panel")
+	if video_panel and video_panel.has_method("play_star") and not file_name.is_empty():
+		launched = bool(video_panel.call("play_star", id, file_name, topic))
+	elif not topic.is_empty():
+		SpeakScript.line(topic)
+	if kind == "bug_video" and str(_reveal_ctx.get("kind", "")) == "bug":
+		_finish_bug_catch(launched)
+	else:
+		_reveal_ctx.clear()
+
+func _on_reveal_cancelled() -> void:
+	_release_interacting_animal()
+	if str(_reveal_ctx.get("kind", "")) == "bug":
+		_finish_bug_catch(false)
+	else:
+		_reveal_ctx.clear()
 
 func _do_plant(bed_id: String, slot: int, plant_id: String) -> void:
 	if not seed_db.is_seed_available(plant_id):
@@ -433,6 +820,19 @@ func _current_tool() -> String:
 		return str(tool_bar.call("get_tool"))
 	return tool_id
 
+func _show_coop_look() -> void:
+	## Peek in the coop: egg-collecting video with our narration.
+	print("Garden Explorer: coop look")
+	var dur := SpeakScript.line("Let's peek inside the chicken coop!")
+	await get_tree().create_timer(maxf(dur, 0.5)).timeout
+	if video_panel == null:
+		video_panel = get_tree().get_first_node_in_group("video_panel")
+	var played := false
+	if video_panel and video_panel.has_method("play_star"):
+		played = bool(video_panel.call("play_star", "coop_eggs", "coop_eggs.ogv", "Collecting eggs"))
+	if not played:
+		SpeakScript.line("Chickens lay their eggs in cozy nesting boxes. Farmers collect them every morning!")
+
 func _do_harvest(bed_id: String, slot: int) -> void:
 	var pid := garden.harvest(bed_id, slot)
 	if pid.is_empty():
@@ -441,9 +841,29 @@ func _do_harvest(bed_id: String, slot: int) -> void:
 	var total := int(harvest_totals[pid])
 	Events.plant_harvested.emit(pid, total)
 	print("Garden Explorer: harvest %s — total %d" % [pid, total])
-	_speak_harvest(pid, total)
+	var save := _save()
+	var first: bool = save != null and save.has_method("has_flag") and not save.has_flag("harvest_first:%s" % pid)
+	if first:
+		save.set_flag("harvest_first:%s" % pid, true)
+		_run_first_harvest_ceremony(pid)
+	else:
+		_speak_harvest(pid, total)
 	if shed_ui and shed_ui.has_method("set_harvest_totals"):
 		shed_ui.call("set_harvest_totals", harvest_totals)
+
+func _run_first_harvest_ceremony(pid: String) -> void:
+	## Freeze (narration lock + fullscreen panels) → celebrate → plant grid
+	## gold unlock → real harvest video / educational slides → resume.
+	var pname := seed_db.display_name(pid)
+	var dur := SpeakScript.line("You harvested your first %s!" % pname)
+	await get_tree().create_timer(maxf(dur, 1.0)).timeout
+	var save := _save()
+	if save and save.has_method("set_harvest_totals"):
+		save.set_harvest_totals(harvest_totals)
+	if plant_grid and plant_grid.has_method("show_unlock"):
+		plant_grid.call("show_unlock", pid, harvest_totals)
+		await plant_grid.grid_closed
+	_offer_plant_media(pid, "harvest", true)
 
 func _speak_harvest(plant_id: String, total: int) -> void:
 	var pname := seed_db.display_name(plant_id)
@@ -502,7 +922,19 @@ func _apply_season_change(season_id: String, announce: bool) -> void:
 			elapsed = float(season_clock.elapsed)
 		save.set_season(season_id, elapsed)
 	if announce:
-		SpeakScript.line("It's %s! New seeds are in the shed." % label)
+		## A new year begins each spring (cycle wrap).
+		var year := 1
+		if save:
+			year = int(save.year)
+			if seed_db.season_order.size() > 0 and season_id == str(seed_db.season_order[0]):
+				year += 1
+				save.set_year(year)
+		if season_card and season_card.has_method("show_season"):
+			season_card.call("show_season", season_id, label, year)
+			await season_card.card_closed
+			SpeakScript.line("New seeds are in the shed.")
+		else:
+			SpeakScript.line("It's %s! New seeds are in the shed." % label)
 
 func _sync_season_hud(announce: bool) -> void:
 	if season_hud == null:

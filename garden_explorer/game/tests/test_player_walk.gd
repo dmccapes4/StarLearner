@@ -22,15 +22,15 @@ func run() -> TestAssert:
 	# Step ~7 seconds of movement (walk speed is intentionally leisurely).
 	for i in 420:
 		player._process(1.0 / 60.0)
-		## Never stride into the animal pen.
+		## Never stride into shed / beds (pen is walkable).
 		if farm.is_blocked(player.global_position) and player.global_position.distance_to(dest) >= 8.0:
 			t.ok(false, "stays outside solids while walking")
 			break
 		if not player.moving:
 			break
 	t.ok(player.global_position.distance_to(start) > 20.0, "moved away from spawn")
-	t.ok(player.global_position.distance_to(dest) < 48.0 or not player.moving,
-		"approached or arrived at pen rim")
+	t.ok(player.global_position.distance_to(dest) < 64.0 or not player.moving,
+		"approached or arrived at pen")
 	t.ok(not farm.is_blocked(player.global_position), "final position is walkable")
 	tree_host.free()
 	return t

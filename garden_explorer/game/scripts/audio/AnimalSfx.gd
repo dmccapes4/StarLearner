@@ -53,6 +53,4 @@ static func _ensure_player() -> AudioStreamPlayer:
 static func _load_ogg(abs_path: String) -> AudioStream:
 	## Godot 4 can load OggVorbis via ResourceLoader when imported; for raw files
 	## prefer AudioStreamOggVorbis.load_from_file when available.
-	if AudioStreamOggVorbis.has_method("load_from_file"):
-		return AudioStreamOggVorbis.load_from_file(abs_path)
-	return null
+	return AudioStreamOggVorbis.load_from_file(abs_path)

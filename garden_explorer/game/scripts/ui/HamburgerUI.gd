@@ -192,27 +192,38 @@ func _kind_glyph(kind: String) -> String:
 			return "🍅"
 
 func _style_concept(star_id: String, tile: Button) -> void:
-	var discovered: bool = progress != null and (progress.is_collected(star_id) or progress.is_revealed(star_id))
-	_apply_chrome(tile, discovered)
+	## Grey = not discovered, silver = unlocked but not watched, gold = watched.
+	var state := "grey"
+	if progress != null:
+		if progress.is_collected(star_id):
+			state = "gold"
+		elif progress.is_revealed(star_id):
+			state = "silver"
+	_apply_chrome(tile, state)
 	tile.tooltip_text = star_db.topic(star_id) if star_db else star_id
 
 func _style_seed_media(plant_id: String, kind: String, tile: Button) -> void:
-	var discovered: bool = _media_seen(plant_id, kind)
-	_apply_chrome(tile, discovered)
+	_apply_chrome(tile, "gold" if _media_seen(plant_id, kind) else "grey")
 	tile.tooltip_text = "%s (%s)" % [seed_db.display_name(plant_id), kind]
 
-func _apply_chrome(tile: Button, discovered: bool) -> void:
+func _apply_chrome(tile: Button, state: String) -> void:
 	var sb := StyleBoxFlat.new()
 	sb.set_corner_radius_all(12)
 	sb.set_border_width_all(3)
-	if discovered:
-		sb.bg_color = Color(0.42, 0.55, 0.28, 0.95)
-		sb.border_color = Color(0.85, 0.9, 0.4, 1)
-		tile.modulate = Color(1, 1, 1, 1)
-	else:
-		sb.bg_color = Color(0.22, 0.22, 0.24, 0.9)
-		sb.border_color = Color(0.4, 0.4, 0.42, 0.7)
-		tile.modulate = Color(0.55, 0.55, 0.58, 1)
+	match state:
+		"gold":
+			sb.bg_color = Color(0.42, 0.55, 0.28, 0.95)
+			sb.border_color = Color(1.0, 0.84, 0.25, 1)
+			sb.set_border_width_all(4)
+			tile.modulate = Color(1, 1, 1, 1)
+		"silver":
+			sb.bg_color = Color(0.38, 0.47, 0.30, 0.95)
+			sb.border_color = Color(0.82, 0.85, 0.9, 1)
+			tile.modulate = Color(1, 1, 1, 1)
+		_:
+			sb.bg_color = Color(0.22, 0.22, 0.24, 0.9)
+			sb.border_color = Color(0.4, 0.4, 0.42, 0.7)
+			tile.modulate = Color(0.55, 0.55, 0.58, 1)
 	tile.add_theme_stylebox_override("normal", sb)
 	tile.add_theme_stylebox_override("hover", sb)
 	tile.add_theme_stylebox_override("pressed", sb)

@@ -48,10 +48,27 @@ func play_plant(plant_id: String, kind: String, topic: String = "") -> bool:
 	var title := topic
 	if title.is_empty():
 		title = "%s — %s" % [seed_db.display_name(plant_id), kind.capitalize()]
+	## First seed collection / first harvest are ceremonies: no tap-to-exit.
+	var no_exit := kind == "seed" or kind == "harvest"
 	var path := seed_db.media_path(plant_id, kind)
 	if not path.is_empty() and (ResourceLoader.exists(path) or FileAccess.file_exists(ProjectSettings.globalize_path(path))):
-		return _open_video("plant:%s:%s" % [plant_id, kind], path, title)
-	return _open_slides("plant:%s:%s" % [plant_id, kind], title, _plant_slides(plant_id, kind))
+		var ok := _open_video("plant:%s:%s" % [plant_id, kind], path, title)
+		if ok and no_exit:
+			_back.visible = false
+		return ok
+	var ok2 := _open_slides("plant:%s:%s" % [plant_id, kind], title, _plant_slides(plant_id, kind))
+	if ok2 and no_exit:
+		_back.visible = false
+	return ok2
+
+## Real-photo lead-in card, if a matching photo exists.
+## Drop photos at res://assets/photos/<folder>/<plant_id>.png (or .jpg).
+static func _photo_path(folder: String, plant_id: String) -> String:
+	for ext in ["png", "jpg", "jpeg", "webp"]:
+		var p := "res://assets/photos/%s/%s.%s" % [folder, plant_id, ext]
+		if ResourceLoader.exists(p) or FileAccess.file_exists(ProjectSettings.globalize_path(p)):
+			return p
+	return ""
 
 func play_file(media_id: String, path: String, title: String) -> bool:
 	if _open:
@@ -74,11 +91,30 @@ func play_unlock_demo(title: String, lines: PackedStringArray) -> bool:
 
 func _plant_slides(plant_id: String, kind: String) -> Array:
 	var plant := seed_db.get_plant(plant_id)
+	var pname := seed_db.display_name(plant_id)
 	var slides_raw: Dictionary = plant.get("slides", {})
 	var arr: Array = slides_raw.get(kind, [])
 	var out: Array = []
+	## Real-photo lead-ins: actual seed for the first collection, actual
+	## sprout for the sprout look.
+	if kind == "seed":
+		var sp := _photo_path("seeds", plant_id)
+		if not sp.is_empty():
+			out.append({"text": "This is a %s seed." % pname, "image": sp})
+	elif kind == "sprout":
+		var pp := _photo_path("sprouts", plant_id)
+		if not pp.is_empty():
+			out.append({"text": "Look — a real %s sprout!" % pname, "image": pp})
 	if arr.is_empty():
-		var blurb := str(plant.get("blurb", seed_db.display_name(plant_id)))
+		if kind == "harvest":
+			## Reusable educational harvest structure until real footage lands.
+			var blurb0 := str(plant.get("blurb", ""))
+			if not blurb0.is_empty():
+				out.append({"text": blurb0, "image": ""})
+			out.append({"text": "Farmers pick %s gently when it is ripe, so the plant is not hurt." % pname, "image": ""})
+			out.append({"text": "Fresh %s is full of vitamins that help you grow strong." % pname, "image": ""})
+			return out
+		var blurb := str(plant.get("blurb", pname))
 		out.append({"text": blurb, "image": ""})
 		return out
 	for s in arr:
@@ -88,6 +124,7 @@ func _plant_slides(plant_id: String, kind: String) -> Array:
 
 func _open_video(media_id: String, path: String, title: String) -> bool:
 	_stop_all()
+	_back.visible = true
 	_media_id = media_id
 	_mode = "video"
 	_open = true
@@ -109,6 +146,7 @@ func _open_video(media_id: String, path: String, title: String) -> bool:
 
 func _open_slides(media_id: String, title: String, slides: Array) -> bool:
 	_stop_all()
+	_back.visible = true
 	_media_id = media_id
 	_mode = "slides"
 	_slides = slides

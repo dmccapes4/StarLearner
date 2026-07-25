@@ -13,6 +13,8 @@ var season_elapsed: float = 0.0
 var harvest_totals: Dictionary = {} ## plant_id -> int
 var beds_blob: Dictionary = {} ## bed_id -> Array[slot dict]
 var tool_id: String = "water"
+var caught_bugs: PackedStringArray = PackedStringArray()
+var year: int = 1
 
 func _ready() -> void:
 	if FileAccess.file_exists(WIPE_FLAG):
@@ -53,6 +55,10 @@ func _apply_blob(blob: Dictionary) -> void:
 	if typeof(bb) == TYPE_DICTIONARY:
 		beds_blob = bb.duplicate(true)
 	tool_id = str(blob.get("tool_id", "water"))
+	caught_bugs = PackedStringArray()
+	for b in blob.get("caught_bugs", []):
+		caught_bugs.append(str(b))
+	year = maxi(1, int(blob.get("year", 1)))
 
 func mark_dirty() -> void:
 	dirty = true
@@ -70,6 +76,8 @@ func save_if_dirty() -> void:
 		"harvest_totals": harvest_totals.duplicate(),
 		"beds": beds_blob.duplicate(true),
 		"tool_id": tool_id,
+		"caught_bugs": Array(caught_bugs),
+		"year": year,
 	}
 	var f := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if f == null:
@@ -128,6 +136,24 @@ func set_tool(id: String) -> void:
 	mark_dirty()
 	save_if_dirty()
 
+func has_bug(bug_id: String) -> bool:
+	return caught_bugs.has(bug_id)
+
+func catch_bug(bug_id: String) -> bool:
+	if has_bug(bug_id):
+		return false
+	caught_bugs.append(bug_id)
+	mark_dirty()
+	save_if_dirty()
+	return true
+
+func set_year(y: int) -> void:
+	if year == y:
+		return
+	year = maxi(1, y)
+	mark_dirty()
+	save_if_dirty()
+
 func clear_all() -> void:
 	_delete(SAVE_PATH)
 	_reset()
@@ -141,6 +167,8 @@ func _reset() -> void:
 	harvest_totals.clear()
 	beds_blob.clear()
 	tool_id = "water"
+	caught_bugs = PackedStringArray()
+	year = 1
 	dirty = false
 
 func _delete(path: String) -> void:

@@ -1,0 +1,5 @@
+Generated educational portrait tiles for Garden Explorer animals and garden bugs
+(kid-friendly stills used as reveal tiles and short documentary cards).
+
+Gate SFX: synthesized wood creak bands (tools / ffmpeg).
+Educational clips: tools/make_animal_bug_videos.sh → res://stars/animal_*.ogv, bug_*.ogv

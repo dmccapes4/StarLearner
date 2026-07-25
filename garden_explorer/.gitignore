@@ -11,6 +11,11 @@ tools/build/
 *.apk
 *.pck
 
+# Generated educational/intro clips + raw footage cache (regenerable via
+# tools/build_edu_videos.py, build_intro_explainer.py; too large for git)
+game/stars/*.ogv
+tools/media_src/
+
 # Editor host-local config (do not ship)
 .cache/
 .config/

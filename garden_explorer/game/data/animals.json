@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "animals": [
+    {
+      "id": "chicken_a",
+      "name": "Penny",
+      "kind": "chicken",
+      "gender": "f",
+      "color": "default",
+      "scale": 3.5,
+      "pen": true,
+      "portrait": "res://assets/portraits/animal_chicken_a.png",
+      "video": "animal_chicken.ogv"
+    },
+    {
+      "id": "chicken_b",
+      "name": "Coco",
+      "kind": "chicken",
+      "gender": "f",
+      "color": "brown",
+      "scale": 3.5,
+      "pen": true,
+      "portrait": "res://assets/portraits/animal_chicken_b.png",
+      "video": "animal_chicken.ogv"
+    },
+    {
+      "id": "rabbit",
+      "name": "Nibble",
+      "kind": "rabbit",
+      "gender": "m",
+      "scale": 1.45,
+      "pen": true,
+      "portrait": "res://assets/portraits/animal_rabbit.png",
+      "video": "animal_rabbit.ogv"
+    },
+    {
+      "id": "pig",
+      "name": "Pip",
+      "kind": "pig",
+      "gender": "m",
+      "scale": 1.15,
+      "pen": true,
+      "portrait": "res://assets/portraits/animal_pig.png",
+      "video": "animal_pig.ogv"
+    },
+    {
+      "id": "cow",
+      "name": "Daisy",
+      "kind": "cow",
+      "gender": "f",
+      "scale": 1.75,
+      "pen": true,
+      "portrait": "res://assets/portraits/animal_cow.png",
+      "video": "animal_cow.ogv"
+    },
+    {
+      "id": "dog",
+      "name": "Buddy",
+      "kind": "dog",
+      "gender": "m",
+      "scale": 1.25,
+      "pen": false,
+      "portrait": "res://assets/portraits/animal_dog.png",
+      "video": "animal_dog.ogv"
+    }
+  ]
+}

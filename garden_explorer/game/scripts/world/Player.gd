@@ -168,8 +168,17 @@ func _process(delta: float) -> void:
 		return
 	var step := to.normalized() * speed * delta
 	var next := global_position + step
-	## Soft collision: don't stride into solid tiles mid-segment.
+	## Soft collision: don't stride into solid tiles mid-segment,
+	## and never cut through the pen fence away from the gate.
 	var farm2 := _farm()
+	if farm2 and farm2.has_method("crossing_allowed") and not farm2.crossing_allowed(global_position, next):
+		if _wp_i + 1 < _waypoints.size():
+			_wp_i += 1
+			target = _waypoints[_wp_i]
+			return
+		moving = false
+		Events.player_arrived.emit()
+		return
 	if farm2 and farm2.is_blocked(next):
 		## Skip toward next waypoint / repath remainder.
 		if _wp_i + 1 < _waypoints.size():

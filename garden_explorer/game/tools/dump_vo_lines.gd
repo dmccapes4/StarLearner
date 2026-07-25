@@ -90,6 +90,41 @@ func _run() -> void:
 		_add("Let's visit the animals. %s" % t)
 		_add("Let's look around the whole garden. %s" % t)
 
+	## ---- Debug round 2: animals, bugs, harvest ceremony, seasons, shed UX ----
+	var animals_raw = JSON.parse_string(FileAccess.get_file_as_string("res://data/animals.json"))
+	if typeof(animals_raw) == TYPE_DICTIONARY:
+		for a in animals_raw.get("animals", []):
+			var an := str(a.get("name", ""))
+			var kind := str(a.get("kind", ""))
+			var pron := "He" if str(a.get("gender", "f")) == "m" else "She"
+			_add("Walking to %s." % an)
+			_add("This is %s! %s is a %s. Tap to learn more about %ss on farms." % [an, pron, kind, kind])
+	var bugs_raw = JSON.parse_string(FileAccess.get_file_as_string("res://data/bugs.json"))
+	if typeof(bugs_raw) == TYPE_DICTIONARY:
+		for b in bugs_raw.get("bugs", []):
+			_add(str(b.get("line", "")))
+			_add("You caught a %s!" % str(b.get("name", "")))
+	_add("We'll look carefully for bugs that live with our plants.")
+	_add("No bugs today — try again later.")
+	_add("Let's look for bugs in the garden!")
+	_add("Let's peek inside the chicken coop!")
+	_add("Chickens lay their eggs in cozy nesting boxes. Farmers collect them every morning!")
+	_add("New seeds are in the shed.")
+	_add("See the silver outline? Silver means you collected that seed before. When you harvest a plant, its seed turns gold!")
+	for season in ["Spring", "Summer", "Fall", "Winter"]:
+		for y in range(1, 11):
+			_add("It's %s, year %d!" % [season, y])
+	var seeds_raw = JSON.parse_string(FileAccess.get_file_as_string("res://data/seeds.json"))
+	if typeof(seeds_raw) == TYPE_DICTIONARY:
+		for p in seeds_raw.get("plants", []):
+			var pn := str(p.get("name", str(p.get("id", "")).capitalize()))
+			_add("You harvested your first %s!" % pn)
+			_add("This is a %s seed." % pn)
+			_add("Look — a real %s sprout!" % pn)
+			_add("Farmers pick %s gently when it is ripe, so the plant is not hurt." % pn)
+			_add("Fresh %s is full of vitamins that help you grow strong." % pn)
+			_add("You picked %s!" % pn)
+
 	var abs_path := ProjectSettings.globalize_path(OUT)
 	var f := FileAccess.open(OUT, FileAccess.WRITE)
 	if f == null:

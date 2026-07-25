@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "notes": "12 garden bugs weighted by crops from seeds.json. Beneficial + common pests kids meet in veggie gardens.",
+  "bugs": [
+    {
+      "id": "ladybug",
+      "name": "Ladybug",
+      "portrait": "res://assets/portraits/bug_ladybug.png",
+      "video": "bug_ladybug.ogv",
+      "base_weight": 2.0,
+      "plants": ["tomato", "lettuce", "pea", "bean", "cabbage", "kale", "broccoli", "strawberry", "pepper", "bell_pepper", "chili"],
+      "line": "A ladybug! These spotted helpers eat tiny aphids that harm plants. Tap to learn more."
+    },
+    {
+      "id": "rolly_polly",
+      "name": "Rolly Polly",
+      "portrait": "res://assets/portraits/bug_rolly_polly.png",
+      "video": "bug_rolly_polly.ogv",
+      "base_weight": 2.2,
+      "plants": ["lettuce", "cabbage", "spinach", "strawberry", "cucumber", "zucchini", "melon", "pumpkin"],
+      "line": "A rolly polly — also called a pill bug! It rolls into a ball and helps break down old leaves. Tap to learn more."
+    },
+    {
+      "id": "earthworm",
+      "name": "Earthworm",
+      "portrait": "res://assets/portraits/bug_earthworm.png",
+      "video": "bug_earthworm.ogv",
+      "base_weight": 2.0,
+      "plants": ["carrot", "potato", "onion", "garlic", "beet", "radish", "turnip", "lettuce", "tomato"],
+      "line": "An earthworm! Worms make tunnels that help roots breathe and soil stay soft. Tap to learn more."
+    },
+    {
+      "id": "honeybee",
+      "name": "Honeybee",
+      "portrait": "res://assets/portraits/bug_honeybee.png",
+      "video": "bug_honeybee.ogv",
+      "base_weight": 1.6,
+      "plants": ["strawberry", "tomato", "cucumber", "melon", "pumpkin", "zucchini", "blueberry", "raspberry", "grape", "apple"],
+      "line": "A honeybee! Bees carry pollen so flowers can make fruit. Tap to learn more."
+    },
+    {
+      "id": "butterfly",
+      "name": "Butterfly",
+      "portrait": "res://assets/portraits/bug_butterfly.png",
+      "video": "bug_butterfly.ogv",
+      "base_weight": 1.4,
+      "plants": ["cabbage", "broccoli", "cauliflower", "kale", "carrot", "strawberry"],
+      "line": "A butterfly! Some butterflies visit flowers for nectar while their caterpillars nibble leaves. Tap to learn more."
+    },
+    {
+      "id": "ant",
+      "name": "Garden Ant",
+      "portrait": "res://assets/portraits/bug_ant.png",
+      "video": "bug_ant.ogv",
+      "base_weight": 1.5,
+      "plants": ["lettuce", "tomato", "pea", "bean", "corn", "strawberry"],
+      "line": "A garden ant! Ants tidy soil and sometimes farm aphids for sweet dew. Tap to learn more."
+    },
+    {
+      "id": "aphid",
+      "name": "Aphid",
+      "portrait": "res://assets/portraits/bug_aphid.png",
+      "video": "bug_aphid.ogv",
+      "base_weight": 1.8,
+      "plants": ["tomato", "lettuce", "pea", "bean", "cabbage", "kale", "broccoli", "pepper", "bell_pepper", "chili", "spinach"],
+      "line": "An aphid — a tiny sap-sucker. Ladybugs love to eat them. Tap to learn more."
+    },
+    {
+      "id": "caterpillar",
+      "name": "Caterpillar",
+      "portrait": "res://assets/portraits/bug_caterpillar.png",
+      "video": "bug_caterpillar.ogv",
+      "base_weight": 1.5,
+      "plants": ["cabbage", "broccoli", "cauliflower", "kale", "lettuce", "tomato"],
+      "line": "A caterpillar! It munches leaves now and may become a moth or butterfly later. Tap to learn more."
+    },
+    {
+      "id": "spider",
+      "name": "Garden Spider",
+      "portrait": "res://assets/portraits/bug_spider.png",
+      "video": "bug_spider.ogv",
+      "base_weight": 1.3,
+      "plants": ["tomato", "cucumber", "bean", "corn", "strawberry", "lettuce"],
+      "line": "A garden spider! Many spiders catch pest insects in their webs. Tap to learn more."
+    },
+    {
+      "id": "grasshopper",
+      "name": "Grasshopper",
+      "portrait": "res://assets/portraits/bug_grasshopper.png",
+      "video": "bug_grasshopper.ogv",
+      "base_weight": 1.2,
+      "plants": ["lettuce", "corn", "wheat", "oats", "bean", "cabbage", "spinach"],
+      "line": "A grasshopper! It hops through the garden and nibbles green leaves. Tap to learn more."
+    },
+    {
+      "id": "snail",
+      "name": "Garden Snail",
+      "portrait": "res://assets/portraits/bug_snail.png",
+      "video": "bug_snail.ogv",
+      "base_weight": 1.4,
+      "plants": ["lettuce", "cabbage", "strawberry", "spinach", "hosta", "cucumber", "zucchini"],
+      "line": "A garden snail! It slides on a slime trail and likes cool, damp leaves. Tap to learn more."
+    },
+    {
+      "id": "praying_mantis",
+      "name": "Praying Mantis",
+      "portrait": "res://assets/portraits/bug_praying_mantis.png",
+      "video": "bug_praying_mantis.ogv",
+      "base_weight": 1.0,
+      "plants": ["tomato", "pepper", "bell_pepper", "chili", "corn", "bean", "cucumber"],
+      "line": "A praying mantis! This hunter waits still, then catches other insects. Tap to learn more."
+    }
+  ]
+}

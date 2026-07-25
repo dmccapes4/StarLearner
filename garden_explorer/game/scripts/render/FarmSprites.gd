@@ -141,6 +141,30 @@ func chicken_coop_texture() -> Texture2D:
 		return null
 	return _atlas(_coop_tex, Rect2(64 * 3, 0, 64, 80))
 
+func gate_frame_textures() -> Array:
+	## Sprout Lands fence gate sheet: 5 frames × 32×48 (closed → open).
+	var path := "res://assets/tiles/sprout_lands/Tilesets/Building parts/Fence gates animation sprites .png"
+	var sheet := _load(path)
+	if sheet == null:
+		return []
+	var frames: Array = []
+	for i in 5:
+		frames.append(_atlas(sheet, Rect2(i * 32, 0, 32, 48)))
+	return frames
+
+func portrait_texture(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+	return _load(path)
+
+func bug_sprite(bug_id: String) -> Texture2D:
+	## Small world sprite for roaming bugs. Drop Pixel Gnome pack sprites as
+	## res://assets/bugs/<bug_id>.png (16x16) — falls back to the portrait.
+	var tex := _load("res://assets/bugs/%s.png" % bug_id)
+	if tex:
+		return tex
+	return _load("res://assets/portraits/bug_%s.png" % bug_id)
+
 func cow_texture() -> Texture2D:
 	var packed := _load("res://assets/animals/cow_idle.png")
 	if packed:
@@ -198,11 +222,16 @@ func action_icon(kind: String, plant_id: String = "") -> Texture2D:
 			if tex == null and _tools_tex:
 				tex = _atlas(_tools_tex, Rect2(0, 64, 16, 16))
 		"open_shed":
-			tex = door_texture()
+			## Generated seed-basket tile (not the old barn door sprite).
+			tex = _load("res://assets/ui/icon_seeds.png")
 			if tex == null:
-				tex = shed_texture()
+				tex = door_texture()
 		"media":
 			tex = harvest_icon(plant_id) if not plant_id.is_empty() else seed_icon(plant_id)
+		"bugs":
+			tex = _load("res://assets/ui/icon_bugs.png")
+			if tex == null:
+				tex = _load("res://assets/portraits/bug_ladybug.png")
 		_:
 			tex = null
 	_action_icon_cache[key] = tex

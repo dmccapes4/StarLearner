@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "notes": "Educational video builder manifest. footage: tools/media_src/footage/<id>.(mp4|webm|mov|ogv) wins; else commons_title is downloaded; else Ken-Burns portrait. Run tools/build_edu_videos.py.",
+  "items": [
+    {
+      "id": "animal_chicken",
+      "out": "game/stars/animal_chicken.ogv",
+      "title": "Chickens on the farm",
+      "portrait": "game/assets/portraits/animal_chicken_a.png",
+      "commons_title": "",
+      "script": "Chickens are curious birds that live together in a flock. They scratch the dirt with their feet to find seeds and tasty bugs. A mother hen lays about one egg every day, and she loves a cozy nest. Chickens even take baths in dust to keep their feathers clean!"
+    },
+    {
+      "id": "animal_rabbit",
+      "out": "game/stars/animal_rabbit.ogv",
+      "title": "Rabbits on the farm",
+      "portrait": "game/assets/portraits/animal_rabbit.png",
+      "commons_title": "File:Pet rabbit eating grass.webm",
+      "script": "Rabbits have long ears that can turn almost all the way around to listen. Their big front teeth never stop growing, so they nibble all day long. Rabbits hop fast and dig cozy burrows underground. On a farm, rabbits munch on grass, carrots, and leafy greens."
+    },
+    {
+      "id": "animal_pig",
+      "out": "game/stars/animal_pig.ogv",
+      "title": "Pigs on the farm",
+      "portrait": "game/assets/portraits/animal_pig.png",
+      "commons_title": "File:Pigs eating AppletonFarms Massachusetts 2024-10.webm",
+      "script": "Pigs are some of the smartest animals on a farm. They use their strong snouts to sniff and dig for food. Pigs roll in the mud to stay cool \u2014 it works like nature's sunscreen. A happy pig wags its curly tail, just like a puppy!"
+    },
+    {
+      "id": "animal_cow",
+      "out": "game/stars/animal_cow.ogv",
+      "title": "Cows on the farm",
+      "portrait": "game/assets/portraits/animal_cow.png",
+      "commons_title": "File:Cow grazing in the farm.webm",
+      "script": "Cows are gentle giants that spend the whole day munching grass. A cow has a special tummy with four parts to help digest her food. Cows give us milk, which becomes cheese, butter, and ice cream. Every cow has her own pattern of spots \u2014 no two are the same!"
+    },
+    {
+      "id": "animal_dog",
+      "out": "game/stars/animal_dog.ogv",
+      "title": "Farm dogs",
+      "portrait": "game/assets/portraits/animal_dog.png",
+      "commons_title": "",
+      "script": "Farm dogs are hard workers and best friends. They help round up the animals and keep everyone safe. A dog can smell about ten thousand times better than you can! At the end of the day, a farm dog loves a good belly rub."
+    },
+    {
+      "id": "coop_eggs",
+      "out": "game/stars/coop_eggs.ogv",
+      "title": "Collecting eggs",
+      "portrait": "game/assets/portraits/animal_chicken_b.png",
+      "commons_title": "",
+      "script": "This is the chicken coop, where the hens sleep and lay their eggs. Every morning, farmers gently lift the eggs out of the nesting boxes. The hens keep their eggs warm and cozy in the soft straw. Fresh eggs get washed and kept cool \u2014 ready for breakfast!"
+    },
+    {
+      "id": "bug_ladybug",
+      "out": "game/stars/bug_ladybug.ogv",
+      "title": "Ladybugs",
+      "portrait": "game/assets/portraits/bug_ladybug.png",
+      "commons_title": "File:Ladybird in a container.webm",
+      "script": "Ladybugs are a gardener's best helpers. One ladybug can munch fifty aphids in a single day, and that protects our plants. Their bright red shells warn birds to stay away. When ladybugs fly, their spotted shells lift up like tiny doors!"
+    },
+    {
+      "id": "bug_rolly_polly",
+      "out": "game/stars/bug_rolly_polly.ogv",
+      "title": "Rolly pollies",
+      "portrait": "game/assets/portraits/bug_rolly_polly.png",
+      "commons_title": "File:Pill woodlouse (Armadillidium vulgare).webm",
+      "script": "Rolly pollies curl into a tiny ball when they feel shy. They are not insects at all \u2014 they are cousins of crabs! They eat old leaves and turn them into fresh soil for the garden. Rolly pollies love damp, cozy places under rocks and logs."
+    },
+    {
+      "id": "bug_earthworm",
+      "out": "game/stars/bug_earthworm.ogv",
+      "title": "Earthworms",
+      "portrait": "game/assets/portraits/bug_earthworm.png",
+      "commons_title": "File:Ver qui s'enfouit cropped.webm",
+      "script": "Earthworms are underground gardeners. As they wiggle, they dig little tunnels so plant roots get air and water. Worms eat old leaves and leave behind rich food for the soil. A worm has no eyes, but it can still feel light and shadows!"
+    },
+    {
+      "id": "bug_honeybee",
+      "out": "game/stars/bug_honeybee.ogv",
+      "title": "Honeybees",
+      "portrait": "game/assets/portraits/bug_honeybee.png",
+      "commons_title": "File:Bee on crocus.ogv",
+      "script": "Honeybees visit hundreds of flowers every single day. They carry yellow pollen from flower to flower, which helps plants make seeds and fruit. Bees do a waggle dance to tell their friends where the best flowers are! Without bees, we would have far fewer strawberries and pumpkins."
+    },
+    {
+      "id": "bug_butterfly",
+      "out": "game/stars/bug_butterfly.ogv",
+      "title": "Butterflies",
+      "portrait": "game/assets/portraits/bug_butterfly.png",
+      "commons_title": "File:Butterfly resting on flower.webm",
+      "script": "A butterfly starts life as a very hungry caterpillar. Inside its chrysalis it changes completely \u2014 that big change is called metamorphosis. Butterflies taste with their feet when they land on flowers! They sip sweet nectar and help flowers make seeds."
+    },
+    {
+      "id": "bug_ant",
+      "out": "game/stars/bug_ant.ogv",
+      "title": "Ants",
+      "portrait": "game/assets/portraits/bug_ant.png",
+      "commons_title": "File:Ants on dandelion.webm",
+      "script": "Ants are tiny but mighty \u2014 an ant can carry things fifty times heavier than itself! They live in big families and talk by touching antennas. Their tunnels help air and water reach plant roots. Watch an ant line closely \u2014 they follow smell trails their friends left behind."
+    },
+    {
+      "id": "bug_aphid",
+      "out": "game/stars/bug_aphid.ogv",
+      "title": "Aphids",
+      "portrait": "game/assets/portraits/bug_aphid.png",
+      "commons_title": "",
+      "script": "Aphids are tiny green bugs that sip juice from plant stems. Too many aphids can make a plant droopy and sad. That is why gardeners love ladybugs \u2014 they gobble aphids up! Ants sometimes look after aphids like little cows, for their sweet honeydew."
+    },
+    {
+      "id": "bug_caterpillar",
+      "out": "game/stars/bug_caterpillar.ogv",
+      "title": "Caterpillars",
+      "portrait": "game/assets/portraits/bug_caterpillar.png",
+      "commons_title": "File:Time-lapse of a caterpillar eating a basil.ogv",
+      "script": "A caterpillar's job is to eat, eat, eat! It sheds its skin as it grows bigger and bigger. One day it will build a chrysalis and become a butterfly or a moth. Some caterpillars nibble garden leaves, so gardeners keep a friendly eye on them."
+    },
+    {
+      "id": "bug_spider",
+      "out": "game/stars/bug_spider.ogv",
+      "title": "Garden spiders",
+      "portrait": "game/assets/portraits/bug_spider.png",
+      "commons_title": "File:Garden spider in the UK.webm",
+      "script": "Garden spiders are quiet helpers. They spin sticky silk webs to catch flies and moths that bother our plants. Spider silk is stronger than steel of the same size! Most garden spiders are gentle and shy \u2014 they would rather hide than say hello."
+    },
+    {
+      "id": "bug_grasshopper",
+      "out": "game/stars/bug_grasshopper.ogv",
+      "title": "Grasshoppers",
+      "portrait": "game/assets/portraits/bug_grasshopper.png",
+      "commons_title": "File:Rammeihippus dinaricus -- Dinarian Grasshopper.webm",
+      "script": "Grasshoppers have big back legs that work like springs. They can jump twenty times their own body length! Grasshoppers sing by rubbing their legs against their wings. You can hear them chirping in the warm summer grass."
+    },
+    {
+      "id": "bug_snail",
+      "out": "game/stars/bug_snail.ogv",
+      "title": "Snails",
+      "portrait": "game/assets/portraits/bug_snail.png",
+      "commons_title": "File:Snail crawling on a leaf in Asuka Village, Nara, Japan (May 2025).webm",
+      "script": "Snails carry their homes on their backs. They glide along on one big foot, leaving a shiny, silvery trail. A snail's shell grows bigger as the snail grows. On rainy days, snails come out to explore the garden!"
+    },
+    {
+      "id": "01_seeds",
+      "out": "game/stars/01_seeds.ogv",
+      "title": "What is a seed?",
+      "portrait": "game/assets/tiles/concepts/01_seeds.png",
+      "commons_title": "",
+      "script": "A seed is a tiny plant waiting to wake up. Inside every seed is a baby plant and a snack of food to help it start growing. Seeds come in all shapes and sizes \u2014 some tiny like a dot, some big like a bean. When a seed gets soil, water, and warmth, it wakes up and starts to grow!"
+    },
+    {
+      "id": "02_soil",
+      "out": "game/stars/02_soil.ogv",
+      "title": "Soil and garden beds",
+      "portrait": "game/assets/tiles/concepts/02_soil.png",
+      "commons_title": "",
+      "script": "Soil is like a cozy bed and a kitchen for plants, all in one. It holds water and food that roots drink up. Good garden soil is soft and crumbly, so roots can stretch out. Gardeners rake their beds nice and smooth before planting, so every seed has a comfy home."
+    },
+    {
+      "id": "03_planting",
+      "out": "game/stars/03_planting.ogv",
+      "title": "How to plant a seed",
+      "portrait": "game/assets/tiles/concepts/03_planting.png",
+      "commons_title": "File:Garden cress timelapse.webm",
+      "script": "Planting a seed is easy and fun! First, poke a little hole in the soil with your finger. Drop the seed in, and tuck it in with a blanket of soil. Give it a gentle drink of water, and say good night, little seed \u2014 see you when you sprout!"
+    },
+    {
+      "id": "04_watering",
+      "out": "game/stars/04_watering.ogv",
+      "title": "Watering plants",
+      "portrait": "game/assets/tiles/concepts/04_watering.png",
+      "commons_title": "",
+      "script": "Plants get thirsty, just like you! Their roots drink water from the soil and send it all the way up to the leaves. A gentle sprinkle is best \u2014 too much water can make roots soggy. The best time to water the garden is in the cool morning, before the sun gets hot."
+    },
+    {
+      "id": "05_sprouting",
+      "out": "game/stars/05_sprouting.ogv",
+      "title": "Seeds sprouting",
+      "portrait": "game/assets/tiles/concepts/05_sprouting.png",
+      "commons_title": "File:Mung bean germination.ogv",
+      "script": "When a seed wakes up, we say it sprouts! First a little root grows down, down, down into the soil. Then a green shoot pushes up, up, up toward the light. The first tiny leaves unfold like little hands saying hello to the sun!"
+    },
+    {
+      "id": "06_sunlight",
+      "out": "game/stars/06_sunlight.ogv",
+      "title": "Sunlight and growing",
+      "portrait": "game/assets/tiles/concepts/06_sunlight.png",
+      "commons_title": "File:Heliotropism in Helianthus annuus.webm",
+      "script": "Sunlight is plant food power! Leaves catch sunshine and use it to make sugar \u2014 that is how plants make their own lunch. This special trick is called photosynthesis. That is why plants lean toward the light, and why gardens love sunny days!"
+    },
+    {
+      "id": "07_growing",
+      "out": "game/stars/07_growing.ogv",
+      "title": "Watching plants grow",
+      "portrait": "game/assets/tiles/concepts/07_growing.png",
+      "commons_title": "File:Timelapse-Basil-growing.ogv",
+      "script": "Plants grow a little bit every single day. First comes the sprout, then more leaves, then the plant grows tall and strong. Some plants grow flowers, and the flowers turn into fruits and vegetables. Be patient, water often, and watch the magic happen!"
+    },
+    {
+      "id": "08_weeding",
+      "out": "game/stars/08_weeding.ogv",
+      "title": "Uprooting and clearing space",
+      "portrait": "game/assets/tiles/concepts/08_weeding.png",
+      "commons_title": "",
+      "script": "Sometimes a garden gets crowded, and plants have to share too much. Weeds sneak in and gobble up the water and sunlight our vegetables need. Gardeners gently pull them out, roots and all. With more room, our garden plants grow bigger and happier!"
+    },
+    {
+      "id": "09_harvest",
+      "out": "game/stars/09_harvest.ogv",
+      "title": "Harvesting the garden",
+      "portrait": "game/assets/tiles/concepts/09_harvest.png",
+      "commons_title": "File:Harvest (20181008-FPAC-KLS-0011).webm",
+      "script": "Harvest time is the best part of gardening! It is when the fruits and vegetables are ripe and ready to pick. We pull carrots, snap beans, and twist tomatoes gently off the vine. Then we get to eat the yummy food we grew ourselves!"
+    },
+    {
+      "id": "10_seasons",
+      "out": "game/stars/10_seasons.ogv",
+      "title": "Seasons in the garden",
+      "portrait": "game/assets/tiles/concepts/10_seasons.png",
+      "commons_title": "File:One Year. One Tree. One Drone.webm",
+      "script": "The garden changes with the seasons. In spring we plant seeds, and in summer everything grows tall in the sunshine. In fall we harvest, and leaves turn orange and red. In winter the garden rests under the frost, dreaming of spring!"
+    },
+    {
+      "id": "11_animals",
+      "out": "game/stars/11_animals.ogv",
+      "title": "Garden animals",
+      "portrait": "game/assets/tiles/concepts/11_animals.png",
+      "commons_title": "",
+      "script": "A farm garden is full of animal friends. Chickens give us eggs, and cows give us milk. Dogs keep watch, and rabbits hop around looking for greens to nibble. Taking care of animals every day is a big part of life on a farm!"
+    },
+    {
+      "id": "12_store",
+      "out": "game/stars/12_store.ogv",
+      "title": "Storing the harvest",
+      "portrait": "game/assets/tiles/concepts/12_store.png",
+      "commons_title": "",
+      "script": "After the harvest, we save food to enjoy later. Pumpkins and potatoes keep for months in a cool, dark place. Some fruits become jam, and some vegetables become pickles! Storing food means we can taste our summer garden even in winter."
+    },
+    {
+      "id": "bug_praying_mantis",
+      "out": "game/stars/bug_praying_mantis.ogv",
+      "title": "Praying mantis",
+      "portrait": "game/assets/portraits/bug_praying_mantis.png",
+      "commons_title": "File:Praying mantis (Mantis religiosa) in Quebec.webm",
+      "script": "The praying mantis folds its front legs like it is saying please. It can turn its head almost all the way around \u2014 no other insect can do that! A mantis stays still as a statue, then catches garden pests quick as a flash. Gardeners love the mantis because it protects their plants."
+    }
+  ],
+  "harvest_scripts": {
+    "carrot": "Crunchy carrots grow under the ground. Farmers hold the green leafy tops and pull gently until the carrot pops out. Carrots are full of vitamin A, which helps your eyes see well. Rabbits agree \u2014 carrots are delicious!",
+    "tomato": "Tomatoes turn from green to bright red as they ripen in the sun. Farmers twist them gently off the vine so the plant keeps growing more. Tomatoes are full of vitamins that keep your heart strong. We eat them in salads, sauces, and soups!",
+    "lettuce": "Lettuce grows in leafy green bundles. Farmers cut the whole head close to the soil with a small knife. Lettuce is mostly water, so it is extra crunchy and fresh. It is the start of almost every salad!",
+    "strawberry": "Strawberries are ready when they turn ruby red all over. Farmers pinch the stem so the soft berry does not get squished. Strawberries have more vitamin C than oranges! They are the only fruit with seeds on the outside.",
+    "pumpkin": "Pumpkins grow on long vines that crawl across the ground. Farmers cut the thick stem and leave a little handle on top. Pumpkins can grow bigger than you! We eat them in pies and soups, and carve them for fun.",
+    "corn": "Corn grows taller than a grown-up! Each ear is wrapped in a leafy husk with silky threads on top. Farmers snap the ear down and twist to pick it. Every silk thread is connected to one kernel of corn!",
+    "pea": "Peas grow in little green pods that hang from climbing vines. Farmers pick the pods when they feel plump and full. Pop one open \u2014 the peas sit in a row like beads! Peas give you energy to run and play.",
+    "radish": "Radishes are one of the fastest vegetables to grow \u2014 about one month! Farmers pull them up by their leaves, just like carrots. They are crunchy with a tiny spicy zing. Radishes come in red, pink, purple, and even white!"
+  }
+}

@@ -108,26 +108,63 @@ func _run() -> void:
 	await _wait_narration()
 	await _shot("07_harvested")
 
-	print("DEMO: animals")
+	print("DEMO: animals — reveal tile + educational video")
+	var reveal: Node = _world.get("reveal_tile")
 	var chick: Vector2 = farm.animal_positions.get("chicken_a", farm.fence_center)
 	_events().world_tapped.emit(chick)
-	await _wait_narration()
-	await _shot("08_animals")
+	await _wait_reveal_open(reveal)      ## player walks over, then tile opens
+	await _shot("08_animal_reveal")
+	## Tap the reveal tile → launches the real animal documentary clip.
+	if reveal and reveal.has_method("is_open") and bool(reveal.call("is_open")):
+		await _wait_reveal_narration(reveal)
+		await _sec(0.6)                  ## let the intro line be heard
+		if reveal.has_method("_on_tile_pressed"):
+			reveal.call("_on_tile_pressed")
+		await _sec(3.0)
+		await _shot("09_animal_video")
+		await _close_media_if_open()
 
-	print("DEMO: season")
+	print("DEMO: bug catch — reveal tile + bug grid")
+	var spawner: Node = _world.get("bug_spawner")
+	if spawner and spawner.has_method("force_spawn") and _world.player:
+		var near: Vector2 = _world.player.global_position + Vector2(64, 18)
+		var bug: Node2D = spawner.call("force_spawn", "ladybug", near)
+		if bug:
+			await _sec(0.3)
+			_events().world_tapped.emit(bug.global_position)
+			await _wait_reveal_open(reveal)
+			await _shot("10_bug_reveal")
+			if reveal and reveal.has_method("is_open") and bool(reveal.call("is_open")):
+				await _wait_reveal_narration(reveal)
+				await _sec(0.6)
+				if reveal.has_method("_on_tile_pressed"):
+					reveal.call("_on_tile_pressed")
+				await _sec(3.0)
+				await _close_media_if_open()
+			## Bug grid celebrates the catch.
+			await _sec(1.2)
+			await _shot("11_bug_grid")
+			var bgrid: Node = _world.get("bug_grid")
+			if bgrid and bgrid.has_method("is_open") and bool(bgrid.call("is_open")) and bgrid.has_method("close_grid"):
+				bgrid.call("close_grid")
+			await _sec(0.4)
+
+	print("DEMO: season card")
 	_world.call("advance_season")
 	await _wait_narration()
-	await _shot("09_season")
+	await _shot("12_season")
+	await _sec(3.0) ## season card holds 5s
+	await _close_media_if_open()
 
 	print("DEMO: hamburger library")
 	_events().hamburger_pressed.emit()
 	await _sec(1.2)
-	await _shot("10_concepts_tab")
+	await _shot("13_concepts_tab")
 	var menu: Node = _main.get_node_or_null("HamburgerUI")
 	if menu and menu.has_method("_set_tab"):
 		menu.call("_set_tab", "seeds")
 		await _sec(1.0)
-		await _shot("11_seeds_tab")
+		await _shot("14_seeds_tab")
 		menu.call("_set_tab", "concepts")
 	if menu and menu.has_method("_on_concept"):
 		menu.call("_on_concept", "01_seeds")
@@ -140,7 +177,7 @@ func _run() -> void:
 	await _sec(0.8)
 
 	print("DEMO: done")
-	await _shot("12_end")
+	await _shot("15_end")
 	await _sec(1.5)
 	quit(0)
 
@@ -173,6 +210,23 @@ func _close_media_if_open() -> void:
 				n.call("_close")
 			self.paused = false
 			await _sec(0.3)
+
+func _wait_reveal_open(reveal: Node) -> void:
+	## Player must walk to the target before the reveal tile opens.
+	var guard := 0
+	while guard < 120:
+		if reveal and reveal.has_method("is_open") and bool(reveal.call("is_open")):
+			return
+		await _sec(0.1)
+		guard += 1
+
+func _wait_reveal_narration(reveal: Node) -> void:
+	var guard := 0
+	while guard < 120:
+		if not (reveal.has_method("is_narrating") and bool(reveal.call("is_narrating"))):
+			return
+		await _sec(0.1)
+		guard += 1
 
 func _wait_narration() -> void:
 	var guard := 0

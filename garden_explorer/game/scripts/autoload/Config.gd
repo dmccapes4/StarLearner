@@ -17,6 +17,8 @@ var growth_threshold_scale: float = 0.45 ## shrink seed.json tick thresholds
 ## Phase 4 — season length (seconds). ≤0 uses seasons.json.
 var season_duration_sec: float = 0.0
 var animal_tap_radius: float = 48.0
+## Reveal tiles (animal/bug/season): tap window after narration ends.
+var reveal_window_sec: float = 5.0
 
 func get_walk_speed() -> float:
 	return walk_speed
@@ -47,3 +49,6 @@ func get_season_duration_sec() -> float:
 
 func get_animal_tap_radius() -> float:
 	return animal_tap_radius
+
+func get_reveal_window_sec() -> float:
+	return reveal_window_sec

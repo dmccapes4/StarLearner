@@ -1,9 +1,8 @@
 class_name FarmMap
 extends Node2D
-## Builds the wide farm: shed (left) · 2×3 beds (middle) · fence/animals (right).
-## Beds + shed are extruded iso volumes (fake-3D). Animals stay inside the pen.
-## Perimeter fence + meadows outside. Shed / beds / animal pen block walking;
-## A* routes the gardener around them.
+## Builds the wide farm: shed (left) · 2×3 beds (middle) · full-end animal pen (right).
+## Beds + shed are extruded iso volumes (fake-3D). Pen is walkable via a west gate
+## (player only — roaming animals stay inside fence_poly). Shed / beds block walking.
 
 const MAP_PATH := "res://data/map.json"
 const SLOT_OFFSETS := [
@@ -27,9 +26,12 @@ var slot_positions: Dictionary = {} ## bed_id -> Array[Vector2]
 var animal_positions: Dictionary = {} ## id -> Vector2
 var shed_center: Vector2 = Vector2.ZERO
 var shed_door_world: Vector2 = Vector2.ZERO ## Walk-to point just outside the door (faces garden).
+var coop_world: Vector2 = Vector2.ZERO ## Chicken coop anchor (inside pen).
 var fence_center: Vector2 = Vector2.ZERO
 var spawn_world: Vector2 = Vector2.ZERO
 var dog_spawn_world: Vector2 = Vector2.ZERO
+var gate_world: Vector2 = Vector2.ZERO ## West gate into the pen (player entrance).
+var pen_roam_poly: PackedVector2Array = PackedVector2Array() ## Inset bound for animals.
 var walk_bounds: Rect2 = Rect2()
 var _built: bool = false
 var _astar: AStar2D = AStar2D.new()
@@ -57,7 +59,7 @@ func build_from_file(path: String = MAP_PATH) -> void:
 	_build_shed()
 	_build_beds()
 	_build_fence()
-	_build_animals()
+	_register_animal_spawns()
 	_compute_bounds()
 	_rebuild_nav()
 	var spawn: Dictionary = data.get("player_spawn_tile", {"x": 2, "y": 4})
@@ -69,6 +71,8 @@ func build_from_file(path: String = MAP_PATH) -> void:
 	if dog_spawn_world != Vector2.ZERO:
 		dog_spawn_world = nearest_walkable(dog_spawn_world)
 		animal_positions["dog"] = dog_spawn_world
+	if gate_world != Vector2.ZERO:
+		gate_world = nearest_walkable(gate_world)
 	_built = true
 
 func bed_ids() -> PackedStringArray:
@@ -116,13 +120,97 @@ func apply_season_tint(season_id: String) -> void:
 		return
 	match season_id:
 		"summer":
-			ground.modulate = Color(1.05, 1.0, 0.85, 1)
+			## Bright and clear.
+			ground.modulate = Color(1.08, 1.03, 0.88, 1)
 		"fall":
-			ground.modulate = Color(1.1, 0.9, 0.7, 1)
+			## Warmer, a touch dimmer.
+			ground.modulate = Color(1.0, 0.86, 0.66, 1)
 		"winter":
-			ground.modulate = Color(0.85, 0.95, 1.05, 1)
+			## Coolest and dimmest.
+			ground.modulate = Color(0.78, 0.86, 0.98, 1)
 		_:
-			ground.modulate = Color(1, 1, 1, 1)
+			## Spring — lively green.
+			ground.modulate = Color(0.98, 1.05, 0.95, 1)
+	_apply_season_decor(season_id)
+
+## Scatter decals + weather per season: fall leaves, spring flowers,
+## winter snow/rain particles. Cheap Polygon2Ds — no assets required.
+func _apply_season_decor(season_id: String) -> void:
+	var old := get_node_or_null("SeasonDecor")
+	if old:
+		old.queue_free()
+	var decor := Node2D.new()
+	decor.name = "SeasonDecor"
+	decor.z_index = 2
+	add_child(decor)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20260725
+	match season_id:
+		"fall":
+			for i in 46:
+				var p := _random_yard_point(rng)
+				if p == Vector2.INF:
+					continue
+				var leaf := Polygon2D.new()
+				var s := rng.randf_range(2.5, 4.5)
+				leaf.polygon = PackedVector2Array([
+					p + Vector2(-s, 0), p + Vector2(0, -s * 0.8),
+					p + Vector2(s, 0), p + Vector2(0, s * 0.8),
+				])
+				leaf.color = [Color(0.80, 0.45, 0.15, 0.9), Color(0.72, 0.32, 0.10, 0.9),
+					Color(0.85, 0.60, 0.20, 0.9)][i % 3]
+				decor.add_child(leaf)
+		"spring":
+			for i in 36:
+				var p2 := _random_yard_point(rng)
+				if p2 == Vector2.INF:
+					continue
+				var stem := Polygon2D.new()
+				stem.polygon = PackedVector2Array([
+					p2 + Vector2(-1, 0), p2 + Vector2(1, 0),
+					p2 + Vector2(1, -5), p2 + Vector2(-1, -5),
+				])
+				stem.color = Color(0.30, 0.60, 0.25, 0.95)
+				decor.add_child(stem)
+				var bloom := Polygon2D.new()
+				var b := 2.6
+				var c := p2 + Vector2(0, -6)
+				bloom.polygon = PackedVector2Array([
+					c + Vector2(-b, 0), c + Vector2(0, -b), c + Vector2(b, 0), c + Vector2(0, b),
+				])
+				bloom.color = [Color(0.95, 0.75, 0.85, 1), Color(0.98, 0.92, 0.55, 1),
+					Color(0.85, 0.80, 0.98, 1)][i % 3]
+				decor.add_child(bloom)
+		"winter":
+			var snow := CPUParticles2D.new()
+			snow.name = "Snow"
+			snow.amount = 90
+			snow.lifetime = 6.0
+			snow.preprocess = 3.0
+			snow.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+			snow.emission_rect_extents = Vector2(absf(IsoUtil.tile_to_world(_yard_max).x - IsoUtil.tile_to_world(_yard_min).x) * 0.6, 8)
+			snow.position = Vector2(0, IsoUtil.tile_to_world(_yard_min).y - 160.0)
+			snow.direction = Vector2(0.15, 1.0)
+			snow.spread = 12.0
+			snow.gravity = Vector2(0, 14)
+			snow.initial_velocity_min = 26.0
+			snow.initial_velocity_max = 52.0
+			snow.scale_amount_min = 1.2
+			snow.scale_amount_max = 2.4
+			snow.color = Color(1, 1, 1, 0.85)
+			snow.z_index = 400
+			decor.add_child(snow)
+		_:
+			pass
+
+func _random_yard_point(rng: RandomNumberGenerator) -> Vector2:
+	for attempt in 12:
+		var tx := rng.randf_range(_yard_min.x + 0.5, _yard_max.x - 0.5)
+		var ty := rng.randf_range(_yard_min.y + 0.5, _yard_max.y - 0.5)
+		var w := IsoUtil.tile_to_world(Vector2(tx, ty))
+		if not is_blocked(w) and not in_pen(w):
+			return w
+	return Vector2.INF
 
 func slot_world(bed_id: String, slot: int) -> Vector2:
 	var arr: Array = slot_positions.get(bed_id, [])
@@ -315,7 +403,12 @@ func _draw_fence_loop(prefix: String, corners: Array, posts_per_edge: int) -> vo
 			])
 			add_child(post)
 
+const SHED_SPRITE := "res://assets/buildings/shed_v2.png"
+const SHED_SPRITE_SCALE := 2.2
+
 func _build_shed() -> void:
+	## Composed Sprout Lands shed (tools/build_shed_sprite.py): front-facing
+	## with a CENTERED door — the walk path leads straight to it.
 	var shed: Dictionary = data.get("shed", {})
 	var tile := _vec2(shed.get("tile", {"x": -7, "y": 2}))
 	var half := _vec2(shed.get("half_tiles", {"x": 2.0, "y": 1.7}))
@@ -324,75 +417,29 @@ func _build_shed() -> void:
 	shed_center = IsoUtil.tile_to_world(tile)
 	var z := IsoUtil.depth_from_y(shed_center.y)
 
-	## Door faces the garden (toward positive tile-x / beds). Snapped after nav build.
-	var door_tile := tile + Vector2(half.x * 0.95, half.y * 0.15)
-	shed_door_world = IsoUtil.tile_to_world(door_tile) + Vector2(28, 18)
+	## Bottom of the facade sits on the south corner row of the footprint,
+	## so the door lands at the footprint's near edge, centered.
+	var south := IsoUtil.tile_to_world(tile + Vector2(half.x * 0.5, half.y * 0.5))
+	shed_door_world = south + Vector2(0, 20)
 
-	## Ground pad under shed
-	_add_poly("ShedPad", IsoUtil.diamond_polygon(tile, half * 1.08),
-		Color(0.40, 0.30, 0.18, 1.0), z - 1)
-
-	## Extruded wood walls
-	var faces: Array = IsoUtil.extrusion_side_faces(base, SHED_WALL_H)
-	_add_poly("ShedWallW", faces[0], Color(0.62, 0.42, 0.24, 1.0), z + 1)
-	_add_poly("ShedWallE", faces[1], Color(0.50, 0.32, 0.16, 1.0), z + 2)
-
-	var wall_top := IsoUtil.raise_poly(base, SHED_WALL_H)
-	_add_poly("ShedEave", wall_top, Color(0.52, 0.34, 0.18, 1.0), z + 3)
-
-	## Door sprite on the garden-facing face (near/east).
-	var door_anchor: Vector2 = IsoUtil.tile_to_world(tile + Vector2(half.x * 0.55, half.y * 0.55))
-	door_anchor.y -= SHED_WALL_H * 0.22
-	## Wood plank texture on the near wall face when available.
-	if sprites:
-		var wall_tex := sprites.shed_texture()
-		if wall_tex:
-			var face_spr := Sprite2D.new()
-			face_spr.name = "ShedFace"
-			face_spr.texture = wall_tex
-			face_spr.centered = true
-			face_spr.position = shed_center + Vector2(10, -SHED_WALL_H * 0.35)
-			face_spr.z_index = z + 4
-			face_spr.scale = Vector2(2.2, 2.2)
-			face_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			add_child(face_spr)
-		var dtex := sprites.door_texture()
-		if dtex:
-			var door_spr := Sprite2D.new()
-			door_spr.name = "ShedDoor"
-			door_spr.texture = dtex
-			door_spr.centered = true
-			door_spr.position = door_anchor
-			door_spr.z_index = z + 6
-			door_spr.scale = Vector2(2.8, 2.8)
-			door_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			add_child(door_spr)
-	if get_node_or_null("ShedDoor") == null:
-		## Fallback painted door if sprites missing.
-		var door := Polygon2D.new()
-		door.name = "ShedDoor"
-		door.z_index = z + 5
-		door.color = Color(0.30, 0.18, 0.10, 1.0)
-		door.polygon = PackedVector2Array([
-			door_anchor + Vector2(-16, 8),
-			door_anchor + Vector2(16, 8),
-			door_anchor + Vector2(14, -SHED_WALL_H * 0.55),
-			door_anchor + Vector2(-14, -SHED_WALL_H * 0.55),
-		])
-		add_child(door)
-
-	## Pitched roof
-	var far := wall_top[0]
-	var east := wall_top[1]
-	var near := wall_top[2]
-	var west := wall_top[3]
-	var ridge := (far + near) * 0.5
-	ridge.y = minf(far.y, near.y) - SHED_ROOF_H
-	_add_poly("ShedRoofW", PackedVector2Array([west, near, ridge]), Color(0.70, 0.34, 0.20, 1.0), z + 7)
-	_add_poly("ShedRoofE", PackedVector2Array([near, east, ridge]), Color(0.56, 0.26, 0.14, 1.0), z + 8)
-	_add_poly("ShedRoofBack", PackedVector2Array([west, far, ridge]), Color(0.62, 0.30, 0.16, 1.0), z + 6)
-
-	_add_label("ShedLabel", shed_center + Vector2(0, 14), "SHED", Color(1, 0.95, 0.8, 0.9))
+	var tex: Texture2D = load(SHED_SPRITE) if ResourceLoader.exists(SHED_SPRITE) else null
+	if tex:
+		var spr := Sprite2D.new()
+		spr.name = "ShedSprite"
+		spr.texture = tex
+		spr.centered = true
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		spr.scale = Vector2(SHED_SPRITE_SCALE, SHED_SPRITE_SCALE)
+		var h := float(tex.get_height()) * SHED_SPRITE_SCALE
+		spr.position = south + Vector2(0, 8) - Vector2(0, h * 0.5)
+		spr.z_index = z + 4
+		add_child(spr)
+	else:
+		## Fallback: simple extruded box (headless tests without the asset).
+		var faces: Array = IsoUtil.extrusion_side_faces(base, SHED_WALL_H)
+		_add_poly("ShedWallW", faces[0], Color(0.62, 0.42, 0.24, 1.0), z + 1)
+		_add_poly("ShedWallE", faces[1], Color(0.50, 0.32, 0.16, 1.0), z + 2)
+		_add_poly("ShedEave", IsoUtil.raise_poly(base, SHED_WALL_H), Color(0.52, 0.34, 0.18, 1.0), z + 3)
 
 func _build_beds() -> void:
 	var beds: Array = data.get("beds", [])
@@ -409,10 +456,6 @@ func _build_beds() -> void:
 		var center := IsoUtil.tile_to_world(tile)
 		bed_centers[id] = center
 		var z := IsoUtil.depth_from_y(center.y)
-
-		## Shadow / dirt under the box
-		_add_poly(id + "_shadow", IsoUtil.diamond_polygon(tile, half * 1.06),
-			Color(0.22, 0.16, 0.08, 0.35), z - 1)
 
 		## Wood side walls (extrusion)
 		var faces: Array = IsoUtil.extrusion_side_faces(base, BED_HEIGHT)
@@ -434,6 +477,10 @@ func _build_beds() -> void:
 
 		_add_slot_markers(id, tile, half, z + 5)
 
+## Iso half-size (in tiles) of one "plant here" patch. Kept comfortably inside
+## the bed lip (half * 0.90) and clear of the neighboring slot.
+const SLOT_MARKER_HALF := Vector2(0.22, 0.155)
+
 func _add_slot_markers(bed_id: String, tile: Vector2, half: Vector2, z: int) -> void:
 	var positions: Array = []
 	for i in SLOT_OFFSETS.size():
@@ -441,13 +488,25 @@ func _add_slot_markers(bed_id: String, tile: Vector2, half: Vector2, z: int) -> 
 		## Hit/path targets stay on the ground footprint so zone_at still works.
 		var ground: Vector2 = IsoUtil.tile_to_world(slot_tile)
 		positions.append(ground)
+		## Darker, freshly-turned soil patch on the soil-top plane — a warm
+		## brown "plant here" cue (no grey overlay).
 		_add_poly(
 			"%s_slot_%d" % [bed_id, i],
-			IsoUtil.raise_poly(IsoUtil.diamond_polygon(slot_tile, Vector2(0.26, 0.20)), BED_HEIGHT - 1.0),
-			Color(0.26, 0.16, 0.08, 0.9),
+			IsoUtil.raise_poly(IsoUtil.diamond_polygon(slot_tile, SLOT_MARKER_HALF), BED_HEIGHT),
+			Color(0.27, 0.165, 0.075, 1.0),
 			z
 		)
 	slot_positions[bed_id] = positions
+
+func slot_marker_poly(bed_id: String, slot: int) -> PackedVector2Array:
+	## For UI validation: the drawn marker polygon for a slot.
+	var p := get_node_or_null("%s_slot_%d" % [bed_id, slot]) as Polygon2D
+	return p.polygon if p else PackedVector2Array()
+
+func bed_soil_top_poly(bed_id: String) -> PackedVector2Array:
+	var tile: Vector2 = bed_tiles.get(bed_id, Vector2.ZERO)
+	var half: Vector2 = bed_halves.get(bed_id, Vector2.ZERO)
+	return IsoUtil.raise_poly(IsoUtil.diamond_polygon(tile, half * 0.90), BED_HEIGHT)
 
 func slot_plant_world(bed_id: String, slot: int) -> Vector2:
 	## Visual plant anchor on the raised soil top.
@@ -455,23 +514,29 @@ func slot_plant_world(bed_id: String, slot: int) -> Vector2:
 
 func _build_fence() -> void:
 	var fence: Dictionary = data.get("fence", {})
-	var tile := _vec2(fence.get("tile", {"x": 12, "y": 2}))
-	var half := _vec2(fence.get("half_tiles", {"x": 2.0, "y": 2.4}))
+	var tile := _vec2(fence.get("tile", {"x": 13, "y": 3}))
+	var half := _vec2(fence.get("half_tiles", {"x": 3.4, "y": 4.4}))
 	fence_poly = IsoUtil.diamond_polygon(tile, half)
+	pen_roam_poly = IsoUtil.diamond_polygon(tile, half * 0.78)
 	fence_center = IsoUtil.tile_to_world(tile)
 	var z := IsoUtil.depth_from_y(fence_center.y)
 	_add_poly("FenceYard", fence_poly, Color(0.50, 0.68, 0.36, 1.0), z - 2)
 
-	## Posts + rails around the animal pen — player stops at the rail for interaction.
+	## Posts + rails with a gap on the west edge for the player-only gate.
 	var corners := [
 		tile + Vector2(-half.x, -half.y),
 		tile + Vector2(half.x, -half.y),
 		tile + Vector2(half.x, half.y),
 		tile + Vector2(-half.x, half.y),
 	]
-	_draw_fence_loop("Pen", corners, 4)
+	_draw_pen_fence_with_gate("Pen", corners, 5)
 
-	## Chicken coop at the *back* of the pen so animals stand in front, not on it.
+	## Gate world position — west midpoint of the pen (faces garden beds).
+	gate_world = IsoUtil.tile_to_world(tile + Vector2(-half.x + 0.05, 0.0))
+
+	## Chicken coop at the *upper* end of the pen.
+	var coop_off := _vec2(fence.get("coop_offset", {"x": -0.2, "y": -2.6}))
+	coop_world = IsoUtil.tile_to_world(tile + coop_off)
 	if sprites:
 		var coop := sprites.chicken_coop_texture()
 		if coop:
@@ -479,70 +544,78 @@ func _build_fence() -> void:
 			spr.name = "ChickenCoop"
 			spr.texture = coop
 			spr.centered = true
-			## Far corner of yard (screen-up from fence center).
-			spr.position = IsoUtil.tile_to_world(tile + Vector2(-0.35, -1.15)) + Vector2(0, -28)
+			spr.position = coop_world + Vector2(0, -28)
 			spr.z_index = z + 4
 			spr.scale = Vector2(2.0, 2.0)
 			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			add_child(spr)
 
-	_add_label("FenceLabel", fence_center + Vector2(0, -52), "ANIMALS", Color(1, 0.95, 0.8, 0.9))
+	_add_label("FenceLabel", fence_center + Vector2(0, -72), "ANIMALS", Color(1, 0.95, 0.8, 0.9))
 
-func _build_animals() -> void:
+func _draw_pen_fence_with_gate(prefix: String, corners: Array, posts_per_edge: int) -> void:
+	for i in 4:
+		var a: Vector2 = corners[i]
+		var b: Vector2 = corners[(i + 1) % 4]
+		var west_edge := (i == 3)
+		## Rails — skip middle third on west edge (gate opening).
+		for rail_y in [-18.0, -9.0]:
+			if west_edge:
+				_add_rail_segment("%sRail_%d_a_%d" % [prefix, i, int(rail_y)], a, a.lerp(b, 0.30), rail_y)
+				_add_rail_segment("%sRail_%d_b_%d" % [prefix, i, int(rail_y)], a.lerp(b, 0.70), b, rail_y)
+			else:
+				_add_rail_segment("%sRail_%d_%d" % [prefix, i, int(rail_y)], a, b, rail_y)
+		for step in posts_per_edge:
+			var t: float = float(step) / float(maxi(posts_per_edge - 1, 1))
+			if west_edge and t > 0.32 and t < 0.68:
+				continue
+			var pt: Vector2 = a.lerp(b, t)
+			var world := IsoUtil.tile_to_world(pt)
+			var post := Polygon2D.new()
+			post.name = "%sPost_%d_%d" % [prefix, i, step]
+			post.z_index = IsoUtil.depth_from_y(world.y) + 3
+			post.color = Color(0.42, 0.28, 0.14, 1.0)
+			post.polygon = PackedVector2Array([
+				world + Vector2(-3.5, -24), world + Vector2(3.5, -24),
+				world + Vector2(3.5, 5), world + Vector2(-3.5, 5),
+			])
+			add_child(post)
+
+func _add_rail_segment(name: String, tile_a: Vector2, tile_b: Vector2, rail_y: float) -> void:
+	var wa := IsoUtil.tile_to_world(tile_a)
+	var wb := IsoUtil.tile_to_world(tile_b)
+	var rail := Polygon2D.new()
+	rail.name = name
+	rail.z_index = IsoUtil.depth_from_y(maxf(wa.y, wb.y)) + 2
+	rail.color = Color(0.48, 0.32, 0.16, 1.0)
+	var n := (wb - wa).normalized().orthogonal() * 2.2
+	rail.polygon = PackedVector2Array([
+		wa + Vector2(0, rail_y) - n,
+		wb + Vector2(0, rail_y) - n,
+		wb + Vector2(0, rail_y + 3.5) + n,
+		wa + Vector2(0, rail_y + 3.5) + n,
+	])
+	add_child(rail)
+
+func _register_animal_spawns() -> void:
+	## Positions only — World spawns roaming actors (correct sizes + motion).
 	var animals: Array = data.get("animals", [])
-	var colors := {"chicken_a": "default", "chicken_b": "brown", "chicken_c": "red"}
 	for a in animals:
 		var d: Dictionary = a
 		var id := str(d.get("id", "animal"))
-		## Dog is spawned by World as a roaming actor (not a static pen sprite).
-		if id.begins_with("dog"):
-			var dog_tile := _vec2(d.get("tile", {"x": 2, "y": 5}))
-			dog_spawn_world = nearest_walkable(IsoUtil.tile_to_world(dog_tile))
-			animal_positions[id] = dog_spawn_world
-			continue
 		var tile := _vec2(d.get("tile", {"x": 12, "y": 2}))
 		var pos := IsoUtil.tile_to_world(tile)
-		animal_positions[id] = pos
-		var z := IsoUtil.depth_from_y(pos.y) + 5
-		var tex: Texture2D = null
-		var sc := 3.2
-		if sprites:
-			if id.begins_with("chicken"):
-				tex = sprites.chicken_texture(str(colors.get(id, "default")))
-				sc = 3.5
-			elif id.begins_with("cow"):
-				tex = sprites.cow_texture()
-				sc = 3.8
-			elif id.begins_with("pig"):
-				tex = sprites.pig_texture()
-				sc = 3.0
-			elif id.begins_with("rabbit"):
-				tex = sprites.rabbit_texture()
-				sc = 3.2
-		if tex:
-			var spr := Sprite2D.new()
-			spr.name = id
-			spr.texture = tex
-			spr.centered = true
-			spr.position = pos + Vector2(0, -8)
-			spr.z_index = z + 6
-			spr.scale = Vector2(sc, sc)
-			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			add_child(spr)
+		if id.begins_with("dog"):
+			dog_spawn_world = pos
+			animal_positions[id] = pos
 			continue
-		## Placeholder poly if art missing.
-		var body := Polygon2D.new()
-		body.name = id
-		body.z_index = z
-		body.position = pos
-		body.color = Color(0.90, 0.75, 0.55, 1.0)
-		body.polygon = PackedVector2Array([
-			Vector2(-12, 2), Vector2(-6, -10), Vector2(8, -8),
-			Vector2(12, 2), Vector2(4, 10), Vector2(-8, 8),
-		])
-		add_child(body)
+		if pen_roam_poly.size() >= 3 and not IsoUtil.point_in_polygon(pos, pen_roam_poly):
+			pos = fence_center
+		animal_positions[id] = pos
 	if dog_spawn_world == Vector2.ZERO:
-		dog_spawn_world = nearest_walkable(spawn_world + Vector2(40, 30))
+		dog_spawn_world = spawn_world + Vector2(40, 30)
+		animal_positions["dog"] = dog_spawn_world
+	if gate_world == Vector2.ZERO and fence_poly.size() >= 3:
+		gate_world = fence_center + Vector2(-80, 0)
 
 func _compute_bounds() -> void:
 	var corners: Array[Vector2] = [
@@ -562,19 +635,30 @@ func _compute_bounds() -> void:
 	walk_bounds = Rect2(min_p, max_p - min_p).grow(40.0)
 
 func is_blocked(world_pos: Vector2) -> bool:
-	## Solid: shed, garden beds, animal pen. Outside the farm yard is also blocked
-	## (perimeter fence — meadows are scenery only).
+	## Solid: shed + garden beds. Pen is walkable (player enters via west gate).
+	## Outside the farm yard is blocked (perimeter fence — meadows are scenery).
 	if farm_yard_poly.size() >= 3 and not IsoUtil.point_in_polygon(world_pos, farm_yard_poly):
 		return true
 	if shed_poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, shed_poly):
-		return true
-	if fence_poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, fence_poly):
 		return true
 	for id in bed_polys.keys():
 		var poly: PackedVector2Array = bed_polys[id]
 		if poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, poly):
 			return true
 	return false
+
+func in_pen(world_pos: Vector2) -> bool:
+	return fence_poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, fence_poly)
+
+const GATE_PASS_RADIUS := 46.0
+
+func crossing_allowed(a: Vector2, b: Vector2) -> bool:
+	## A move between two points may not cross the pen fence except at the gate.
+	if in_pen(a) == in_pen(b):
+		return true
+	if gate_world == Vector2.ZERO:
+		return true
+	return ((a + b) * 0.5).distance_to(gate_world) <= GATE_PASS_RADIUS
 
 func nearest_walkable(world_pos: Vector2, max_radius_tiles: int = 8) -> Vector2:
 	## Snap a goal (often inside an obstacle) to the closest walkable nav cell.
@@ -650,11 +734,16 @@ func _rebuild_nav() -> void:
 	]
 	for cell in _nav_cell_to_id.keys():
 		var a: int = int(_nav_cell_to_id[cell])
+		var wa: Vector2 = _astar.get_point_position(a)
 		for d in deltas:
 			var nb: Vector2i = cell + d
 			if not _nav_cell_to_id.has(nb):
 				continue
 			var b: int = int(_nav_cell_to_id[nb])
+			var wb: Vector2 = _astar.get_point_position(b)
+			## Pen fence is impassable except through the gate opening.
+			if not crossing_allowed(wa, wb):
+				continue
 			if not _astar.are_points_connected(a, b):
 				var diag := absi(d.x) + absi(d.y) == 2
 				_astar.connect_points(a, b, true)

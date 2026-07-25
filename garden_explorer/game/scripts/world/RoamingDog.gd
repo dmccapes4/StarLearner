@@ -5,6 +5,8 @@ extends Node2D
 const WALK_FRAME_SEC := 0.12
 const IDLE_PAUSE_MIN := 1.2
 const IDLE_PAUSE_MAX := 3.2
+## Dog reads as a full-grown pet, not a rat — bigger than a chicken.
+const DOG_SCALE := 3.3
 
 var farm_map: FarmMap
 var _target: Vector2 = Vector2.ZERO
@@ -30,14 +32,14 @@ func setup(map: FarmMap, art: FarmSprites, spawn: Vector2) -> void:
 		_spr.hframes = 4
 		_spr.vframes = 4
 		_spr.frame = 2 ## down idle
-		_spr.scale = Vector2(2.4, 2.4)
-		_spr.position = Vector2(0, -10)
+		_spr.scale = Vector2(DOG_SCALE, DOG_SCALE)
+		_spr.position = Vector2(0, -18)
 	else:
 		var idle := art.dog_texture() if art and art.has_method("dog_texture") else null
 		if idle:
 			_spr.texture = idle
-			_spr.scale = Vector2(2.4, 2.4)
-			_spr.position = Vector2(0, -10)
+			_spr.scale = Vector2(DOG_SCALE, DOG_SCALE)
+			_spr.position = Vector2(0, -18)
 	add_child(_spr)
 	z_index = IsoUtil.depth_from_y(position.y) + 55
 	_pick_new_target()

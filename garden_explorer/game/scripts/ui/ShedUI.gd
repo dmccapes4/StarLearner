@@ -7,6 +7,7 @@ var seed_db: SeedDB
 var sprites: FarmSprites
 var _open: bool = false
 var _selected: String = ""
+var _harvest_totals: Dictionary = {}
 var _panel: PanelContainer
 var _grid: GridContainer
 var _title: Label
@@ -56,9 +57,11 @@ func close_shed() -> void:
 		_dim.visible = false
 	Events.shed_closed.emit()
 
-func set_harvest_totals(_totals: Dictionary) -> void:
-	## Basket totals live in season VO; keep API for World.
-	pass
+func set_harvest_totals(totals: Dictionary) -> void:
+	## Gold outlines in the grid mark seeds whose plants were harvested.
+	_harvest_totals = totals.duplicate()
+	if _open:
+		refresh()
 
 func refresh() -> void:
 	if seed_db == null or _grid == null:
@@ -151,26 +154,41 @@ func _on_dim_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		close_shed()
 
+## Silver = seed collected before; gold = its plant has been harvested.
+func _seed_status(plant_id: String) -> String:
+	if int(_harvest_totals.get(plant_id, 0)) > 0:
+		return "harvested"
+	var save := get_node_or_null("/root/Save")
+	if save and save.has_method("has_flag") and save.has_flag("seed_collected:%s" % plant_id):
+		return "collected"
+	return "new"
+
 func _make_seed_button(plant_id: String) -> Button:
 	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(140, 140)
+	btn.custom_minimum_size = Vector2(148, 168)
 	btn.focus_mode = Control.FOCUS_NONE
-	_style_seed_btn(btn, _selected == plant_id)
+	_style_seed_btn(btn, _selected == plant_id, _seed_status(plant_id))
+	## Tile is mostly sprite; label pinned to the bottom.
 	var box := VBoxContainer.new()
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.offset_left = 8
+	box.offset_top = 8
+	box.offset_right = -8
+	box.offset_bottom = -8
+	box.add_theme_constant_override("separation", 4)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(box)
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(72, 72)
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if sprites:
 		icon.texture = sprites.seed_icon(plant_id)
 	if icon.texture == null:
 		var fallback := ColorRect.new()
-		fallback.custom_minimum_size = Vector2(72, 72)
+		fallback.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		fallback.color = _plant_color(plant_id)
 		fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(fallback)
@@ -179,30 +197,58 @@ func _make_seed_button(plant_id: String) -> Button:
 	var lbl := Label.new()
 	lbl.text = seed_db.display_name(plant_id) if seed_db else plant_id
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", 18)
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	lbl.add_theme_font_size_override("font_size", 20)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(lbl)
 	btn.pressed.connect(_on_seed_pressed.bind(plant_id))
 	return btn
 
-func _style_seed_btn(btn: Button, selected: bool) -> void:
+func _style_seed_btn(btn: Button, selected: bool, status: String = "new") -> void:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.18, 0.28, 0.16, 0.95) if not selected else Color(0.28, 0.38, 0.18, 0.98)
 	sb.set_corner_radius_all(16)
-	sb.set_border_width_all(4 if selected else 2)
-	sb.border_color = Color(1.0, 0.85, 0.25, 1.0) if selected else Color(1, 1, 1, 0.25)
+	var border_w := 4 if selected else 3
+	var border_col := Color(1, 1, 1, 0.18)
+	match status:
+		"harvested":
+			border_col = Color(1.0, 0.84, 0.25, 1.0) ## gold — harvested before
+		"collected":
+			border_col = Color(0.83, 0.85, 0.88, 1.0) ## silver — collected before
+		_:
+			border_w = 2
+	if selected:
+		border_col = Color(1.0, 0.85, 0.25, 1.0)
+	sb.set_border_width_all(border_w)
+	sb.border_color = border_col
 	btn.add_theme_stylebox_override("normal", sb)
 	btn.add_theme_stylebox_override("hover", sb)
 	btn.add_theme_stylebox_override("pressed", sb)
 
 func _on_seed_pressed(plant_id: String) -> void:
-	## One tap: take the seed, close shed, narrate. Replaces any previous seed.
+	## One tap: take the seed, narrate. Replaces any previous seed.
 	_selected = plant_id
 	_refresh_held_chip()
-	close_shed()
 	var name := seed_db.display_name(plant_id) if seed_db else plant_id
 	var SpeakScript := preload("res://scripts/audio/Speak.gd")
-	SpeakScript.line("You picked %s!" % name)
+	var save := get_node_or_null("/root/Save")
+	var first_ever: bool = save != null and save.has_method("has_flag") \
+		and not save.has_flag("shed_outline_tutorial")
+	if save and save.has_method("set_flag"):
+		save.set_flag("seed_collected:%s" % plant_id, true)
+	if first_ever:
+		## Demonstrate the outline system on the very first collection: the
+		## tile turns silver while the narration explains, then the shed closes.
+		save.set_flag("shed_outline_tutorial", true)
+		refresh()
+		var dur := SpeakScript.line(
+			"You picked %s! See the silver outline? Silver means you collected that seed before. When you harvest a plant, its seed turns gold!" % name)
+		await get_tree().create_timer(maxf(dur, 1.0)).timeout
+		if _open:
+			close_shed()
+	else:
+		close_shed()
+		SpeakScript.line("You picked %s!" % name)
 	Events.seed_selected.emit(plant_id)
 
 func _refresh_held_chip() -> void:

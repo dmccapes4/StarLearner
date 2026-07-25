@@ -96,7 +96,7 @@ func _on_start() -> void:
 	visible = false
 	if _dim:
 		_dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_speak("Welcome to the garden! Tap the shed for seeds, water your plants, and open the star menu.")
+	## The explainer clip carries its own narration — don't talk over it.
 	var video := get_tree().get_first_node_in_group("video_panel")
 	var file: String = star_db.intro_file() if star_db else "intro.ogv"
 	var topic: String = "Welcome to the garden"

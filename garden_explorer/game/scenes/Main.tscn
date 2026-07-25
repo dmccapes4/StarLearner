@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/Main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/World.tscn" id="2_world"]
@@ -11,6 +11,10 @@
 [ext_resource type="Script" path="res://scripts/ui/VideoPanel.gd" id="9_video"]
 [ext_resource type="Script" path="res://scripts/ui/IntroPanel.gd" id="10_intro"]
 [ext_resource type="Script" path="res://scripts/ui/ActionPrompt.gd" id="11_act"]
+[ext_resource type="Script" path="res://scripts/ui/RevealTile.gd" id="12_reveal"]
+[ext_resource type="Script" path="res://scripts/ui/BugGrid.gd" id="13_buggrid"]
+[ext_resource type="Script" path="res://scripts/ui/PlantGrid.gd" id="14_plantgrid"]
+[ext_resource type="Script" path="res://scripts/ui/SeasonCard.gd" id="15_seasoncard"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_main")
@@ -32,6 +36,18 @@ script = ExtResource("6_tools")
 
 [node name="ActionPrompt" type="CanvasLayer" parent="." groups=["action_prompt"]]
 script = ExtResource("11_act")
+
+[node name="RevealTile" type="CanvasLayer" parent="." groups=["reveal_tile"]]
+script = ExtResource("12_reveal")
+
+[node name="BugGrid" type="CanvasLayer" parent="." groups=["bug_grid"]]
+script = ExtResource("13_buggrid")
+
+[node name="PlantGrid" type="CanvasLayer" parent="." groups=["plant_grid"]]
+script = ExtResource("14_plantgrid")
+
+[node name="SeasonCard" type="CanvasLayer" parent="." groups=["season_card"]]
+script = ExtResource("15_seasoncard")
 
 [node name="MediaPanel" type="CanvasLayer" parent="." groups=["stage_media", "media_panel"]]
 script = ExtResource("7_media")

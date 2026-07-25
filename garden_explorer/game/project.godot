@@ -18,6 +18,7 @@ general/text_to_speech=true
 Config="*res://scripts/autoload/Config.gd"
 Events="*res://scripts/autoload/Events.gd"
 Save="*res://scripts/autoload/Save.gd"
+Music="*res://scripts/autoload/Music.gd"
 IdleGuard="*res://scripts/system/IdleGuard.gd"
 
 [display]
