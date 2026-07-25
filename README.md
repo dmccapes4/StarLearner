@@ -43,7 +43,7 @@ in [`ant_explorer/docs/KIOSK_APPLIANCE.md`](ant_explorer/docs/KIOSK_APPLIANCE.md
 | # | Game | Tile | Status | Details |
 |---|------|------|--------|---------|
 | 1 | **Ant Explorer** | `ants` | ✅ Available | [full detail below](#1-ant-explorer) · [`ant_explorer/`](ant_explorer/) |
-| 2 | **Solar System Explorer** | `planets` | ✅ Available | pick a world, plot a course, fly the 3D hop, park in orbit (Sun included — safe standoff) · [`solar_system_explorer/`](solar_system_explorer/) |
+| 2 | **Solar System Explorer** | `planets` | ✅ Available | two-tile hub: Spaceship flight sim or Solar System orrery tour; plot, burn, belt, orbit · [`solar_system_explorer/`](solar_system_explorer/) |
 | 3 | **Math Explorer** | `preview` | 🔬 Preview | four tabs (`+ − × ÷`); numbers made visible as countable cubes; narrated, animated tutorials + sprite word problems · [`math_explorer/`](math_explorer/) |
 | 4 | **Garden Explorer** | `garden` | ✅ Available | plant, water, grow, harvest, and learn from an offline seasonal garden · [`garden_explorer/`](garden_explorer/) |
 | 5 | **Language Explorer** | `words` | ✅ Available | bilingual EN/ES sentence matching, books, alphabet writing, and finger tracing · [`language_explorer/`](language_explorer/) |
@@ -56,12 +56,13 @@ problems (chickens & eggs, coins & change, sharing dolls, painting stones) plus 
 Design: [`math_explorer/docs/STRATEGY_MATH_EXPLORER.md`](math_explorer/docs/STRATEGY_MATH_EXPLORER.md).
 
 New titles are added as folders beside `ant_explorer/`, each a self-contained Godot project that
-plugs into the Star Learner home shell and the stars format. **Solar System Explorer** is a second title on the console: it boots into the same landscape
-shell and appears as its own tile — the **astronaut girl**, sat to the left of the ants and badged
-full flyer. Its flow: START → a narrated top-down orrery (Sun, the eight planets, and the asteroid
-belt) → an astronaut briefing that hands off to a horizontal **piloting** strip, where a spaceship
-marker flies between bodies (speeding up, then easing in to land) and each stop opens a real 1–2
-minute documentary clip — Sun through Pluto, plus the asteroid belt.
+plugs into the Star Learner home shell and the stars format. **Solar System Explorer** is a second
+title on the console: same landscape shell, own **planets** tile. Launch opens a two-tile hub —
+**Spaceship** for the 3D flight sim, or **Solar System** for a narrated top-down orrery tour
+(Sun, eight planets, asteroid belt). The flyer path: astronaut briefing → horizontal piloting
+strip → top-down course plot → cockpit burn/coast/brake (with a cool asteroid-belt dive) →
+parking orbit → optional documentary clips (Sun through Pluto, plus Ceres / Vesta / Psyche).
+Details: [`solar_system_explorer/`](solar_system_explorer/).
 
 ---
 

@@ -1,7 +1,8 @@
 # Solar System Explorer
 
-**Game #2 in the [Star Learner](../README.md) catalog** — a calm, guided tour of the Sun and its
-planets for a young child, with a full 3D flyer loop (plot → fly → orbit).
+**Game #2 in the [Star Learner](../README.md) catalog** — a calm tour of the Sun and its planets
+for a young child, with a two-tile launch hub (Spaceship flight sim or Solar System orrery) and a
+full 3D flyer loop (plot → burn → orbit).
 
 - **Engine:** Godot **4.3** (Mobile renderer), landscape 1280×600, offline-first.
 - **Assets:** bodies + orbits drawn procedurally; narration is the same warm baked ElevenLabs
@@ -41,11 +42,27 @@ planets for a young child, with a full 3D flyer loop (plot → fly → orbit).
    mission footage (Dawn / NASA) into the belt explainer, strictly sequential — Back skips the
    rest of the chain.
 
-![Title](game/docs/screenshots/01_title.png)
+![Launch hub — Spaceship or Solar System](game/docs/screenshots/01_title.png)
 ![Orrery tour with asteroid belt](game/docs/screenshots/02_orrery.png)
 ![Astronaut briefing](game/docs/screenshots/03_astronaut.png)
 ![Piloting strip with ship marker](game/docs/screenshots/04_scroll.png)
 ![Body video clip](game/docs/screenshots/05_video.png)
+![Asteroid belt crossing](game/docs/screenshots/trips/earth_to_jupiter_1_belt_u056.png)
+![Parked in orbit at Jupiter](game/docs/screenshots/trips/earth_to_jupiter_2_orbit.png)
+
+## Demo videos
+
+| File | What it is |
+|------|------------|
+| [`docs/demo/solar_system_explorer_playthrough.mp4`](docs/demo/solar_system_explorer_playthrough.mp4) | In-engine walkthrough: hub → orrery peek → Spaceship → Jupiter (belt) → Sun |
+| [`docs/demo/solar_system_explorer_explainer.mp4`](docs/demo/solar_system_explorer_explainer.mp4) | Short narrated overview (astronaut art → hub → plot → belt → orbit) |
+
+```bash
+./tools/make_demo_videos.sh          # needs DISPLAY (or xvfb); regenerates both MP4s
+python3 tools/gen_demo_vo.py --force # explainer VO only
+```
+
+See [`docs/demo/README.md`](docs/demo/README.md).
 
 ## Run & test
 

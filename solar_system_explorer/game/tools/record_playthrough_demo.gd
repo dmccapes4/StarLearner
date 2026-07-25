@@ -6,8 +6,8 @@ extends SceneTree
 ##     --write-movie /tmp/solar_playthrough.avi \
 ##     -s res://tools/record_playthrough_demo.gd
 ##
-## Beats: title hub → Spaceship → astronaut → scroll → plot Mars → fly →
-## orbit → chart again → plot Sun → fly → arrive.
+## Beats: title hub → Solar System peek → hub → Spaceship → astronaut → scroll
+## → plot Jupiter (belt) → fly → orbit → chart again → plot Sun → fly → arrive.
 
 const FPS := 24.0
 const MainScript := preload("res://scripts/Main.gd")
@@ -21,8 +21,18 @@ func _run() -> void:
 	root.add_child(main)
 	await process_frame
 	await process_frame
+
 	print("DEMO: title hub")
-	await _sec(2.0)
+	await _sec(3.0)
+
+	# Brief Solar System (orrery) peek, then back to the hub.
+	if main.has_method("_on_explainer"):
+		main._on_explainer()
+	print("DEMO: orrery peek")
+	await _sec(7.0)
+	if main.has_method("_show_title"):
+		main._show_title()
+	await _sec(1.5)
 
 	# Spaceship tile → flight sim (astronaut briefing + strip).
 	if main.has_method("_on_flight"):
@@ -30,21 +40,21 @@ func _run() -> void:
 	print("DEMO: astronaut + scroll")
 	await _sec(8.0)
 
-	# Plot Earth → Mars
-	print("DEMO: plot Mars")
+	# Plot Earth → Jupiter (crosses the asteroid belt).
+	print("DEMO: plot Jupiter")
 	if main.has_method("_on_body_selected"):
-		main._on_body_selected("mars")
+		main._on_body_selected("jupiter")
 	await _sec(10.0)
 	var board = main.get("_board")
 	if board != null and board.has_method("_commit"):
 		board._commit()
-	print("DEMO: fly Mars")
-	await _sec(22.0)
+	print("DEMO: fly Jupiter (belt)")
+	await _sec(42.0)
 
 	# Chart new course from arrival UI if present, else force scroll.
 	var fly = main.get("_fly")
 	if fly != null and fly.has_signal("chart_course"):
-		fly.emit_signal("chart_course", "mars")
+		fly.emit_signal("chart_course", "jupiter")
 	await _sec(2.0)
 	print("DEMO: plot Sun")
 	if main.has_method("_on_body_selected"):
@@ -54,7 +64,7 @@ func _run() -> void:
 	if board != null and board.has_method("_commit"):
 		board._commit()
 	print("DEMO: fly Sun")
-	await _sec(20.0)
+	await _sec(28.0)
 
 	await _sec(3.0)
 	print("DEMO: done")

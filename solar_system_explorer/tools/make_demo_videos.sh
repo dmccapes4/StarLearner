@@ -18,7 +18,7 @@ rm -rf "$USER_DIR"
 mkdir -p "$USER_DIR"
 
 echo "=== 0) ensure explainer VO ==="
-python3 "$ROOT/tools/gen_demo_vo.py"
+python3 "$ROOT/tools/gen_demo_vo.py" --force
 
 echo "=== 1) capture fresh UI stills (title / orrery / scroll) ==="
 # Best-effort; fall back to existing shots if DISPLAY unavailable.
@@ -26,14 +26,21 @@ if [[ -n "${DISPLAY:-}" ]]; then
   DISPLAY="$DISPLAY" "$GODOT" --path "$GAME" -s res://tools/capture_debug_ux.gd \
     >/tmp/solar_capture_ux.log 2>&1 || true
 fi
-# Copy trip plot/orbit stills into a stable explainer path if missing from root.
+# Copy trip plot / belt / orbit stills into a stable explainer path.
 mkdir -p "$SHOTS"
 [[ -f "$TRIP_SHOTS/earth_to_jupiter_0_plot.png" ]] && \
   cp -f "$TRIP_SHOTS/earth_to_jupiter_0_plot.png" "$SHOTS/earth_to_jupiter_0_plot.png"
 [[ -f "$TRIP_SHOTS/earth_to_jupiter_1_fly_u040.png" ]] && \
   cp -f "$TRIP_SHOTS/earth_to_jupiter_1_fly_u040.png" "$SHOTS/earth_to_jupiter_1_fly_u040.png"
+[[ -f "$TRIP_SHOTS/earth_to_jupiter_1_belt_u056.png" ]] && \
+  cp -f "$TRIP_SHOTS/earth_to_jupiter_1_belt_u056.png" "$SHOTS/earth_to_jupiter_1_belt_u056.png"
 [[ -f "$TRIP_SHOTS/earth_to_jupiter_2_orbit.png" ]] && \
   cp -f "$TRIP_SHOTS/earth_to_jupiter_2_orbit.png" "$SHOTS/earth_to_jupiter_2_orbit.png"
+# Prefer a fresh title hub capture when available.
+if [[ -n "${DISPLAY:-}" ]]; then
+  DISPLAY="$DISPLAY" "$GODOT" --path "$GAME" -s res://tools/capture_preview_shots.gd \
+    >/tmp/solar_capture_preview.log 2>&1 || true
+fi
 
 echo "=== 2) automated playthrough (Godot MovieWriter) ==="
 export GODOT_USER_DATA_DIR="$USER_DIR"
@@ -88,10 +95,16 @@ format=yuv420p" \
 
 # Open on the astronaut art (girl + ship), not the title/star screen — no on-image caption.
 mkslide "$GAME/images/astronaut_girl.png" "$d0" "$WORK/s0.mp4" in
-mkslide "$SHOTS/02_orrery.png" "$d1" "$WORK/s1.mp4" out
+# Prefer the two-tile launch hub for the "choose your path" beat.
+HUB="$SHOTS/01_title.png"
+[[ -f "$HUB" ]] || HUB="$GAME/images/launch_solar.png"
+mkslide "$HUB" "$d1" "$WORK/s1.mp4" out
 mkslide "$SHOTS/04_scroll.png" "$d2" "$WORK/s2.mp4" in
 mkslide "$SHOTS/earth_to_jupiter_0_plot.png" "$d3" "$WORK/s3.mp4" out
-mkslide "$SHOTS/earth_to_jupiter_1_fly_u040.png" "$d4" "$WORK/s4.mp4" in
+# Prefer the asteroid-belt crossing still when present.
+FLY="$SHOTS/earth_to_jupiter_1_belt_u056.png"
+[[ -f "$FLY" ]] || FLY="$SHOTS/earth_to_jupiter_1_fly_u040.png"
+mkslide "$FLY" "$d4" "$WORK/s4.mp4" in
 d5_pad=$(python3 -c "print(float('$d5') + 5 * float('$XFADE'))")
 mkslide "$SHOTS/earth_to_jupiter_2_orbit.png" "$d5_pad" "$WORK/s5.mp4" out
 

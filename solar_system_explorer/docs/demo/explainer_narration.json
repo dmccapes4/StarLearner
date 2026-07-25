@@ -9,28 +9,28 @@
     },
     {
       "key": "02_tour",
-      "shot": "02_orrery.png",
-      "text": "It opens with a quiet tour of the solar system. Watch the planets circle the Sun, then pick up the controls yourself."
+      "shot": "01_title.png",
+      "text": "At the start you choose: Spaceship to fly yourself, or Solar System for a quiet narrated tour of the planets around the Sun."
     },
     {
       "key": "03_pick",
       "shot": "04_scroll.png",
-      "text": "Swipe across the planets. Tap one to plot a course. The Sun is fair game too — we fly close, but we never land on a star."
+      "text": "In the spaceship, swipe across the worlds. Tap one to plot a course. The Sun is fair game too — we fly close, but we never land on a star."
     },
     {
       "key": "04_plot",
       "shot": "earth_to_jupiter_0_plot.png",
-      "text": "A top-down map draws the path. Worlds are moving, so the ship aims ahead of where the destination will be."
+      "text": "A top-down map draws the path. Worlds are moving, so the ship aims ahead — and steers clear of anything in the way."
     },
     {
       "key": "05_fly",
-      "shot": "earth_to_jupiter_1_fly_u040.png",
-      "text": "Then you fly it — cockpit view, a little course console over the wheel, and planets that grow as you arrive."
+      "shot": "earth_to_jupiter_1_belt_u056.png",
+      "text": "Then you fly it — engines burn and brake, planets stay little icons until you get close, and diving through the asteroid belt is a rush of tumbling rocks."
     },
     {
       "key": "06_close",
       "shot": "earth_to_jupiter_2_orbit.png",
-      "text": "Park in orbit, learn more with a short video, or chart a new course. Exploration is the loop. Wonder is the reward."
+      "text": "Park in orbit beside the world, learn more with a short video, or chart a new course. Exploration is the loop. Wonder is the reward."
     }
   ]
 }
