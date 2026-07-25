@@ -163,11 +163,22 @@ func _on_gui_input(event: InputEvent) -> void:
 	_plot_to(id)
 
 func _plot_to(id: String) -> void:
-	var target := SolarData.flyer_body_by_id(id, _cfg)
 	var origin := SolarData.flyer_body_by_id(_ship_id, _cfg)
-	if target.is_empty() or origin.is_empty():
+	if origin.is_empty():
 		return
 	_t0 = _bodies.t if _bodies.t > 0.0 else 0.0
+	# The belt ring is not a place — a belt tap resolves to the nearest major
+	# asteroid right now (STRATEGY §5.3), skipping the one we're parked at.
+	var from_belt := false
+	if id == "asteroid_belt":
+		from_belt = true
+		id = SolarData.nearest_major_asteroid(
+			OrbitMath.body_pos(origin, _t0), _t0, _cfg, _ship_id)
+		if id.is_empty():
+			return
+	var target := SolarData.flyer_body_by_id(id, _cfg)
+	if target.is_empty():
+		return
 	# Prefer leaving the Sun along the destination's current radial so the
 	# departure doesn't look like it pops out of nowhere at +X.
 	var prefer := OrbitMath.body_pos(target, _t0)
@@ -177,7 +188,8 @@ func _plot_to(id: String) -> void:
 	var depart := 0.0
 	if not bool(origin.get("is_star", false)):
 		depart = OrbitMath.orbit_standoff(float(origin.get("hero_r", 2.0)))
-	_route = OrbitMath.plot_route(ship_pos, target, _t0, _cfg, depart)
+	_route = OrbitMath.plot_route(ship_pos, target, _t0, _cfg, depart,
+		OrbitMath.sweep_bodies_for(_ship_id, id, _cfg))
 	_route["travel_au"] = absf(float(target.get("a_au", 0.0)) - float(origin.get("a_au", 0.0)))
 	_route["origin_id"] = _ship_id
 	_route["dest_name"] = str(target.get("name", id))
@@ -192,7 +204,10 @@ func _plot_to(id: String) -> void:
 	_preview_s = float(beats["preview"])
 	_phase = Phase.CHART
 	_hint.text = "Plotting a course to %s…" % str(target["name"])
-	Narrator.speak(OrbitMath.trip_narration(origin, target, _route, _cfg))
+	var narr := OrbitMath.trip_narration(origin, target, _route, _cfg)
+	if from_belt:
+		narr = OrbitMath.belt_intro_sentence(target) + " " + narr
+	Narrator.speak(narr)
 
 func _commit() -> void:
 	if _dest_id.is_empty() or _route.is_empty():

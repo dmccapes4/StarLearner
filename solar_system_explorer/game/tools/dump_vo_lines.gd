@@ -11,6 +11,7 @@ extends SceneTree
 const TitleView := preload("res://scripts/TitleView.gd")
 const OrreryView := preload("res://scripts/OrreryView.gd")
 const AstronautIntro := preload("res://scripts/AstronautIntro.gd")
+const FlySceneScript := preload("res://scripts/FlyScene.gd")
 const NarratorScript := preload("res://scripts/Narrator.gd")
 
 const OUT_PATH := "res://data/solar_vo_manifest.json"
@@ -25,9 +26,20 @@ func _run() -> void:
 	_add(OrreryView.CLOSING)
 	_add(AstronautIntro.BRIEFING)
 
+	# Burn-phase beats spoken during every flight.
+	_add(FlySceneScript.LINE_LAUNCH)
+	_add(FlySceneScript.LINE_CRUISE)
+	_add(FlySceneScript.LINE_FLIP)
+	_add(FlySceneScript.LINE_HOLD)
+	_add(FlySceneScript.LINE_BELT)
+
 	# Body blurbs (orrery tour + video card) + the video-card suffix.
-	for b in SolarData.bodies():
+	for b in SolarData.bodies() + SolarData.major_asteroids():
 		_add(str(b.get("blurb", "")))
+
+	# Belt-tap intros: one per major asteroid the tap can resolve to.
+	for a in SolarData.major_asteroids():
+		_add(OrbitMath.belt_intro_sentence(a))
 	_add("A video about it is coming soon.")
 	_add("Now let's look at them up close…")
 

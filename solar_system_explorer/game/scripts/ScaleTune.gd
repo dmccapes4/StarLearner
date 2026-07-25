@@ -18,10 +18,18 @@ static func evaluate(cfg: SolarFlyerConfig) -> Dictionary:
 		issues.append("focus_dist must be > 0")
 	if cfg.cruise_speed <= 0.0:
 		issues.append("cruise_speed must be > 0")
+	if cfg.burn_accel <= 0.0:
+		issues.append("burn_accel must be > 0")
+	if cfg.v_max <= 0.0:
+		issues.append("v_max must be > 0")
 	if cfg.hop_min_s >= cfg.hop_max_s:
 		issues.append("hop_min_s must be < hop_max_s")
 	if cfg.compression_exp <= 0.0 or cfg.compression_exp > 1.0:
 		issues.append("compression_exp should be in (0, 1]")
+	if cfg.belt_fade_near >= cfg.belt_fade_far:
+		issues.append("belt_fade_near must be < belt_fade_far (rock reveal band)")
+	if cfg.belt_cull_dist <= cfg.belt_fade_far:
+		issues.append("belt_cull_dist must exceed belt_fade_far or rocks pop")
 	# Focus bubble should engage before mesh turns off.
 	if cfg.focus_dist > cfg.mesh_out:
 		issues.append("focus_dist > mesh_out — bloom finishes after mesh hides")
@@ -30,9 +38,9 @@ static func evaluate(cfg: SolarFlyerConfig) -> Dictionary:
 	for b in SolarData.flyer_bodies(cfg):
 		by_id[str(b["id"])] = b
 
-	# Ordering preserved under compression.
-	var order := ["mercury", "venus", "earth", "mars", "asteroid_belt",
-		"jupiter", "saturn", "uranus", "neptune", "pluto"]
+	# Ordering preserved under compression (major asteroids straddle the ring).
+	var order := ["mercury", "venus", "earth", "mars", "vesta", "asteroid_belt",
+		"ceres", "psyche", "jupiter", "saturn", "uranus", "neptune", "pluto"]
 	for i in order.size() - 1:
 		var a: float = float(by_id[order[i]]["orbit_r"])
 		var c: float = float(by_id[order[i + 1]]["orbit_r"])
@@ -58,14 +66,23 @@ static func evaluate(cfg: SolarFlyerConfig) -> Dictionary:
 	for b in SolarData.flyer_destinations(cfg):
 		if str(b["id"]) == "earth" or bool(b.get("is_star", false)):
 			continue
-		var route := OrbitMath.plot_route(ship, b, 0.0, cfg)
+		var sweep := OrbitMath.sweep_bodies_for("earth", str(b["id"]), cfg)
+		var route := OrbitMath.plot_route(ship, b, 0.0, cfg, 0.0, sweep)
 		var dur: float = float(route["duration"])
 		var plen: float = float(route["path_len"])
+		# Collision contract: the refined course clears every swept world.
+		for s in route.get("sweeps", []):
+			if str(s["class"]) == "conflict":
+				issues.append("%s hop conflicts with %s (sep %.1f < clear %.1f)" % [
+					b["id"], s["id"], float(s["min_sep"]), float(s["clearance"])])
 		dur_min = minf(dur_min, dur)
 		dur_max = maxf(dur_max, dur)
 		if dur < cfg.hop_min_s - 0.05 or dur > cfg.hop_max_s + 0.05:
-			issues.append("%s hop duration %.1fs outside [%s,%s]" % [
+			issues.append("%s hop duration %.1fs outside [%s,%s] — tune burn_accel/v_max" % [
 				b["id"], dur, cfg.hop_min_s, cfg.hop_max_s])
+		# Honesty invariant: the flown wall-clock and the orbital clock agree.
+		if absf(dur - float(route["t_arr"])) > 0.01:
+			issues.append("%s duration != t_arr (clock mismatch)" % b["id"])
 
 		var bloom_u := bloom_progress(route["curve"], b, 0.0, float(route["t_arr"]), cfg, 0.55)
 		var d_mid := OrbitMath.ship_to_dest_dist(
@@ -97,13 +114,7 @@ static func evaluate(cfg: SolarFlyerConfig) -> Dictionary:
 	if outer_total > 0 and outer_bloom_ok < 3:
 		issues.append("fewer than 3 outer hops bloom after mid-cruise (got %d)" % outer_bloom_ok)
 
-	# Duration variety: not every hop stuck on hop_min (cruise too fast).
-	var at_floor := 0
-	for h in hops:
-		if absf(float(h["duration"]) - cfg.hop_min_s) < 0.05:
-			at_floor += 1
-	if at_floor == hops.size():
-		issues.append("all hops clamped to hop_min_s — lower cruise_speed")
+	# Duration variety: burn-profile times must spread with distance.
 	if dur_max - dur_min < 5.0 and hops.size() >= 6:
 		issues.append("hop durations lack variety (span %.1fs)" % (dur_max - dur_min))
 

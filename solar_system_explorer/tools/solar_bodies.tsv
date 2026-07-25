@@ -31,9 +31,20 @@ earth	00:03:19	00:04:36	https://www.youtube.com/watch?v=1wyr5rWonbE
 mars	00:00:05	00:00:17	https://www.youtube.com/watch?v=Vy_RPd0rblI
 mars	00:04:36	00:05:37	https://www.youtube.com/watch?v=1wyr5rWonbE
 
-# Asteroid belt — Dawn flyover of Ceres (belt stand-in)
-asteroid_belt	00:00:05	00:00:17	https://www.youtube.com/watch?v=uSaLVAl-ObY
+# Asteroid belt — explainer only: it always auto-queues AFTER a major
+# asteroid's own live clip (VideoPanel.play_chain), so no separate opener.
 asteroid_belt	00:05:37	00:05:51	https://www.youtube.com/watch?v=1wyr5rWonbE
+
+# Ceres — Dawn flyover (real mission imagery; the belt's dwarf planet)
+ceres	00:00:05	00:00:20	https://www.youtube.com/watch?v=uSaLVAl-ObY
+
+# Vesta — DLR/NASA Dawn virtual flyover, direct MP4 (surface stretch;
+# avoids the German title cards elsewhere in the video)
+vesta	00:01:18	00:01:33	https://www.dlr.de/en/media/publications/miscellaneous/2012/video-virtual-flight-over-asteroid-vesta-hd_490/@@download/file
+
+# Psyche — NASA/JPL teaser, direct MP4: Jupiter pan → orbit diagram →
+# metal-asteroid surface render (cleanroom footage starts ~00:14, excluded)
+psyche	00:00:03	00:00:13	http://images-assets.nasa.gov/video/JPL-20230929-PSYCHEf-0004-Hype/JPL-20230929-PSYCHEf-0004-Hype~large.mp4
 
 # Jupiter — Juno Great Red Spot fly-in
 jupiter	00:00:05	00:00:17	https://www.youtube.com/watch?v=uj3Lq7Gu94Y

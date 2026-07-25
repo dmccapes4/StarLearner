@@ -120,7 +120,13 @@ func _on_flight_arrived(dest_id: String) -> void:
 
 func _on_learn_more(dest_id: String) -> void:
 	_ship_at = dest_id
-	_video.play_body(dest_id)
+	# Major asteroids chain their own clip into the belt explainer — the rock
+	# first, then what the belt IS (STRATEGY §5.3).
+	var body := SolarData.flyer_body_by_id(dest_id)
+	if bool(body.get("major_asteroid", false)):
+		_video.play_chain([dest_id, "asteroid_belt"])
+	else:
+		_video.play_body(dest_id)
 
 func _on_chart_new_course(dest_id: String) -> void:
 	_ship_at = dest_id

@@ -30,6 +30,13 @@ planets for a young child, with a full 3D flyer loop (plot → fly → orbit).
 5. **Body video (optional).** From orbit, **Learn more** plays `res://videos/<id>.ogv`. Big **◀**
    Back; the clip auto-closes when it finishes. Missing clips fall back to a spoken **"video coming
    soon"** facts card. You can skip videos and keep cruising.
+6. **The asteroid belt.** Tapping **Asteroid Belt** resolves to the nearest of three real, named
+   asteroids — **Ceres**, **Vesta**, **Psyche** — visible as labelled dots inside the belt ring on
+   the plot board (each is also directly tappable there). The rock field is invisible until the
+   ship is actually inside it (distance-dither fade); crossing it fires an **ASTEROID FIELD!**
+   callout with narration. After parking at an asteroid, **Learn more** chains that asteroid's own
+   mission footage (Dawn / NASA) into the belt explainer, strictly sequential — Back skips the
+   rest of the chain.
 
 ![Title](game/docs/screenshots/01_title.png)
 ![Orrery tour with asteroid belt](game/docs/screenshots/02_orrery.png)
@@ -50,11 +57,16 @@ DISPLAY=:1 godot --path . -s res://tools/make_tile.gd              # regenerate 
 `tests/run_tests.gd` also force-loads every view script, so a compile error anywhere fails the run
 (headless can't render the scenes themselves).
 
-### 3D flyer scale knobs (phase 4)
+### 3D flyer scale knobs
 
-Defaults live in [`game/data/solar_flyer_config.tres`](game/data/solar_flyer_config.tres)
-(`cruise_speed`, `focus_dist`, LOD band, hop duration band). `ScaleTune` asserts the happy-medium
-contracts in tests. To tweak on the phone without rebuilding the APK, push a JSON overlay:
+Defaults live in [`game/data/solar_flyer_config.tres`](game/data/solar_flyer_config.tres):
+burn profile (`burn_accel`, `v_max`, hop duration band), LOD + proximity render band
+(`render_in_*`, `icon_scale`, `focus_dist`), orbit rest (`orbit_time_scale`), and the belt
+reveal (`belt_fade_near`/`belt_fade_far`/`belt_cull_dist`). `ScaleTune` asserts the
+happy-medium contracts in tests (including that every Earth-departure hop sweeps clean of
+conflicts and lands inside the duration band). Full design:
+[`docs/STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY.md`](docs/STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY.md).
+To tweak on the phone without rebuilding the APK, push a JSON overlay:
 
 ```bash
 adb push tools/solar_flyer.json /sdcard/AntPhone/solar_flyer.json
@@ -69,7 +81,10 @@ Built with the same shape as Ant Explorer's `build_stars.sh`: a TSV manifest
 ([`tools/solar_bodies.tsv`](tools/solar_bodies.tsv), columns `id / start / end / url`) fed to
 [`tools/build_clips.sh`](tools/build_clips.sh), which `yt-dlp`-downloads the source once (cached
 under `tools/build/sources/`) and `ffmpeg`-cuts one Theora `.ogv` per body into `game/videos/<id>.ogv`.
-IDs match [`game/scripts/SolarData.gd`](game/scripts/SolarData.gd) (`sun` … `asteroid_belt` … `pluto`).
+IDs match [`game/scripts/SolarData.gd`](game/scripts/SolarData.gd) (`sun` … `asteroid_belt` …
+`pluto`, plus the major asteroids `ceres` / `vesta` / `psyche`). Non-YouTube direct MP4 URLs
+(DLR, NASA image library) work too — `yt-dlp` fetches them with its generic extractor. The
+`asteroid_belt` clip is explainer-only: it always auto-queues *after* an asteroid's own clip.
 
 ```bash
 tools/build_clips.sh                 # all bodies → game/videos/<id>.ogv

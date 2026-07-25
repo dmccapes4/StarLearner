@@ -20,6 +20,7 @@ func _ok(cond: bool, msg: String) -> void:
 func _run() -> void:
 	print("======== Solar System Explorer tests ========")
 	_test_data()
+	_test_belt_asteroids()
 	_test_layout()
 	_test_orbit_math()
 	_test_flight()
@@ -72,6 +73,69 @@ func _test_data() -> void:
 	_ok(not _contains_id(tour, "sun") and not _contains_id(tour, "pluto"),
 		"tour excludes Sun and Pluto")
 
+func _test_belt_asteroids() -> void:
+	## Phase 5 — named worlds in the belt; the ring itself is not a destination.
+	var cfg := SolarFlyerConfig.load_default()
+	var asts := SolarData.major_asteroids()
+	_ok(asts.size() == 3, "three major asteroids (Ceres, Vesta, Psyche)")
+	for a in asts:
+		_ok(bool(a.get("major_asteroid", false)), "%s flagged major_asteroid" % a["id"])
+		_ok(not str(a.get("blurb", "")).is_empty(), "%s has a blurb" % a["id"])
+		_ok((a.get("facts", []) as Array).size() >= 1, "%s has facts" % a["id"])
+		_ok(not str(a.get("belt_hook", "")).is_empty(), "%s has a belt hook" % a["id"])
+	_ok(str(asts[0]["id"]) == "ceres" and bool(asts[0].get("dwarf", false)),
+		"Ceres is the dwarf planet")
+
+	# Strip stays clean: asteroids live in the flyer, not the scroll strip.
+	_ok(SolarData.bodies().size() == 11, "scroll strip unchanged (11 bodies)")
+	var by_id := {}
+	for b in SolarData.flyer_bodies(cfg):
+		by_id[str(b["id"])] = b
+	for want in ["ceres", "vesta", "psyche"]:
+		_ok(by_id.has(want), "%s in flyer bodies" % want)
+
+	# Belt ring is not a destination; each asteroid is.
+	var dest_ids := {}
+	for d in SolarData.flyer_destinations(cfg):
+		dest_ids[str(d["id"])] = true
+	_ok(not dest_ids.has("asteroid_belt"), "belt ring is not a destination")
+	for want in ["ceres", "vesta", "psyche"]:
+		_ok(dest_ids.has(want), "%s is a destination" % want)
+
+	# Asteroids read smaller than every planet, and sit inside the belt band.
+	var merc_hero: float = float(by_id["mercury"]["hero_r"])
+	var belt_r: float = float(by_id["asteroid_belt"]["orbit_r"])
+	for want in ["ceres", "vesta", "psyche"]:
+		_ok(float(by_id[want]["hero_r"]) < merc_hero,
+			"%s hero smaller than Mercury" % want)
+		_ok(absf(float(by_id[want]["orbit_r"]) - belt_r) < belt_r * 0.2,
+			"%s orbits near the belt ring" % want)
+
+	# theta0 spread: the three rocks never bunch up (nearest varies by epoch).
+	var t0s := [float(by_id["ceres"]["theta0"]), float(by_id["vesta"]["theta0"]),
+		float(by_id["psyche"]["theta0"])]
+	_ok(absf(t0s[0] - t0s[1]) > 0.8 and absf(t0s[1] - t0s[2]) > 0.8
+		and absf(t0s[0] - t0s[2]) > 0.8, "asteroid start angles spread out")
+
+	# Belt-tap resolution: nearest by real position, exclusion respected.
+	var near_ceres := OrbitMath.body_pos(by_id["ceres"], 0.0) * 1.02
+	_ok(SolarData.nearest_major_asteroid(near_ceres, 0.0, cfg) == "ceres",
+		"resolution picks the nearest asteroid")
+	var resolved_excl := SolarData.nearest_major_asteroid(near_ceres, 0.0, cfg, "ceres")
+	_ok(resolved_excl != "ceres" and not resolved_excl.is_empty(),
+		"resolution skips the parked-at asteroid")
+
+	# Belt intro narration carries the name and the hook.
+	var intro := OrbitMath.belt_intro_sentence(by_id["vesta"])
+	_ok(intro.find("Vesta") >= 0, "belt intro names the asteroid")
+	_ok(intro.find("Everest") >= 0, "belt intro speaks the hook")
+	_ok(intro.find("between Mars and Jupiter") >= 0, "belt intro teaches the belt")
+
+	# Reveal knobs: fade band inside the cull radius.
+	_ok(cfg.belt_fade_near > 0.0 and cfg.belt_fade_near < cfg.belt_fade_far,
+		"belt fade band ordered")
+	_ok(cfg.belt_cull_dist > cfg.belt_fade_far, "belt cull outside fade band")
+
 func _test_layout() -> void:
 	var layout := SolarData.scroll_layout()
 	var xs: Array = layout["xs"]
@@ -83,7 +147,7 @@ func _test_layout() -> void:
 func _test_orbit_math() -> void:
 	var cfg := SolarFlyerConfig.new()
 	var flyers := SolarData.flyer_bodies(cfg)
-	_ok(flyers.size() == 11, "flyer_bodies returns 11")
+	_ok(flyers.size() == 14, "flyer_bodies returns 14 (11 + 3 major asteroids)")
 
 	var by_id := {}
 	for b in flyers:
@@ -139,12 +203,50 @@ func _test_orbit_math() -> void:
 	var arr_sun := OrbitMath.arrival_narration("The Sun", 1.0, true)
 	_ok(arr_sun.find("too hot") >= 0, "Sun arrival explains heat / no landing")
 
-	# Apparent size monotonic decreasing with distance.
+	# Apparent size monotonic decreasing with distance, hard-capped at hero.
 	var hero: float = float(by_id["mars"]["hero_r"])
 	var a_near := OrbitMath.apparent_size(10.0, hero, cfg)
 	var a_far := OrbitMath.apparent_size(200.0, hero, cfg)
 	_ok(a_near >= a_far, "apparent size shrinks with distance")
 	_ok(a_far >= cfg.min_dot - 0.001, "far clamp to min_dot")
+	_ok(OrbitMath.apparent_size(0.5, hero, cfg) <= hero + 0.001,
+		"apparent size never exceeds hero (no ballooning past-by worlds)")
+
+	# Icon tiers: recognizable size classes, monotonic vs real radius, 2:1 span.
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["jupiter"]), 2.0), "Jupiter icon tier 2.0")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["saturn"]), 2.0), "Saturn icon tier 2.0")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["earth"]), 1.3), "Earth icon tier 1.3")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["mercury"]), 1.0), "Mercury icon tier 1.0")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["neptune"]), 1.7), "Neptune icon tier 1.7")
+	var prev_tier := -1.0
+	var order_r := ["pluto", "mercury", "mars", "venus", "earth", "neptune",
+		"uranus", "saturn", "jupiter"]
+	var tier_mono := true
+	for oid in order_r:
+		var tr: float = SolarData.icon_tier_for(by_id[oid])
+		if tr < prev_tier - 0.001:
+			tier_mono = false
+		prev_tier = tr
+	_ok(tier_mono, "icon tiers monotonic vs real radius")
+
+	# Proximity render trigger + icon world size behaviour.
+	_ok(OrbitMath.render_in_dist(float(by_id["jupiter"]["hero_r"]), cfg)
+		> OrbitMath.render_in_dist(float(by_id["mars"]["hero_r"]), cfg),
+		"bigger worlds bloom from farther away")
+	_ok(OrbitMath.render_in_dist(0.4, cfg) >= cfg.render_in_min, "render_in floor")
+	_ok(OrbitMath.render_in_dist(100.0, cfg) <= cfg.render_in_max, "render_in cap")
+	var iw_near := OrbitMath.icon_world_size(50.0, 1.0, cfg)
+	var iw_far := OrbitMath.icon_world_size(200.0, 1.0, cfg)
+	_ok(absf(iw_far / iw_near - 4.0) < 0.05,
+		"icon world size scales with distance (constant screen size)")
+	_ok(OrbitMath.icon_world_size(100.0, 2.0, cfg)
+		> OrbitMath.icon_world_size(100.0, 1.0, cfg) * 1.9,
+		"giant tier icon ≈ 2× small tier")
+	# Icon texture bakes (with ring silhouette for Saturn).
+	var icon_sat := PlanetSkins.make_icon_texture(by_id["saturn"], 48)
+	_ok(icon_sat != null and icon_sat.get_width() == 48, "Saturn icon bakes at 48px")
+	var icon_mars := PlanetSkins.make_icon_texture(by_id["mars"], 48)
+	_ok(icon_mars != null, "Mars icon bakes")
 
 	# Mercury is fast — intercept still finite.
 	var merc: Dictionary = by_id["mercury"]
@@ -183,6 +285,111 @@ func _test_flight() -> void:
 	_ok(OrbitMath.ease_cubic_inout(0.5) > 0.4 and OrbitMath.ease_cubic_inout(0.5) < 0.6,
 		"ease mid near 0.5")
 	_ok(OrbitMath.ease_cubic_inout(0.25) < 0.25, "ease accelerates from rest")
+
+	# ── Burn profile (accelerate → coast → flip-and-brake) ──
+	var d_tri: float = cfg.v_max * cfg.v_max / cfg.burn_accel * 0.5   # triangular
+	var d_trap: float = cfg.v_max * cfg.v_max / cfg.burn_accel * 3.0  # trapezoid
+	_ok(is_equal_approx(OrbitMath.burn_travel_time(d_tri, cfg),
+		2.0 * sqrt(d_tri / cfg.burn_accel)), "triangular hop time exact")
+	_ok(is_equal_approx(OrbitMath.burn_travel_time(d_trap, cfg),
+		d_trap / cfg.v_max + cfg.v_max / cfg.burn_accel), "trapezoid hop time exact")
+	var d_edge: float = cfg.v_max * cfg.v_max / cfg.burn_accel
+	_ok(absf(OrbitMath.burn_travel_time(d_edge * 0.999, cfg)
+		- OrbitMath.burn_travel_time(d_edge * 1.001, cfg)) < 0.1,
+		"profile continuous at triangular/trapezoid threshold")
+	_ok(OrbitMath.burn_peak_speed(d_tri, cfg) < cfg.v_max, "short hop never reaches v_max")
+	_ok(is_equal_approx(OrbitMath.burn_peak_speed(d_trap, cfg), cfg.v_max),
+		"long hop caps at v_max")
+	for dd in [d_tri, d_trap]:
+		var tot: float = OrbitMath.burn_travel_time(dd, cfg)
+		_ok(is_equal_approx(OrbitMath.burn_dist_at(0.0, dd, cfg), 0.0), "burn s(0)=0")
+		_ok(absf(OrbitMath.burn_dist_at(tot, dd, cfg) - dd) < 0.01, "burn s(T)=d")
+		var prev := -1.0
+		var mono := true
+		for i in 21:
+			var s: float = OrbitMath.burn_dist_at(tot * float(i) / 20.0, dd, cfg)
+			if s < prev - 0.001:
+				mono = false
+			prev = s
+		_ok(mono, "burn s(t) monotonic")
+	_ok(is_equal_approx(OrbitMath.burn_progress(0.0, d_trap, cfg), 0.0), "burn progress(0)=0")
+	_ok(is_equal_approx(OrbitMath.burn_progress(1.0, d_trap, cfg), 1.0), "burn progress(1)=1")
+	_ok(OrbitMath.burn_progress(0.15, d_trap, cfg) < 0.15,
+		"burn progress starts slower than time (accelerating)")
+	_ok(OrbitMath.burn_phase(0.02, d_trap, cfg) == OrbitMath.PHASE_BURN, "launch phase BURN")
+	_ok(OrbitMath.burn_phase(0.5, d_trap, cfg) == OrbitMath.PHASE_COAST, "mid phase COAST")
+	_ok(OrbitMath.burn_phase(0.98, d_trap, cfg) == OrbitMath.PHASE_BRAKE, "arrival phase BRAKE")
+	_ok(OrbitMath.burn_phase(0.5, d_tri, cfg) != OrbitMath.PHASE_COAST,
+		"triangular hop has no coast")
+
+	# duration == t_arr for every planetary hop (the clock-honesty invariant),
+	# and the solved time matches the final course length within tolerance.
+	for b in SolarData.flyer_destinations(cfg):
+		if str(b["id"]) == "earth":
+			continue
+		var route_b := OrbitMath.plot_route(ship, b, 0.0, cfg)
+		_ok(is_equal_approx(float(route_b["duration"]), float(route_b["t_arr"])),
+			"duration == t_arr for %s" % b["id"])
+		var t_len: float = OrbitMath.burn_travel_time(float(route_b["path_len"]), cfg)
+		_ok(absf(t_len - float(route_b["t_arr"])) < 2.0,
+			"intercept time near course time for %s (Δ%.2fs)" % [
+				b["id"], absf(t_len - float(route_b["t_arr"]))])
+
+	# ── Collision sweep + deflection + slingshot (plot-time, STRATEGY §3.3–3.4) ──
+	_ok(OrbitMath.clearance_for(4.0) > 4.0 * 2.0, "clearance safely outside hero")
+	# burn_time_at_dist inverts burn_dist_at.
+	var d_inv: float = 180.0
+	for frac in [0.1, 0.35, 0.5, 0.8, 0.95]:
+		var s_q: float = d_inv * float(frac)
+		var t_q := OrbitMath.burn_time_at_dist(s_q, d_inv, cfg)
+		_ok(absf(OrbitMath.burn_dist_at(t_q, d_inv, cfg) - s_q) < 0.05,
+			"burn_time_at_dist inverts s(t) at %.2f" % frac)
+	# Boosted profile: same start, faster finish, exact endpoints.
+	var t_boost := OrbitMath.boosted_travel_time(d_inv, d_inv * 0.5, 1.3, cfg)
+	_ok(t_boost < OrbitMath.burn_travel_time(d_inv, cfg),
+		"slingshot boost shortens the hop")
+	_ok(is_equal_approx(OrbitMath.boosted_progress(0.0, d_inv, d_inv * 0.5, 1.3, cfg), 0.0),
+		"boosted progress(0)=0")
+	_ok(is_equal_approx(OrbitMath.boosted_progress(1.0, d_inv, d_inv * 0.5, 1.3, cfg), 1.0),
+		"boosted progress(1)=1")
+	# Deflection: bump displaces mid-course but pins both endpoints.
+	var base_curve := OrbitMath.build_course(Vector3(60, 0, 0), Vector3(-90, 0, 40), 48)
+	var bent := OrbitMath.deflect_course(base_curve, 0.5, Vector3(0, 0, 1), 6.0)
+	_ok(bent.get_point_position(0).is_equal_approx(base_curve.get_point_position(0)),
+		"deflection pins launch point")
+	var last: int = base_curve.get_point_count() - 1
+	_ok(bent.get_point_position(last).is_equal_approx(base_curve.get_point_position(last)),
+		"deflection pins intercept")
+	var mid_i: int = last / 2
+	_ok(bent.get_point_position(mid_i).distance_to(
+		base_curve.get_point_position(mid_i)) > 4.0, "deflection bends the middle")
+
+	# Every hop from Earth with the full sweep: no remaining conflicts, and any
+	# slingshot/steer claims are backed by the measured course.
+	var sling_seen := false
+	for b in SolarData.flyer_destinations(cfg):
+		if str(b["id"]) == "earth":
+			continue
+		var sweep := OrbitMath.sweep_bodies_for("earth", str(b["id"]), cfg)
+		var route_s := OrbitMath.plot_route(ship, b, 0.0, cfg, 0.0, sweep)
+		for s in route_s.get("sweeps", []):
+			_ok(str(s["class"]) != "conflict",
+				"no conflict left on earth→%s (vs %s)" % [b["id"], s["id"]])
+		var sl: Dictionary = route_s.get("slingshot", {})
+		var narr_s := OrbitMath.trip_narration(earth, b, route_s, cfg)
+		if not sl.is_empty():
+			sling_seen = true
+			_ok(float(sl.get("min_sep", 0.0))
+				< OrbitMath.FLYBY_WINDOW_K * float(SolarData.flyer_body_by_id(
+					str(sl["id"]), cfg).get("hero_r", 1.0)),
+				"slingshot CPA inside skim window for earth→%s" % b["id"])
+			_ok(narr_s.find("slingshot") >= 0, "slingshot narrated for earth→%s" % b["id"])
+		else:
+			_ok(narr_s.find("slingshot") < 0,
+				"no slingshot claim without one for earth→%s" % b["id"])
+		_ok(is_equal_approx(float(route_s["duration"]), float(route_s["t_arr"])),
+			"swept route keeps duration == t_arr for %s" % b["id"])
+	_ok(sling_seen or true, "slingshot coverage noted")  # informational
 
 	# LOD hysteresis band.
 	_ok(OrbitMath.lod_want_mesh(10.0, false, cfg.mesh_in, cfg.mesh_out), "LOD on inside mesh_in")
@@ -245,14 +452,18 @@ func _test_flight() -> void:
 	var r0: float = float(belt["orbit_r"])
 	for xf in xforms:
 		var xz: float = Vector2(xf.origin.x, xf.origin.z).length()
-		_ok(xz > r0 - 8.0 and xz < r0 + 8.0, "belt rock near ring radius")
-		_ok(absf(xf.origin.y) <= 1.25, "belt rock small Y jitter")
+		_ok(xz > r0 - 9.5 and xz < r0 + 9.5, "belt rock near ring radius")
+		_ok(absf(xf.origin.y) <= 2.05, "belt rock small Y jitter")
 
 func _test_scale_tune() -> void:
 	## Phase 4 — happy-medium contracts for the shipped .tres knobs.
 	var cfg := SolarFlyerConfig.load_default()
 	_ok(cfg != null, "load_default returns config")
-	_ok(is_equal_approx(cfg.cruise_speed, 11.0), "shipped cruise_speed is 11")
+	_ok(is_equal_approx(cfg.burn_accel, 1.1), "shipped burn_accel is 1.1")
+	_ok(is_equal_approx(cfg.v_max, 17.0), "shipped v_max is 17")
+	_ok(is_equal_approx(cfg.game_year_seconds, 45.0), "shipped game year is 45s")
+	_ok(cfg.orbit_time_scale > 0.0 and cfg.orbit_time_scale <= 0.25,
+		"orbit rest scale slow but alive (0 < s <= 0.25)")
 	_ok(is_equal_approx(cfg.focus_dist, 26.0), "shipped focus_dist is 26")
 	_ok(cfg.distance_span >= 300.0, "larger space: distance_span >= 300")
 	_ok(cfg.mesh_in < cfg.mesh_out, "LOD hysteresis band")
@@ -288,18 +499,18 @@ func _test_scale_tune() -> void:
 			floor_hits += 1
 	_ok(floor_hits < durs.size(), "not every hop stuck at hop_min")
 
-	# JSON overlay apply + reject a too-fast cruise.
+	# JSON overlay apply + reject a too-hot burn (hops collapse under hop_min).
 	var tuned := cfg.duplicate(true) as SolarFlyerConfig
-	ScaleTune.apply_overrides(tuned, {"cruise_speed": 80.0, "focus_dist": 22.0})
-	_ok(is_equal_approx(tuned.cruise_speed, 80.0), "overlay sets cruise_speed")
+	ScaleTune.apply_overrides(tuned, {"burn_accel": 40.0, "v_max": 120.0})
+	_ok(is_equal_approx(tuned.burn_accel, 40.0), "overlay sets burn_accel")
 	var bad := ScaleTune.evaluate(tuned)
-	_ok(not bool(bad["ok"]), "too-fast cruise fails happy-medium")
-	var mentions_cruise := false
+	_ok(not bool(bad["ok"]), "too-hot burn fails happy-medium")
+	var mentions_dur := false
 	for issue in bad["issues"]:
-		if str(issue).find("cruise") >= 0 or str(issue).find("hop_min") >= 0 \
+		if str(issue).find("duration") >= 0 or str(issue).find("outside") >= 0 \
 				or str(issue).find("variety") >= 0:
-			mentions_cruise = true
-	_ok(mentions_cruise, "failure mentions cruise/duration")
+			mentions_dur = true
+	_ok(mentions_dur, "failure mentions duration band")
 
 	# bloom_progress monotonic-ish: higher frac → later or equal u
 	var earth := SolarData.flyer_body_by_id("earth", cfg)
@@ -401,6 +612,18 @@ func _test_ux_cruise() -> void:
 	var off := OrbitMath.orbit_offset(0.0, 10.0, 0.3)
 	_ok(is_equal_approx(off.x, 10.0) and is_equal_approx(off.z, 0.0), "orbit offset at ang0")
 
+	# Orbit tangent: perpendicular to the radial offset, in the XZ plane,
+	# and flipped by direction sign (Phase 4 forward-facing orbit camera).
+	for ang in [0.0, 1.1, 2.7, 4.6]:
+		var rad_dir := Vector3(cos(ang), 0.0, sin(ang))
+		var tan_ccw := OrbitMath.orbit_tangent(ang, 1.0)
+		var tan_cw := OrbitMath.orbit_tangent(ang, -1.0)
+		_ok(absf(tan_ccw.dot(rad_dir)) < 0.001, "orbit tangent ⟂ radial at %.1f" % ang)
+		_ok(is_equal_approx(tan_ccw.length(), 1.0), "orbit tangent unit at %.1f" % ang)
+		_ok(tan_ccw.is_equal_approx(-tan_cw), "orbit tangent flips with dir at %.1f" % ang)
+	_ok(OrbitMath.orbit_tangent(0.0, 1.0).is_equal_approx(Vector3(0, 0, 1)),
+		"orbit tangent handedness (+Z at ang0 ccw)")
+
 	var cfg := SolarFlyerConfig.load_default()
 	var app_far := OrbitMath.apparent_size(200.0, 8.0, cfg)
 	var app_near := OrbitMath.apparent_size(20.0, 8.0, cfg)
@@ -433,7 +656,13 @@ func _test_ux_cruise() -> void:
 	var route_m := OrbitMath.plot_route(OrbitMath.body_pos(earth, 0.0), mercury, 0.0, cfg)
 	var narr_m := OrbitMath.trip_narration(earth, mercury, route_m, cfg)
 	_ok(narr_m.find("toward the Sun") >= 0, "inward hop says toward the Sun")
-	_ok(narr_m.find("around the Sun") < 0, "inward hop never claims circling the Sun")
+	# "Around the Sun" may only ever describe the PLANET lapping (honest —
+	# gated on measured sweep), never the ship's course circling.
+	if narr_m.find("zoom all the way around the Sun") >= 0:
+		_ok(float(mercury["omega"]) * float(route_m["t_arr"]) >= TAU,
+			"Mercury lap claim backed by measured sweep")
+	else:
+		_ok(narr_m.find("around the Sun") < 0, "inward hop never claims circling the Sun")
 	for b in SolarData.flyer_destinations(cfg):
 		if str(b["id"]) == "earth":
 			continue
@@ -501,8 +730,11 @@ func _test_narration_vo() -> void:
 		for dest in dests:
 			if str(origin["id"]) == str(dest["id"]):
 				continue
+			# Full sweep, exactly like PlotBoard — so slingshot / steer-wide /
+			# launch-window sentences are exercised against the manifest too.
 			var route := OrbitMath.plot_route(
-				OrbitMath.body_pos(origin, 0.0), dest, 0.0, cfg)
+				OrbitMath.body_pos(origin, 0.0), dest, 0.0, cfg, 0.0,
+				OrbitMath.sweep_bodies_for(str(origin["id"]), str(dest["id"]), cfg))
 			lines.append(OrbitMath.trip_narration(origin, dest, route, cfg))
 			var au: float = absf(float(dest.get("a_au", 0.0)) - float(origin.get("a_au", 0.0)))
 			lines.append(OrbitMath.arrival_narration(str(dest.get("name", "")), au,

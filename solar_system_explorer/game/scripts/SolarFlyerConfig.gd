@@ -17,6 +17,9 @@ const OVERRIDE_KEYS := [
 	"focus_dist", "min_dot", "mesh_in", "mesh_out",
 	"cruise_speed", "game_year_seconds", "sun_clearance",
 	"hop_min_s", "hop_max_s", "course_samples", "intercept_iters",
+	"burn_accel", "v_max",
+	"render_in_k", "render_in_min", "render_in_max", "icon_scale",
+	"orbit_time_scale", "belt_fade_near", "belt_fade_far", "belt_cull_dist",
 ]
 
 @export var distance_base: float = 12.0
@@ -33,13 +36,41 @@ const OVERRIDE_KEYS := [
 @export var mesh_in: float = 60.0
 @export var mesh_out: float = 170.0
 
+## Proximity rendering (STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY §3): a world
+## renders as a mesh only inside render_in = clamp(k · hero_r, min, max);
+## beyond that it is a recognizable constant-screen-size icon billboard.
+@export var render_in_k: float = 14.0
+@export var render_in_min: float = 40.0
+@export var render_in_max: float = 140.0
+## Icon world-size per unit camera distance (constant apparent size), tier 1.
+@export var icon_scale: float = 0.028
+
+## Orbital clock multiplier while parked in orbit (STRATEGY §4.3): the system
+## slows to a near-rest so narration plays over a still sky. 1× restores on
+## the next charted course.
+@export var orbit_time_scale: float = 0.1
+
+## Belt reveal (STRATEGY §5.1): rocks are fully visible within belt_fade_near
+## of the camera, fully invisible beyond belt_fade_far — the belt is a
+## surprise you fly INTO, not a dotted line across the sky. Beyond
+## belt_cull_dist from the ring the whole MultiMesh is skipped (Moto G win).
+@export var belt_fade_near: float = 35.0
+@export var belt_fade_far: float = 70.0
+@export var belt_cull_dist: float = 120.0
+
+## Legacy straight-line speed — only seeds the first intercept guess now.
 @export var cruise_speed: float = 11.0
-@export var game_year_seconds: float = 30.0
+## Burn simulation (STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY §1): constant-thrust
+## accelerate → coast at v_max → flip-and-brake. Trip time emerges from these.
+@export var burn_accel: float = 1.1
+@export var v_max: float = 17.0
+@export var game_year_seconds: float = 45.0
 @export var sun_clearance: float = 18.0
-@export var hop_min_s: float = 12.0
-@export var hop_max_s: float = 40.0
+## Design band asserted by ScaleTune — NOT a runtime clamp (burn profile owns time).
+@export var hop_min_s: float = 8.0
+@export var hop_max_s: float = 45.0
 @export var course_samples: int = 48
-@export var intercept_iters: int = 4
+@export var intercept_iters: int = 10
 
 static func load_default() -> SolarFlyerConfig:
 	var cfg: SolarFlyerConfig = null

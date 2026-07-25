@@ -107,16 +107,58 @@ static func bodies() -> Array:
 		},
 	]
 
+## Named worlds inside the asteroid belt — real orbits, tiny hero radii,
+## their own skins/facts/clips. Tapping "Asteroid Belt" resolves to the
+## nearest of these; they also appear on the plot board inside the ring.
+## `belt_hook` is the one-line reason this rock is worth visiting (spoken
+## when the belt tap resolves to it).
+static func major_asteroids() -> Array:
+	return [
+		{
+			"id": "ceres", "name": "Ceres", "color": Color(0.60, 0.57, 0.53),
+			"ring": false, "draw_radius": 16.0, "orbit_index": -1,
+			"orrery_rx": 0.0, "period": 0.0, "is_star": false, "dwarf": true,
+			"major_asteroid": true,
+			"a_au": 2.77, "period_yr": 4.6, "real_radius_km": 473.0,
+			"belt_hook": "the biggest one — a real dwarf planet",
+			"blurb": "Ceres is the biggest world in the asteroid belt — so big it counts as a dwarf planet. It has shiny bright spots made of salt.",
+			"facts": ["Biggest rock in the belt", "A dwarf planet", "Has shiny salt spots"],
+		},
+		{
+			"id": "vesta", "name": "Vesta", "color": Color(0.68, 0.63, 0.55),
+			"ring": false, "draw_radius": 14.0, "orbit_index": -1,
+			"orrery_rx": 0.0, "period": 0.0, "is_star": false, "dwarf": false,
+			"major_asteroid": true,
+			"a_au": 2.36, "period_yr": 3.63, "real_radius_km": 263.0,
+			"belt_hook": "it has a mountain twice as tall as Everest",
+			"blurb": "Vesta is the second-biggest asteroid. It has a giant mountain more than twice as tall as Mount Everest.",
+			"facts": ["Second-biggest asteroid", "Has a giant mountain", "Visited by the Dawn spacecraft"],
+		},
+		{
+			"id": "psyche", "name": "Psyche", "color": Color(0.62, 0.64, 0.68),
+			"ring": false, "draw_radius": 12.0, "orbit_index": -1,
+			"orrery_rx": 0.0, "period": 0.0, "is_star": false, "dwarf": false,
+			"major_asteroid": true,
+			"a_au": 2.92, "period_yr": 5.0, "real_radius_km": 113.0,
+			"belt_hook": "a world made of metal",
+			"blurb": "Psyche is an asteroid made mostly of metal, like the inside of a planet. A spacecraft is flying there right now to take a close look.",
+			"facts": ["Made mostly of metal", "Like a planet's core", "A spacecraft is on its way now"],
+		},
+	]
+
 ## Bodies enriched with flyer geometry (orbit_r, omega, hero_r, theta0, spin).
 ## Safe to call every frame — cheap dict copies keyed off cfg.
 static func flyer_bodies(cfg: SolarFlyerConfig = null) -> Array:
 	if cfg == null:
 		cfg = SolarFlyerConfig.load_default()
-	var raw := bodies()
-	# Size ranks among non-star, non-belt bodies by real_radius_km.
+	var raw := bodies() + major_asteroids()
+	# Size ranks among non-star, non-belt PLANET-class bodies by real_radius_km.
+	# Major asteroids stay out of the rank basis — they get a fixed sub-Mercury
+	# hero size below, so adding them never reshuffles the planets.
 	var sized: Array = []
 	for b in raw:
-		if bool(b.get("is_star", false)) or bool(b.get("belt", false)):
+		if bool(b.get("is_star", false)) or bool(b.get("belt", false)) \
+				or bool(b.get("major_asteroid", false)):
 			continue
 		sized.append(float(b.get("real_radius_km", 0.0)))
 	sized.sort()
@@ -140,6 +182,8 @@ static func flyer_bodies(cfg: SolarFlyerConfig = null) -> Array:
 			e["theta0"] = 0.0
 		elif bool(b.get("belt", false)):
 			e["hero_r"] = cfg.hero_min * 1.5
+		elif bool(b.get("major_asteroid", false)):
+			e["hero_r"] = cfg.hero_min * 0.75  # clearly smaller than any planet
 		else:
 			var rk: float = float(b.get("real_radius_km", 0.0))
 			var rank01: float = 0.0
@@ -149,12 +193,48 @@ static func flyer_bodies(cfg: SolarFlyerConfig = null) -> Array:
 		out.append(e)
 	return out
 
+## Resolve a tap on the belt to the nearest major asteroid (by actual
+## position at time t), skipping the world the ship is already parked at.
+static func nearest_major_asteroid(ship_pos: Vector3, t: float,
+		cfg: SolarFlyerConfig = null, exclude_id: String = "") -> String:
+	var best := ""
+	var best_d := INF
+	for b in flyer_bodies(cfg):
+		if not bool(b.get("major_asteroid", false)):
+			continue
+		if str(b["id"]) == exclude_id:
+			continue
+		var d := ship_pos.distance_to(OrbitMath.body_pos(b, t))
+		if d < best_d:
+			best_d = d
+			best = str(b["id"])
+	return best
+
+## Icon size tier — a deliberate size-class CARTOON, not to scale (Jupiter
+## reads ~2× Earth, per the design brief). Monotonic in real radius.
+static func icon_tier_for(b: Dictionary) -> float:
+	var rk: float = float(b.get("real_radius_km", 0.0))
+	if rk >= 50000.0:
+		return 2.0   # giant: Jupiter, Saturn
+	if rk >= 20000.0:
+		return 1.7   # large: Uranus, Neptune
+	if rk >= 5000.0:
+		return 1.3   # medium: Venus, Earth
+	return 1.0       # small: Mercury, Mars, Pluto, asteroids
+
 static func _flyer_theta0(id: String) -> float:
 	match id:
 		"asteroid_belt":
 			return 1.1
 		"pluto":
 			return 2.4
+		# Major asteroids spread around the ring so "nearest" varies by epoch.
+		"ceres":
+			return 1.3
+		"vesta":
+			return 3.4
+		"psyche":
+			return 5.3
 		_:
 			return 0.5
 
@@ -164,10 +244,17 @@ static func flyer_body_by_id(id: String, cfg: SolarFlyerConfig = null) -> Dictio
 			return b
 	return {}
 
-## Destinations you can plot a course to (planets, belt, Pluto, and the Sun).
-## The Sun is a special hop: park at a safe standoff — never land on the star.
+## Destinations you can plot a course to (planets, major asteroids, Pluto,
+## and the Sun). The Sun is a special hop: park at a safe standoff — never
+## land on the star. The belt ring itself is NOT a destination — tapping it
+## resolves to the nearest major asteroid (nearest_major_asteroid).
 static func flyer_destinations(cfg: SolarFlyerConfig = null) -> Array:
-	return flyer_bodies(cfg)
+	var out: Array = []
+	for b in flyer_bodies(cfg):
+		if bool(b.get("belt", false)):
+			continue
+		out.append(b)
+	return out
 
 ## Planets that trace an orbit in the top-down orrery, in Sun-outward order.
 ## (The asteroid belt is drawn separately; it is not a single orbiting disc.)

@@ -42,6 +42,20 @@ func set_destination(body: Dictionary) -> void:
 	_dest_color = body.get("color", Color(0.5, 0.7, 1.0))
 	_thumb.texture = make_planet_thumb(_dest_color, 72)
 
+## Distance-bar tint per burn phase: amber while thrusting (burn/brake),
+## green while coasting, cool blue while holding for a launch window —
+## the kid-readable "engines on / off" cue.
+func set_burn_phase(phase: int) -> void:
+	if _bar_fill == null:
+		return
+	match phase:
+		OrbitMath.PHASE_COAST:
+			_bar_fill.color = Color(0.45, 0.92, 0.65, 0.95)
+		OrbitMath.PHASE_HOLD:
+			_bar_fill.color = Color(0.55, 0.72, 0.95, 0.95)
+		_:
+			_bar_fill.color = Color(0.98, 0.72, 0.28, 0.95)
+
 func update_flight(progress_u: float, heading_rad: float) -> void:
 	var fill: float = distance_bar_fill(progress_u)
 	_bar_fill.size.x = _bar_w * fill
@@ -61,11 +75,21 @@ func set_console_map(ship: Vector2, dest: Vector2, course: PackedVector2Array,
 	if _console != null:
 		_console.queue_redraw()
 
+var _callout_tween: Tween
+
 func show_callout(text: String) -> void:
 	_callout.text = text
 	_callout.modulate.a = 1.0
+	if _callout_tween != null:
+		_callout_tween.kill()
+	_callout_tween = create_tween()
+	_callout_tween.tween_interval(2.5)
+	_callout_tween.tween_property(_callout, "modulate:a", 0.0, 0.8)
 
 func clear_callout() -> void:
+	if _callout_tween != null:
+		_callout_tween.kill()
+		_callout_tween = null
 	_callout.text = ""
 
 func show_arrival_choices(place_name: String) -> void:
@@ -266,6 +290,8 @@ func _make_console() -> Control:
 			var p: Vector2 = b.get("pos", Vector2.ZERO)
 			var col: Color = b.get("color", Color(0.7, 0.7, 0.8))
 			c.draw_circle(p, 3.5, col)
+			if bool(b.get("hot", false)):
+				c.draw_arc(p, 6.5, 0.0, TAU, 20, Color(1.0, 0.85, 0.25, 0.95), 1.8)
 		if _map_pts.size() >= 2:
 			c.draw_polyline(_map_pts, Color(0.45, 0.95, 1.0, 0.9), 2.5, true)
 		c.draw_circle(_map_dest, 6.0, Color(_dest_color.r, _dest_color.g, _dest_color.b, 0.9))

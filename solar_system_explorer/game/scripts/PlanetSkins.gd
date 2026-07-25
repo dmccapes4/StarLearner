@@ -46,6 +46,53 @@ static func make_disc_texture(body_id: String, fallback: Color, diameter: int) -
 			img.set_pixel(x, y, Color(col.r * shade, col.g * shade, col.b * shade, 1.0))
 	return ImageTexture.create_from_image(img)
 
+## Recognizable navigation icon for the 3D flyer: the body's actual skin as a
+## shaded disc, plus a ring silhouette for ringed worlds (Saturn reads as
+## Saturn even as a far marker). Baked once at load; billboarded in-flight.
+static func make_icon_texture(b: Dictionary, size: int = 48) -> Texture2D:
+	var s: int = maxi(size, 16)
+	var id := str(b.get("id", ""))
+	var col: Color = b.get("color", Color(0.7, 0.7, 0.7))
+	var has_ring := bool(b.get("ring", false))
+	var disc_d: int = int(s * (0.58 if has_ring else 0.9))
+	var disc_tex := make_disc_texture(id, col, disc_d)
+	var disc_img: Image = disc_tex.get_image()
+
+	var img := Image.create(s, s, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var off := Vector2i((s - disc_d) / 2, (s - disc_d) / 2)
+	var cx := s * 0.5
+	var cy := s * 0.5
+	var ring_col := Color(0.86, 0.78, 0.55, 0.95)
+	if has_ring:
+		_icon_ring(img, cx, cy, s, ring_col, false)  # back half behind the disc
+	img.blend_rect(disc_img, Rect2i(0, 0, disc_d, disc_d), off)
+	if has_ring:
+		_icon_ring(img, cx, cy, s, ring_col, true)   # front half over the disc
+	return ImageTexture.create_from_image(img)
+
+static func _icon_ring(img: Image, cx: float, cy: float, s: int, col: Color,
+		front_half: bool) -> void:
+	var rx: float = s * 0.47
+	var ry: float = s * 0.16
+	var thick: float = maxf(s * 0.05, 1.5)
+	for y in s:
+		for x in s:
+			var py := float(y) + 0.5
+			if front_half and py < cy:
+				continue
+			if not front_half and py >= cy:
+				continue
+			var dx := (float(x) + 0.5 - cx) / rx
+			var dy := (py - cy) / ry
+			var e := sqrt(dx * dx + dy * dy)
+			# Signed distance from the ellipse edge, approximated in pixels.
+			var dist_px: float = absf(e - 1.0) * minf(rx, ry) * 2.2
+			if dist_px <= thick:
+				var a: float = clampf(1.0 - dist_px / thick, 0.0, 1.0) * col.a
+				var prev := img.get_pixel(x, y)
+				img.set_pixel(x, y, prev.blend(Color(col.r, col.g, col.b, a)))
+
 static func apply_to_material(mat: Material, body_id: String, fallback: Color) -> void:
 	var tex := texture_for(body_id)
 	if mat is StandardMaterial3D:

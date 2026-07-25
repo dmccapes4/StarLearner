@@ -14,6 +14,7 @@ var _card_facts: Label
 var _back: Button
 var _open: bool = false
 var _current_id: String = ""
+var _queue: Array = []  ## remaining chain ids (strictly sequential, one decoder)
 
 func _ready() -> void:
 	layer = 20
@@ -29,7 +30,7 @@ func _ready() -> void:
 	_player.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_player.expand = true
 	_player.visible = false
-	_player.finished.connect(_close)
+	_player.finished.connect(_on_clip_finished)
 	add_child(_player)
 
 	_card = _build_card()
@@ -42,27 +43,48 @@ func is_open() -> bool:
 	return _open
 
 func play_body(id: String) -> void:
-	if _open:
+	play_chain([id])
+
+## Play several clips back to back (e.g. an asteroid's own footage, then the
+## belt explainer). One decoder: strictly sequential; Back skips the rest of
+## the chain. Ids without a video are skipped so the chain never dead-ends on
+## a facts card mid-run — unless NOTHING has a video, then the first id's
+## card shows.
+func play_chain(ids: Array) -> void:
+	if _open or ids.is_empty():
 		return
-	var body := _find(id)
-	if body.is_empty():
-		return
+	var with_video: Array = []
+	for id in ids:
+		if ResourceLoader.exists("res://videos/%s.ogv" % str(id)):
+			with_video.append(str(id))
 	_open = true
-	_current_id = id
 	visible = true
-
-	var path := "res://videos/%s.ogv" % id
-	var stream: VideoStream = null
-	if ResourceLoader.exists(path):
-		stream = ResourceLoader.load(path, "VideoStream") as VideoStream
-
-	if stream != null:
-		_card.visible = false
-		_player.visible = true
-		_player.stream = stream
-		_player.play()
-	else:
+	if with_video.is_empty():
+		_queue = []
+		_current_id = str(ids[0])
+		var body := _find(_current_id)
+		if body.is_empty():
+			_close()
+			return
 		_show_card(body)
+		return
+	_queue = with_video
+	_play_next()
+
+func _play_next() -> void:
+	_current_id = str(_queue.pop_front())
+	var stream := ResourceLoader.load(
+		"res://videos/%s.ogv" % _current_id, "VideoStream") as VideoStream
+	_card.visible = false
+	_player.visible = true
+	_player.stream = stream
+	_player.play()
+
+func _on_clip_finished() -> void:
+	if not _queue.is_empty():
+		_play_next()
+		return
+	_close()
 
 func current_id() -> String:
 	return _current_id
@@ -84,6 +106,7 @@ func _close() -> void:
 	if not _open:
 		return
 	_open = false
+	_queue = []  # Back skips the rest of the chain
 	Narrator.stop()
 	if _player.is_playing():
 		_player.stop()
@@ -96,7 +119,7 @@ func _close() -> void:
 	_current_id = done_id  # keep last id for the flyer to park at
 
 func _find(id: String) -> Dictionary:
-	for b in SolarData.bodies():
+	for b in SolarData.bodies() + SolarData.major_asteroids():
 		if b["id"] == id:
 			return b
 	return {}

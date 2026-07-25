@@ -12,6 +12,21 @@ signal chart_course(dest_id: String)
 
 const BOOST_NUDGE := 0.08
 const ORBIT_SPEED := 0.32
+## Camera yaw from the orbit tangent toward the planet: with the 1280×600
+## canopy's ~107° horizontal FOV this parks the planet in the side third of
+## the glass (abeam-ish) while stars stream past ahead.
+const ORBIT_CAM_YAW_DEG := 48.0
+const ORBIT_ENTRY_BLEND_S := 1.6   ## seconds to blend path-forward → orbit view
+
+## Burn-phase narration (baked VO; see dump_vo_lines.gd). The lines describe
+## the ship, not passing geometry, so they can never go stale mid-flight.
+const LINE_LAUNCH := "Engines on — hold tight, we're speeding up!"
+const LINE_CRUISE := "Cruising speed!"
+const LINE_FLIP := "Halfway there — time to turn the ship around and slow down!"
+const LINE_HOLD := "Holding for our launch window…"
+const LINE_BELT := "Whoa — we're inside the asteroid belt! Watch the space rocks glide past the window."
+
+const ICON_TEX_PX := 48
 
 var _cfg: SolarFlyerConfig
 var _viewport: SubViewport
@@ -31,9 +46,20 @@ var _flying: bool = false
 var _orbiting: bool = false
 var _flight_t: float = 0.0       ## linear seconds into the hop
 var _duration: float = 20.0
+var _path_len: float = 1.0
 var _clock: float = 0.0
-var _progress_u: float = 0.0     ## eased 0..1
+var _progress_u: float = 0.0     ## burn-profile path fraction 0..1
+var _burn_phase: int = OrbitMath.PHASE_BURN
+var _slung: bool = false
 var _orbit_ang: float = 0.0
+var _orbit_dir: float = 1.0        ## ±1, chosen to match arrival velocity
+var _orbit_blend: float = 0.0      ## 0 at entry → 1 parked (camera + spiral-in)
+var _orbit_entry_rad: float = 0.0  ## actual entry distance (spirals to standoff)
+var _orbit_entry_fwd: Vector3 = Vector3.FORWARD
+var _orbit_rest: float = 1.0       ## orbital clock scale, ramps to orbit_time_scale
+var _belt_mm: MultiMeshInstance3D
+var _belt_ring_r: float = 0.0
+var _belt_called: bool = false     ## belt-crossing callout, once per hop
 var _hud: CockpitHud
 var _highlight_id: String = ""
 
@@ -78,6 +104,10 @@ func begin_flight(dest_id: String, route: Dictionary, t0: float) -> void:
 	_orbit_ang = 0.0
 	_highlight_id = ""
 	_duration = maxf(float(route.get("duration", 20.0)), 0.001)
+	_path_len = maxf(float(route.get("path_len", 1.0)), 0.001)
+	_burn_phase = OrbitMath.route_phase(0.0, route, _cfg)
+	_slung = false
+	_belt_called = false
 	_flying = true
 	_orbiting = false
 	visible = true
@@ -102,7 +132,9 @@ func begin_flight(dest_id: String, route: Dictionary, t0: float) -> void:
 	var dest := SolarData.flyer_body_by_id(dest_id, _cfg)
 	_hud.set_destination(dest)
 	_hud.update_flight(0.0, 0.0)
+	_hud.set_burn_phase(_burn_phase)
 	_update_console()
+	Narrator.speak(LINE_HOLD if _burn_phase == OrbitMath.PHASE_HOLD else LINE_LAUNCH)
 
 func show_arrival_ui() -> void:
 	var dest := SolarData.flyer_body_by_id(_dest_id, _cfg)
@@ -125,11 +157,15 @@ func _process(delta: float) -> void:
 
 	_flight_t = minf(_duration, _flight_t + delta)
 	var lin: float = clampf(_flight_t / _duration, 0.0, 1.0)
-	_progress_u = OrbitMath.ease_cubic_inout(lin)
+	_progress_u = OrbitMath.route_progress(lin, _route, _cfg)
 	_follow.progress_ratio = _progress_u
-	_clock = OrbitMath.flight_clock(_t0, float(_route.get("t_arr", 0.0)), _progress_u)
+	# duration == t_arr (plot_route invariant) → the sky runs at true rate.
+	_clock = _t0 + _flight_t
+	_update_burn_phase(lin)
+	_update_slingshot(lin)
 	_place_bodies_at(_clock)
 	_aim_camera(_progress_u)
+	_update_belt(_cam.global_position)
 	_update_lod()
 	_update_hud()
 	_update_console()
@@ -140,6 +176,36 @@ func _process(delta: float) -> void:
 		return
 	if lin >= 1.0:
 		_try_enter_orbit_from_approach(true)
+
+func _update_burn_phase(lin: float) -> void:
+	var phase := OrbitMath.route_phase(lin, _route, _cfg)
+	if phase == _burn_phase:
+		return
+	var was_hold: bool = _burn_phase == OrbitMath.PHASE_HOLD
+	_burn_phase = phase
+	_hud.set_burn_phase(phase)
+	match phase:
+		OrbitMath.PHASE_BURN:
+			if was_hold:
+				Narrator.speak(LINE_LAUNCH)
+		OrbitMath.PHASE_COAST:
+			Narrator.speak(LINE_CRUISE)
+		OrbitMath.PHASE_BRAKE:
+			Narrator.speak(LINE_FLIP)
+
+func _update_slingshot(_lin: float) -> void:
+	var sling: Dictionary = _route.get("slingshot", {})
+	if sling.is_empty():
+		if not _slung:
+			return
+		_slung = false
+		return
+	var past: bool = _progress_u * _path_len >= float(sling.get("s_cpa", INF))
+	if past and not _slung:
+		_slung = true
+		_hud.show_callout("SLINGSHOT BOOST!")
+	elif not past and _slung:
+		_slung = false
 
 func _spin_bodies(delta: float) -> void:
 	for id in _body_nodes:
@@ -162,18 +228,21 @@ func _try_enter_orbit_from_approach(force: bool = false) -> bool:
 		return false
 	_flying = false
 	_orbiting = true
+	# Tangential entry (STRATEGY §4): keep the ship exactly where it arrived —
+	# no teleport, no sunlit-side snap. The orbit direction is whichever way
+	# best matches the arrival velocity, so travel direction is continuous;
+	# the radius spirals in to the parking circle over the entry blend.
 	var rel := ship - center
 	if rel.length() < 0.001:
 		rel = -_cam.global_transform.basis.z * standoff
-	var entry_ang := atan2(rel.z, rel.x)
-	# Planets: bias toward the sunlit side. The Sun itself needs no bias —
-	# the star is the light source and glows from every angle.
-	if not bool(dest.get("is_star", false)):
-		var sun_dir := -center
-		if sun_dir.length() > 0.001:
-			var sun_ang := atan2(sun_dir.z, sun_dir.x)
-			entry_ang = lerp_angle(entry_ang, sun_ang, 0.85)
-	_orbit_ang = entry_ang
+	_orbit_ang = atan2(rel.z, rel.x)
+	_orbit_entry_rad = maxf(rel.length(), standoff * 0.6)
+	_orbit_entry_fwd = -_cam.global_transform.basis.z
+	var tang_ccw := OrbitMath.orbit_tangent(_orbit_ang, 1.0)
+	_orbit_dir = 1.0 if _orbit_entry_fwd.dot(tang_ccw) >= 0.0 else -1.0
+	_orbit_blend = 0.0
+	_orbit_rest = 1.0
+	_hud.clear_callout()
 	if _cam.get_parent() != _orbit_rig:
 		_cam.reparent(_orbit_rig, false)
 		_cam.position = Vector3.ZERO
@@ -187,13 +256,35 @@ func _enter_orbit() -> void:
 	_try_enter_orbit_from_approach(true)
 
 func _process_orbit(delta: float) -> void:
-	_clock += delta
-	_orbit_ang += delta * ORBIT_SPEED
+	# The system rests while parked: the orbital clock ramps to a near-still
+	# orbit_time_scale over ~2 s so narration plays over a calm sky. The
+	# SHIP keeps circling — that motion is ours, not the planets'.
+	_orbit_rest = maxf(_cfg.orbit_time_scale,
+		_orbit_rest - delta * (1.0 - _cfg.orbit_time_scale) / 2.0)
+	_clock += delta * _orbit_rest
+	_orbit_blend = minf(1.0, _orbit_blend + delta / ORBIT_ENTRY_BLEND_S)
+	_orbit_ang += delta * ORBIT_SPEED * _orbit_dir * _orbit_dwell_factor()
 	_place_bodies_at(_clock)
 	_place_orbit_cam()
+	_update_belt(_cam.global_position)
 	_update_lod()
 	_update_console()
 	_spin_bodies(delta)
+
+## Sunlit-side bias without a snap: the ship hurries over the night side and
+## lingers over the day side, so the parked view naturally settles where the
+## planet is lit. The Sun itself glows from every angle — no bias needed.
+func _orbit_dwell_factor() -> float:
+	var dest := SolarData.flyer_body_by_id(_dest_id, _cfg)
+	if dest.is_empty() or bool(dest.get("is_star", false)):
+		return 1.0
+	var center := OrbitMath.body_pos(dest, _clock)
+	if center.length() < 0.001:
+		return 1.0
+	var sun_dir := -center.normalized()
+	var off_dir := Vector3(cos(_orbit_ang), 0.0, sin(_orbit_ang))
+	var dayness: float = 0.5 * (off_dir.dot(sun_dir) + 1.0)
+	return lerpf(1.7, 0.55, dayness)
 
 func _place_orbit_cam() -> void:
 	var dest := SolarData.flyer_body_by_id(_dest_id, _cfg)
@@ -201,13 +292,31 @@ func _place_orbit_cam() -> void:
 		return
 	var center := OrbitMath.body_pos(dest, _clock)
 	var hero: float = float(dest.get("hero_r", 2.0))
-	var rad: float = OrbitMath.sun_approach_standoff(_cfg) \
+	var standoff: float = OrbitMath.sun_approach_standoff(_cfg) \
 		if bool(dest.get("is_star", false)) else OrbitMath.orbit_standoff(hero)
-	var off := OrbitMath.orbit_offset(_orbit_ang, rad, 0.22)
+	# Spiral in: entry radius/height ease to the parking circle as we blend.
+	var s: float = smoothstep(0.0, 1.0, _orbit_blend)
+	var rad: float = lerpf(_orbit_entry_rad, standoff, s)
+	var off := OrbitMath.orbit_offset(_orbit_ang, rad, 0.22 * s)
 	_orbit_rig.global_position = center + off
 	_cam.position = Vector3.ZERO
-	_cam.look_at(center, Vector3.UP)
-	_hud.update_flight(1.0, 0.0)
+	# Forward-facing orbit camera: look along the direction of travel, yawed
+	# toward the planet so it fills the side third of the canopy. The entry
+	# blend slerps from the arrival heading — velocity direction stays
+	# continuous through the seam (no look_at snap).
+	var tangent := OrbitMath.orbit_tangent(_orbit_ang, _orbit_dir)
+	var to_planet := (center - _orbit_rig.global_position).normalized()
+	var side: float = signf(tangent.cross(to_planet).y)
+	if side == 0.0:
+		side = 1.0
+	# Big worlds park abeam (full yaw) and fill the glass; small asteroids
+	# get less yaw so they sit inside the frame instead of half off the edge.
+	var yaw_deg: float = lerpf(28.0, ORBIT_CAM_YAW_DEG, clampf(hero / 6.0, 0.0, 1.0))
+	var parked_fwd := tangent.rotated(Vector3.UP, side * deg_to_rad(yaw_deg))
+	var fwd := _orbit_entry_fwd.slerp(parked_fwd, s)
+	if fwd.length() > 0.001:
+		_cam.look_at(_orbit_rig.global_position + fwd.normalized(), Vector3.UP)
+	_hud.update_flight(1.0, CockpitHud.heading_angle(fwd, to_planet))
 
 func _build_viewport() -> void:
 	_host = SubViewportContainer.new()
@@ -272,6 +381,9 @@ func _build_world() -> void:
 
 func _build_bodies() -> void:
 	for b in SolarData.flyer_bodies(_cfg):
+		# The belt is a rock FIELD (_build_belt), not a body — no noise ball.
+		if bool(b.get("belt", false)):
+			continue
 		var root := Node3D.new()
 		root.name = str(b["id"])
 		_bodies_root.add_child(root)
@@ -314,23 +426,19 @@ func _build_bodies() -> void:
 		outline.centered = true
 		root.add_child(outline)
 
+		# Recognizable icon billboard (constant screen size) instead of an
+		# anonymous white dot — Saturn keeps its ring silhouette.
 		var dot := Sprite3D.new()
-		dot.name = "Dot"
+		dot.name = "Icon"
 		dot.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		dot.pixel_size = 0.04
-		dot.modulate = b["color"]
-		var img := Image.create(8, 8, false, Image.FORMAT_RGBA8)
-		img.fill(Color(0, 0, 0, 0))
-		for y in 8:
-			for x in 8:
-				if Vector2(x - 3.5, y - 3.5).length() <= 3.2:
-					img.set_pixel(x, y, Color(1, 1, 1, 1))
-		dot.texture = ImageTexture.create_from_image(img)
+		dot.texture = PlanetSkins.make_icon_texture(b, ICON_TEX_PX)
+		dot.no_depth_test = true
 		root.add_child(dot)
 
 		_body_nodes[str(b["id"])] = {
 			"root": root, "sphere": mesh, "dot": dot, "outline": outline, "data": b,
-			"mesh_on": true,
+			"mesh_on": true, "tier": SolarData.icon_tier_for(b),
 		}
 
 func _make_ring_texture() -> Texture2D:
@@ -361,15 +469,41 @@ func _build_belt() -> void:
 	rock.rings = 4
 	multi.mesh = rock
 	multi.transform_format = MultiMesh.TRANSFORM_3D
-	var xforms: Array = OrbitMath.belt_transforms(float(belt["orbit_r"]), 280, 909091)
+	# 640 rocks, still one draw call; culled entirely beyond belt_cull_dist,
+	# so the Moto G only ever pays for them while actually near the ring.
+	var xforms: Array = OrbitMath.belt_transforms(float(belt["orbit_r"]), 640, 909091)
 	multi.instance_count = xforms.size()
 	for i in xforms.size():
 		multi.set_instance_transform(i, xforms[i])
 	mm.multimesh = multi
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = Color(0.62, 0.58, 0.52)
+	# Invisible until you're IN it (STRATEGY §5.1): dither-fade rocks out
+	# between belt_fade_near and belt_fade_far of the camera. Dither, not
+	# alpha — no transparency sorting cost on the Moto G.
+	mat.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_DITHER
+	mat.distance_fade_max_distance = _cfg.belt_fade_near
+	mat.distance_fade_min_distance = _cfg.belt_fade_far
 	mm.material_override = mat
 	_world.add_child(mm)
+	_belt_mm = mm
+	_belt_ring_r = float(belt["orbit_r"])
+
+## Skip the whole rock MultiMesh when the ship is far from the ring, and fire
+## the belt-crossing moment (callout + narration) the first time the camera
+## actually enters the rock field on a hop.
+func _update_belt(cam_pos: Vector3) -> void:
+	if _belt_mm == null:
+		return
+	var ring_d: float = absf(Vector2(cam_pos.x, cam_pos.z).length() - _belt_ring_r)
+	var d: float = sqrt(ring_d * ring_d + cam_pos.y * cam_pos.y)
+	_belt_mm.visible = d < _cfg.belt_cull_dist
+	# Callout only when properly INSIDE the field (0.8× the fade band), so a
+	# course that merely grazes the band never shouts over faint rocks.
+	if _flying and not _belt_called and d < _cfg.belt_fade_near * 0.8:
+		_belt_called = true
+		_hud.show_callout("ASTEROID FIELD!")
+		Narrator.speak(LINE_BELT)
 
 func _add_starfield() -> void:
 	var stars := MeshInstance3D.new()
@@ -418,25 +552,17 @@ func _place_bodies_at(at_t: float) -> void:
 		root.scale = Vector3.ONE * float(b.get("hero_r", 1.0))
 
 func _aim_camera(u: float) -> void:
-	var dest := SolarData.flyer_body_by_id(_dest_id, _cfg)
-	if dest.is_empty():
-		return
-	var w: float = OrbitMath.look_blend_weight(u)
-	if w <= 0.001:
-		return
-	var aim := OrbitMath.body_pos(dest, _clock)
-	var from: Vector3 = -_cam.global_transform.basis.z
-	var to: Vector3 = (aim - _cam.global_position)
-	if to.length() < 0.001:
-		return
-	to = to.normalized()
-	var look := from.lerp(to, w)
-	if look.length() > 0.001:
-		_cam.look_at(_cam.global_position + look, Vector3.UP)
-	# Gentle roll from path curvature (life without nausea).
-	_cam.rotation_degrees.z = sin(u * PI) * 4.0 * (1.0 - w)
+	# The camera faces the velocity vector, always: identity against the
+	# oriented PathFollow3D (its -Z is the path tangent), plus a gentle roll.
+	# No destination stare — the course ends at the intercept, so the target
+	# slides to center on final approach purely from the geometry.
+	_cam.rotation = Vector3(0.0, 0.0, deg_to_rad(sin(u * PI) * 3.0))
 
 func _update_lod() -> void:
+	# Per-body proximity rendering (STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY §3.2):
+	# beyond render_in a world is a constant-screen-size icon; crossing it, the
+	# mesh appears scale-matched to the icon's current world size and grows by
+	# genuine proximity from there — no pop, no ballooning past hero size.
 	var cam_pos: Vector3 = _cam.global_position
 	for id in _body_nodes:
 		var info: Dictionary = _body_nodes[id]
@@ -447,27 +573,40 @@ func _update_lod() -> void:
 		var outline: Sprite3D = info["outline"]
 		var hero: float = float(b.get("hero_r", 1.0))
 		var dist: float = cam_pos.distance_to(root.global_position)
-		var priority: bool = (id == _dest_id) or bool(b.get("is_star", false))
-		var mesh_on: bool = OrbitMath.lod_want_mesh_priority(
-			dist, bool(info["mesh_on"]), _cfg, priority)
-		info["mesh_on"] = mesh_on
+		var is_star: bool = bool(b.get("is_star", false))
+		var render_in: float = OrbitMath.render_in_dist(hero, _cfg)
+		var icon_w: float = OrbitMath.icon_world_size(dist, float(info["tier"]), _cfg)
+		# Small hysteresis so the icon↔mesh handoff can't flicker at the line.
+		var mesh_on: bool = is_star or OrbitMath.lod_want_mesh(
+			dist, bool(info["mesh_on"]), render_in * 0.97, render_in * 1.03)
 		var apparent: float = OrbitMath.apparent_size(dist, hero, _cfg)
-		# Destination grows toward hero size near arrival — never past standoff framing.
+		# Destination grows toward hero size near arrival — capped at 1.0× hero.
 		if id == _dest_id and (_progress_u > 0.7 or _orbiting):
-			apparent = maxf(apparent, hero * lerpf(0.85, 1.05, _progress_u))
+			mesh_on = true
+			apparent = maxf(apparent, hero * lerpf(0.85, 1.0, clampf(_progress_u, 0.0, 1.0)))
+		info["mesh_on"] = mesh_on
 		sph.visible = mesh_on
 		dot.visible = not mesh_on
-		var show_outline: bool = mesh_on and id == _dest_id and _orbiting
-		outline.visible = show_outline
-		if show_outline:
-			# Parent root already scales by `apparent` — keep pixel_size fixed so the
-			# ring stays a thin gold rim (~10% larger than the unit sphere).
-			outline.pixel_size = 0.034
+		# No gold ring in orbit — the parked world speaks for itself, and on
+		# small asteroids the ring reads as clutter. (Proximity pings live on
+		# the console, not in the sky.)
+		outline.visible = false
 		if mesh_on:
-			root.scale = Vector3.ONE * apparent
+			# The Sun never scale-matches an icon (it is always a mesh). Other
+			# worlds blend from the icon's exact world size at render_in down
+			# to true proximity size across the 20% crossfade band — the mesh
+			# literally starts as the icon and grows.
+			var scale_w: float = apparent
+			if not is_star:
+				var band0: float = render_in * 0.8
+				var w: float = clampf((dist - band0) / maxf(render_in - band0, 0.001), 0.0, 1.0)
+				scale_w = lerpf(apparent, icon_w, w)
+			if id == _dest_id and (_progress_u > 0.7 or _orbiting):
+				scale_w = maxf(scale_w, apparent)
+			root.scale = Vector3.ONE * scale_w
 		else:
 			root.scale = Vector3.ONE
-			dot.pixel_size = clampf(0.02 * (apparent / maxf(_cfg.min_dot, 0.01)), 0.02, 0.14)
+			dot.pixel_size = icon_w / float(ICON_TEX_PX)
 
 func _update_hud() -> void:
 	var dest := SolarData.flyer_body_by_id(_dest_id, _cfg)
@@ -499,11 +638,17 @@ func _update_console() -> void:
 	for b in SolarData.flyer_bodies(_cfg):
 		if bool(b.get("is_star", false)) or bool(b.get("belt", false)):
 			continue
+		var bid := str(b["id"])
+		# Gold-ping worlds that triggered the proximity render mid-cruise —
+		# the honest "look, we're passing close!" cue (no camera theft).
+		var hot: bool = (not _orbiting) and bid != _dest_id \
+			and _body_nodes.has(bid) and bool(_body_nodes[bid]["mesh_on"])
 		var wp := OrbitMath.body_pos(b, _clock)
 		bodies.append({
 			"pos": CockpitHud.console_project(wp, bmin, bmax, panel),
 			"color": b["color"],
 			"name": b["name"],
+			"hot": hot,
 		})
 	var pts := PackedVector2Array()
 	var len: float = maxf(curve.get_baked_length(), 0.001)

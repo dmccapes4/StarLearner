@@ -113,6 +113,38 @@ def asteroid_belt(u, v, seed, x, y):
     return rock if n > 0.35 else (0.08, 0.08, 0.1)
 
 
+def ceres(u, v, seed, x, y):
+    n = _hash(x // 2, y // 2, seed)
+    # Occator's famous bright salt spots.
+    spot = (u - 0.58) ** 2 + (v - 0.42) ** 2 < 0.0012 or \
+        (u - 0.62) ** 2 + (v - 0.44) ** 2 < 0.0005
+    if spot:
+        return (0.95, 0.95, 0.90)
+    crater = 1.0 - 0.30 * (1.0 if n > 0.80 else 0.0)
+    base = (0.52, 0.50, 0.46)
+    return tuple(c * crater * (0.75 + 0.25 * n) for c in base)
+
+
+def vesta(u, v, seed, x, y):
+    n = _hash(x // 2, y // 2, seed)
+    # The huge Rheasilvia mound near the south pole.
+    mound = v > 0.82 and _hash(x // 3, y // 3, seed + 5) > 0.3
+    if mound:
+        return (0.80, 0.74, 0.62)
+    crater = 1.0 - 0.35 * (1.0 if n > 0.83 else 0.0)
+    base = (0.62, 0.56, 0.46)
+    return tuple(c * crater * (0.7 + 0.3 * n) for c in base)
+
+
+def psyche(u, v, seed, x, y):
+    n = _hash(x // 2, y // 2, seed)
+    # Metal world: cool gray with mirror-bright glints.
+    glint = n > 0.92
+    if glint:
+        return (0.92, 0.94, 1.0)
+    return _mix((0.38, 0.40, 0.46), (0.62, 0.65, 0.72), n)
+
+
 def jupiter(u, v, seed, x, y):
     bands = 0.5 + 0.5 * math.sin(v * 22 * math.pi)
     n = _hash(x // 6, y // 2, seed)
@@ -156,6 +188,9 @@ SKINS = {
     "earth": earth,
     "mars": mars,
     "asteroid_belt": asteroid_belt,
+    "ceres": ceres,
+    "vesta": vesta,
+    "psyche": psyche,
     "jupiter": jupiter,
     "saturn": saturn,
     "uranus": uranus,
