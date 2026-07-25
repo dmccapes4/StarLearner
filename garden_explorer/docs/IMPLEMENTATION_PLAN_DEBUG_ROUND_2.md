@@ -98,5 +98,23 @@ original list.
   series) and the obsolete make_animal_bug_videos.sh; added android/build
   .gdignore so gradle export copies no longer shadow global classes on import.
 
+## Round 4 follow-ups (2026-07-25 eve)
+- Planting UX: seed stays in hand; each tap on a plot square plants that plot
+  (sequential, one per action) — no whole-bed autofill, no shed round-trips.
+- Bed visuals: removed the grey EmptySlot overlays (PlantLayer) and the old
+  grey slot diamonds. Beds are now a lighter wooden frame with a dark
+  fresh-soil interior and two perpendicular furrow lines splitting the soil
+  into four iso plot squares (tap targets).
+- Dog: root cause of the "rat" — the dog spawns via RoamingAnimal with
+  animals.json scale 1.25; the old 3.3 fix sat in never-instantiated
+  RoamingDog.gd (deleted). Replaced the unreadable grey sheet with a hand-drawn
+  golden puppy (4 dirs × 4 frames, floppy ears, red collar, wagging tail),
+  scale → 1.5. Roaming verified: all 4 directions, 12 distinct frames sampled.
+  Portrait regenerated to match (red collar).
+- Demos: playthrough now plants all four bed_0 plots by tapping plot squares,
+  then fills and grows all six beds ("beautiful garden" overview shot).
+  Explainer narration updated (hold-a-seed planting, Buddy the puppy, fill all
+  six beds); intro.ogv + explainer.mp4 rebuilt.
+
 ## Always
 - Headless unit tests + ux_suite after each phase; rebuild APK & install last.

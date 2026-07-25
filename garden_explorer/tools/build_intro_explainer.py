@@ -27,10 +27,11 @@ import gen_garden_vo as vo  # noqa: E402
 
 SCRIPT = [
     "Welcome to Garden Explorer! This is your very own garden to grow and explore.",
-    "Tap the shed to pick out seeds, then plant them in the soft garden beds.",
+    "Tap the shed to pick out a seed. Keep it in your hand and plant every square you like — tap a plot in a garden bed, and your seed goes right in.",
     "Give your little seeds a drink of water, and watch them sprout and grow big and strong.",
+    "Fill all six beds and grow a big, beautiful garden of your very own.",
     "When your plants are ripe, harvest them, and learn what makes each one special.",
-    "Say hello to the farm animals in the pen, and meet the friendly dog in the yard!",
+    "Say hello to the farm animals in the pen, and meet Buddy, the friendly puppy in the yard!",
     "Keep an eye out for garden bugs. Tap one to catch it and add it to your bug collection.",
     "As the seasons change from spring to winter, your whole garden changes too.",
     "Open the star menu any time to watch fun videos about plants, bugs, and animals.",

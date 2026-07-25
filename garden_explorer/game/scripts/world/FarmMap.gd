@@ -462,46 +462,70 @@ func _build_beds() -> void:
 		_add_poly(id + "_wall_w", faces[0], Color(0.62, 0.42, 0.22, 1.0), z + 1)
 		_add_poly(id + "_wall_e", faces[1], Color(0.48, 0.30, 0.14, 1.0), z + 2)
 
-		## Soil top (raised)
+		## Bed top: lighter wooden frame with dark freshly-turned soil inside.
 		var top := IsoUtil.raise_poly(base, BED_HEIGHT)
-		var soil := _add_poly(id, top, Color(0.38, 0.24, 0.12, 1.0), z + 3)
+		_add_poly(id, top, Color(0.55, 0.36, 0.18, 1.0), z + 3)
+		var soil_poly := IsoUtil.raise_poly(IsoUtil.diamond_polygon(tile, half * 0.86), BED_HEIGHT)
+		var soil := _add_poly(id + "_soil", soil_poly, Color(0.30, 0.185, 0.09, 1.0), z + 4)
 		if sprites:
 			var ttex := sprites.tilled_texture()
 			if ttex:
 				soil.texture = ttex
 				soil.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 
-		## Inner lip (rim of the planter)
-		var lip := IsoUtil.raise_poly(IsoUtil.diamond_polygon(tile, half * 0.90), BED_HEIGHT - 2.0)
-		_add_poly(id + "_lip", lip, Color(0.55, 0.36, 0.18, 0.85), z + 4)
-
-		_add_slot_markers(id, tile, half, z + 5)
+		## Two perpendicular furrows split the soil into four iso plots — clean
+		## "plant here" squares, no grey overlay.
+		_add_plot_grid(id, tile, half, z + 5)
+		_add_slot_markers(id, tile, half)
 
 ## Iso half-size (in tiles) of one "plant here" patch. Kept comfortably inside
 ## the bed lip (half * 0.90) and clear of the neighboring slot.
 const SLOT_MARKER_HALF := Vector2(0.22, 0.155)
 
-func _add_slot_markers(bed_id: String, tile: Vector2, half: Vector2, z: int) -> void:
+func _add_slot_markers(bed_id: String, tile: Vector2, half: Vector2) -> void:
+	## Logical plot centers (hit/path targets) — geometry only, drawn as the grid.
 	var positions: Array = []
 	for i in SLOT_OFFSETS.size():
 		var slot_tile: Vector2 = tile + SLOT_OFFSETS[i] * half
-		## Hit/path targets stay on the ground footprint so zone_at still works.
-		var ground: Vector2 = IsoUtil.tile_to_world(slot_tile)
-		positions.append(ground)
-		## Darker, freshly-turned soil patch on the soil-top plane — a warm
-		## brown "plant here" cue (no grey overlay).
-		_add_poly(
-			"%s_slot_%d" % [bed_id, i],
-			IsoUtil.raise_poly(IsoUtil.diamond_polygon(slot_tile, SLOT_MARKER_HALF), BED_HEIGHT),
-			Color(0.27, 0.165, 0.075, 1.0),
-			z
-		)
+		positions.append(IsoUtil.tile_to_world(slot_tile))
 	slot_positions[bed_id] = positions
 
+func _add_plot_grid(bed_id: String, tile: Vector2, half: Vector2, z: int) -> void:
+	## Divide the soil-top diamond into four iso squares with two furrow lines
+	## through the center (midpoint of each edge to the opposite edge midpoint).
+	var top := IsoUtil.raise_poly(IsoUtil.diamond_polygon(tile, half * 0.82), BED_HEIGHT)
+	var n := top[0]
+	var e := top[1]
+	var s := top[2]
+	var w := top[3]
+	var m_ne := (n + e) * 0.5
+	var m_es := (e + s) * 0.5
+	var m_sw := (s + w) * 0.5
+	var m_wn := (w + n) * 0.5
+	var furrow := Color(0.16, 0.10, 0.05, 0.9)
+	_add_line("%s_grid_a" % bed_id, [m_wn, m_es], furrow, z)
+	_add_line("%s_grid_b" % bed_id, [m_ne, m_sw], furrow, z)
+
+func _add_line(node_name: String, pts: Array, color: Color, z: int) -> Line2D:
+	var line := Line2D.new()
+	line.name = node_name
+	line.points = PackedVector2Array(pts)
+	line.width = 3.0
+	line.default_color = color
+	line.joint_mode = Line2D.LINE_JOINT_ROUND
+	line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	line.end_cap_mode = Line2D.LINE_CAP_ROUND
+	line.antialiased = true
+	line.z_index = z
+	add_child(line)
+	return line
+
 func slot_marker_poly(bed_id: String, slot: int) -> PackedVector2Array:
-	## For UI validation: the drawn marker polygon for a slot.
-	var p := get_node_or_null("%s_slot_%d" % [bed_id, slot]) as Polygon2D
-	return p.polygon if p else PackedVector2Array()
+	## For UI validation: the logical plot diamond for a slot (drawn as grid).
+	var tile: Vector2 = bed_tiles.get(bed_id, Vector2.ZERO)
+	var half: Vector2 = bed_halves.get(bed_id, Vector2.ZERO)
+	var slot_tile: Vector2 = tile + SLOT_OFFSETS[slot] * half
+	return IsoUtil.raise_poly(IsoUtil.diamond_polygon(slot_tile, SLOT_MARKER_HALF), BED_HEIGHT)
 
 func bed_soil_top_poly(bed_id: String) -> PackedVector2Array:
 	var tile: Vector2 = bed_tiles.get(bed_id, Vector2.ZERO)

@@ -56,21 +56,9 @@ func _refresh_slot(bed_id: String, slot: int) -> void:
 	node.position = plant_pos if not pid.is_empty() else ground + Vector2(0, -FarmMap.BED_HEIGHT + 4)
 	node.z_index = IsoUtil.depth_from_y(ground.y) + 40
 
-	## Empty slot: subtle iso grey square so kids see where to plant.
+	## Empty slot: no overlay — the bed's furrow grid already marks the four
+	## plots; the keyed node stays so refresh bookkeeping is uniform.
 	if pid.is_empty():
-		var pad := Polygon2D.new()
-		pad.name = "EmptySlot"
-		pad.color = Color(0.55, 0.58, 0.62, 0.55)
-		pad.polygon = PackedVector2Array([
-			Vector2(0, -12), Vector2(16, 0), Vector2(0, 12), Vector2(-16, 0),
-		])
-		node.add_child(pad)
-		var lip := Polygon2D.new()
-		lip.color = Color(0.78, 0.80, 0.84, 0.42)
-		lip.polygon = PackedVector2Array([
-			Vector2(0, -8), Vector2(11, 0), Vector2(0, 8), Vector2(-11, 0),
-		])
-		node.add_child(lip)
 		add_child(node)
 		_nodes[key] = node
 		return
