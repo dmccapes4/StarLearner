@@ -1,10 +1,10 @@
 extends Node
-## Solar System Explorer — preview flow controller.
+## Solar System Explorer — flow controller.
 ##
-##   Title ─▶ Orrery tour ─▶ Astronaut briefing
-##      ─▶ [3D flyer] ScrollView strip ─▶ top-down PlotBoard ─▶ FlyScene (orbit)
+##   Title (two tiles)
+##      ─▶ Spaceship ─▶ Astronaut briefing ─▶ ScrollView ─▶ PlotBoard ─▶ FlyScene
 ##           ─▶ optional Video ─▶ ScrollView again
-##      ─▶ [legacy]   ScrollView strip ─▶ Video
+##      ─▶ Solar System ─▶ Orrery tour ─▶ back to Title
 ##
 ## Flip USE_3D_FLYER to false for strip → video only (no 3D hop).
 
@@ -48,8 +48,9 @@ func _ready() -> void:
 	add_child(_video)
 	add_child(_astro)
 
-	_title.start_pressed.connect(_on_start)
-	_orrery.tour_finished.connect(_begin_astronaut)
+	_title.flight_pressed.connect(_on_flight)
+	_title.explainer_pressed.connect(_on_explainer)
+	_orrery.tour_finished.connect(_show_title)
 	_orrery.go_home.connect(_show_title)
 	_scroll.go_home.connect(_show_title)
 	_scroll.body_selected.connect(_on_body_selected)
@@ -65,7 +66,11 @@ func _ready() -> void:
 	_hide_all_views()
 	_set_view(_title)
 
-func _on_start() -> void:
+func _on_flight() -> void:
+	_show_scroll()
+	_astro.begin()
+
+func _on_explainer() -> void:
 	_set_view(_orrery)
 	_orrery.begin_tour()
 
@@ -73,10 +78,6 @@ func _show_title() -> void:
 	_orrery.stop_tour()
 	_fly.set_active(false)
 	_set_view(_title)
-
-func _begin_astronaut() -> void:
-	_show_scroll()
-	_astro.begin()
 
 func _on_astro_finished() -> void:
 	pass

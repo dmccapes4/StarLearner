@@ -14,18 +14,21 @@ planets for a young child, with a full 3D flyer loop (plot → fly → orbit).
 
 ## The flow
 
-1. **Title → START.** A star-field title screen with one big START button.
+1. **Launch hub — two tiles.** A star-field home screen with two large choices:
+   - **Spaceship** → the 3D flight simulation (briefing → strip → plot → fly → orbit).
+   - **Solar System** → the narrated orrery explainer tour. When the tour ends (or you tap
+     **◀** / **Skip ▶**), you're back at the hub — flight is a separate choice.
 2. **Orrery (top-down).** The Sun with the eight planets tracing flattened ellipses, plus the
    **asteroid belt** as a scattered ring between Mars and Jupiter. A voice walks the tour
    (Mercury → Mars → asteroid belt → Jupiter → Neptune) naming a couple of facts, highlighting the
-   one it's on. A **Skip ▶** jumps ahead; **◀** returns home.
-3. **Astronaut briefing.** A cartoon astronaut girl (helmet under one arm, waving) in front of her
-   spaceship, with a spoken *"you are an astronaut…"* briefing. The overlay fades out to reveal the
-   fly screen underneath. **Tap to skip.**
-4. **3D flyer (default).** The original **horizontal ScrollView** strip (now with rotating planet
-   skins) — swipe, tap a world, watch the ship glide over. Then a **top-down** board charts the
-   intercept course. Cockpit flight with skinned spheres, course console, callouts, and **orbit**
-   on arrival. **Learn more** (optional video) or **Chart a new course** back to the strip.
+   one it's on.
+3. **Astronaut briefing** (Spaceship path). A cartoon astronaut girl (helmet under one arm, waving)
+   in front of her spaceship, with a spoken *"you are an astronaut…"* briefing. The overlay fades
+   out to reveal the fly screen underneath. **Tap to skip.**
+4. **3D flyer.** The **horizontal ScrollView** strip (rotating planet skins) — swipe, tap a world,
+   watch the ship glide over. Then a **top-down** board charts the intercept course. Cockpit flight
+   with skinned spheres, course console, callouts, and **orbit** on arrival. **Learn more**
+   (optional video) or **Chart a new course** back to the strip.
    Design: [`docs/STRATEGY_3D_FLYER.md`](docs/STRATEGY_3D_FLYER.md).
 5. **Body video (optional).** From orbit, **Learn more** plays `res://videos/<id>.ogv`. Big **◀**
    Back; the clip auto-closes when it finishes. Missing clips fall back to a spoken **"video coming

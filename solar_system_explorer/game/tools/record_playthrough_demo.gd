@@ -6,7 +6,7 @@ extends SceneTree
 ##     --write-movie /tmp/solar_playthrough.avi \
 ##     -s res://tools/record_playthrough_demo.gd
 ##
-## Beats: title → orrery tour (short) → astronaut → scroll → plot Mars → fly →
+## Beats: title hub → Spaceship → astronaut → scroll → plot Mars → fly →
 ## orbit → chart again → plot Sun → fly → arrive.
 
 const FPS := 24.0
@@ -21,22 +21,12 @@ func _run() -> void:
 	root.add_child(main)
 	await process_frame
 	await process_frame
-	print("DEMO: title")
+	print("DEMO: title hub")
 	await _sec(2.0)
 
-	# START
-	if main.has_method("_on_start"):
-		main.call("_on_start")
-	else:
-		main._on_start()
-	print("DEMO: orrery tour")
-	# Let a few planets narrate, then skip ahead via tour_finished path.
-	await _sec(14.0)
-	var orrery = main.get("_orrery")
-	if orrery != null and orrery.has_method("stop_tour"):
-		orrery.stop_tour()
-	if main.has_method("_begin_astronaut"):
-		main._begin_astronaut()
+	# Spaceship tile → flight sim (astronaut briefing + strip).
+	if main.has_method("_on_flight"):
+		main._on_flight()
 	print("DEMO: astronaut + scroll")
 	await _sec(8.0)
 
