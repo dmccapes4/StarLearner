@@ -63,6 +63,18 @@ chmod 755 "$BIN"
 # Kill prior instance
 killall antphone_tunnel 2>/dev/null || true
 "$BIN" -user "$HUB_USER" -host "$HUB_HOST" -key "$KEY" \
-  -listen 127.0.0.1:5555 -local 127.0.0.1:5555 &
+    -listen 127.0.0.1:5555 -local 127.0.0.1:5555 &
 echo "tunnel pid $!"
+
+# --- pull-based updater (hub.starlearner.app on 245) ---
+UPD=$ANT/antphone_updater
+UPD_CONF=$ANT/updater.conf
+if [ -x "$UPD" ] && [ -f "$UPD_CONF" ]; then
+  killall antphone_updater 2>/dev/null || true
+  "$UPD" -conf "$UPD_CONF" &
+  echo "updater pid $!"
+else
+  echo "updater not installed (skip)"
+fi
+
 echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) agent armed"

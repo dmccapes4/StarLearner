@@ -1,0 +1,50 @@
+# Star Learner hub on 245 — template.
+# Real copy (token baked in) lives at C:\Users\dylan\antphone\server\Caddyfile
+# and in tools/secrets/hub245/ on 82. __TOKEN__ = tools/secrets/hub245/token.txt.
+#
+# TLS today: self-signed cert (agent pins its SPKI). Once DNS is on a
+# provider with an API, switch to a caddy build with the matching dns plugin
+# and `tls { dns <provider> <token> }` for real Let's Encrypt certs.
+
+{
+	admin off
+	auto_https off
+}
+
+:8443 {
+	tls C:/Users/dylan/antphone/server/certs/hub.crt C:/Users/dylan/antphone/server/certs/hub.key
+
+	log {
+		output file C:/Users/dylan/antphone/server/access.log
+	}
+
+	# Auth gate: handle blocks run in written order, so this must stay first
+	# (a bare `respond` directive would be ordered after `handle` by Caddy).
+	@noauth {
+		not header Authorization "Bearer __TOKEN__"
+	}
+	handle @noauth {
+		respond 403
+	}
+
+	# Update artifacts: APKs + catalog.json straight from the staging dir.
+	handle_path /starlearner/files/* {
+		root * C:/Users/dylan/antphone/staging
+		file_server
+	}
+
+	handle /starlearner/manifest.json {
+		root * C:/Users/dylan/antphone/server
+		rewrite * /manifest.json
+		file_server
+	}
+
+	# Goal 4: model gateway to the 4090's Ollama (WSL, relayed on localhost).
+	handle_path /api/llm/* {
+		reverse_proxy localhost:11434
+	}
+
+	handle {
+		respond 404
+	}
+}

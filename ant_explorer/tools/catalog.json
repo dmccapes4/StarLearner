@@ -20,7 +20,7 @@
       "tile": "tile_garden",
       "enter_name": "Garden Explorer",
       "enter_line": "You are entering Garden Explorer",
-      "video": "garden_explorer_playthrough.mp4"
+      "video": "garden_explorer_explainer.mp4"
     },
     {
       "id": "solar",

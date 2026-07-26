@@ -180,6 +180,46 @@ Documentary sourcing and the 12 topics:
 
 ---
 
+## Full appliance deployment
+
+`tools/full_deploy.sh` is the canonical release path. By default it:
+
+1. builds and signs the launcher plus Ant, Garden, Solar, Math, and Language APKs;
+2. validates package IDs, all five launcher drawables, catalog completeness, and each
+   Godot `project.binary`;
+3. creates a portable, SHA-256-manifested bundle under
+   `ant_explorer/tools/build/full_deploy/`;
+4. installs games first and the launcher last without clearing game progress;
+5. replaces the catalog and all five launcher explainer videos in both Android-readable
+   locations, clearing only the launcher's derived video cache;
+6. restores HOME/immersive/brightness/charging policy; and
+7. verifies every package is launchable, every media size matches, the launcher is
+   focused, and (on a production unit) device-owner lock-task is `LOCKED`.
+
+```bash
+# Build everything and deploy to the one USB device attached here
+./tools/full_deploy.sh
+
+# Or target an explicit local serial
+./tools/full_deploy.sh --serial ZL8326FWKM
+
+# Build and validate the portable bundle without touching a device
+./tools/full_deploy.sh --prepare-only
+
+# Transfer that same bundle to 245, deploy to fogona over 245 USB, and publish
+# identical APK/catalog artifacts into the starlearner.app OTA staging catalog
+./tools/deploy_via_245.sh
+```
+
+Production fogona deployment uses `--require-kiosk`; a personal/test phone with Android
+accounts can receive the complete launcher/games/media set but cannot become device owner
+without removing those accounts or factory-resetting. Game saves are always preserved.
+
+Detailed device, WSL/Windows-adb bridge, OTA, and recovery notes:
+[`ant_explorer/docs/STRATEGY_ANT_PHONE_UPDATES.md`](ant_explorer/docs/STRATEGY_ANT_PHONE_UPDATES.md).
+
+---
+
 ## Repository layout
 
 ```
@@ -194,9 +234,12 @@ star_learning/                 ← platform / repo (this catalog)
 ├── solar_system_explorer/     ← Game #2: Solar System Explorer
 │   ├── game/                  ← Godot 4.3 project (scripts, videos, images, tests)
 │   └── tools/                 ← YouTube clip ingest pipeline + APK build
-└── math_explorer/             ← Game #3: Math Explorer (preview)
-    ├── docs/                  ← strategy + asset plan
-    └── game/                  ← Godot 4.3 project (scripts, tests, procedural cube widgets)
+├── math_explorer/             ← Math Explorer
+├── garden_explorer/           ← Garden Explorer
+├── language_explorer/         ← Language Explorer
+└── tools/
+    ├── full_deploy.sh         ← canonical build/bundle/USB deploy
+    └── deploy_via_245.sh      ← 82 → 245 → fogona USB + OTA publish
 ```
 
 Agents do not use host `sudo`; anything requiring root is handed to the maintainer as a script
