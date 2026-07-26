@@ -107,7 +107,7 @@ func _refit_board_scale() -> void:
 		max_r = maxf(max_r, float(origin.get("orbit_r", 0.0)))
 	if not target.is_empty():
 		max_r = maxf(max_r, float(target.get("orbit_r", 0.0)))
-	# Course bows outward ~35% of span — leave room so Uranus isn't clipped.
+	# Measure the actual arc — its radius is bounded by the endpoint orbits.
 	if not route.is_empty() and route.has("curve"):
 		var curve: Curve3D = route["curve"]
 		var n: int = curve.get_point_count()

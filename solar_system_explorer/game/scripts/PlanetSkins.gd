@@ -53,6 +53,8 @@ static func make_icon_texture(b: Dictionary, size: int = 48) -> Texture2D:
 	var s: int = maxi(size, 16)
 	var id := str(b.get("id", ""))
 	var col: Color = b.get("color", Color(0.7, 0.7, 0.7))
+	if bool(b.get("is_star", false)):
+		return _sun_marker_texture(s)
 	var has_ring := bool(b.get("ring", false))
 	var disc_d: int = int(s * (0.58 if has_ring else 0.9))
 	var disc_tex := make_disc_texture(id, col, disc_d)
@@ -69,6 +71,28 @@ static func make_icon_texture(b: Dictionary, size: int = 48) -> Texture2D:
 	img.blend_rect(disc_img, Rect2i(0, 0, disc_d, disc_d), off)
 	if has_ring:
 		_icon_ring(img, cx, cy, s, ring_col, true)   # front half over the disc
+	return ImageTexture.create_from_image(img)
+
+## The Sun's marker is not a rendering of the Sun — it is a bright yellow
+## ball with a soft glow halo, unmistakable and bigger than every other
+## marker (its recognition tier outranks them all).
+static func _sun_marker_texture(s: int) -> Texture2D:
+	var img := Image.create(s, s, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var c: float = s * 0.5
+	var core: float = s * 0.30
+	var halo: float = s * 0.48
+	for y in s:
+		for x in s:
+			var d: float = Vector2(x + 0.5 - c, y + 0.5 - c).length()
+			if d <= core:
+				# Hot center fading to pure yellow at the ball's edge.
+				var t: float = d / core
+				img.set_pixel(x, y, Color(1.0, lerpf(0.98, 0.85, t),
+					lerpf(0.75, 0.15, t), 1.0))
+			elif d <= halo:
+				var a: float = pow(1.0 - (d - core) / (halo - core), 2.0) * 0.8
+				img.set_pixel(x, y, Color(1.0, 0.82, 0.25, a))
 	return ImageTexture.create_from_image(img)
 
 static func _icon_ring(img: Image, cx: float, cy: float, s: int, col: Color,

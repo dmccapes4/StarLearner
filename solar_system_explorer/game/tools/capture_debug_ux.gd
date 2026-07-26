@@ -81,19 +81,14 @@ func _run() -> void:
 		fly._orbiting = false
 		fly._highlight_id = ""
 		await process_frame
-		if u_i >= 75:
-			fly._try_enter_orbit_from_approach(false)
-		await process_frame
 		await _shot(dir + "/30_fly_u%03d.png" % u_i)
-		if fly._orbiting:
-			await _shot(dir + "/30_fly_entered_orbit.png")
-			break
-	if not fly._orbiting:
-		fly._try_enter_orbit_from_approach(true)
+	# Orbit entry is baked into the timeline's final frame — jump to it.
+	fly._enter_orbit()
+	await _shot(dir + "/30_fly_entered_orbit.png")
 	for ang_i in 4:
 		fly._orbit_ang = float(ang_i) * 0.7
 		fly._place_orbit_cam()
-		fly._update_lod()
+		fly._update_markers()
 		for i in 4:
 			await process_frame
 		await _shot(dir + "/40_orbit_%02d.png" % ang_i)

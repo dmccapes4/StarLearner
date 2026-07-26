@@ -100,51 +100,23 @@ static func burn_phase(u_time: float, d: float, cfg: SolarFlyerConfig) -> int:
 		return PHASE_BRAKE
 	return PHASE_COAST
 
-# ── Plot-time collision sweep, deflection, slingshot (STRATEGY §3.3–3.4) ──
+# ── Plot-time navigation simulation (sim-first, STRATEGY §3) ─────────
+# The course is REAL physics on a curved TRANSFER ARC around the Sun (see
+# build_course) flown with the burn profile. The whole hop is then SIMULATED
+# at plot time at a fixed step: ship via the burn profile, worlds via their
+# orbits. The sim's timeline (positions, headings, events, orbit entry) is
+# ground truth — the renderer plays it back and never re-derives geometry.
 
-const SLINGSHOT_HERO_MIN := 6.0   ## big worlds only (Jupiter, Saturn)
-const SLINGSHOT_BOOST := 1.3      ## v_max multiplier after the swing
-const FLYBY_WINDOW_K := 7.0       ## CPA < 7·hero_r counts as a flyby
+## Fixed simulation step (game seconds). 30 Hz over a ≤60 s hop is ≤1800
+## frames — trivial memory, exact enough for every event we narrate.
+const SIM_DT := 1.0 / 30.0
 
-## Launch-window candidates tried when a hop can't sweep clean at t=0 —
-## real missions wait for windows too (the compressed system makes inner-world
-## conjunctions genuinely undodgeable by geometry alone).
-const LAUNCH_WINDOWS: Array = [0.0, 2.0, 4.0, 6.0, 8.0]
-
-## Safe separation from a world's center — outside its largest rendered size.
-static func clearance_for(hero_r: float) -> float:
-	return 2.2 * hero_r + 2.0
-
-## Clearance capped by the body's ring gap to its orbital neighbours: in the
-## compressed system Venus's ideal clearance (11.0) exceeds the Venus–Earth
-## gap (10.1), which would make conjunction launches impossible by contract.
-## Never drops below 1.6 × hero (safely outside the rendered sphere).
-static func clearance_for_body(b: Dictionary, cfg: SolarFlyerConfig) -> float:
-	if bool(b.get("is_star", false)):
-		return cfg.sun_clearance
-	var hero: float = float(b.get("hero_r", 1.0))
-	var my_r: float = float(b.get("orbit_r", 0.0))
-	var gap := INF
-	for o in SolarData.flyer_bodies(cfg):
-		if str(o.get("id", "")) == str(b.get("id", "")) or bool(o.get("is_star", false)):
-			continue
-		var d: float = absf(float(o.get("orbit_r", 0.0)) - my_r)
-		if d > 0.001:
-			gap = minf(gap, d)
-	return maxf(minf(clearance_for(hero), gap * 0.85), hero * 1.6)
-
-## Bodies the sweep must respect on a hop: everything except the origin (we
-## launch from its standoff), the destination (the course ends there), and the
-## belt pseudo-body (a ring, not a point — its rocks are scenery, not hazards).
-static func sweep_bodies_for(origin_id: String, dest_id: String,
-		cfg: SolarFlyerConfig) -> Array:
-	var out: Array = []
-	for b in SolarData.flyer_bodies(cfg):
-		var id := str(b.get("id", ""))
-		if id == origin_id or id == dest_id or bool(b.get("belt", false)):
-			continue
-		out.append(b)
-	return out
+## Space is EMPTY: planets are POINTS compared to the gulf between them, so
+## the flown arc never hits anything (and its radius never drops below the
+## inner endpoint's orbit, so the Sun is cleared by construction). There is
+## NO collision detection, no launch holds, and no flyby machinery — the sim
+## records ship kinematics and burn phases; the renderer draws every world
+## as a sized icon marker at its true bearing.
 
 ## Inverse of burn_dist_at: time at which the ship has covered path distance s.
 static func burn_time_at_dist(s: float, d: float, cfg: SolarFlyerConfig) -> float:
@@ -161,298 +133,133 @@ static func burn_time_at_dist(s: float, d: float, cfg: SolarFlyerConfig) -> floa
 		return total - sqrt(2.0 * maxf(dist - ss, 0.0) / a)
 	return t_ramp + (ss - s_ramp) / vp
 
-## Trip time when everything after the slingshot CPA (path distance s_cpa)
-## runs `boost`× faster — same geometry, hotter engine.
-static func boosted_travel_time(d: float, s_cpa: float, boost: float,
-		cfg: SolarFlyerConfig) -> float:
-	var t_cpa: float = burn_time_at_dist(s_cpa, d, cfg)
-	return t_cpa + (burn_travel_time(d, cfg) - t_cpa) / maxf(boost, 0.001)
-
-## Path progress under the boosted profile at wall-time fraction u_time.
-static func boosted_progress(u_time: float, d: float, s_cpa: float, boost: float,
-		cfg: SolarFlyerConfig) -> float:
-	var dist: float = maxf(d, 0.001)
-	var total: float = boosted_travel_time(dist, s_cpa, boost, cfg)
-	var t: float = clampf(u_time, 0.0, 1.0) * total
-	var t_cpa: float = burn_time_at_dist(s_cpa, dist, cfg)
-	var t_plain: float = t if t <= t_cpa else t_cpa + (t - t_cpa) * maxf(boost, 0.001)
-	return clampf(burn_dist_at(t_plain, dist, cfg) / dist, 0.0, 1.0)
-
-const PHASE_HOLD := 3   ## parked at the launch point, waiting for a window
-
-## Flight-only trip time for a route shape (excludes any launch hold).
+## Trip time for a route shape — pure burn profile, launches are immediate.
 static func route_flight_time(route: Dictionary, cfg: SolarFlyerConfig) -> float:
-	var d: float = maxf(float(route.get("path_len", 1.0)), 0.001)
-	var sl: Dictionary = route.get("slingshot", {})
-	if sl.is_empty():
-		return burn_travel_time(d, cfg)
-	return boosted_travel_time(d, float(sl.get("s_cpa", d * 0.5)),
-		float(sl.get("boost", SLINGSHOT_BOOST)), cfg)
+	return burn_travel_time(maxf(float(route.get("path_len", 1.0)), 0.001), cfg)
 
-## Route-aware progress: launch hold (parked), then the burn profile, with the
-## slingshot boost applied when the hop has one.
+## Route-aware progress along the plain burn profile.
 static func route_progress(u_time: float, route: Dictionary, cfg: SolarFlyerConfig) -> float:
-	var d: float = maxf(float(route.get("path_len", 1.0)), 0.001)
-	var delay: float = maxf(float(route.get("launch_delay", 0.0)), 0.0)
-	var t_flight: float = route_flight_time(route, cfg)
-	var total: float = delay + t_flight
-	var t: float = clampf(u_time, 0.0, 1.0) * total
-	if t <= delay:
-		return 0.0
-	var uf: float = (t - delay) / maxf(t_flight, 0.001)
-	var sl: Dictionary = route.get("slingshot", {})
-	if sl.is_empty():
-		return burn_progress(uf, d, cfg)
-	return boosted_progress(uf, d, float(sl.get("s_cpa", d * 0.5)),
-		float(sl.get("boost", SLINGSHOT_BOOST)), cfg)
+	return burn_progress(clampf(u_time, 0.0, 1.0),
+		maxf(float(route.get("path_len", 1.0)), 0.001), cfg)
 
-## Route-aware burn phase (hold → burn → coast → brake; slingshot remaps time).
+## Route-aware burn phase (burn → coast → brake).
 static func route_phase(u_time: float, route: Dictionary, cfg: SolarFlyerConfig) -> int:
-	var d: float = maxf(float(route.get("path_len", 1.0)), 0.001)
-	var delay: float = maxf(float(route.get("launch_delay", 0.0)), 0.0)
-	var t_flight: float = route_flight_time(route, cfg)
-	var total: float = delay + t_flight
-	var t: float = clampf(u_time, 0.0, 1.0) * total
-	if t < delay:
-		return PHASE_HOLD
-	var tf: float = t - delay
-	var sl: Dictionary = route.get("slingshot", {})
-	if sl.is_empty():
-		return burn_phase(tf / maxf(t_flight, 0.001), d, cfg)
-	var boost: float = float(sl.get("boost", SLINGSHOT_BOOST))
-	var s_cpa: float = float(sl.get("s_cpa", d * 0.5))
-	var t_cpa: float = burn_time_at_dist(s_cpa, d, cfg)
-	var t_plain: float = tf if tf <= t_cpa else t_cpa + (tf - t_cpa) * boost
-	return burn_phase(t_plain / maxf(burn_travel_time(d, cfg), 0.001), d, cfg)
+	return burn_phase(clampf(u_time, 0.0, 1.0),
+		maxf(float(route.get("path_len", 1.0)), 0.001), cfg)
 
-## True moving-target sweep: sample the hop uniformly in TIME (ship via the
-## burn profile, worlds via their orbits at the same clock) and record each
-## body's closest approach. route_like needs path_len (+ slingshot if any).
-static func sweep_course(curve: Curve3D, route_like: Dictionary, bodies: Array,
-		t0: float, cfg: SolarFlyerConfig, steps: int = 100) -> Array:
-	var out: Array = []
-	var clen: float = maxf(curve.get_baked_length(), 0.001)
-	var dur: float = maxf(float(route_like.get("duration",
-		burn_travel_time(clen, cfg))), 0.001)
-	var delay: float = maxf(float(route_like.get("launch_delay", 0.0)), 0.0)
-	for b in bodies:
-		var best_sep := INF
-		var best_u := 0.0
-		for i in steps + 1:
-			var u_t: float = float(i) / float(steps)
-			# While holding for the launch window the ship is docked at the
-			# origin world — passing traffic is not a collision hazard there.
-			if u_t * dur < delay:
-				continue
-			var p := curve.sample_baked(route_progress(u_t, route_like, cfg) * clen)
-			var q := body_pos(b, t0 + u_t * dur)
-			var sep: float = p.distance_to(q)
-			if sep < best_sep:
-				best_sep = sep
-				best_u = u_t
-		var hero: float = float(b.get("hero_r", 1.0))
-		var clear: float = clearance_for_body(b, cfg)
-		var klass := "clear"
-		if best_sep < clear:
-			klass = "conflict"
-		elif best_sep < FLYBY_WINDOW_K * hero:
-			klass = "flyby"
-		out.append({
-			"id": str(b.get("id", "")), "min_sep": best_sep, "u_cpa": best_u,
-			"clearance": clear, "class": klass, "hero_r": hero,
-			"is_star": bool(b.get("is_star", false)),
-		})
-	return out
+## Distance from a point to the belt's rock band (torus centerline circle).
+static func belt_band_dist(p: Vector3, ring_r: float) -> float:
+	var rd: float = absf(Vector2(p.x, p.z).length() - ring_r)
+	return sqrt(rd * rd + p.y * p.y)
 
-## Smooth lateral bump: displace the course's sampled points along `dir` with a
-## cos² window centered at path progress p_cpa. Endpoints stay pinned so the
-## launch point and the intercept never move. Negative mag pulls TOWARD a body
-## (slingshot skim). Returns a rebuilt Curve3D.
-static func deflect_course(curve: Curve3D, p_cpa: float, dir: Vector3, mag: float,
-		width: float = 0.12) -> Curve3D:
-	var out := Curve3D.new()
-	var n: int = curve.get_point_count()
-	for i in n:
-		var p := curve.get_point_position(i)
-		var pu: float = float(i) / float(maxi(n - 1, 1))
-		var x: float = (pu - p_cpa) / maxf(width, 0.001)
-		var bump: float = 0.0
-		if absf(x) < 1.0:
-			bump = pow(cos(x * PI * 0.5), 2.0)
-		# Pin the endpoints (launch + intercept are promises).
-		bump *= clampf(pu / 0.08, 0.0, 1.0) * clampf((1.0 - pu) / 0.08, 0.0, 1.0)
-		out.add_point(p + dir * (mag * bump))
-	return out
-
-## Sweep + deflect + slingshot until the course is clean (≤ max_passes; the
-## field is sparse, it settles fast). Returns {curve, duration, sweeps,
-## deflections, slingshot}.
-## Try the candidate deflection sides (radially away from the body, and both
-## path perpendiculars) against the ACTUAL moving-target sweep, then keep the
-## side that best restores clearance — tie-broken toward the Sun-away option
-## so outward-bound courses never get shoved into the inner system.
-static func _deflect_best_side(cur: Curve3D, route_like: Dictionary, body: Dictionary,
-		t0: float, cfg: SolarFlyerConfig, center: float, width: float, mag: float,
-		rel: Vector3, p_cpa: float, clen: float) -> Curve3D:
-	var tang := (cur.sample_baked(minf(p_cpa * clen + 1.0, clen))
-		- cur.sample_baked(maxf(p_cpa * clen - 1.0, 0.0)))
-	tang.y = 0.0
-	var candidates: Array = []
-	if rel.length() > 0.001:
-		candidates.append(rel.normalized())
-	if tang.length() > 0.001:
-		var perp := Vector3(-tang.z, 0.0, tang.x).normalized()
-		candidates.append(perp)
-		candidates.append(-perp)
-	if candidates.is_empty():
-		candidates.append(Vector3.RIGHT)
-	var best_curve: Curve3D = cur
-	var best_score := -INF
-	var clear: float = clearance_for_body(body, cfg)
-	for dir in candidates:
-		var trial := deflect_course(cur, center, dir, mag, width)
-		var sw := sweep_course(trial, route_like, [body], t0, cfg, 60)
-		var sep: float = float(sw[0]["min_sep"]) if not sw.is_empty() else 0.0
-		# Separation first (capped once safely clear), Sun distance second.
-		var score: float = minf(sep, clear + 3.0) * 10.0 \
-			+ course_min_sun_dist(trial) * 0.5
-		if score > best_score:
-			best_score = score
-			best_curve = trial
-	return best_curve
-
-## Attenuation of a deflection bump at path progress p for a bump centered at
-## `center` (cos² window × endpoint pinning) — used to size the magnitude so
-## the SHIP at CPA actually moves by the full requested amount.
-static func _bump_effect(p: float, center: float, width: float) -> float:
-	var x: float = (p - center) / maxf(width, 0.001)
-	if absf(x) >= 1.0:
-		return 0.0
-	var e: float = pow(cos(x * PI * 0.5), 2.0)
-	return e * clampf(p / 0.08, 0.0, 1.0) * clampf((1.0 - p) / 0.08, 0.0, 1.0)
-
-static func refine_course(curve: Curve3D, t0: float, cfg: SolarFlyerConfig,
-		sweep_bodies: Array, launch_delay: float = 0.0, max_passes: int = 6) -> Dictionary:
-	var cur := curve
-	var slingshot: Dictionary = {}
-	var deflections: Array = []
-	var sweeps: Array = []
-	for _pass in max_passes:
-		var clen: float = maxf(cur.get_baked_length(), 0.001)
-		var route_like := {"path_len": clen, "slingshot": slingshot,
-			"launch_delay": launch_delay}
-		route_like["duration"] = launch_delay + route_flight_time(route_like, cfg)
-		sweeps = sweep_course(cur, route_like, sweep_bodies, t0, cfg)
-		# Pick the worst offender this pass: conflicts first, then a big-world
-		# flyby we can turn into a slingshot (one per hop).
-		var act: Dictionary = {}
-		for s in sweeps:
-			if s["class"] == "conflict":
-				if act.is_empty() or float(s["min_sep"]) - float(s["clearance"]) \
-						< float(act["min_sep"]) - float(act["clearance"]):
-					act = s
-		if act.is_empty() and slingshot.is_empty():
-			for s in sweeps:
-				if s["class"] == "flyby" and not bool(s["is_star"]) \
-						and float(s["hero_r"]) >= SLINGSHOT_HERO_MIN:
-					act = s
-					break
-		if act.is_empty():
-			break
-		var dur: float = float(route_like["duration"])
-		var u_cpa: float = float(act["u_cpa"])
-		var p_cpa: float = route_progress(u_cpa, route_like, cfg)
-		var ship_at := cur.sample_baked(p_cpa * clen)
-		var body := SolarData.flyer_body_by_id(str(act["id"]), cfg)
-		var body_at := body_pos(body, t0 + u_cpa * dur)
-		var rel := ship_at - body_at
-		rel.y = 0.0
-		var big: bool = float(act["hero_r"]) >= SLINGSHOT_HERO_MIN \
-			and not bool(act["is_star"])
-		# CPAs near the endpoints get their bump attenuated by pinning —
-		# recenter slightly downstream and compensate the magnitude so the
-		# ship at CPA moves by the full requested amount.
-		var width := 0.2
-		var center: float = clampf(p_cpa, 0.10, 0.90)
-		var eff: float = maxf(_bump_effect(p_cpa, center, width), 0.30)
-		if big:
-			# Slingshot: snap the course to SKIM the clearance sphere (pull in
-			# or push out to the skim radius) and boost the rest of the hop.
-			var skim: float = float(act["clearance"]) * 1.15
-			var dir := rel.normalized() if rel.length() > 0.001 else Vector3.RIGHT
-			cur = deflect_course(cur, center, dir,
-				(skim - float(act["min_sep"])) / eff, width)
-			slingshot = {"id": str(act["id"]), "boost": SLINGSHOT_BOOST}
-		else:
-			var mag: float = (float(act["clearance"]) - float(act["min_sep"]) + 2.0) / eff
-			cur = _deflect_best_side(cur, route_like, body, t0, cfg,
-				center, width, mag, rel, p_cpa, clen)
-			deflections.append({"id": str(act["id"]), "mag": mag})
-	var final_len: float = maxf(cur.get_baked_length(), 0.001)
-	if not slingshot.is_empty():
-		# Locate the final CPA arc-length for the boost handoff (plain flight
-		# timing; the hold just offsets the clock).
-		var body := SolarData.flyer_body_by_id(str(slingshot["id"]), cfg)
-		var best_sep := INF
-		var best_p := 0.5
-		var dur0: float = burn_travel_time(final_len, cfg)
-		for i in 101:
-			var u_t: float = float(i) / 100.0
-			var pr: float = burn_progress(u_t, final_len, cfg)
-			var sep: float = cur.sample_baked(pr * final_len).distance_to(
-				body_pos(body, t0 + launch_delay + u_t * dur0))
-			if sep < best_sep:
-				best_sep = sep
-				best_p = pr
-		slingshot["s_cpa"] = best_p * final_len
-		slingshot["min_sep"] = best_sep
-	var shape := {"path_len": final_len, "slingshot": slingshot,
-		"launch_delay": launch_delay}
-	return {
-		"curve": cur, "duration": launch_delay + route_flight_time(shape, cfg),
-		"sweeps": sweeps, "deflections": deflections, "slingshot": slingshot,
-		"launch_delay": launch_delay,
-	}
-
-## Damped fixed-point intercept under the burn profile. Fast inner planets
-## (Mercury) move quicker than the ship, so the naive iteration is
-## non-contractive — the 0.5 damping restores convergence; iterations are
-## capped and the scene stays self-consistent regardless (the clock, the
-## course endpoint, and the ghost all use the same t).
-static func solve_intercept_burn(ship_pos: Vector3, target: Dictionary, t0: float,
-		cfg: SolarFlyerConfig, depart_standoff: float = 0.0) -> Dictionary:
-	var t: float = burn_travel_time(
-		ship_pos.distance_to(body_pos(target, t0)), cfg)
-	for _i in maxi(cfg.intercept_iters, 4):
-		var aim := body_pos(target, t0 + t)
-		var coarse := build_course(ship_pos, aim, 16, depart_standoff)
-		var t_new: float = burn_travel_time(coarse.get_baked_length(), cfg)
-		if absf(t_new - t) < 0.02:
-			t = t_new
-			break
-		t = 0.5 * (t + t_new)
-	return {"arrival_pos": body_pos(target, t0 + t), "t_arr": t}
-
-## Quadratic Bézier bowed outward from the Sun so courses don't cut through it.
-## depart_standoff trims the start so we launch from outside the origin planet
-## instead of its center (no "backing out of the planet" on takeoff).
+## Physics course: a TRANSFER ARC around the Sun, the way real interplanetary
+## trajectories read. In heliocentric polar coordinates the bearing sweeps
+## from the launch point to the intercept point while the orbital radius
+## eases from the origin's orbit to the destination's — a smooth curved arc,
+## never a straight line. Because the radius stays between the two endpoint
+## radii, the arc can never dive at the Sun; no clearance bow is needed.
 static func build_course(ship_pos: Vector3, arrival_pos: Vector3,
 		samples: int = 48, depart_standoff: float = 0.0) -> Curve3D:
 	var span: float = ship_pos.distance_to(arrival_pos)
-	var start := ship_pos
-	if depart_standoff > 0.001 and span > 0.001:
-		var trim: float = minf(depart_standoff, span * 0.3)
-		start = ship_pos + (arrival_pos - ship_pos).normalized() * trim
-	var mid := (start + arrival_pos) * 0.5
-	var out_dir := mid.normalized() if mid.length() > 0.001 else Vector3.FORWARD
-	var ctrl := mid + out_dir * (span * 0.35)
+	if span < 0.01:
+		# Degenerate candidate (close conjunction sweeps the parking sphere
+		# over the ship during the intercept scan): keep the curve non-zero
+		# so Curve3D's up-vector baking never sees coincident points.
+		arrival_pos = ship_pos + Vector3(0.01, 0.0, 0.0)
+		span = 0.01
+	var r0: float = maxf(ship_pos.length(), 0.01)
+	var r1: float = maxf(arrival_pos.length(), 0.01)
+	var th0: float = atan2(ship_pos.z, ship_pos.x)
+	var dth: float = wrapf(atan2(arrival_pos.z, arrival_pos.x) - th0, -PI, PI)
 	var curve := Curve3D.new()
 	var n: int = maxi(samples, 2)
+	# Launch trim: skip the first stretch of the arc so the course starts
+	# outside the origin planet's standoff (capped at 30% of the span so a
+	# short hop keeps a real cruise). Binary search the exact arc parameter
+	# at that distance from the ship.
+	var u0: float = 0.0
+	var trim: float = minf(depart_standoff, span * 0.3)
+	if trim > 0.001 and _arc_pt(r0, r1, th0, dth, 0.5).distance_to(ship_pos) > trim:
+		var hi := 0.5
+		var lo := 0.0
+		for _i in 24:
+			var mid: float = (lo + hi) * 0.5
+			if _arc_pt(r0, r1, th0, dth, mid).distance_to(ship_pos) >= trim:
+				hi = mid
+			else:
+				lo = mid
+		u0 = hi
 	for i in n + 1:
-		var u := float(i) / float(n)
-		var p := start.lerp(ctrl, u).lerp(ctrl.lerp(arrival_pos, u), u)
-		curve.add_point(p)
+		var u: float = lerpf(u0, 1.0, float(i) / float(n))
+		curve.add_point(_arc_pt(r0, r1, th0, dth, u))
+	# The intercept endpoint is exact — never let sampling round it off.
+	curve.set_point_position(curve.get_point_count() - 1, arrival_pos)
 	return curve
+
+## Point on the transfer arc at parameter u: linear radius + linear sweep =
+## an Archimedean spiral segment. Curvature keeps ONE sign the whole way
+## (a clean swept arc, never an S-wiggle), and the radius stays bounded by
+## the endpoint orbits — the arc can never dive at the Sun.
+static func _arc_pt(r0: float, r1: float, th0: float, dth: float, u: float) -> Vector3:
+	var r: float = lerpf(r0, r1, u)
+	var th: float = th0 + dth * u
+	return Vector3(cos(th) * r, 0.0, sin(th) * r)
+
+## Run the whole hop at SIM_DT: ship along the course via the burn profile,
+## worlds on their orbits at the same clock. Produces the ground-truth
+## timeline the renderer plays back: positions, headings, burn-phase events,
+## and the exact orbit-entry state (the course END is the parking radius by
+## construction). Nothing else — worlds are points, there is nothing to
+## detect or dodge.
+static func simulate_route(curve: Curve3D, target: Dictionary, t0: float,
+		t_fly: float, cfg: SolarFlyerConfig) -> Dictionary:
+	var clen: float = maxf(curve.get_baked_length(), 0.001)
+	var total: float = maxf(t_fly, 0.001)
+	var steps: int = maxi(int(ceil(total / SIM_DT)), 2)
+	var pos := PackedVector3Array()
+	var fwd := PackedVector3Array()
+	var events: Array = []
+	var min_sun := INF
+	var phase_prev := -99
+	var last_fwd := Vector3.RIGHT
+	for k in steps + 1:
+		var t: float = minf(float(k) * SIM_DT, total)
+		var uf: float = t / total
+		# burn_progress is endpoint-normalized: the playback lands ON the
+		# curve end (the parking sphere) at exactly t = t_fly.
+		var s: float = burn_progress(uf, clen, cfg) * clen
+		var ph: int = burn_phase(uf, clen, cfg)
+		var p := curve.sample_baked(s)
+		var ahead := curve.sample_baked(minf(s + 0.75, clen))
+		var f := ahead - p
+		if f.length() < 0.001:
+			f = last_fwd
+		else:
+			f = f.normalized()
+			last_fwd = f
+		pos.append(p)
+		fwd.append(f)
+		min_sun = minf(min_sun, p.length())
+		if ph != phase_prev:
+			events.append({"t": t, "kind": "phase", "phase": ph})
+			phase_prev = ph
+	# Orbit-entry state at the timeline's end. The course ends ON the parking
+	# sphere, so entry radius == standoff exactly — no recoil, no spiral-out.
+	var end_p: Vector3 = pos[pos.size() - 1]
+	var center := Vector3.ZERO if bool(target.get("is_star", false)) \
+		else body_pos(target, t0 + total)
+	var rel := end_p - center
+	var ang: float = atan2(rel.z, rel.x)
+	var efwd: Vector3 = fwd[fwd.size() - 1]
+	var dir: float = 1.0 if efwd.dot(orbit_tangent(ang, 1.0)) >= 0.0 else -1.0
+	return {
+		"timeline": {
+			"dt": SIM_DT, "pos": pos, "fwd": fwd, "events": events,
+			"entry": {"pos": end_p, "fwd": efwd, "rad": rel.length(),
+				"ang": ang, "dir": dir},
+		},
+		"min_sun_dist": min_sun,
+	}
 
 ## Minimum distance from the Sun (origin) along a sampled course.
 static func course_min_sun_dist(curve: Curve3D) -> float:
@@ -464,25 +271,15 @@ static func course_min_sun_dist(curve: Curve3D) -> float:
 			best = d
 	return best
 
-## Apparent size LOD (STRATEGY §3.3): far → min_dot, near → hero_r.
-## Soft far presence + accelerating bloom near focus_dist so approach feels
-## dramatic. Hard-capped at hero_r — passing worlds must never balloon past
-## their true hero size (it read as the camera rubber-necking).
-static func apparent_size(dist: float, hero_r: float, cfg: SolarFlyerConfig) -> float:
-	var d: float = maxf(dist, 0.001)
-	var ratio: float = cfg.focus_dist / d
-	# Compress the mid-range so growth ramps hard in the last stretch.
-	var u: float = clampf(pow(ratio, 0.72), 0.0, 1.0)
-	return clampf(hero_r * u, cfg.min_dot, hero_r)
-
-## Proximity render trigger: bigger worlds bloom from farther away.
-static func render_in_dist(hero_r: float, cfg: SolarFlyerConfig) -> float:
-	return clampf(cfg.render_in_k * hero_r, cfg.render_in_min, cfg.render_in_max)
-
-## World-space size of a constant-screen-size icon billboard at camera
-## distance `dist` for a body of icon tier `tier`.
-static func icon_world_size(dist: float, tier: float, cfg: SolarFlyerConfig) -> float:
-	return maxf(cfg.icon_scale * maxf(dist, 0.001) * tier, 0.3)
+## MARKERS, not planets: every world is drawn as a small legible icon of
+## CONSTANT screen size REGARDLESS OF PROXIMITY, sized only by a simple
+## recognition tier (Jupiter reads double Earth, the Sun a bright yellow ball
+## bigger than everything). Markers are identifiers for where a world is —
+## honest little dots on the sky — never a rendering of the world itself.
+## The ONLY time any real geometry appears is the destination's cinematic
+## approach and orbit; everything else stays a marker forever.
+static func marker_world_size(dist: float, tier: float, cfg: SolarFlyerConfig) -> float:
+	return maxf(cfg.icon_scale * maxf(dist, 0.001) * tier, 0.05)
 
 ## Safe parking distance outside the Sun's hero sphere (never dive into the star).
 static func sun_approach_standoff(cfg: SolarFlyerConfig) -> float:
@@ -592,17 +389,6 @@ static func trip_narration(origin: Dictionary, dest: Dictionary, route: Dictiona
 	var cross := _trip_cross_sentence(origin, dest, cfg)
 	if not cross.is_empty():
 		line += " " + cross
-	# Slingshot / steer-wide claims come straight from the refined course —
-	# spoken only when the sweep actually bent the trajectory.
-	var sling: Dictionary = route.get("slingshot", {})
-	if not sling.is_empty():
-		line += " " + _trip_slingshot_sentence(_spoken_body_name(str(sling["id"]), cfg))
-	else:
-		var defl: Array = route.get("deflections", [])
-		if not defl.is_empty():
-			line += " " + _trip_steer_sentence(_spoken_body_name(str(defl[0]["id"]), cfg))
-	if float(route.get("launch_delay", 0.0)) > 0.01:
-		line += " " + _trip_window_sentence()
 	line += " " + _trip_aim_sentence(dest_name)
 	# Honest bonus lesson: a fast inner world can lap the Sun before we arrive.
 	# Claimed only when the measured trip time × the body's omega proves it.
@@ -615,16 +401,6 @@ static func _spoken_body_name(id: String, cfg: SolarFlyerConfig) -> String:
 	if bool(b.get("is_star", false)):
 		return "the Sun"  # mid-sentence, not the display name "The Sun"
 	return str(b.get("name", id))
-
-static func _trip_slingshot_sentence(body_name: String) -> String:
-	return ("We'll slingshot around %s — its gravity gives us a speed boost!"
-		% body_name)
-
-static func _trip_steer_sentence(body_name: String) -> String:
-	return "We'll steer wide of %s to keep a safe distance." % body_name
-
-static func _trip_window_sentence() -> String:
-	return "Traffic ahead — we'll hold for a clear launch window first."
 
 static func _trip_lap_sentence(dest_name: String) -> String:
 	return ("%s is so quick it will zoom all the way around the Sun " +
@@ -687,15 +463,6 @@ static func trip_narration_sentences_all(origin: Dictionary, dest: Dictionary,
 		out.append(cross)
 	out.append(_trip_aim_sentence(dest_name))
 	out.append(_trip_lap_sentence(dest_name))
-	# Slingshot / steer variants for every possible flyby world on this pair.
-	for b in SolarData.flyer_bodies(cfg):
-		if bool(b.get("belt", false)):
-			continue
-		var nm := _spoken_body_name(str(b["id"]), cfg)
-		if float(b.get("hero_r", 0.0)) >= SLINGSHOT_HERO_MIN and not bool(b.get("is_star", false)):
-			out.append(_trip_slingshot_sentence(nm))
-		out.append(_trip_steer_sentence(nm))
-	out.append(_trip_window_sentence())
 	return out
 
 ## Hop duration from path length under the burn profile. NO clamp — the
@@ -714,79 +481,102 @@ static func snapshot_angles(bodies: Array, t0: float) -> Dictionary:
 		out[id] = float(b.get("theta0", 0.0)) + float(b.get("omega", 0.0)) * t0
 	return out
 
-## Full plot package for destination select (Beat A).
-## depart_standoff (game units) trims the launch point clear of the origin planet.
-## The Sun is a fixed target: we aim at a safe standoff on the approach radial,
-## never the star's center.
-## sweep_bodies (all worlds except origin + destination) activates the plot-time
-## collision sweep, lateral deflection, and slingshot (STRATEGY §3.3–3.4) —
-## the refine pass runs INSIDE the intercept iteration so the charted time
-## already includes every swerve and boost.
-## Invariant: duration == t_arr — the wall-clock flight and the orbital clock
-## are the SAME time, so the charted intercept and the flown sky always agree.
+## Full plot package for destination select (Beat A) — SIM-FIRST.
+## 1. Intercept: solve the arrival time so the course ends ON the
+##    destination's parking sphere (orbit standoff) exactly when the planet
+##    gets there. The Sun is a fixed target at a radial standoff.
+## 2. Geometry: a transfer arc that sweeps around the Sun between the two
+##    orbits (build_course) — real curved trajectory, no hand-drawn swerves,
+##    and NO collision dodging: worlds are points and space is empty.
+## 3. Simulation: the whole hop runs at SIM_DT; the timeline (positions,
+##    headings, phase events, orbit entry) is ground truth for the renderer.
+## Invariant: duration == t_arr — wall-clock flight and orbital clock agree.
+##
+## The intercept solves f(T) = burn_time(course_length(T)) − T = 0: the time
+## physics needs to fly the course must equal the time the planet needs to
+## reach its end. A damped fixed-point iteration is NOT contractive for fast
+## inner planets (Mercury laps faster than we fly), so we scan T for the
+## first sign change and bisect — always converges, honest endpoint.
 static func plot_route(ship_pos: Vector3, target: Dictionary, t0: float,
-		cfg: SolarFlyerConfig, depart_standoff: float = 0.0,
-		sweep_bodies: Array = []) -> Dictionary:
+		cfg: SolarFlyerConfig, depart_standoff: float = 0.0) -> Dictionary:
 	var star: bool = bool(target.get("is_star", false))
+	var dest_stand: float = sun_approach_standoff(cfg) if star \
+		else orbit_standoff(float(target.get("hero_r", 2.0)))
 	var fixed_arrival := Vector3.ZERO
 	if star:
-		var stand := sun_approach_standoff(cfg)
 		var radial := ship_pos if ship_pos.length() > 0.001 else Vector3.RIGHT
-		fixed_arrival = radial.normalized() * stand
+		fixed_arrival = radial.normalized() * dest_stand
 
-	# Launch-window loop: if a hop can't sweep clean at the tapped moment
-	# (fast inner worlds at conjunction are genuinely undodgeable), hold at
-	# the launch point and try again a little later — like real missions.
-	var best: Dictionary = {}
-	var best_conflicts: int = 1 << 30
-	var windows: Array = LAUNCH_WINDOWS if not sweep_bodies.is_empty() else [0.0]
-	for delay in windows:
-		var t: float = float(delay) + burn_travel_time(ship_pos.distance_to(
-			fixed_arrival if star else body_pos(target, t0)), cfg)
-		var refined: Dictionary = {}
-		var arrival := fixed_arrival
-		for _i in maxi(cfg.intercept_iters, 4):
-			arrival = fixed_arrival if star else body_pos(target, t0 + t)
-			var c := build_course(ship_pos, arrival, cfg.course_samples, depart_standoff)
-			if sweep_bodies.is_empty():
-				refined = {
-					"curve": c,
-					"duration": burn_travel_time(c.get_baked_length(), cfg),
-					"sweeps": [], "deflections": [], "slingshot": {},
-					"launch_delay": 0.0,
-				}
-			else:
-				refined = refine_course(c, t0, cfg, sweep_bodies, float(delay))
-			var t_new: float = float(refined["duration"])
-			if absf(t_new - t) < 0.02:
-				t = t_new
-				break
-			t = 0.5 * (t + t_new)
-		var conflicts := 0
-		for s in refined.get("sweeps", []):
-			if str(s["class"]) == "conflict":
-				conflicts += 1
-		if conflicts < best_conflicts:
-			best_conflicts = conflicts
-			best = {"refined": refined, "t": t, "arrival": arrival}
-		if conflicts == 0:
+	var t_max: float = burn_travel_time(ship_pos.length()
+		+ float(target.get("orbit_r", 0.0)) + dest_stand + 60.0, cfg) + 4.0
+	var lo: float = 0.05
+	var hi: float = -1.0
+	var prev_t: float = lo
+	var prev_err: float = _hop_err(prev_t, ship_pos, target, t0, cfg,
+		depart_standoff, dest_stand, fixed_arrival, star)
+	var scan_steps := 48
+	for k in range(1, scan_steps + 1):
+		var t: float = lo + (t_max - lo) * float(k) / float(scan_steps)
+		var err: float = _hop_err(t, ship_pos, target, t0, cfg,
+			depart_standoff, dest_stand, fixed_arrival, star)
+		if prev_err > 0.0 and err <= 0.0:
+			lo = prev_t
+			hi = t
 			break
-
-	var refined: Dictionary = best["refined"]
-	var t_final: float = float(best["t"])
-	var curve: Curve3D = refined["curve"]
+		prev_t = t
+		prev_err = err
+	var t_fly: float = t_max
+	if hi > 0.0:
+		for _i in 32:
+			var mid: float = (lo + hi) * 0.5
+			if _hop_err(mid, ship_pos, target, t0, cfg, depart_standoff,
+					dest_stand, fixed_arrival, star) > 0.0:
+				lo = mid
+			else:
+				hi = mid
+		t_fly = (lo + hi) * 0.5
+	var planet_arr := fixed_arrival if star else body_pos(target, t0 + t_fly)
+	var curve := build_course(ship_pos,
+		_hop_entry(planet_arr, ship_pos, dest_stand, star),
+		cfg.course_samples, depart_standoff)
+	var sim := simulate_route(curve, target, t0, t_fly, cfg)
 	return {
-		"arrival_pos": best["arrival"],
-		"t_arr": t_final,
+		"arrival_pos": planet_arr,
+		"t_arr": t_fly,
 		"curve": curve,
 		"path_len": curve.get_baked_length(),
-		"duration": t_final,
-		"min_sun_dist": course_min_sun_dist(curve),
-		"sweeps": refined["sweeps"],
-		"deflections": refined["deflections"],
-		"slingshot": refined["slingshot"],
-		"launch_delay": refined.get("launch_delay", 0.0),
+		"duration": t_fly,
+		"min_sun_dist": float(sim["min_sun_dist"]),
+		"timeline": sim["timeline"],
 	}
+
+## Course endpoint for a planet at planet_arr: the point of its parking
+## sphere on the ship's side of the planet. Stars are already aimed at a
+## fixed standoff. The course ALWAYS ends on the sphere — at a close
+## conjunction (ship already inside the sphere) the hop is the short leg
+## outward to it. Length |d − standoff| is continuous in T, so the intercept
+## root-finder stays honest; only d ≈ 0 (ship at the planet's center) would
+## flip the bearing, and that never occurs.
+static func _hop_entry(planet_arr: Vector3, ship_pos: Vector3,
+		dest_stand: float, star: bool) -> Vector3:
+	if star:
+		return planet_arr
+	var app := planet_arr - ship_pos
+	var d: float = app.length()
+	if d < 0.001:
+		return planet_arr
+	return planet_arr - app.normalized() * dest_stand
+
+## Intercept residual at candidate flight time T. Full-sample geometry so the
+## solved time matches the final course length EXACTLY (duration honesty).
+static func _hop_err(T: float, ship_pos: Vector3, target: Dictionary, t0: float,
+		cfg: SolarFlyerConfig, depart_standoff: float,
+		dest_stand: float, fixed_arrival: Vector3, star: bool) -> float:
+	var planet_arr := fixed_arrival if star else body_pos(target, t0 + T)
+	var c := build_course(ship_pos,
+		_hop_entry(planet_arr, ship_pos, dest_stand, star),
+		cfg.course_samples, depart_standoff)
+	return burn_travel_time(c.get_baked_length(), cfg) - T
 
 # ── Phase 3 flight helpers (headless-testable) ──────────────────────
 
@@ -808,26 +598,6 @@ static func path_sample(curve: Curve3D, progress_u: float) -> Vector3:
 	var len: float = maxf(curve.get_baked_length(), 0.001)
 	return curve.sample_baked(clampf(progress_u, 0.0, 1.0) * len)
 
-## LOD hysteresis: turn mesh ON inside mesh_in, OFF only past mesh_out.
-static func lod_want_mesh(dist: float, currently_on: bool, mesh_in: float,
-		mesh_out: float) -> bool:
-	if dist < mesh_in:
-		return true
-	if dist > mesh_out:
-		return false
-	return currently_on
-
-## Prefer mesh longer for the Sun / active destination (bloom framing).
-static func lod_want_mesh_priority(dist: float, currently_on: bool, cfg: SolarFlyerConfig,
-		priority: bool) -> bool:
-	var out: float = cfg.mesh_out * (1.6 if priority else 1.0)
-	var inn: float = cfg.mesh_in
-	return lod_want_mesh(dist, currently_on, inn, out)
-
-## Camera look blend weight: 0 = path-forward, 1 = stare at destination.
-static func look_blend_weight(progress_u: float, start: float = 0.35) -> float:
-	return smoothstep(start, 1.0, clampf(progress_u, 0.0, 1.0))
-
 ## Harmless BOOST: nudge linear flight time forward (seconds of hop).
 static func apply_boost(flight_t: float, duration: float, nudge_ratio: float = 0.08) -> float:
 	var dur: float = maxf(duration, 0.001)
@@ -840,18 +610,56 @@ static func ship_to_dest_dist(curve: Curve3D, progress_u: float, dest: Dictionar
 	var clock := flight_clock(t0, t_arr, progress_u)
 	return ship.distance_to(body_pos(dest, clock))
 
-## Deterministic belt rock transforms (MultiMesh). Returns Array of Transform3D.
-static func belt_transforms(orbit_r: float, count: int = 280, seed: int = 909091) -> Array:
+## Belt rock ENCOUNTER — a per-flight cinematic, not persistent scenery.
+## The only belt objects the game tracks (marks, meshes, narrates) are the
+## three NAMED asteroids; the field itself is a sparse handful of small dark
+## rocks — plus one big one that drifts by — procedurally scattered around
+## the flown path wherever it crosses the ring, with a fresh seed every
+## flight so each passthrough looks different. Rendering the whole ring
+## looked ridiculous; a few rocks sliding past make the real objects matter.
+## Every rock is offset ≥ BELT_ROCK_CLEARANCE perpendicular to the course,
+## so the pre-determined array can never collide with the camera.
+const BELT_CORRIDOR := 45.0        ## path-to-ring distance that counts as a crossing
+const BELT_ROCK_CLEARANCE := 5.0
+const BELT_ROCKS_SMALL := 26
+const BELT_ROCKS_BIG := 1
+
+static func belt_encounter_transforms(path: PackedVector3Array, ring_r: float,
+		seed: int) -> Array:
 	var out: Array = []
+	if path.size() < 2 or ring_r <= 0.001:
+		return out
+	# Contiguous stretch of the flown path inside the ring corridor.
+	var i0 := -1
+	var i1 := -1
+	for i in path.size():
+		if belt_band_dist(path[i], ring_r) < BELT_CORRIDOR:
+			if i0 < 0:
+				i0 = i
+			i1 = i
+	if i0 < 0 or i1 <= i0:
+		return out
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed
-	for i in count:
+	for k in BELT_ROCKS_SMALL + BELT_ROCKS_BIG:
+		var big: bool = k >= BELT_ROCKS_SMALL
+		var i: int = rng.randi_range(i0, maxi(i1 - 1, i0))
+		var f: Vector3 = path[mini(i + 1, path.size() - 1)] - path[i]
+		f = f.normalized() if f.length() > 0.001 else Vector3.RIGHT
+		var side: Vector3 = f.cross(Vector3.UP)
+		if side.length() < 0.5:
+			side = Vector3.RIGHT
+		side = side.normalized()
+		# Offset strictly perpendicular to the local course direction: the
+		# rock glides past the window, never through it.
 		var ang: float = rng.randf() * TAU
-		var rr: float = orbit_r + rng.randf_range(-9.0, 9.0)
-		var y: float = rng.randf_range(-2.0, 2.0)
-		var s: float = rng.randf_range(0.5, 1.8)
-		var sy: float = s * rng.randf_range(0.6, 1.2)
-		var xf := Transform3D.IDENTITY.scaled(Vector3(s, sy, s))
-		xf.origin = Vector3(cos(ang) * rr, y, sin(ang) * rr)
+		var off: Vector3 = side * cos(ang) + Vector3.UP * sin(ang)
+		var r_off: float = rng.randf_range(8.0, 14.0) if big \
+			else rng.randf_range(BELT_ROCK_CLEARANCE, 30.0)
+		var s: float = rng.randf_range(3.2, 4.8) if big \
+			else rng.randf_range(0.25, 1.0)
+		var xf := Transform3D.IDENTITY.scaled(
+			Vector3(s, s * rng.randf_range(0.6, 1.1), s))
+		xf.origin = path[i] + off * r_off
 		out.append(xf)
 	return out

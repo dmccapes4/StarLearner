@@ -14,16 +14,14 @@ const OVERRIDE_PATHS := [
 const OVERRIDE_KEYS := [
 	"distance_base", "distance_span", "compression_exp", "a_max_au",
 	"hero_min", "hero_max", "sun_hero_r",
-	"focus_dist", "min_dot", "mesh_in", "mesh_out",
 	"cruise_speed", "game_year_seconds", "sun_clearance",
 	"hop_min_s", "hop_max_s", "course_samples", "intercept_iters",
-	"burn_accel", "v_max",
-	"render_in_k", "render_in_min", "render_in_max", "icon_scale",
-	"orbit_time_scale", "belt_fade_near", "belt_fade_far", "belt_cull_dist",
+	"burn_accel", "v_max", "icon_scale",
+	"orbit_time_scale", "belt_fade_near", "belt_fade_far",
 ]
 
 @export var distance_base: float = 12.0
-@export var distance_span: float = 340.0
+@export var distance_span: float = 420.0
 @export var compression_exp: float = 0.45
 @export var a_max_au: float = 39.5
 
@@ -31,19 +29,11 @@ const OVERRIDE_KEYS := [
 @export var hero_max: float = 12.0
 @export var sun_hero_r: float = 16.0
 
-@export var focus_dist: float = 26.0
-@export var min_dot: float = 0.55
-@export var mesh_in: float = 60.0
-@export var mesh_out: float = 170.0
-
-## Proximity rendering (STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY §3): a world
-## renders as a mesh only inside render_in = clamp(k · hero_r, min, max);
-## beyond that it is a recognizable constant-screen-size icon billboard.
-@export var render_in_k: float = 14.0
-@export var render_in_min: float = 40.0
-@export var render_in_max: float = 140.0
-## Icon world-size per unit camera distance (constant apparent size), tier 1.
-@export var icon_scale: float = 0.028
+## Marker size rule: in flight every world is an icon MARKER of world size
+## icon_scale · distance · tier — a small constant screen size (the legible
+## minimum at tier 1.0 ≈ Earth), tiered only for recognition (Jupiter reads
+## double Earth). Markers look far away; space feels enormous.
+@export var icon_scale: float = 0.023
 
 ## Orbital clock multiplier while parked in orbit (STRATEGY §4.3): the system
 ## slows to a near-rest so narration plays over a still sky. 1× restores on
@@ -52,11 +42,9 @@ const OVERRIDE_KEYS := [
 
 ## Belt reveal (STRATEGY §5.1): rocks are fully visible within belt_fade_near
 ## of the camera, fully invisible beyond belt_fade_far — the belt is a
-## surprise you fly INTO, not a dotted line across the sky. Beyond
-## belt_cull_dist from the ring the whole MultiMesh is skipped (Moto G win).
+## surprise you fly INTO, not a dotted line across the sky.
 @export var belt_fade_near: float = 35.0
 @export var belt_fade_far: float = 70.0
-@export var belt_cull_dist: float = 120.0
 
 ## Legacy straight-line speed — only seeds the first intercept guess now.
 @export var cruise_speed: float = 11.0
@@ -67,8 +55,11 @@ const OVERRIDE_KEYS := [
 @export var game_year_seconds: float = 45.0
 @export var sun_clearance: float = 18.0
 ## Design band asserted by ScaleTune — NOT a runtime clamp (burn profile owns time).
-@export var hop_min_s: float = 8.0
-@export var hop_max_s: float = 45.0
+## Physics is ground truth: at close conjunction a neighbour world can pass
+## right by the ship, making that hop genuinely tiny on a short transfer
+## arc. The band is a design assertion, not a runtime clamp.
+@export var hop_min_s: float = 1.5
+@export var hop_max_s: float = 55.0
 @export var course_samples: int = 48
 @export var intercept_iters: int = 10
 

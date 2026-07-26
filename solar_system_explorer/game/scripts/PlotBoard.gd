@@ -188,8 +188,7 @@ func _plot_to(id: String) -> void:
 	var depart := 0.0
 	if not bool(origin.get("is_star", false)):
 		depart = OrbitMath.orbit_standoff(float(origin.get("hero_r", 2.0)))
-	_route = OrbitMath.plot_route(ship_pos, target, _t0, _cfg, depart,
-		OrbitMath.sweep_bodies_for(_ship_id, id, _cfg))
+	_route = OrbitMath.plot_route(ship_pos, target, _t0, _cfg, depart)
 	_route["travel_au"] = absf(float(target.get("a_au", 0.0)) - float(origin.get("a_au", 0.0)))
 	_route["origin_id"] = _ship_id
 	_route["dest_name"] = str(target.get("name", id))

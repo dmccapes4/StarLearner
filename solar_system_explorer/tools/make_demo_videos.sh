@@ -18,7 +18,7 @@ rm -rf "$USER_DIR"
 mkdir -p "$USER_DIR"
 
 echo "=== 0) ensure explainer VO ==="
-python3 "$ROOT/tools/gen_demo_vo.py" --force
+python3 "$ROOT/tools/gen_demo_vo.py"
 
 echo "=== 1) capture fresh UI stills (title / orrery / scroll) ==="
 # Best-effort; fall back to existing shots if DISPLAY unavailable.

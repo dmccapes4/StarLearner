@@ -210,17 +210,20 @@ static func nearest_major_asteroid(ship_pos: Vector3, t: float,
 			best = str(b["id"])
 	return best
 
-## Icon size tier — a deliberate size-class CARTOON, not to scale (Jupiter
-## reads ~2× Earth, per the design brief). Monotonic in real radius.
+## Marker recognition tier — NOT planetary scale. Earth-class is the 1.0
+## baseline legible size; Jupiter reads exactly double Earth (design brief);
+## small worlds a touch under baseline so they still read at a glance.
 static func icon_tier_for(b: Dictionary) -> float:
+	if bool(b.get("is_star", false)):
+		return 2.4   # the Sun outranks everything, slightly
 	var rk: float = float(b.get("real_radius_km", 0.0))
 	if rk >= 50000.0:
-		return 2.0   # giant: Jupiter, Saturn
+		return 2.0   # giant: Jupiter, Saturn — double Earth
 	if rk >= 20000.0:
-		return 1.7   # large: Uranus, Neptune
+		return 1.6   # large: Uranus, Neptune
 	if rk >= 5000.0:
-		return 1.3   # medium: Venus, Earth
-	return 1.0       # small: Mercury, Mars, Pluto, asteroids
+		return 1.0   # medium: Venus, Earth — the legible baseline
+	return 0.8       # small: Mercury, Mars, Pluto, asteroids
 
 static func _flyer_theta0(id: String) -> float:
 	match id:

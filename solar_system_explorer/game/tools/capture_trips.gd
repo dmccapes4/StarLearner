@@ -43,10 +43,15 @@ func _run() -> void:
 				"resolved body is a major asteroid")
 			print("  belt intro: ", OrbitMath.belt_intro_sentence(res_body))
 		var dest := SolarData.flyer_body_by_id(to_id, cfg)
-		var ship_pos := OrbitMath.body_pos(origin, 0.0)
-		var standoff := OrbitMath.orbit_standoff(float(origin.get("hero_r", 2.0)))
-		var route := OrbitMath.plot_route(ship_pos, dest, 0.0, cfg, standoff,
-			OrbitMath.sweep_bodies_for(from_id, to_id, cfg))
+		# Plot EXACTLY like PlotBoard: park_pos departure aimed at the target.
+		var prefer := OrbitMath.body_pos(dest, 0.0)
+		if prefer.length() < 0.001:
+			prefer = Vector3.RIGHT
+		var ship_pos := OrbitMath.park_pos(origin, 0.0, cfg, prefer)
+		var standoff := 0.0
+		if not bool(origin.get("is_star", false)):
+			standoff = OrbitMath.orbit_standoff(float(origin.get("hero_r", 2.0)))
+		var route := OrbitMath.plot_route(ship_pos, dest, 0.0, cfg, standoff)
 		route["travel_au"] = absf(float(dest.get("a_au", 0.0)) - float(origin.get("a_au", 0.0)))
 		var narr := OrbitMath.trip_narration(origin, dest, route, cfg)
 
@@ -71,39 +76,40 @@ func _run() -> void:
 				"crossed orbit of %s is mentioned" % b["name"])
 		var start_p: Vector3 = OrbitMath.path_sample(route["curve"], 0.0)
 		var launch_gap := start_p.distance_to(ship_pos)
-		# Trim is capped at 30% of the hop span so short hops keep a real cruise.
-		var span := ship_pos.distance_to(route["arrival_pos"])
+		# Trim is capped at 30% of the COURSE span (launch point → parking-
+		# sphere entry, i.e. the curve's own endpoints) so short hops keep a
+		# real cruise — measuring to the planet CENTER overstates the span.
+		var span := ship_pos.distance_to(OrbitMath.path_sample(route["curve"], 1.0))
 		var want_trim := minf(standoff, span * 0.3)
 		print("  launch gap from %s center: %.1f (want %.1f, standoff %.1f)" % [
 			from_id, launch_gap, want_trim, standoff])
 		_check(launch_gap >= want_trim * 0.9, "launch clears origin planet")
 
-		# ── Sweep / slingshot honesty ──
-		var conflicts := 0
-		for s in route.get("sweeps", []):
-			if str(s["class"]) == "conflict":
-				conflicts += 1
-				print("  CONFLICT %s sep=%.1f clear=%.1f" % [
-					s["id"], float(s["min_sep"]), float(s["clearance"])])
-		_check(conflicts == 0, "refined course clears every world")
-		var sling: Dictionary = route.get("slingshot", {})
-		if not sling.is_empty():
-			print("  slingshot: %s (CPA sep %.1f)" % [
-				sling["id"], float(sling.get("min_sep", -1.0))])
-			_check(narr.find("slingshot") >= 0, "slingshot narrated when charted")
-		else:
-			_check(narr.find("slingshot") < 0, "no slingshot claim without one")
-		for d in route.get("deflections", []):
-			print("  deflection: steer wide of %s (mag %.1f)" % [d["id"], float(d["mag"])])
+		# ── Simulation honesty: worlds are points, space is empty — nothing
+		# is dodged, nothing is detected, nothing is called out mid-cruise.
+		_check(narr.find("slingshot") < 0 and narr.find("steer wide") < 0
+			and narr.find("launch window") < 0
+			and narr.find("fly right past") < 0, "narration invents no maneuvers")
+		var tl0: Dictionary = route["timeline"]
+		for ev0 in (tl0["events"] as Array):
+			_check(str(ev0["kind"]) == "phase",
+				"timeline carries only burn-phase events (got %s)" % ev0["kind"])
 
-		# ── Plot board shot ──
+		# ── Plot board shot — AFTER the chart animation finishes drawing.
+		# (Screenshotting mid-draw was what made charted courses look
+		# truncated in earlier clip reviews.)
 		var bg := Starfield.new()
 		var board: PlotBoard = PlotBoard.new()
 		root.add_child(bg)
 		root.add_child(board)
 		board.set_ship_at(from_id)
 		board.begin_plot(str(trip["to"]))  # original tap — board resolves belt itself
-		for i in 100:
+		var wait_frames := 0
+		while board._phase == PlotBoard.Phase.CHART and wait_frames < 1200:
+			await process_frame
+			wait_frames += 1
+		_check(board._phase != PlotBoard.Phase.CHART, "chart animation completed")
+		for i in 20:
 			await process_frame
 		await _shot(dir + "/%s_0_plot.png" % tag)
 		board.queue_free()
@@ -119,24 +125,39 @@ func _run() -> void:
 		fly.begin_flight(to_id, route, 0.0)
 		var curve: Curve3D = route["curve"]
 		var clen: float = maxf(curve.get_baked_length(), 0.001)
-		# Find the deepest belt approach so we can screenshot the rock reveal —
-		# the part the harness must prove is still cool. The callout is only
-		# demanded when the path dives well inside the field (frame-time slop
-		# means grazing passes may or may not land a frame in the band).
+		# For a rocks-out-the-window screenshot, find where the SIMULATED path
+		# passes nearest the belt ring (pure scenery — no alarm, no event).
 		var belt_r: float = float(SolarData.flyer_body_by_id("asteroid_belt", cfg)["orbit_r"])
+		var tl: Dictionary = route["timeline"]
+		var dur_total: float = maxf(float(route["duration"]), 0.001)
+		var tl_pos0: PackedVector3Array = tl["pos"]
 		var u_belt: int = -1
-		var d_belt_min: float = INF
-		for ui in range(1, 100):
-			var prog := OrbitMath.route_progress(float(ui) / 100.0, route, cfg)
-			var p := curve.sample_baked(prog * clen)
-			var rd: float = absf(Vector2(p.x, p.z).length() - belt_r)
-			var d := sqrt(rd * rd + p.y * p.y)
-			if d < d_belt_min:
-				d_belt_min = d
-				u_belt = ui
-		var demand_callout: bool = d_belt_min < cfg.belt_fade_near * 0.8 - 4.0
+		var best_ring := INF
+		for i in tl_pos0.size():
+			var rd: float = OrbitMath.belt_band_dist(tl_pos0[i], belt_r)
+			if rd < best_ring:
+				best_ring = rd
+				u_belt = clampi(int(float(i) * float(tl["dt"]) / dur_total * 100.0), 1, 99)
+		var want_belt_shot: bool = best_ring < cfg.belt_fade_near
+		# Rock encounter contract: rocks exist only on ring-crossing flights,
+		# freshly scattered around the path and never ON it.
+		var n_rocks: int = 0
+		if fly._belt_mm != null:
+			n_rocks = fly._belt_mm.multimesh.instance_count
+		if best_ring < OrbitMath.BELT_CORRIDOR:
+			_check(n_rocks > 0, "rock encounter spawned on a ring crossing")
+			var min_clear := INF
+			for ri in n_rocks:
+				var ro: Vector3 = fly._belt_mm.multimesh \
+					.get_instance_transform(ri).origin
+				for pi in range(0, tl_pos0.size(), 3):
+					min_clear = minf(min_clear, ro.distance_to(tl_pos0[pi]))
+			_check(min_clear >= 3.0,
+				"every rock clear of the flown path (min %.1f)" % min_clear)
+		else:
+			_check(n_rocks == 0, "no rocks spawned away from the ring")
 		var samples: Array = [0, 3, 15, 40, 70, 90, 97]
-		if demand_callout and not samples.has(u_belt):
+		if want_belt_shot and not samples.has(u_belt):
 			samples.append(u_belt)
 			samples.sort()
 		for u_i in samples:
@@ -155,38 +176,69 @@ func _run() -> void:
 					_check(fwd.angle_to(tang) < deg_to_rad(6.0),
 						"camera faces travel direction at u%02d (off %.1f°)" % [
 							u_i, rad_to_deg(fwd.angle_to(tang))])
-			# Belt cull contract with hysteresis: frame-delta slop moves the
-			# camera a few units past the sampled fraction, so only assert
-			# clearly-inside / clearly-outside cases.
-			if fly._belt_mm != null and not fly._orbiting:
-				var cp: Vector3 = fly._cam.global_position
-				var crd: float = absf(Vector2(cp.x, cp.z).length() - belt_r)
-				var cd: float = sqrt(crd * crd + cp.y * cp.y)
-				if cd < cfg.belt_cull_dist - 12.0:
-					_check(fly._belt_mm.visible, "belt rocks on near ring at u%02d (d=%.0f)" % [u_i, cd])
-				elif cd > cfg.belt_cull_dist + 12.0:
-					_check(not fly._belt_mm.visible, "belt rocks culled far from ring at u%02d (d=%.0f)" % [u_i, cd])
-			if u_i == u_belt and demand_callout:
+			# Marker contract: in flight every world is an icon marker — no
+			# meshes — and the destination marker never reads LARGE on screen.
+			if not fly._orbiting and fly._body_nodes.has(to_id):
+				var dn: Dictionary = fly._body_nodes[to_id]
+				_check(not (dn["sphere"] as MeshInstance3D).visible,
+					"destination stays a marker mid-flight at u%02d" % u_i)
+				var ic: Sprite3D = dn["icon"]
+				var dd: float = fly._cam.global_position.distance_to(
+					(dn["root"] as Node3D).global_position)
+				var scr_px: float = ic.pixel_size * FlyScene.ICON_TEX_PX \
+					/ (2.0 * maxf(dd, 0.01) * tan(deg_to_rad(65.0 * 0.5))) * 600.0
+				_check(scr_px < 45.0,
+					"destination marker stays a small marker at u%02d (%.0f px)" % [u_i, scr_px])
+			if u_i == u_belt and want_belt_shot:
 				await _shot(dir + "/%s_1_belt_u%03d.png" % [tag, u_i])
 			await _shot(dir + "/%s_1_fly_u%03d.png" % [tag, u_i])
 			if fly._orbiting:
 				break
-		if demand_callout:
-			_check(fly._belt_called,
-				"belt crossing fired callout (deepest d=%.0f)" % d_belt_min)
 		if not fly._orbiting:
-			fly._try_enter_orbit_from_approach(true)
+			# Natural arrival: run the playback clock out; entry is the
+			# timeline's final frame.
+			fly._flight_t = float(route["duration"])
+			fly._flying = true
+			await process_frame
 		# Entry seam contract (STRATEGY §4): the camera heading never jumps —
 		# < 4°/frame through the whole entry blend.
 		var prev_fwd: Vector3 = -fly._cam.global_transform.basis.z
 		var worst_step := 0.0
-		for i in 90:
+		var entry_frames := 0
+		while (fly._orbit_blend < 1.0 or fly._approach_t < FlyScene.APPROACH_S) \
+				and entry_frames < 900:
 			await process_frame
+			entry_frames += 1
 			var now_fwd: Vector3 = -fly._cam.global_transform.basis.z
 			worst_step = maxf(worst_step, rad_to_deg(prev_fwd.angle_to(now_fwd)))
 			prev_fwd = now_fwd
+			if entry_frames == 200:   # mid-approach: the planet mid-growth
+				await _shot(dir + "/%s_2_approach.png" % tag)
+		_check(fly._orbit_blend >= 1.0, "approach + orbit blend completed")
 		_check(worst_step < 4.0,
 			"orbit entry heading continuous (worst %.1f°/frame)" % worst_step)
+		# Big ONLY in orbit: after the entry cinematic the destination is the
+		# real mesh at full hero size; every other world stays a marker.
+		if fly._body_nodes.has(to_id):
+			var dn2: Dictionary = fly._body_nodes[to_id]
+			_check((dn2["sphere"] as MeshInstance3D).visible,
+				"destination mesh shown in orbit")
+			var hero2: float = float(dest.get("hero_r", 1.0))
+			_check(absf((dn2["sphere"] as MeshInstance3D).scale.x - hero2) < hero2 * 0.05,
+				"destination at full hero size in orbit")
+			for oid in fly._body_nodes:
+				if oid == to_id:
+					continue
+				if (fly._body_nodes[oid]["sphere"] as MeshInstance3D).visible:
+					_check(false, "non-destination %s shows a mesh in orbit" % oid)
+		# Entry radius contract: the sim charts the course to END on the
+		# parking sphere, so orbit entry is exactly at the standoff — no
+		# overshoot, no "recoil backwards" possible by construction.
+		var dstand: float = OrbitMath.sun_approach_standoff(cfg) \
+			if bool(dest.get("is_star", false)) \
+			else OrbitMath.orbit_standoff(float(dest.get("hero_r", 2.0)))
+		_check(absf(fly._orbit_entry_rad - dstand) < dstand * 0.06 + 0.5,
+			"orbit entered at parking radius (%.1f vs %.1f)" % [fly._orbit_entry_rad, dstand])
 		await _shot(dir + "/%s_2_orbit.png" % tag)
 		# A second orbit shot half a lap later — the abeam framing + icons.
 		for i in 120:

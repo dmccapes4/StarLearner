@@ -43,16 +43,13 @@ func set_destination(body: Dictionary) -> void:
 	_thumb.texture = make_planet_thumb(_dest_color, 72)
 
 ## Distance-bar tint per burn phase: amber while thrusting (burn/brake),
-## green while coasting, cool blue while holding for a launch window —
-## the kid-readable "engines on / off" cue.
+## green while coasting — the kid-readable "engines on / off" cue.
 func set_burn_phase(phase: int) -> void:
 	if _bar_fill == null:
 		return
 	match phase:
 		OrbitMath.PHASE_COAST:
 			_bar_fill.color = Color(0.45, 0.92, 0.65, 0.95)
-		OrbitMath.PHASE_HOLD:
-			_bar_fill.color = Color(0.55, 0.72, 0.95, 0.95)
 		_:
 			_bar_fill.color = Color(0.98, 0.72, 0.28, 0.95)
 

@@ -131,10 +131,43 @@ func _test_belt_asteroids() -> void:
 	_ok(intro.find("Everest") >= 0, "belt intro speaks the hook")
 	_ok(intro.find("between Mars and Jupiter") >= 0, "belt intro teaches the belt")
 
-	# Reveal knobs: fade band inside the cull radius.
+	# Reveal knobs: fade band ordered.
 	_ok(cfg.belt_fade_near > 0.0 and cfg.belt_fade_near < cfg.belt_fade_far,
 		"belt fade band ordered")
-	_ok(cfg.belt_cull_dist > cfg.belt_fade_far, "belt cull outside fade band")
+
+	# Rock ENCOUNTER: a per-flight cinematic scattered around the flown path
+	# where it crosses the ring — sparse, seeded, never colliding.
+	var ring_r: float = float(by_id["asteroid_belt"]["orbit_r"])
+	var path := PackedVector3Array()
+	for i in 121:
+		path.append(Vector3(
+			lerpf(-ring_r - 60.0, ring_r + 60.0, float(i) / 120.0), 0.0, 3.0))
+	var rocks := OrbitMath.belt_encounter_transforms(path, ring_r, 777)
+	_ok(rocks.size() == OrbitMath.BELT_ROCKS_SMALL + OrbitMath.BELT_ROCKS_BIG,
+		"crossing spawns the sparse rock handful")
+	var min_clear := INF
+	var big_scale := 0.0
+	for xf: Transform3D in rocks:
+		big_scale = maxf(big_scale, xf.basis.get_scale().x)
+		var dmin := INF
+		for p in path:
+			dmin = minf(dmin, (xf.origin - p).length())
+		min_clear = minf(min_clear, dmin)
+	_ok(min_clear >= OrbitMath.BELT_ROCK_CLEARANCE - 1.5,
+		"every rock clear of the flown path (min %.1f)" % min_clear)
+	_ok(big_scale >= 3.0, "one big rock drifts by (scale %.1f)" % big_scale)
+	var rocks_b := OrbitMath.belt_encounter_transforms(path, ring_r, 777)
+	_ok((rocks[0] as Transform3D).origin.is_equal_approx((rocks_b[0] as Transform3D).origin),
+		"encounter deterministic for a fixed seed")
+	var rocks_c := OrbitMath.belt_encounter_transforms(path, ring_r, 778)
+	_ok(not (rocks[0] as Transform3D).origin.is_equal_approx((rocks_c[0] as Transform3D).origin),
+		"a fresh seed gives a different passthrough")
+	# A course nowhere near the ring spawns nothing.
+	var path_in := PackedVector3Array()
+	for i in 40:
+		path_in.append(Vector3(lerpf(20.0, 60.0, float(i) / 39.0), 0.0, 0.0))
+	_ok(OrbitMath.belt_encounter_transforms(path_in, ring_r, 777).is_empty(),
+		"no rocks away from the ring")
 
 func _test_layout() -> void:
 	var layout := SolarData.scroll_layout()
@@ -203,21 +236,29 @@ func _test_orbit_math() -> void:
 	var arr_sun := OrbitMath.arrival_narration("The Sun", 1.0, true)
 	_ok(arr_sun.find("too hot") >= 0, "Sun arrival explains heat / no landing")
 
-	# Apparent size monotonic decreasing with distance, hard-capped at hero.
+	# Marker size rule: markers are MARKERS — a legible constant screen size
+	# with recognition tiers, REGARDLESS of proximity. No scale model, no
+	# proximity bump: the size at parking distance equals the size at cruise.
 	var hero: float = float(by_id["mars"]["hero_r"])
-	var a_near := OrbitMath.apparent_size(10.0, hero, cfg)
-	var a_far := OrbitMath.apparent_size(200.0, hero, cfg)
-	_ok(a_near >= a_far, "apparent size shrinks with distance")
-	_ok(a_far >= cfg.min_dot - 0.001, "far clamp to min_dot")
-	_ok(OrbitMath.apparent_size(0.5, hero, cfg) <= hero + 0.001,
-		"apparent size never exceeds hero (no ballooning past-by worlds)")
+	var stand_m := OrbitMath.orbit_standoff(hero)
+	var scr_near := OrbitMath.marker_world_size(stand_m, 0.8, cfg) / stand_m
+	var scr_far := OrbitMath.marker_world_size(4000.0, 0.8, cfg) / 4000.0
+	_ok(absf(scr_near - scr_far) < 0.001,
+		"marker screen size identical at parking distance and deep cruise")
+	# Even at the parking standoff the marker still reads far away.
+	var w_max := OrbitMath.marker_world_size(stand_m, 2.0, cfg)
+	_ok(w_max / stand_m < 0.12, "marker still reads far away up close")
 
-	# Icon tiers: recognizable size classes, monotonic vs real radius, 2:1 span.
+	# Recognition tiers: Earth-class is the 1.0 legible baseline; Jupiter
+	# reads exactly DOUBLE Earth; monotonic vs real radius.
 	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["jupiter"]), 2.0), "Jupiter icon tier 2.0")
 	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["saturn"]), 2.0), "Saturn icon tier 2.0")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["earth"]), 1.3), "Earth icon tier 1.3")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["mercury"]), 1.0), "Mercury icon tier 1.0")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["neptune"]), 1.7), "Neptune icon tier 1.7")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["earth"]), 1.0), "Earth icon tier 1.0")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["jupiter"]),
+		SolarData.icon_tier_for(by_id["earth"]) * 2.0),
+		"Jupiter marker reads double Earth")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["mercury"]), 0.8), "Mercury icon tier 0.8")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["neptune"]), 1.6), "Neptune icon tier 1.6")
 	var prev_tier := -1.0
 	var order_r := ["pluto", "mercury", "mars", "venus", "earth", "neptune",
 		"uranus", "saturn", "jupiter"]
@@ -229,24 +270,14 @@ func _test_orbit_math() -> void:
 		prev_tier = tr
 	_ok(tier_mono, "icon tiers monotonic vs real radius")
 
-	# Proximity render trigger + icon world size behaviour.
-	_ok(OrbitMath.render_in_dist(float(by_id["jupiter"]["hero_r"]), cfg)
-		> OrbitMath.render_in_dist(float(by_id["mars"]["hero_r"]), cfg),
-		"bigger worlds bloom from farther away")
-	_ok(OrbitMath.render_in_dist(0.4, cfg) >= cfg.render_in_min, "render_in floor")
-	_ok(OrbitMath.render_in_dist(100.0, cfg) <= cfg.render_in_max, "render_in cap")
-	var iw_near := OrbitMath.icon_world_size(50.0, 1.0, cfg)
-	var iw_far := OrbitMath.icon_world_size(200.0, 1.0, cfg)
+	# Markers hold constant screen size: world size ∝ distance.
+	var iw_near := OrbitMath.marker_world_size(500.0, 1.0, cfg)
+	var iw_far := OrbitMath.marker_world_size(2000.0, 1.0, cfg)
 	_ok(absf(iw_far / iw_near - 4.0) < 0.05,
-		"icon world size scales with distance (constant screen size)")
-	_ok(OrbitMath.icon_world_size(100.0, 2.0, cfg)
-		> OrbitMath.icon_world_size(100.0, 1.0, cfg) * 1.9,
-		"giant tier icon ≈ 2× small tier")
-	# Icon texture bakes (with ring silhouette for Saturn).
-	var icon_sat := PlanetSkins.make_icon_texture(by_id["saturn"], 48)
-	_ok(icon_sat != null and icon_sat.get_width() == 48, "Saturn icon bakes at 48px")
-	var icon_mars := PlanetSkins.make_icon_texture(by_id["mars"], 48)
-	_ok(icon_mars != null, "Mars icon bakes")
+		"marker world size scales with distance (constant screen size)")
+	# The Sun's marker outranks every planet's, slightly.
+	_ok(SolarData.icon_tier_for(by_id["sun"]) > SolarData.icon_tier_for(by_id["jupiter"]),
+		"Sun marker tier tops the chart")
 
 	# Mercury is fast — intercept still finite.
 	var merc: Dictionary = by_id["mercury"]
@@ -335,8 +366,7 @@ func _test_flight() -> void:
 			"intercept time near course time for %s (Δ%.2fs)" % [
 				b["id"], absf(t_len - float(route_b["t_arr"]))])
 
-	# ── Collision sweep + deflection + slingshot (plot-time, STRATEGY §3.3–3.4) ──
-	_ok(OrbitMath.clearance_for(4.0) > 4.0 * 2.0, "clearance safely outside hero")
+	# ── Physics course + navigation simulation (sim-first, STRATEGY §3) ──
 	# burn_time_at_dist inverts burn_dist_at.
 	var d_inv: float = 180.0
 	for frac in [0.1, 0.35, 0.5, 0.8, 0.95]:
@@ -344,75 +374,107 @@ func _test_flight() -> void:
 		var t_q := OrbitMath.burn_time_at_dist(s_q, d_inv, cfg)
 		_ok(absf(OrbitMath.burn_dist_at(t_q, d_inv, cfg) - s_q) < 0.05,
 			"burn_time_at_dist inverts s(t) at %.2f" % frac)
-	# Boosted profile: same start, faster finish, exact endpoints.
-	var t_boost := OrbitMath.boosted_travel_time(d_inv, d_inv * 0.5, 1.3, cfg)
-	_ok(t_boost < OrbitMath.burn_travel_time(d_inv, cfg),
-		"slingshot boost shortens the hop")
-	_ok(is_equal_approx(OrbitMath.boosted_progress(0.0, d_inv, d_inv * 0.5, 1.3, cfg), 0.0),
-		"boosted progress(0)=0")
-	_ok(is_equal_approx(OrbitMath.boosted_progress(1.0, d_inv, d_inv * 0.5, 1.3, cfg), 1.0),
-		"boosted progress(1)=1")
-	# Deflection: bump displaces mid-course but pins both endpoints.
-	var base_curve := OrbitMath.build_course(Vector3(60, 0, 0), Vector3(-90, 0, 40), 48)
-	var bent := OrbitMath.deflect_course(base_curve, 0.5, Vector3(0, 0, 1), 6.0)
-	_ok(bent.get_point_position(0).is_equal_approx(base_curve.get_point_position(0)),
-		"deflection pins launch point")
-	var last: int = base_curve.get_point_count() - 1
-	_ok(bent.get_point_position(last).is_equal_approx(base_curve.get_point_position(last)),
-		"deflection pins intercept")
-	var mid_i: int = last / 2
-	_ok(bent.get_point_position(mid_i).distance_to(
-		base_curve.get_point_position(mid_i)) > 4.0, "deflection bends the middle")
+	# A physics course is a TRANSFER ARC, never a straight line: the bearing
+	# sweeps around the Sun while the radius eases between the two orbits.
+	var arc := OrbitMath.build_course(Vector3(60, 0, 0), Vector3(90, 0, 40), 48, 0.0)
+	var chord_a: Vector3 = arc.get_point_position(0)
+	var chord_dir: Vector3 = (arc.get_point_position(48) - chord_a).normalized()
+	var dev_max := 0.0
+	for i in 49:
+		var rel: Vector3 = arc.get_point_position(i) - chord_a
+		dev_max = maxf(dev_max, (rel - chord_dir * rel.dot(chord_dir)).length())
+	_ok(dev_max > 1.0, "course curves like a real transfer, not a line (dev %.1f)" % dev_max)
+	_ok(arc.get_point_position(48).distance_to(Vector3(90, 0, 40)) < 0.01,
+		"transfer arc ends exactly at the intercept point")
+	# Radius bounded by the endpoint orbits, in-plane: the arc can never dive
+	# at the Sun, so no clearance bow is needed or drawn.
+	var r_lo := minf(chord_a.length(), arc.get_point_position(48).length())
+	var r_hi := maxf(chord_a.length(), arc.get_point_position(48).length())
+	var radius_ok := true
+	var planar_ok := true
+	for i in 49:
+		var p: Vector3 = arc.get_point_position(i)
+		if p.length() < r_lo - 0.5 or p.length() > r_hi + 0.5:
+			radius_ok = false
+		if absf(p.y) > 0.001:
+			planar_ok = false
+	_ok(radius_ok, "arc radius stays between the endpoint orbits (Sun-safe)")
+	_ok(planar_ok, "arc stays in the ecliptic plane")
+	# Opposite side of the Sun: the arc sweeps AROUND, never through.
+	var around := OrbitMath.build_course(Vector3(60, 0, 0), Vector3(-90, 0, 4), 48, 0.0)
+	_ok(OrbitMath.course_min_sun_dist(around) >= 59.0,
+		"antipodal hop sweeps around the Sun (min %.1f)" %
+		OrbitMath.course_min_sun_dist(around))
 
-	# Every hop from Earth with the full sweep: no remaining conflicts, and any
-	# slingshot/steer claims are backed by the measured course.
-	var sling_seen := false
+	# Every hop from Earth with the full sim: the timeline is honest
+	# (monotonic, ends on the parking sphere), carries only burn-phase
+	# events, and nothing narrated is derived outside the sim.
 	for b in SolarData.flyer_destinations(cfg):
 		if str(b["id"]) == "earth":
 			continue
-		var sweep := OrbitMath.sweep_bodies_for("earth", str(b["id"]), cfg)
-		var route_s := OrbitMath.plot_route(ship, b, 0.0, cfg, 0.0, sweep)
-		for s in route_s.get("sweeps", []):
-			_ok(str(s["class"]) != "conflict",
-				"no conflict left on earth→%s (vs %s)" % [b["id"], s["id"]])
-		var sl: Dictionary = route_s.get("slingshot", {})
-		var narr_s := OrbitMath.trip_narration(earth, b, route_s, cfg)
-		if not sl.is_empty():
-			sling_seen = true
-			_ok(float(sl.get("min_sep", 0.0))
-				< OrbitMath.FLYBY_WINDOW_K * float(SolarData.flyer_body_by_id(
-					str(sl["id"]), cfg).get("hero_r", 1.0)),
-				"slingshot CPA inside skim window for earth→%s" % b["id"])
-			_ok(narr_s.find("slingshot") >= 0, "slingshot narrated for earth→%s" % b["id"])
-		else:
-			_ok(narr_s.find("slingshot") < 0,
-				"no slingshot claim without one for earth→%s" % b["id"])
+		var route_s := OrbitMath.plot_route(ship, b, 0.0, cfg, 0.0)
 		_ok(is_equal_approx(float(route_s["duration"]), float(route_s["t_arr"])),
-			"swept route keeps duration == t_arr for %s" % b["id"])
-	_ok(sling_seen or true, "slingshot coverage noted")  # informational
-
-	# LOD hysteresis band.
-	_ok(OrbitMath.lod_want_mesh(10.0, false, cfg.mesh_in, cfg.mesh_out), "LOD on inside mesh_in")
-	_ok(not OrbitMath.lod_want_mesh(500.0, true, cfg.mesh_in, cfg.mesh_out), "LOD off past mesh_out")
-	var mid: float = (cfg.mesh_in + cfg.mesh_out) * 0.5
-	_ok(OrbitMath.lod_want_mesh(mid, true, cfg.mesh_in, cfg.mesh_out), "LOD holds ON in band")
-	_ok(not OrbitMath.lod_want_mesh(mid, false, cfg.mesh_in, cfg.mesh_out), "LOD holds OFF in band")
-	var past_normal: float = cfg.mesh_out * 1.15
-	_ok(OrbitMath.lod_want_mesh_priority(past_normal, true, cfg, true),
-		"priority keeps mesh ON past normal mesh_out")
-	_ok(not OrbitMath.lod_want_mesh_priority(past_normal, true, cfg, false),
-		"non-priority turns mesh OFF past mesh_out")
-
-	# Look blend: off early, full at arrival.
-	_ok(is_equal_approx(OrbitMath.look_blend_weight(0.0), 0.0), "look blend 0 at start")
-	_ok(OrbitMath.look_blend_weight(0.5) > 0.0, "look blend rising mid-hop")
-	_ok(is_equal_approx(OrbitMath.look_blend_weight(1.0), 1.0), "look blend 1 at end")
+			"simulated route keeps duration == t_arr for %s" % b["id"])
+		var tl: Dictionary = route_s["timeline"]
+		var tl_pos: PackedVector3Array = tl["pos"]
+		var tl_fwd: PackedVector3Array = tl["fwd"]
+		_ok(tl_pos.size() >= 2 and tl_pos.size() == tl_fwd.size(),
+			"timeline frames present for %s" % b["id"])
+		var frames_expected: int = int(ceil(float(route_s["duration"]) / float(tl["dt"]))) + 1
+		_ok(absf(tl_pos.size() - frames_expected) <= 1,
+			"timeline covers the whole hop for %s" % b["id"])
+		# Playback distance along the hop never runs backwards.
+		var s_prev := -1.0
+		var mono_tl := true
+		for i in tl_pos.size():
+			var s_here: float = tl_pos[0].distance_to(tl_pos[i])
+			if s_here < s_prev - 0.5:
+				mono_tl = false
+			s_prev = maxf(s_prev, s_here)
+		_ok(mono_tl, "timeline playback monotonic for %s" % b["id"])
+		# The timeline ENDS on the destination's parking sphere — orbit entry
+		# is a precomputed state, not a live geometric check.
+		var entry: Dictionary = tl["entry"]
+		var d_stand: float = OrbitMath.sun_approach_standoff(cfg) \
+			if bool(b.get("is_star", false)) \
+			else OrbitMath.orbit_standoff(float(b.get("hero_r", 2.0)))
+		_ok(absf(float(entry["rad"]) - d_stand) < 1.0,
+			"entry exactly at parking radius for %s (%.1f vs %.1f)" % [
+				b["id"], float(entry["rad"]), d_stand])
+		var center_arr := Vector3.ZERO if bool(b.get("is_star", false)) \
+			else OrbitMath.body_pos(b, float(route_s["t_arr"]))
+		_ok(absf(tl_pos[tl_pos.size() - 1].distance_to(center_arr) - d_stand) < 1.0,
+			"timeline end on the parking sphere for %s" % b["id"])
+		# Determinism: replotting the same hop yields the same timeline.
+		var route_s2 := OrbitMath.plot_route(ship, b, 0.0, cfg, 0.0)
+		var tl2_pos: PackedVector3Array = route_s2["timeline"]["pos"]
+		var same := tl2_pos.size() == tl_pos.size()
+		if same:
+			for i in tl_pos.size():
+				if tl_pos[i].distance_to(tl2_pos[i]) > 0.001:
+					same = false
+					break
+		_ok(same, "navigation sim deterministic for %s" % b["id"])
+		# No slingshot/steer/hold/flyby claims exist — narration must not lie.
+		var narr_s := OrbitMath.trip_narration(earth, b, route_s, cfg)
+		_ok(narr_s.find("slingshot") < 0 and narr_s.find("steer wide") < 0
+			and narr_s.find("launch window") < 0
+			and narr_s.find("fly right past") < 0,
+			"no invented maneuver claims for earth→%s" % b["id"])
+		# The sim records burn phases and nothing else — no alarms, no
+		# detections; every phase sequence is monotonic in time.
+		var t_prev := -1.0
+		for ev in (tl["events"] as Array):
+			_ok(str(ev["kind"]) == "phase",
+				"timeline events are phase-only for %s" % b["id"])
+			_ok(float(ev["t"]) >= t_prev, "events ordered for %s" % b["id"])
+			t_prev = float(ev["t"])
 
 	# BOOST clamps.
 	_ok(is_equal_approx(OrbitMath.apply_boost(0.0, 20.0, 0.08), 1.6), "boost nudges 8%")
 	_ok(is_equal_approx(OrbitMath.apply_boost(19.0, 20.0, 0.5), 20.0), "boost clamps to duration")
 
-	# Every planetary hop: path endpoints, clock, bloom-at-arrival, duration band.
+	# Every planetary hop: path endpoints, clock, parking honesty, duration band.
 	for b in SolarData.flyer_destinations(cfg):
 		if str(b["id"]) == "earth" or bool(b.get("is_star", false)):
 			continue
@@ -420,40 +482,31 @@ func _test_flight() -> void:
 		var curve: Curve3D = route["curve"]
 		var t_arr: float = float(route["t_arr"])
 		var arrival: Vector3 = route["arrival_pos"]
+		var park_b := OrbitMath.orbit_standoff(float(b["hero_r"]))
 
 		var p_start := OrbitMath.path_sample(curve, 0.0)
 		var p_end := OrbitMath.path_sample(curve, 1.0)
 		_ok(p_start.distance_to(ship) < 0.5, "path starts at ship for %s" % b["id"])
-		_ok(p_end.distance_to(arrival) < 0.5, "path ends at intercept for %s" % b["id"])
+		# The course ends ON the parking sphere of the intercept point — orbit
+		# entry is the last playback frame, never a dive-and-recoil.
+		_ok(absf(p_end.distance_to(arrival) - park_b) < 1.0,
+			"path ends on the parking sphere for %s (%.1f vs %.1f)" % [
+				b["id"], p_end.distance_to(arrival), park_b])
 
 		var clock0 := OrbitMath.flight_clock(0.0, t_arr, 0.0)
 		var clock1 := OrbitMath.flight_clock(0.0, t_arr, 1.0)
 		_ok(is_equal_approx(clock0, 0.0), "flight clock start for %s" % b["id"])
 		_ok(is_equal_approx(clock1, t_arr), "flight clock end for %s" % b["id"])
 
-		# At arrival the ship is on top of the destination → bloom (hero-sized).
+		# At arrival the ship parks at the standoff (destination fills the
+		# canopy from there; the renderer holds it at hero size in orbit).
 		var dist_end := OrbitMath.ship_to_dest_dist(curve, 1.0, b, 0.0, t_arr)
-		_ok(dist_end < maxf(float(b["hero_r"]) * 2.0, 2.0),
-			"arrival close enough to bloom for %s (d=%.2f)" % [b["id"], dist_end])
-		var app_end := OrbitMath.apparent_size(maxf(dist_end, 0.01), float(b["hero_r"]), cfg)
-		_ok(app_end >= float(b["hero_r"]) * 0.85,
-			"apparent size near hero at arrival for %s" % b["id"])
+		_ok(absf(dist_end - park_b) < 1.5,
+			"arrival parks at the standoff for %s (d=%.2f)" % [b["id"], dist_end])
 
 		# Mid-hop: destination still farther than at the end (generally).
 		var dist_mid := OrbitMath.ship_to_dest_dist(curve, 0.35, b, 0.0, t_arr)
 		_ok(dist_mid > dist_end, "closes on target for %s" % b["id"])
-
-	# Belt MultiMesh: deterministic seed, rocks stay near belt radius.
-	var belt: Dictionary = by_id["asteroid_belt"]
-	var xforms := OrbitMath.belt_transforms(float(belt["orbit_r"]), 40, 909091)
-	var xforms2 := OrbitMath.belt_transforms(float(belt["orbit_r"]), 40, 909091)
-	_ok(xforms.size() == 40, "belt transform count")
-	_ok(xforms[0].origin.is_equal_approx(xforms2[0].origin), "belt transforms deterministic")
-	var r0: float = float(belt["orbit_r"])
-	for xf in xforms:
-		var xz: float = Vector2(xf.origin.x, xf.origin.z).length()
-		_ok(xz > r0 - 9.5 and xz < r0 + 9.5, "belt rock near ring radius")
-		_ok(absf(xf.origin.y) <= 2.05, "belt rock small Y jitter")
 
 func _test_scale_tune() -> void:
 	## Phase 4 — happy-medium contracts for the shipped .tres knobs.
@@ -464,10 +517,8 @@ func _test_scale_tune() -> void:
 	_ok(is_equal_approx(cfg.game_year_seconds, 45.0), "shipped game year is 45s")
 	_ok(cfg.orbit_time_scale > 0.0 and cfg.orbit_time_scale <= 0.25,
 		"orbit rest scale slow but alive (0 < s <= 0.25)")
-	_ok(is_equal_approx(cfg.focus_dist, 26.0), "shipped focus_dist is 26")
 	_ok(cfg.distance_span >= 300.0, "larger space: distance_span >= 300")
-	_ok(cfg.mesh_in < cfg.mesh_out, "LOD hysteresis band")
-	_ok(cfg.mesh_out >= 100.0, "mesh_out keeps far worlds as spheres")
+	_ok(cfg.icon_scale > 0.0, "far-visibility angular floor enabled")
 
 	var report := ScaleTune.evaluate(cfg)
 	if not bool(report["ok"]):
@@ -476,15 +527,12 @@ func _test_scale_tune() -> void:
 	_ok(bool(report["ok"]), "shipped config passes happy-medium checks")
 	_ok((report["hops"] as Array).size() >= 9, "scale report covers destinations")
 
-	# Outer hops bloom after mid-cruise.
-	var late_blooms := 0
+	# Outer hops park exactly at the standoff (orbit entry honesty).
 	for h in report["hops"]:
 		if str(h["id"]) in ["jupiter", "saturn", "uranus", "neptune", "pluto"]:
-			if float(h["bloom_u"]) >= 0.50:
-				late_blooms += 1
-			_ok(float(h["app_end"]) >= float(h["hero_r"]) * 0.8,
-				"%s blooms to hero at arrival" % h["id"])
-	_ok(late_blooms >= 3, "at least 3 outer hops bloom late")
+			_ok(absf(float(h["d_end"])
+				- OrbitMath.orbit_standoff(float(h["hero_r"]))) < 1.5,
+				"%s parks at the standoff" % h["id"])
 
 	# Duration variety across the system.
 	var durs: Array = []
@@ -512,13 +560,18 @@ func _test_scale_tune() -> void:
 			mentions_dur = true
 	_ok(mentions_dur, "failure mentions duration band")
 
-	# bloom_progress monotonic-ish: higher frac → later or equal u
+	# Markers never grow with proximity: the destination's marker screen size
+	# at the end of the hop equals its size at launch (constant, honest).
 	var earth := SolarData.flyer_body_by_id("earth", cfg)
 	var jup := SolarData.flyer_body_by_id("jupiter", cfg)
 	var route := OrbitMath.plot_route(OrbitMath.body_pos(earth, 0.0), jup, 0.0, cfg)
-	var u55 := ScaleTune.bloom_progress(route["curve"], jup, 0.0, route["t_arr"], cfg, 0.55)
-	var u90 := ScaleTune.bloom_progress(route["curve"], jup, 0.0, route["t_arr"], cfg, 0.90)
-	_ok(u90 >= u55 - 0.001, "higher bloom frac → later progress")
+	var tier_j := SolarData.icon_tier_for(jup)
+	var d_launch := OrbitMath.ship_to_dest_dist(route["curve"], 0.0, jup, 0.0, route["t_arr"])
+	var d_park := OrbitMath.ship_to_dest_dist(route["curve"], 1.0, jup, 0.0, route["t_arr"])
+	var scr_launch := OrbitMath.marker_world_size(d_launch, tier_j, cfg) / d_launch
+	var scr_park := OrbitMath.marker_world_size(d_park, tier_j, cfg) / d_park
+	_ok(absf(scr_launch - scr_park) < 0.001,
+		"Jupiter marker holds constant screen size across the whole hop")
 
 func _test_cockpit_hud() -> void:
 	## Phase 5 — cockpit asset + icon HUD helpers.
@@ -625,9 +678,12 @@ func _test_ux_cruise() -> void:
 		"orbit tangent handedness (+Z at ang0 ccw)")
 
 	var cfg := SolarFlyerConfig.load_default()
-	var app_far := OrbitMath.apparent_size(200.0, 8.0, cfg)
-	var app_near := OrbitMath.apparent_size(20.0, 8.0, cfg)
-	_ok(app_near > app_far * 1.5, "approach grows apparent size")
+	# Markers hold their angular size no matter how close a world gets —
+	# proximity NEVER grows a marker; only the destination's cinematic does.
+	var ang_far: float = OrbitMath.marker_world_size(400.0, 1.6, cfg) / 400.0
+	var ang_near: float = OrbitMath.marker_world_size(40.0, 1.6, cfg) / 40.0
+	_ok(absf(ang_near - ang_far) < 0.001,
+		"marker angular size constant regardless of proximity")
 	_ok(OrbitMath.orbit_standoff(4.0) > 4.0 * 1.5, "orbit stays outside hero radius")
 
 	var earth := SolarData.flyer_body_by_id("earth", cfg)
@@ -644,8 +700,8 @@ func _test_ux_cruise() -> void:
 	var along := OrbitMath.bodies_along_hop(earth, uranus, cfg)
 	_ok(along.size() >= 2, "Earth→Uranus crosses inner/outer worlds")
 
-	# Narration honesty: outward hops never claim a Sun flyby (the Bézier bows
-	# outward, so min_sun_dist ≈ the inner endpoint's orbit — never near the Sun).
+	# Narration honesty: outward hops never claim a Sun flyby (the transfer
+	# arc's radius never drops below the inner endpoint's orbit).
 	var jup := SolarData.flyer_body_by_id("jupiter", cfg)
 	var route_j := OrbitMath.plot_route(OrbitMath.body_pos(earth, 0.0), jup, 0.0, cfg)
 	var narr_j := OrbitMath.trip_narration(earth, jup, route_j, cfg)
@@ -680,7 +736,9 @@ func _test_ux_cruise() -> void:
 	_ok(start_d.distance_to(OrbitMath.body_pos(earth, 0.0)) >= standoff * 0.9,
 		"course launch point sits at standoff from origin")
 	var end_d: Vector3 = OrbitMath.path_sample(route_d["curve"], 1.0)
-	_ok(end_d.distance_to(route_d["arrival_pos"]) < 0.5, "trimmed course still ends at intercept")
+	_ok(absf(end_d.distance_to(route_d["arrival_pos"])
+		- OrbitMath.orbit_standoff(float(jup["hero_r"]))) < 1.0,
+		"trimmed course still ends on the parking sphere")
 
 	var p := CockpitHud.console_project(Vector3(0, 0, 0), Vector2(-10, -10), Vector2(10, 10),
 		Vector2(300, 130))
@@ -730,11 +788,8 @@ func _test_narration_vo() -> void:
 		for dest in dests:
 			if str(origin["id"]) == str(dest["id"]):
 				continue
-			# Full sweep, exactly like PlotBoard — so slingshot / steer-wide /
-			# launch-window sentences are exercised against the manifest too.
 			var route := OrbitMath.plot_route(
-				OrbitMath.body_pos(origin, 0.0), dest, 0.0, cfg, 0.0,
-				OrbitMath.sweep_bodies_for(str(origin["id"]), str(dest["id"]), cfg))
+				OrbitMath.body_pos(origin, 0.0), dest, 0.0, cfg, 0.0)
 			lines.append(OrbitMath.trip_narration(origin, dest, route, cfg))
 			var au: float = absf(float(dest.get("a_au", 0.0)) - float(origin.get("a_au", 0.0)))
 			lines.append(OrbitMath.arrival_narration(str(dest.get("name", "")), au,

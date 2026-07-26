@@ -29,9 +29,7 @@ func _run() -> void:
 	# Burn-phase beats spoken during every flight.
 	_add(FlySceneScript.LINE_LAUNCH)
 	_add(FlySceneScript.LINE_CRUISE)
-	_add(FlySceneScript.LINE_FLIP)
-	_add(FlySceneScript.LINE_HOLD)
-	_add(FlySceneScript.LINE_BELT)
+	_add(FlySceneScript.LINE_BRAKE)
 
 	# Body blurbs (orrery tour + video card) + the video-card suffix.
 	for b in SolarData.bodies() + SolarData.major_asteroids():

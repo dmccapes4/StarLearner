@@ -426,7 +426,9 @@ Phases 1–5 are **implemented and verified**; phase 6 (on-device tune) remains.
   nearest (excluding the one you're parked at) and the intro sentence teaches what the belt is.
   640 rocks in one MultiMesh, dither-faded in between `belt_fade_far → belt_fade_near`, culled
   entirely beyond `belt_cull_dist`; diving into the field fires **ASTEROID FIELD!** + narration
-  (only when properly inside — grazing passes stay quiet). `VideoPanel.play_chain` runs the
+  only on a genuine outside→inside crossing of the rock band itself (`BELT_BAND_HALF_W`, ~the
+  ±9 jitter) — grazing passes stay quiet, launches near the ring stay quiet, and hops departing
+  an asteroid (already inside) stay quiet. `VideoPanel.play_chain` runs the
   asteroid's own clip (Dawn / NASA / DLR direct MP4s) then the belt explainer; Back skips the
   rest of the chain.
 - **VO**: 296 sentences enumerated and baked; the "no unbaked sentence" test is green.
