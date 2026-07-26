@@ -90,17 +90,33 @@ func run() -> TestAssert:
 				t.ok(overlap.is_empty(), "%s slots %d/%d do not overlap" % [bid, a, b])
 		break ## beds share geometry — validating one is representative
 
-	## Pen routing: any path into the pen must cross the fence only at the gate.
+	## Pen routing: any path into the pen must go to the gate, then through it.
 	var outside := farm.nearest_walkable(farm.gate_world + Vector2(-140, 0))
 	var inside := farm.nearest_walkable(farm.fence_center)
 	var pen_path := farm.find_path(outside, inside)
 	t.ok(pen_path.size() >= 2, "path into pen exists")
 	var bad_cross := false
+	var near_gate := false
 	for i in range(pen_path.size() - 1):
+		if pen_path[i].distance_to(farm.gate_world) <= 56.0:
+			near_gate = true
 		if not farm.crossing_allowed(pen_path[i], pen_path[i + 1]):
 			bad_cross = true
 			break
+	if pen_path[pen_path.size() - 1].distance_to(farm.gate_world) <= 56.0:
+		near_gate = true
 	t.ok(not bad_cross, "pen entry only through the gate")
+	t.ok(near_gate, "cross-fence path visits the gate waypoint")
+
+	## Same-side garden walk must not detour through the gate.
+	var bed_goal := farm.nearest_walkable(farm.slot_world("bed_0", 0))
+	var yard_path := farm.find_path(farm.spawn_world, bed_goal)
+	var yard_hits_gate := false
+	for p in yard_path:
+		if p.distance_to(farm.gate_world) <= 40.0:
+			yard_hits_gate = true
+			break
+	t.ok(not yard_hits_gate, "garden path skips the pen gate")
 
 	host.free()
 	return t

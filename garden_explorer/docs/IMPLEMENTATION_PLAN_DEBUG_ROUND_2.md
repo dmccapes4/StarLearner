@@ -139,5 +139,13 @@ original list.
   freeze panels, waits for logs instead of fixed settles, retries taps a
   roaming animal stole, and asserts per-bed watering.
 
+## Round 6 — zone targeting (2026-07-26)
+- Tap-to-target animals/bugs is same-zone only: dog + garden bugs from the
+  garden; pen animals + pen bugs only once the player is already inside the
+  pen. Cross-fence animal taps never start follow.
+- Gate routing is separate: FarmMap.find_path concatenates garden→gate→pen
+  (and the reverse) for cross-boundary walks. Same-side walks never visit
+  the gate. Animal follow never asks the pathfinder to cross the fence.
+
 ## Always
 - Headless unit tests + ux_suite after each phase; rebuild APK & install last.

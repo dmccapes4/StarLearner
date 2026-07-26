@@ -177,16 +177,22 @@ func _run() -> void:
 	_check("star_collected", world.progress != null and bool(world.progress.is_collected("01_seeds")),
 		"01_seeds collected")
 
+	## Enter the pen via gate routing first — animal follow is same-zone only.
 	_events().world_tapped.emit(farm.fence_center)
-	await _settle(12)
+	for _i in 1800:
+		await process_frame
+		var p: Node2D = world.get("player")
+		if p and farm.in_pen(p.global_position) and not bool(p.get("moving")):
+			break
+	_check("entered_pen", farm.in_pen(world.get("player").global_position), "player in pen")
 	await _shot("animals")
 
-	# Phase 4 — animal tap plays real SFX (no confirm chip)
-	var chick_pos: Vector2 = farm.animal_positions.get("chicken_a", farm.fence_center)
+	# Phase 4 — pen animal tap (player already inside the pen).
+	var chick: Node2D = world.call("_animal_node", "chicken_a")
+	var chick_pos: Vector2 = chick.global_position if chick \
+		else farm.animal_positions.get("chicken_a", farm.fence_center)
 	_events().world_tapped.emit(chick_pos)
-	## Walking into the pen (gate detour + "Walking to ..." narration) takes a
-	## while — wait for the tap event rather than a fixed settle.
-	await _wait_log("animal:", 1500)
+	await _wait_log("animal:", 1800)
 	_check_log_contains("animal_tap_log", "animal:")
 	await _shot("animal_tap")
 

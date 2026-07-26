@@ -710,9 +710,17 @@ func nearest_walkable(world_pos: Vector2, max_radius_tiles: int = 8) -> Vector2:
 	return best
 
 func find_path(from_world: Vector2, to_world: Vector2) -> PackedVector2Array:
-	## A* through walkable iso tiles. Goals inside obstacles snap to the rim.
+	## A* through walkable iso tiles. Crossing the pen boundary always routes
+	## explicitly: to the gate → through it → to the destination. Same-side
+	## walks (garden↔garden, pen↔pen) never touch the gate.
 	var start_w := nearest_walkable(from_world)
 	var end_w := nearest_walkable(to_world)
+	if gate_world == Vector2.ZERO or in_pen(start_w) == in_pen(end_w):
+		return _find_path_direct(start_w, end_w)
+	var gate := nearest_walkable(gate_world)
+	return _concat_paths(_find_path_direct(start_w, gate), _find_path_direct(gate, end_w))
+
+func _find_path_direct(start_w: Vector2, end_w: Vector2) -> PackedVector2Array:
 	var sid := _nav_id_at_world(start_w)
 	var eid := _nav_id_at_world(end_w)
 	if sid < 0 or eid < 0:
@@ -726,6 +734,20 @@ func find_path(from_world: Vector2, to_world: Vector2) -> PackedVector2Array:
 	if pts[pts.size() - 1].distance_to(end_w) > 2.0:
 		pts.append(end_w)
 	return pts
+
+func _concat_paths(a: PackedVector2Array, b: PackedVector2Array) -> PackedVector2Array:
+	if a.is_empty():
+		return b
+	if b.is_empty():
+		return a
+	var out := PackedVector2Array()
+	out.append_array(a)
+	var start_i := 0
+	if not out.is_empty() and out[out.size() - 1].distance_to(b[0]) < 4.0:
+		start_i = 1
+	for i in range(start_i, b.size()):
+		out.append(b[i])
+	return out
 
 func clamp_world(pos: Vector2) -> Vector2:
 	var c := Vector2(
