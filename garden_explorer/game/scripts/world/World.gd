@@ -51,13 +51,9 @@ var roaming_animals: Dictionary = {} ## id -> RoamingAnimal
 var _reveal_ctx: Dictionary = {}
 ## Bug id waiting for its "You caught it!" grid after a video closes.
 var _grid_after_video: String = ""
-## Pending interactable: walk there first, then show ActionPrompt / RevealTile.
+## Pending interactable: walk once to a fixed approach, then show ActionPrompt /
+## RevealTile on arrive. No chase / repath onto moving animals or bugs.
 var _pending: Dictionary = {}
-## Animal follow: first path leg waits for the "Walking to X" narration, then
-## at most a few repath legs when the player is idle (no per-frame repathing).
-var _follow_delay: float = 0.0
-var _follow_legs: int = 0
-const FOLLOW_MAX_LEGS := 4
 var _animal_sfx_played: bool = false
 
 var _ripple_left: float = 0.0
@@ -235,7 +231,6 @@ func _process(delta: float) -> void:
 		if str(_pending.get("kind", "")) == "nav":
 			_pending.clear()
 		Events.player_path_requested.emit(goal)
-	_update_animal_follow(delta)
 
 func _spawn_bug_spawner() -> void:
 	if bug_spawner and is_instance_valid(bug_spawner):
@@ -299,55 +294,17 @@ func _player_in_pen() -> bool:
 	return player != null and farm_map != null and farm_map.in_pen(player.global_position)
 
 func _same_side_of_fence(a: Vector2, b: Vector2) -> bool:
-	## Garden and pen are separate movement zones; never track across the gate.
+	## Garden and pen are separate movement zones.
 	if farm_map == null:
 		return true
 	return farm_map.in_pen(a) == farm_map.in_pen(b)
 
-func _can_track_animal(animal_id: String) -> bool:
-	## Pen animals only while the player is already in the pen. Dog (and any
-	## yard animal) only while the player is in the garden. Gate entry/exit is
-	## a separate navigate — never part of animal follow.
+func _can_interact_animal(animal_id: String) -> bool:
+	## Pen animals only while the player is already in the pen. Dog only while
+	## the player is in the garden. Cross-fence taps use gate navigate instead.
 	if animal_id.is_empty() or player == null or animal_db == null:
 		return false
 	return _player_in_pen() == animal_db.in_pen(animal_id)
-
-func _update_animal_follow(delta: float) -> void:
-	if _pending.is_empty() or str(_pending.get("kind", "")) != "animal":
-		return
-	if reveal_tile and reveal_tile.has_method("is_open") and bool(reveal_tile.call("is_open")):
-		return
-	var aid := str(_pending.get("id", ""))
-	var actor := _animal_node(aid)
-	if actor == null or not _can_track_animal(aid):
-		## Left the animal's zone (or animal despawned) — drop follow; player
-		## can re-enter via gate routing and tap again.
-		_pending.clear()
-		_follow_delay = 0.0
-		_follow_legs = 0
-		return
-	var goal: Vector2 = actor.global_position
-	## Stay same-side; never ask the pathfinder to cross the fence for a follow.
-	if not _same_side_of_fence(player.global_position, goal):
-		_pending.clear()
-		_follow_delay = 0.0
-		_follow_legs = 0
-		return
-	_pending["approach"] = goal
-	if player and player.global_position.distance_to(goal) <= Config.get_interact_arrive_eps() * 1.35:
-		_open_pending_prompt()
-		return
-	## First leg: wait for the "Walking to X" narration to release movement.
-	if _follow_delay > 0.0:
-		_follow_delay -= delta
-		if _follow_delay <= 0.0:
-			_follow_legs = 1
-			Events.player_path_requested.emit(farm_map.nearest_walkable(goal))
-		return
-	## Later legs: only repath when the player finished the previous leg.
-	if player and not player.moving and _follow_legs < FOLLOW_MAX_LEGS:
-		_follow_legs += 1
-		Events.player_path_requested.emit(farm_map.nearest_walkable(goal))
 
 func _on_world_tapped(world_pos: Vector2) -> void:
 	_show_ripple(world_pos)
@@ -363,15 +320,15 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 		return
 	if season_card and season_card.has_method("is_open") and bool(season_card.call("is_open")):
 		return
-	## Roaming bugs: tap-to-target only on the same side of the fence.
+	## Roaming bugs: same side of the fence only; one walk to tap spot, no chase.
 	if bug_spawner and bug_spawner.has_method("bug_at") and player:
 		var bug: Node2D = bug_spawner.bug_at(world_pos, 34.0)
 		if bug != null and _same_side_of_fence(player.global_position, bug.global_position):
 			_queue_bug_interact(bug)
 			return
-	## Animals: same-zone only. Cross-fence taps fall through to gate navigate.
+	## Animals: same-zone only. Walk once to where they were; no chase.
 	var hit_animal := _nearest_roaming_animal(world_pos, Config.get_animal_tap_radius())
-	if not hit_animal.is_empty() and _can_track_animal(hit_animal):
+	if not hit_animal.is_empty() and _can_interact_animal(hit_animal):
 		var actor := _animal_node(hit_animal)
 		_queue_interact("animal", hit_animal, actor.global_position if actor else world_pos)
 		return
@@ -392,8 +349,8 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 		return
 	var kind := str(zone.get("kind", ""))
 	var zid := str(zone.get("id", ""))
-	## zone_at may report an animal under the tap — only track if same zone.
-	if kind == "animal" and not _can_track_animal(zid):
+	## zone_at may report an animal under the tap — only interact if same zone.
+	if kind == "animal" and not _can_interact_animal(zid):
 		kind = "fence"
 		zid = "fence"
 	Events.zone_tapped.emit(zid, kind)
@@ -424,44 +381,41 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 			slot = farm_map.nearest_slot(zid, world_pos)
 			approach = farm_map.nearest_walkable(farm_map.slot_world(zid, slot))
 		"fence":
-			## Pen ground tap: gate routing only (no animal follow from outside).
-			## Same-zone animal hits are handled above / via kind == "animal".
+			## Pen ground tap: gate routing only from outside. Same-zone animal
+			## hits become a one-shot walk to that animal's current spot.
 			var near := ""
 			if _player_in_pen():
 				near = _nearest_roaming_animal(world_pos, _cfg_animal_radius() * 1.6)
 				if near.is_empty():
 					near = farm_map.animal_at(world_pos, _cfg_animal_radius() * 1.6)
-			if not near.is_empty() and _can_track_animal(near):
+			if not near.is_empty() and _can_interact_animal(near):
 				kind = "animal"
 				zid = near
 				var a := _animal_node(near)
 				approach = a.global_position if a else farm_map.animal_positions.get(near, farm_map.fence_center)
 			else:
-				## Enter / walk the pen via the gate — separate from targeting.
+				## Enter / walk the pen via the gate.
 				approach = farm_map.nearest_walkable(world_pos)
 				_pending.clear()
 				_animal_sfx_played = false
-				_follow_delay = 0.0
-				_follow_legs = 0
 				if NarratorScript.blocks_movement():
 					_pending = {"kind": "nav", "approach": approach, "deferred_path": true}
 				else:
 					Events.player_path_requested.emit(approach)
 				return
 		"animal":
-			## Refuse cross-zone animal tracking; fall back to gate navigate.
-			if not _can_track_animal(zid):
+			## Refuse cross-zone animal interact; fall back to gate navigate.
+			if not _can_interact_animal(zid):
 				approach = farm_map.nearest_walkable(world_pos)
 				_pending.clear()
 				_animal_sfx_played = false
-				_follow_delay = 0.0
-				_follow_legs = 0
 				if NarratorScript.blocks_movement():
 					_pending = {"kind": "nav", "approach": approach, "deferred_path": true}
 				else:
 					Events.player_path_requested.emit(approach)
 				return
 			var actor := _animal_node(zid)
+			## Freeze approach at tap time — do not chase if they wander.
 			approach = actor.global_position if actor else farm_map.animal_positions.get(zid, farm_map.fence_center)
 		_:
 			approach = farm_map.nearest_walkable(world_pos)
@@ -473,18 +427,11 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 		"tap": world_pos,
 	}
 	_animal_sfx_played = false
-	_follow_delay = 0.0
-	_follow_legs = 0
 	## Already close enough → prompt immediately.
 	if player and player.global_position.distance_to(approach) <= Config.get_interact_arrive_eps():
 		_open_pending_prompt()
 		return
-	if kind == "animal":
-		## Narrate first; the follow updater issues the path once the
-		## narration movement-lock releases. Same-zone only — no gate.
-		var dur := SpeakScript.line("Walking to %s." % animal_db.display_name(zid))
-		_follow_delay = maxf(dur, 0.1) + 0.05
-	elif NarratorScript.blocks_movement():
+	if NarratorScript.blocks_movement():
 		## Player is frozen by narration — Player would drop the path request,
 		## leaving the tap dead. Defer it until the lock releases (_process).
 		_pending["deferred_path"] = true
@@ -492,7 +439,7 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 		Events.player_path_requested.emit(farm_map.nearest_walkable(approach))
 
 func _queue_bug_interact(bug: Node2D) -> void:
-	## Same-zone only (garden bugs from the garden, pen bugs from the pen).
+	## Same-zone only. One walk to the bug's position at tap time — no chase.
 	if player and not _same_side_of_fence(player.global_position, bug.global_position):
 		Events.player_path_requested.emit(farm_map.nearest_walkable(bug.global_position))
 		return
@@ -504,10 +451,11 @@ func _queue_bug_interact(bug: Node2D) -> void:
 		"slot": -1,
 		"approach": approach,
 		"tap": bug.global_position,
-		"legs": 0,
 	}
 	if player and player.global_position.distance_to(bug.global_position) <= Config.get_interact_arrive_eps() * 1.4:
 		_open_pending_prompt()
+	elif NarratorScript.blocks_movement():
+		_pending["deferred_path"] = true
 	else:
 		Events.player_path_requested.emit(approach)
 
@@ -523,35 +471,20 @@ func _pending_bug_node() -> Node2D:
 func _on_player_arrived() -> void:
 	if _pending.is_empty():
 		return
-	## Animal follow: _update_animal_follow opens the prompt / repaths.
-	if str(_pending.get("kind", "")) == "animal":
-		return
 	## Gate / ground navigate — no interaction on arrive.
 	if str(_pending.get("kind", "")) == "nav":
 		_pending.clear()
+		return
+	## Animal / bug / shed / bed: open at the fixed approach from the tap.
+	## No repath if the critter has wandered — player can tap again.
+	var approach: Vector2 = _pending.get("approach", Vector2.ZERO)
+	if player and player.global_position.distance_to(approach) > Config.get_interact_arrive_eps() * 1.5:
 		return
 	if str(_pending.get("kind", "")) == "bug":
 		var bug := _pending_bug_node()
 		if bug == null:
 			_pending.clear()
 			return
-		## Bug left our zone — cancel; don't chase through the gate.
-		if player and not _same_side_of_fence(player.global_position, bug.global_position):
-			_pending.clear()
-			return
-		if player and player.global_position.distance_to(bug.global_position) > Config.get_interact_arrive_eps() * 1.6:
-			var legs := int(_pending.get("legs", 0))
-			if legs < 2:
-				_pending["legs"] = legs + 1
-				Events.player_path_requested.emit(farm_map.nearest_walkable(bug.global_position))
-			else:
-				_pending.clear()
-			return
-		_open_pending_prompt()
-		return
-	var approach: Vector2 = _pending.get("approach", Vector2.ZERO)
-	if player and player.global_position.distance_to(approach) > Config.get_interact_arrive_eps() * 1.5:
-		return
 	_open_pending_prompt()
 
 func _open_pending_prompt() -> void:

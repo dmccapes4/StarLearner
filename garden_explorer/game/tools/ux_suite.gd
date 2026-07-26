@@ -177,7 +177,7 @@ func _run() -> void:
 	_check("star_collected", world.progress != null and bool(world.progress.is_collected("01_seeds")),
 		"01_seeds collected")
 
-	## Enter the pen via gate routing first — animal follow is same-zone only.
+	## Enter the pen via gate routing first — animal interact is same-zone only.
 	_events().world_tapped.emit(farm.fence_center)
 	for _i in 1800:
 		await process_frame

@@ -140,12 +140,16 @@ original list.
   roaming animal stole, and asserts per-bed watering.
 
 ## Round 6 — zone targeting (2026-07-26)
-- Tap-to-target animals/bugs is same-zone only: dog + garden bugs from the
-  garden; pen animals + pen bugs only once the player is already inside the
-  pen. Cross-fence animal taps never start follow.
+- Animal/bug interact is same-zone only: dog + garden bugs from the garden;
+  pen animals + pen bugs only once the player is already inside the pen.
 - Gate routing is separate: FarmMap.find_path concatenates garden→gate→pen
   (and the reverse) for cross-boundary walks. Same-side walks never visit
-  the gate. Animal follow never asks the pathfinder to cross the fence.
+  the gate.
+
+## Round 6b — remove tap-to-target chase (2026-07-26)
+- Removed animal/bug follow repathing and "Walking to {name}." chase.
+  Tap walks once to the critter's position at tap time, then opens the
+  reveal on arrive. If they wander off, tap again.
 
 ## Always
 - Headless unit tests + ux_suite after each phase; rebuild APK & install last.

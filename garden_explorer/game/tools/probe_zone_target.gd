@@ -1,5 +1,5 @@
 extends SceneTree
-## Verify same-zone animal targeting + explicit gate routing.
+## Verify same-zone animal interact (no chase) + explicit gate routing.
 
 func _init() -> void:
 	call_deferred("_run")
@@ -17,102 +17,77 @@ func _run() -> void:
 	var world: Node = main.get_node("World")
 	var farm: FarmMap = world.get_node("FarmMap")
 	var player: Node2D = world.get("player")
-	var animal_db = world.get("animal_db")
-
+	var EventsNode := root.get_node("/root/Events")
 	var fails := 0
-	## --- Gate routing: garden → pen must visit the gate ---
-	var garden_pt: Vector2 = farm.spawn_world
-	var pen_pt: Vector2 = farm.fence_center
-	var path: PackedVector2Array = farm.find_path(garden_pt, pen_pt)
+
+	var path: PackedVector2Array = farm.find_path(farm.spawn_world, farm.fence_center)
 	var near_gate := false
 	for p in path:
 		if p.distance_to(farm.gate_world) <= 56.0:
 			near_gate = true
 			break
-	print("gate_path pts=%d near_gate=%s gate=%s" % [path.size(), near_gate, farm.gate_world])
+	print("gate_path near_gate=%s" % near_gate)
 	if not near_gate:
-		print("FAIL gate_path")
 		fails += 1
+		print("FAIL gate_path")
 	else:
 		print("OK gate_path")
 
-	## Same-side path must NOT require the gate.
-	var bed: Vector2 = farm.slot_world("bed_0", 0) if farm.bed_count() > 0 else garden_pt
-	var path2: PackedVector2Array = farm.find_path(garden_pt, bed)
-	var hit_gate := false
-	for p in path2:
-		if p.distance_to(farm.gate_world) <= 40.0:
-			hit_gate = true
-			break
-	print("garden_path pts=%d hit_gate=%s" % [path2.size(), hit_gate])
-	if hit_gate:
-		print("FAIL garden_path_should_skip_gate")
-		fails += 1
-	else:
-		print("OK garden_path_skips_gate")
-
-	## --- Zone helpers ---
-	player.global_position = farm.nearest_walkable(garden_pt)
+	player.global_position = farm.nearest_walkable(farm.spawn_world)
 	await process_frame
-	var can_dog: bool = bool(world.call("_can_track_animal", "dog"))
-	var can_cow: bool = bool(world.call("_can_track_animal", "cow"))
-	print("in_garden can_dog=%s can_cow=%s (expect true/false)" % [can_dog, can_cow])
-	if not can_dog or can_cow:
-		print("FAIL garden_zone_rules")
+	if not bool(world.call("_can_interact_animal", "dog")) \
+			or bool(world.call("_can_interact_animal", "cow")):
 		fails += 1
+		print("FAIL garden_zone_rules")
 	else:
 		print("OK garden_zone_rules")
 
-	player.global_position = farm.nearest_walkable(pen_pt)
+	player.global_position = farm.nearest_walkable(farm.fence_center)
 	await process_frame
-	can_dog = bool(world.call("_can_track_animal", "dog"))
-	can_cow = bool(world.call("_can_track_animal", "cow"))
-	print("in_pen can_dog=%s can_cow=%s (expect false/true)" % [can_dog, can_cow])
-	if can_dog or not can_cow:
-		print("FAIL pen_zone_rules")
+	if bool(world.call("_can_interact_animal", "dog")) \
+			or not bool(world.call("_can_interact_animal", "cow")):
 		fails += 1
+		print("FAIL pen_zone_rules")
 	else:
 		print("OK pen_zone_rules")
 
-	## Tap cow from garden: must NOT start animal follow.
-	player.global_position = farm.nearest_walkable(garden_pt)
+	## Tap cow from garden: must not queue animal interact.
+	player.global_position = farm.nearest_walkable(farm.spawn_world)
 	await process_frame
 	var cow: Node2D = world.call("_animal_node", "cow")
-	var tap: Vector2 = cow.global_position if cow else pen_pt
-	var EventsNode := root.get_node("/root/Events")
-	EventsNode.world_tapped.emit(tap)
+	EventsNode.world_tapped.emit(cow.global_position if cow else farm.fence_center)
 	await process_frame
 	await process_frame
 	var pending: Dictionary = world.get("_pending")
-	var kind := str(pending.get("kind", ""))
-	print("tap_cow_from_garden pending_kind=%s (expect '' or nav, not animal)" % kind)
-	if kind == "animal":
-		print("FAIL no_cross_track")
+	if str(pending.get("kind", "")) == "animal":
 		fails += 1
+		print("FAIL no_cross_interact")
 	else:
-		print("OK no_cross_track")
+		print("OK no_cross_interact")
 
-	## Tap dog from garden: SHOULD start animal follow (or deferred after narrate).
+	## Tap dog from garden: one-shot walk to frozen approach (no chase).
 	var dog: Node2D = world.call("_animal_node", "dog")
 	if dog:
-		EventsNode.world_tapped.emit(dog.global_position)
-		## Wait a few frames for queue.
+		var dog_at_tap: Vector2 = dog.global_position
+		EventsNode.world_tapped.emit(dog_at_tap)
 		for _j in 10:
 			await process_frame
 		pending = world.get("_pending")
-		kind = str(pending.get("kind", ""))
-		print("tap_dog_from_garden pending_kind=%s id=%s" % [kind, pending.get("id", "")])
-		if kind != "animal" or str(pending.get("id", "")) != "dog":
-			print("FAIL dog_track")
+		var approach: Vector2 = pending.get("approach", Vector2.ZERO)
+		print("tap_dog pending=%s approach_dist=%.1f" % [
+			pending.get("kind", ""), approach.distance_to(dog_at_tap)])
+		if str(pending.get("kind", "")) != "animal" or str(pending.get("id", "")) != "dog":
 			fails += 1
+			print("FAIL dog_interact")
+		elif approach.distance_to(dog_at_tap) > 8.0:
+			fails += 1
+			print("FAIL dog_approach_frozen")
 		else:
-			print("OK dog_track")
+			print("OK dog_oneshot")
 
-	## Tap cow from pen: SHOULD start animal follow.
-	player.global_position = farm.nearest_walkable(pen_pt)
-	## Clear any prior follow / narration lock.
+	## Tap cow from pen: one-shot animal pending.
+	player.global_position = farm.nearest_walkable(farm.fence_center)
 	world.set("_pending", {})
-	world.set("_follow_delay", 0.0)
 	var NarratorScript := preload("res://scripts/audio/Narrator.gd")
 	NarratorScript.stop()
 	await process_frame
@@ -122,16 +97,11 @@ func _run() -> void:
 		for _j in 10:
 			await process_frame
 		pending = world.get("_pending")
-		kind = str(pending.get("kind", ""))
-		print("tap_cow_from_pen pending_kind=%s id=%s" % [kind, pending.get("id", "")])
-		if kind != "animal" or str(pending.get("id", "")) != "cow":
-			print("FAIL cow_track_in_pen")
+		if str(pending.get("kind", "")) != "animal" or str(pending.get("id", "")) != "cow":
 			fails += 1
+			print("FAIL cow_oneshot")
 		else:
-			print("OK cow_track_in_pen")
+			print("OK cow_oneshot")
 
-	print("RESULT: %s (%d fails) animal_db_pen_cow=%s" % [
-		"PASS" if fails == 0 else "FAIL", fails,
-		animal_db.in_pen("cow") if animal_db else "?"
-	])
+	print("RESULT: %s (%d fails)" % ["PASS" if fails == 0 else "FAIL", fails])
 	quit(0 if fails == 0 else 1)

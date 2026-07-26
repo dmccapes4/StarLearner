@@ -5,7 +5,7 @@ extends Node
 ## Volume policy, checked every frame:
 ##   • a full-freeze panel is open (video, media, reveal narration, grids,
 ##     season card, intro)          → music pauses
-##   • short narration is playing  → music ducks low ("Walking to Daisy.")
+##   • short narration is playing  → music ducks low
 ##   • otherwise                   → normal volume
 ## Season changes crossfade between the two players.
 
