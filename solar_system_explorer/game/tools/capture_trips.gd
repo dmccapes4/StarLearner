@@ -161,9 +161,14 @@ func _run() -> void:
 			samples.append(u_belt)
 			samples.sort()
 		for u_i in samples:
-			fly._flight_t = float(route["duration"]) * (float(u_i) / 100.0)
-			fly._flying = true
+			# Seek by PATH fraction and pose without advancing the clock.
+			fly._play_u = float(u_i) / 100.0
+			fly._progress_u = fly._play_u
+			fly._flying = false
 			fly._orbiting = false
+			fly._place_ship_at_path(fly._play_u)
+			fly._place_bodies_at(fly._clock)
+			fly._update_markers()
 			await process_frame
 			# Camera contract: forward == path tangent, every sampled frame.
 			if not fly._orbiting and u_i >= 3 and u_i <= 90:
@@ -183,42 +188,57 @@ func _run() -> void:
 				_check(not (dn["sphere"] as MeshInstance3D).visible,
 					"destination stays a marker mid-flight at u%02d" % u_i)
 				var ic: Sprite3D = dn["icon"]
+				_check(not ic.shaded, "marker Sprite3D is unshaded at u%02d" % u_i)
 				var dd: float = fly._cam.global_position.distance_to(
 					(dn["root"] as Node3D).global_position)
 				var scr_px: float = ic.pixel_size * FlyScene.ICON_TEX_PX \
 					/ (2.0 * maxf(dd, 0.01) * tan(deg_to_rad(65.0 * 0.5))) * 600.0
-				_check(scr_px < 45.0,
+				_check(scr_px < 55.0,
 					"destination marker stays a small marker at u%02d (%.0f px)" % [u_i, scr_px])
 			if u_i == u_belt and want_belt_shot:
 				await _shot(dir + "/%s_1_belt_u%03d.png" % [tag, u_i])
 			await _shot(dir + "/%s_1_fly_u%03d.png" % [tag, u_i])
 			if fly._orbiting:
 				break
+		# Late approach still on the sim path: dest marker should already
+		# read bigger than peers before the hard orbit cut.
 		if not fly._orbiting:
-			# Natural arrival: run the playback clock out; entry is the
-			# timeline's final frame.
-			fly._flight_t = float(route["duration"])
+			fly._play_u = 0.97
+			fly._progress_u = fly._play_u
 			fly._flying = true
+			fly._place_ship_at_path(fly._play_u)
+			fly._update_markers()
 			await process_frame
-		# Entry seam contract (STRATEGY §4): the camera heading never jumps —
-		# < 4°/frame through the whole entry blend.
-		var prev_fwd: Vector3 = -fly._cam.global_transform.basis.z
-		var worst_step := 0.0
-		var entry_frames := 0
-		while (fly._orbit_blend < 1.0 or fly._approach_t < FlyScene.APPROACH_S) \
-				and entry_frames < 900:
+			await _shot(dir + "/%s_2_approach.png" % tag)
+			if fly._body_nodes.has(to_id):
+				# Screen size = world_size / dist (pixel_size alone tracks distance).
+				var cam_pos: Vector3 = fly._cam.global_position
+				var dest_root: Node3D = fly._body_nodes[to_id]["root"]
+				var dest_d: float = maxf(cam_pos.distance_to(
+					dest_root.global_position), 0.001)
+				var dest_w: float = (fly._body_nodes[to_id]["icon"] as Sprite3D) \
+					.pixel_size * float(FlyScene.ICON_TEX_PX)
+				var dest_screen: float = dest_w / dest_d
+				var peer_max := 0.0
+				for oid in fly._body_nodes:
+					if oid == to_id:
+						continue
+					var pr: Node3D = fly._body_nodes[oid]["root"]
+					var pd: float = maxf(cam_pos.distance_to(pr.global_position), 0.001)
+					var pw: float = (fly._body_nodes[oid]["icon"] as Sprite3D) \
+						.pixel_size * float(FlyScene.ICON_TEX_PX)
+					peer_max = maxf(peer_max, pw / pd)
+				_check(dest_screen > peer_max * 1.05,
+					"approach dest larger on screen (%.4f vs %.4f)" % [
+						dest_screen, peer_max])
+			fly._play_u = 1.0
+			fly._progress_u = 1.0
+			fly._place_ship_at_path(1.0)
 			await process_frame
-			entry_frames += 1
-			var now_fwd: Vector3 = -fly._cam.global_transform.basis.z
-			worst_step = maxf(worst_step, rad_to_deg(prev_fwd.angle_to(now_fwd)))
-			prev_fwd = now_fwd
-			if entry_frames == 200:   # mid-approach: the planet mid-growth
-				await _shot(dir + "/%s_2_approach.png" % tag)
-		_check(fly._orbit_blend >= 1.0, "approach + orbit blend completed")
-		_check(worst_step < 4.0,
-			"orbit entry heading continuous (worst %.1f°/frame)" % worst_step)
-		# Big ONLY in orbit: after the entry cinematic the destination is the
-		# real mesh at full hero size; every other world stays a marker.
+			fly._enter_orbit_from_timeline()
+			await process_frame
+		# Hard cut: blend is immediate; planet mesh looms at full hero.
+		_check(fly._orbit_blend >= 1.0, "hard-cut orbit engaged")
 		if fly._body_nodes.has(to_id):
 			var dn2: Dictionary = fly._body_nodes[to_id]
 			_check((dn2["sphere"] as MeshInstance3D).visible,
@@ -231,14 +251,11 @@ func _run() -> void:
 					continue
 				if (fly._body_nodes[oid]["sphere"] as MeshInstance3D).visible:
 					_check(false, "non-destination %s shows a mesh in orbit" % oid)
-		# Entry radius contract: the sim charts the course to END on the
-		# parking sphere, so orbit entry is exactly at the standoff — no
-		# overshoot, no "recoil backwards" possible by construction.
 		var dstand: float = OrbitMath.sun_approach_standoff(cfg) \
 			if bool(dest.get("is_star", false)) \
 			else OrbitMath.orbit_standoff(float(dest.get("hero_r", 2.0)))
-		_check(absf(fly._orbit_entry_rad - dstand) < dstand * 0.06 + 0.5,
-			"orbit entered at parking radius (%.1f vs %.1f)" % [fly._orbit_entry_rad, dstand])
+		_check(absf(fly._orbit_park - dstand) < 0.25,
+			"orbit park radius (%.1f vs %.1f)" % [fly._orbit_park, dstand])
 		await _shot(dir + "/%s_2_orbit.png" % tag)
 		# A second orbit shot half a lap later — the abeam framing + icons.
 		for i in 120:

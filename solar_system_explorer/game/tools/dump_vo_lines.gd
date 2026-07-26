@@ -12,6 +12,7 @@ const TitleView := preload("res://scripts/TitleView.gd")
 const OrreryView := preload("res://scripts/OrreryView.gd")
 const AstronautIntro := preload("res://scripts/AstronautIntro.gd")
 const FlySceneScript := preload("res://scripts/FlyScene.gd")
+const PlotBoardScript := preload("res://scripts/PlotBoard.gd")
 const NarratorScript := preload("res://scripts/Narrator.gd")
 
 const OUT_PATH := "res://data/solar_vo_manifest.json"
@@ -30,6 +31,8 @@ func _run() -> void:
 	_add(FlySceneScript.LINE_LAUNCH)
 	_add(FlySceneScript.LINE_CRUISE)
 	_add(FlySceneScript.LINE_BRAKE)
+	# Engines-arming beat while the entry cinematic is already baked in.
+	_add(PlotBoardScript.LINE_ENGINES)
 
 	# Body blurbs (orrery tour + video card) + the video-card suffix.
 	for b in SolarData.bodies() + SolarData.major_asteroids():

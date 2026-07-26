@@ -1,14 +1,16 @@
 class_name PlotBoard
 extends Control
 ## Top-down course plot after the horizontal ScrollView picks a destination.
-## Owns choreography (chart → fast-forward lead → ship run → GO).
+## Owns choreography (chart+lead together → ship run → GO).
 
 signal go_home()
 signal course_committed(dest_id: String, route: Dictionary, t0: float)
 
-enum Phase { IDLE, CHART, LEAD, PREVIEW, READY }
+enum Phase { IDLE, CHART, LEAD, PREVIEW, ARMING, READY }
 
-const AUTO_GO_DELAY := 2.4
+const AUTO_GO_DELAY := 1.6
+const ARMING_S := 3.2
+const LINE_ENGINES := "Engines getting ready!"
 
 var _cfg: SolarFlyerConfig
 var _bodies: OrreryBodies
@@ -24,6 +26,8 @@ var _active: bool = false
 var _chart_s: float = 2.5
 var _lead_s: float = 2.0
 var _preview_s: float = 2.5
+var _arming_t: float = -1.0
+var _arming_said: int = -1
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -101,27 +105,48 @@ func _process(delta: float) -> void:
 		return
 	match _phase:
 		Phase.CHART:
+			# Ship course and destination orbit lead grow together — the
+			# "aim ahead" lesson reads while the path is still drawing.
 			_bodies.course_draw_u = minf(1.0,
 				_bodies.course_draw_u + delta / maxf(_chart_s, 0.1))
+			_bodies.ff_u = _bodies.course_draw_u
 			_bodies.eta_lit = int(round(_bodies.course_draw_u * float(OrreryBodies.ETA_PIP_COUNT)))
 			if _bodies.course_draw_u >= 1.0:
-				_phase = Phase.LEAD
-				_hint.text = "Watch — we aim ahead of where it's going"
-		Phase.LEAD:
-			_bodies.ff_u = minf(1.0, _bodies.ff_u + delta / maxf(_lead_s, 0.1))
-			if _bodies.ff_u >= 1.0:
+				_bodies.ff_u = 1.0
 				_phase = Phase.PREVIEW
 				_bodies.ship_preview_u = 0.0
 				_hint.text = "Ship checks the path…"
+		Phase.LEAD:
+			# Legacy beat — chart already finishes the lead in sync.
+			_bodies.ff_u = 1.0
+			_phase = Phase.PREVIEW
+			_bodies.ship_preview_u = 0.0
+			_hint.text = "Ship checks the path…"
 		Phase.PREVIEW:
 			_bodies.ship_preview_u = minf(1.0,
 				_bodies.ship_preview_u + delta / maxf(_preview_s, 0.1))
 			if _bodies.ship_preview_u >= 1.0:
+				# Arming: entry cinematic is already baked into the route at
+				# plot time; this beat just sells "getting ready" with a
+				# short countdown before GO.
+				_phase = Phase.ARMING
+				_arming_t = 0.0
+				_arming_said = -1
+				_go_btn.visible = false
+				_hint.text = "Engines getting ready…"
+				Narrator.speak(LINE_ENGINES)
+				_bodies.eta_lit = _eta_pips_for_duration(float(_route.get("duration", 20.0)))
+		Phase.ARMING:
+			_arming_t += delta
+			var left: int = maxi(int(ceil(ARMING_S - _arming_t)), 0)
+			if left != _arming_said and left > 0:
+				_arming_said = left
+				_hint.text = "Engines getting ready… %d" % left
+			if _arming_t >= ARMING_S:
 				_phase = Phase.READY
 				_go_btn.visible = true
 				_hint.text = "Ready — tap GO to fly!"
 				_auto_go_left = AUTO_GO_DELAY
-				_bodies.eta_lit = _eta_pips_for_duration(float(_route.get("duration", 20.0)))
 		Phase.READY:
 			if _auto_go_left >= 0.0:
 				_auto_go_left -= delta
@@ -137,9 +162,12 @@ func _eta_pips_for_duration(dur: float) -> int:
 
 static func plot_beat_seconds(duration: float) -> Dictionary:
 	var dur := maxf(duration, 1.0)
-	var chart := clampf(dur * 0.14, 1.3, 5.5)
-	var lead := clampf(dur * 0.10, 1.0, 4.0)
-	var preview := clampf(dur * 0.12, 1.4, 5.0)
+	# Chart stays on screen long enough to finish the whole arc + the
+	# narration that explains it — outer hops used to feel truncated when
+	# the line animation raced ahead of the VO.
+	var chart := clampf(dur * 0.18, 2.2, 8.0)
+	var lead := clampf(dur * 0.10, 1.2, 4.0)
+	var preview := clampf(dur * 0.12, 1.6, 5.0)
 	return {"chart": chart, "lead": lead, "preview": preview}
 
 func _on_gui_input(event: InputEvent) -> void:

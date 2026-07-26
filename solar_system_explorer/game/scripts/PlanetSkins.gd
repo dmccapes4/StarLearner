@@ -46,9 +46,10 @@ static func make_disc_texture(body_id: String, fallback: Color, diameter: int) -
 			img.set_pixel(x, y, Color(col.r * shade, col.g * shade, col.b * shade, 1.0))
 	return ImageTexture.create_from_image(img)
 
-## Recognizable navigation icon for the 3D flyer: the body's actual skin as a
-## shaded disc, plus a ring silhouette for ringed worlds (Saturn reads as
-## Saturn even as a far marker). Baked once at load; billboarded in-flight.
+## Recognizable navigation MARKER for the 3D flyer: a FLAT colored disc
+## (no limb-darkening — markers are identifiers, not tiny planet renders),
+## plus a ring silhouette for ringed worlds so Saturn still reads as Saturn.
+## Baked once at load; billboarded unshaded in-flight.
 static func make_icon_texture(b: Dictionary, size: int = 48) -> Texture2D:
 	var s: int = maxi(size, 16)
 	var id := str(b.get("id", ""))
@@ -56,9 +57,10 @@ static func make_icon_texture(b: Dictionary, size: int = 48) -> Texture2D:
 	if bool(b.get("is_star", false)):
 		return _sun_marker_texture(s)
 	var has_ring := bool(b.get("ring", false))
-	var disc_d: int = int(s * (0.58 if has_ring else 0.9))
-	var disc_tex := make_disc_texture(id, col, disc_d)
-	var disc_img: Image = disc_tex.get_image()
+	# Keep the disc large even with rings — a tiny ringed disc made giants
+	# look Earth-sized next to unringed markers.
+	var disc_d: int = int(s * (0.72 if has_ring else 0.92))
+	var disc_img := _flat_marker_disc(id, col, disc_d)
 
 	var img := Image.create(s, s, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
@@ -73,25 +75,58 @@ static func make_icon_texture(b: Dictionary, size: int = 48) -> Texture2D:
 		_icon_ring(img, cx, cy, s, ring_col, true)   # front half over the disc
 	return ImageTexture.create_from_image(img)
 
-## The Sun's marker is not a rendering of the Sun — it is a bright yellow
-## ball with a soft glow halo, unmistakable and bigger than every other
-## marker (its recognition tier outranks them all).
+## Flat circular marker face: skin colours sampled as a disc (no sphere
+## shading). Soft 1-px edge so it still reads as a clean pin, not a ball.
+static func _flat_marker_disc(body_id: String, fallback: Color, diameter: int) -> Image:
+	var d: int = maxi(diameter, 8)
+	var img := Image.create(d, d, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var skin_tex := texture_for(body_id)
+	var skin: Image = null
+	if skin_tex != null:
+		skin = skin_tex.get_image()
+		if skin != null and skin.is_compressed():
+			skin.decompress()
+	var r: float = d * 0.5
+	var cx := r
+	var cy := r
+	for y in d:
+		for x in d:
+			var dx: float = (x + 0.5) - cx
+			var dy: float = (y + 0.5) - cy
+			var dist: float = sqrt(dx * dx + dy * dy)
+			if dist > r:
+				continue
+			var col: Color
+			if skin != null:
+				var u: float = 0.5 + atan2(dx, r) / TAU
+				var v: float = 0.5 + dy / (r * 2.0)
+				col = skin.get_pixel(
+					clampi(int(u * float(skin.get_width())), 0, skin.get_width() - 1),
+					clampi(int(v * float(skin.get_height())), 0, skin.get_height() - 1))
+			else:
+				col = fallback
+			# Soft edge only — no limb darkening.
+			var edge: float = clampf((r - dist) * 2.0, 0.0, 1.0)
+			img.set_pixel(x, y, Color(col.r, col.g, col.b, edge))
+	return img
+
+## The Sun's marker is a flat bright yellow disc with a soft glow halo —
+## unmistakable and bigger than every other marker (tier 3.0).
 static func _sun_marker_texture(s: int) -> Texture2D:
 	var img := Image.create(s, s, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	var c: float = s * 0.5
-	var core: float = s * 0.30
+	var core: float = s * 0.34
 	var halo: float = s * 0.48
 	for y in s:
 		for x in s:
 			var d: float = Vector2(x + 0.5 - c, y + 0.5 - c).length()
 			if d <= core:
-				# Hot center fading to pure yellow at the ball's edge.
-				var t: float = d / core
-				img.set_pixel(x, y, Color(1.0, lerpf(0.98, 0.85, t),
-					lerpf(0.75, 0.15, t), 1.0))
+				# Flat hot yellow — no sphere shading.
+				img.set_pixel(x, y, Color(1.0, 0.92, 0.28, 1.0))
 			elif d <= halo:
-				var a: float = pow(1.0 - (d - core) / (halo - core), 2.0) * 0.8
+				var a: float = pow(1.0 - (d - core) / (halo - core), 1.6) * 0.75
 				img.set_pixel(x, y, Color(1.0, 0.82, 0.25, a))
 	return ImageTexture.create_from_image(img)
 

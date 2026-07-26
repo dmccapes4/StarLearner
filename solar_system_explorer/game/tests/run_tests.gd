@@ -251,14 +251,15 @@ func _test_orbit_math() -> void:
 
 	# Recognition tiers: Earth-class is the 1.0 legible baseline; Jupiter
 	# reads exactly DOUBLE Earth; monotonic vs real radius.
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["jupiter"]), 2.0), "Jupiter icon tier 2.0")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["saturn"]), 2.0), "Saturn icon tier 2.0")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["jupiter"]), 2.2), "Jupiter icon tier 2.2")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["saturn"]), 2.2), "Saturn icon tier 2.2")
 	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["earth"]), 1.0), "Earth icon tier 1.0")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["jupiter"]),
-		SolarData.icon_tier_for(by_id["earth"]) * 2.0),
-		"Jupiter marker reads double Earth")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["mercury"]), 0.8), "Mercury icon tier 0.8")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["neptune"]), 1.6), "Neptune icon tier 1.6")
+	_ok(SolarData.icon_tier_for(by_id["jupiter"])
+		>= SolarData.icon_tier_for(by_id["earth"]) * 2.0,
+		"Jupiter marker reads at least double Earth")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["mercury"]), 0.65), "Mercury icon tier 0.65")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["neptune"]), 1.55), "Neptune icon tier 1.55")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["sun"]), 3.0), "Sun icon tier 3.0")
 	var prev_tier := -1.0
 	var order_r := ["pluto", "mercury", "mars", "venus", "earth", "neptune",
 		"uranus", "saturn", "jupiter"]
@@ -445,6 +446,11 @@ func _test_flight() -> void:
 			else OrbitMath.body_pos(b, float(route_s["t_arr"]))
 		_ok(absf(tl_pos[tl_pos.size() - 1].distance_to(center_arr) - d_stand) < 1.0,
 			"timeline end on the parking sphere for %s" % b["id"])
+		# Orbit is a hard cut from timeline end — entry only stores ang/dir.
+		_ok(entry.has("ang") and entry.has("dir"),
+			"entry pose recorded for orbit cut %s" % b["id"])
+		_ok(not tl.has("entry_cine") or (tl.get("entry_cine", {}) as Dictionary).is_empty(),
+			"no baked course-continuation cinematic for %s" % b["id"])
 		# Determinism: replotting the same hop yields the same timeline.
 		var route_s2 := OrbitMath.plot_route(ship, b, 0.0, cfg, 0.0)
 		var tl2_pos: PackedVector3Array = route_s2["timeline"]["pos"]

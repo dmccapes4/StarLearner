@@ -1,10 +1,6 @@
 extends SceneTree
-## Dev probe: verify the orbit-entry seam has no "collision course → recoil".
-## Measures camera motion RELATIVE to the destination planet through entry.
-## Two scenarios per trip:
-##   smooth — plain real-time arrival (~last 10% flown frame by frame)
-##   jump   — one huge _flight_t jump right before arrival (boost tap /
-##            frame hitch stand-in) that used to overshoot inside standoff
+## Dev probe: approach stays on the sim path; orbit is a hard cut with the
+## planet looming. No course-continuation blend, no sharp turn-away path.
 ##   DISPLAY=:1 godot --path game -s res://tools/probe_orbit_entry.gd
 
 const Starfield := preload("res://scripts/Starfield.gd")
@@ -52,58 +48,80 @@ func _fly_arrival(cfg: SolarFlyerConfig, from_id: String, to_id: String,
 	print("\n=== %s -> %s %s  (dur %.1fs, park standoff %.1f) ===" % [
 		from_id, to_id, "JUMP" if jump else "smooth", dur, standoff])
 
-	# Approach: run real frames from 90% of the hop; in jump mode, first let
-	# a couple frames process at ~70% so _prev_u is a sane pre-jump sample,
-	# then slam _flight_t forward (worst-case boost tap / frame hitch).
-	fly._flight_t = dur * (0.70 if jump else 0.90)
+	# Late approach on the sim path — dest marker must outgrow peers.
+	fly._play_u = 0.70 if jump else 0.90
+	fly._progress_u = fly._play_u
+	fly._place_ship_at_path(fly._play_u)
+	fly._update_markers()
 	await process_frame
 	await process_frame
 	if jump:
-		fly._flight_t = dur * 0.999
-	var d_entry: float = -1.0
-	var d_min: float = INF
-	var d_max_blend: float = -1.0
-	var max_out_rate: float = 0.0   # planet-relative outward speed, u/s
-	var max_turn: float = 0.0       # camera heading change per frame, deg
-	var seam_frame := -1
-	var prev_d: float = -1.0
-	var prev_fwd := Vector3.ZERO
-	var frames := 0
-	while frames < 2400:
+		fly._play_u = 0.97
+		fly._progress_u = fly._play_u
+		fly._place_ship_at_path(fly._play_u)
+		fly._update_markers()
 		await process_frame
-		frames += 1
-		var center := OrbitMath.body_pos(dest, fly._clock)
-		var d: float = fly._cam.global_position.distance_to(center)
-		var fwd: Vector3 = -fly._cam.global_transform.basis.z
-		if fly._orbiting:
-			if seam_frame < 0:
-				seam_frame = frames
-				d_entry = d
-			d_min = minf(d_min, d)
-			if fly._orbit_blend < 1.0:
-				d_max_blend = maxf(d_max_blend, d)
-				if prev_d > 0.0:
-					# Positive = camera backing away from the planet.
-					max_out_rate = maxf(max_out_rate, (d - prev_d) * 60.0)
-				if prev_fwd.length() > 0.5:
-					max_turn = maxf(max_turn, rad_to_deg(prev_fwd.angle_to(fwd)))
-			else:
-				break
-		prev_d = d
-		prev_fwd = fwd
-	_check(seam_frame > 0, "entered orbit")
-	if seam_frame > 0:
-		print("  entry d=%.2f  blend d_max=%.2f d_min=%.2f  out_rate=%.2f u/s  turn=%.1f°/f" % [
-			d_entry, d_max_blend, d_min, max_out_rate, max_turn])
-		_check(d_entry > standoff * 0.90 and d_entry < standoff * 1.12,
-			"entry at the parking radius (d=%.1f vs %.1f)" % [d_entry, standoff])
-		# The gentle 0.22·r camera lift adds ~2.4% distance over the blend;
-		# anything beyond that reads as the ship recoiling off the planet.
-		_check(d_max_blend < standoff * 1.06 + 0.5,
-			"no backwards recoil during blend (d_max=%.1f)" % d_max_blend)
-		_check(max_out_rate < standoff * 0.05 + 1.0,
-			"outward drift stays gentle (%.2f u/s)" % max_out_rate)
-		_check(max_turn < 4.0, "camera heading continuous (%.1f°/frame)" % max_turn)
+	if fly._body_nodes.has(to_id) and fly._play_u >= FlyScene.APPROACH_GROW_U:
+		# Compare SCREEN size (world_size / dist), not Sprite3D.pixel_size —
+		# pixel_size scales with distance to keep peers constant on glass.
+		var cam_pos: Vector3 = fly._cam.global_position
+		var dest_root: Node3D = fly._body_nodes[to_id]["root"]
+		var dest_d: float = maxf(cam_pos.distance_to(dest_root.global_position), 0.001)
+		var dest_w: float = (fly._body_nodes[to_id]["icon"] as Sprite3D).pixel_size \
+			* float(FlyScene.ICON_TEX_PX)
+		var dest_screen: float = dest_w / dest_d
+		var peer_max := 0.0
+		for oid in fly._body_nodes:
+			if oid == to_id:
+				continue
+			var pr: Node3D = fly._body_nodes[oid]["root"]
+			var pd: float = maxf(cam_pos.distance_to(pr.global_position), 0.001)
+			var pw: float = (fly._body_nodes[oid]["icon"] as Sprite3D).pixel_size \
+				* float(FlyScene.ICON_TEX_PX)
+			peer_max = maxf(peer_max, pw / pd)
+		_check(dest_screen > peer_max * 1.05,
+			"approach dest larger on screen (%.4f vs %.4f)" % [dest_screen, peer_max])
+
+	# Cruise heading should still face travel (no look-at-planet turn-away).
+	var travel: Vector3 = Vector3.ZERO
+	if fly._tl_fwd.size() > 0:
+		var fi: int = mini(int(fly._flight_t / maxf(fly._tl_dt, 0.001)),
+			fly._tl_fwd.size() - 1)
+		travel = fly._tl_fwd[fi]
+	var cam_fwd: Vector3 = -fly._cam.global_transform.basis.z
+	if travel.length() > 0.001:
+		_check(cam_fwd.angle_to(travel.normalized()) < deg_to_rad(12.0),
+			"approach still faces travel (%.1f°)" % rad_to_deg(
+				cam_fwd.angle_to(travel.normalized())))
+
+	# Hard cut to orbit — planet looms at park radius.
+	fly._play_u = 1.0
+	fly._progress_u = 1.0
+	fly._place_ship_at_path(1.0)
+	await process_frame
+	fly._enter_orbit_from_timeline()
+	await process_frame
+	_check(fly._orbiting and fly._orbit_blend >= 1.0, "hard-cut orbit")
+	var center := OrbitMath.body_pos(dest, fly._clock)
+	var d: float = fly._cam.global_position.distance_to(center)
+	# Orbit camera sits on park radius with a small height lift (~2–3%).
+	_check(d > standoff * 0.95 and d < standoff * 1.08 + 0.5,
+		"orbit cut at parking (d=%.1f vs %.1f)" % [d, standoff])
+	if fly._body_nodes.has(to_id):
+		var mesh: MeshInstance3D = fly._body_nodes[to_id]["sphere"]
+		var hero: float = float(dest.get("hero_r", 1.0))
+		_check(mesh.visible and absf(mesh.scale.x - hero) < hero * 0.05,
+			"destination mesh looming at hero size")
+
+	# Free orbit should not spiral out.
+	var d0: float = d
+	for _i in 90:
+		await process_frame
+	var d1: float = fly._cam.global_position.distance_to(
+		OrbitMath.body_pos(dest, fly._clock))
+	_check(absf(d1 - d0) < standoff * 0.08 + 0.5,
+		"orbit radius stable (%.1f → %.1f)" % [d0, d1])
+
 	fly.queue_free()
 	bg.queue_free()
 	await process_frame

@@ -277,12 +277,15 @@ func _draw_belt_plot(c: Vector2) -> void:
 		_label(str(_belt["name"]), c + Vector2(0, -ry - 18.0), 22)
 
 func _draw_course_overlay(_c: Vector2) -> void:
+	## The charted line IS the simulation course — sample the Curve3D only,
+	## never append a stub to the planet. The sim ends on the parking sphere;
+	## "aim here" marks that exact endpoint (no jagged last-segment shift).
 	var curve: Curve3D = route["curve"]
-	var arrival: Vector3 = route["arrival_pos"]
 	var len: float = maxf(curve.get_baked_length(), 0.001)
 	var until: float = clampf(course_draw_u, 0.0, 1.0)
 	var pts := PackedVector2Array()
-	var n := 64
+	# Dense sampling so long transfer arcs stay smooth on the board.
+	var n := 128
 	for i in n + 1:
 		var u := float(i) / float(n) * until
 		pts.append(_to_screen(curve.sample_baked(u * len)))
@@ -290,18 +293,22 @@ func _draw_course_overlay(_c: Vector2) -> void:
 		# Outer glow + bright core so the course reads on a busy board.
 		draw_polyline(pts, Color(0.15, 0.55, 0.85, 0.55), 10.0, true)
 		draw_polyline(pts, Color(0.55, 0.98, 1.0, 0.98), 5.0, true)
-	# Ghost at intercept.
-	var ghost := _to_screen(arrival)
+	# Ghost at the SIM endpoint (parking arrival) — where the course ends.
+	var end_w: Vector3 = curve.sample_baked(len)
+	var ghost := _to_screen(end_w)
 	var ghost_col := Color(1, 1, 1, 0.14)
 	var target := SolarData.flyer_body_by_id(dest_id, cfg)
 	if not target.is_empty():
 		ghost_col = Color(target["color"].r, target["color"].g, target["color"].b, 0.28)
 	draw_circle(ghost, 18.0, ghost_col)
 	draw_arc(ghost, 16.0, 0.0, TAU, 32, Color(0.7, 0.95, 1.0, 0.95), 2.5)
-	_label("aim here", ghost + Vector2(0, -24), 18)
+	if until >= 0.999:
+		_label("aim here", ghost + Vector2(0, -24), 18)
 
 func _draw_target_lead(_c: Vector2) -> void:
-	## Arc along the destination orbit from now → intercept (the "aim ahead" lesson).
+	## Arc along the destination orbit from now → intercept (the "aim ahead"
+	## lesson). Progress tracks ff_u, which PlotBoard advances in lockstep
+	## with course_draw_u so both lines grow during "Plotting a course…".
 	if dest_id.is_empty() or route.is_empty():
 		return
 	var target := SolarData.flyer_body_by_id(dest_id, cfg)

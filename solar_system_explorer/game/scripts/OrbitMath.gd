@@ -189,11 +189,13 @@ static func build_course(ship_pos: Vector3, arrival_pos: Vector3,
 			else:
 				lo = mid
 		u0 = hi
-	for i in n + 1:
+	# Sample the open interval, then pin the exact arrival point so the last
+	# segment has no polar-rounding kink (the charted line == the sim path).
+	for i in n:
 		var u: float = lerpf(u0, 1.0, float(i) / float(n))
 		curve.add_point(_arc_pt(r0, r1, th0, dth, u))
-	# The intercept endpoint is exact — never let sampling round it off.
-	curve.set_point_position(curve.get_point_count() - 1, arrival_pos)
+	curve.add_point(arrival_pos)
+	curve.bake_interval = 0.5
 	return curve
 
 ## Point on the transfer arc at parameter u: linear radius + linear sweep =
@@ -252,11 +254,13 @@ static func simulate_route(curve: Curve3D, target: Dictionary, t0: float,
 	var ang: float = atan2(rel.z, rel.x)
 	var efwd: Vector3 = fwd[fwd.size() - 1]
 	var dir: float = 1.0 if efwd.dot(orbit_tangent(ang, 1.0)) >= 0.0 else -1.0
+	var entry := {"pos": end_p, "fwd": efwd, "rad": rel.length(),
+		"ang": ang, "dir": dir}
 	return {
 		"timeline": {
 			"dt": SIM_DT, "pos": pos, "fwd": fwd, "events": events,
-			"entry": {"pos": end_p, "fwd": efwd, "rad": rel.length(),
-				"ang": ang, "dir": dir},
+			## Arrival pose for the hard-cut orbit cinematic (not a path blend).
+			"entry": entry,
 		},
 		"min_sun_dist": min_sun,
 	}
@@ -276,8 +280,8 @@ static func course_min_sun_dist(curve: Curve3D) -> float:
 ## recognition tier (Jupiter reads double Earth, the Sun a bright yellow ball
 ## bigger than everything). Markers are identifiers for where a world is —
 ## honest little dots on the sky — never a rendering of the world itself.
-## The ONLY time any real geometry appears is the destination's cinematic
-## approach and orbit; everything else stays a marker forever.
+## Real geometry appears only after the hard-cut orbit cinematic; cruise and
+## approach keep every world (including the destination) as a marker.
 static func marker_world_size(dist: float, tier: float, cfg: SolarFlyerConfig) -> float:
 	return maxf(cfg.icon_scale * maxf(dist, 0.001) * tier, 0.05)
 

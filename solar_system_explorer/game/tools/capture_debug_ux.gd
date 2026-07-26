@@ -76,10 +76,14 @@ func _run() -> void:
 	route["travel_au"] = absf(float(mars["a_au"]) - float(earth["a_au"]))
 	fly.begin_flight("mars", route, 0.0)
 	for u_i in [0, 15, 35, 55, 75, 88]:
-		fly._flight_t = float(route["duration"]) * (float(u_i) / 100.0)
-		fly._flying = true
+		fly._play_u = float(u_i) / 100.0
+		fly._progress_u = fly._play_u
+		fly._flying = false
 		fly._orbiting = false
 		fly._highlight_id = ""
+		fly._place_ship_at_path(fly._play_u)
+		fly._place_bodies_at(fly._clock)
+		fly._update_markers()
 		await process_frame
 		await _shot(dir + "/30_fly_u%03d.png" % u_i)
 	# Orbit entry is baked into the timeline's final frame — jump to it.

@@ -22,5 +22,5 @@ game_year_seconds = 45.0
 sun_clearance = 18.0
 hop_min_s = 1.5
 hop_max_s = 55.0
-course_samples = 48
+course_samples = 96
 intercept_iters = 10

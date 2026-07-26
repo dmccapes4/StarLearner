@@ -60,7 +60,7 @@ const OVERRIDE_KEYS := [
 ## arc. The band is a design assertion, not a runtime clamp.
 @export var hop_min_s: float = 1.5
 @export var hop_max_s: float = 55.0
-@export var course_samples: int = 48
+@export var course_samples: int = 96
 @export var intercept_iters: int = 10
 
 static func load_default() -> SolarFlyerConfig:
