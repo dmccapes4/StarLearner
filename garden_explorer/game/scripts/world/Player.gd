@@ -81,9 +81,10 @@ func _wire_seed_carry() -> void:
 		Events.seed_selected.connect(_on_seed_carry)
 	if not Events.seed_cleared.is_connected(_on_seed_cleared):
 		Events.seed_cleared.connect(_on_seed_cleared)
+	if not Events.tool_changed.is_connected(_on_tool_carry):
+		Events.tool_changed.connect(_on_tool_carry)
 
-func _on_seed_carry(plant_id: String) -> void:
-	var art := _sprites()
+func _held_sprite() -> Sprite2D:
 	var spr := get_node_or_null("HeldSeed") as Sprite2D
 	if spr == null:
 		spr = Sprite2D.new()
@@ -92,10 +93,36 @@ func _on_seed_carry(plant_id: String) -> void:
 		spr.z_index = 5
 		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		add_child(spr)
+	return spr
+
+func _on_seed_carry(plant_id: String) -> void:
+	var art := _sprites()
+	var spr := _held_sprite()
 	if art:
 		spr.texture = art.seed_icon(plant_id)
 	spr.scale = Vector2(2.4, 2.4)
 	spr.position = Vector2(22, -28)
+	spr.rotation_degrees = 0.0
+	spr.visible = spr.texture != null
+
+func _on_tool_carry(tool_id: String) -> void:
+	if tool_id == "seed":
+		return ## seed_selected handles the icon
+	var spr := _held_sprite()
+	match tool_id:
+		"water":
+			spr.texture = _load_tex("res://assets/ui/carry_watering_can.png")
+			spr.scale = Vector2(0.55, 0.55)
+			spr.position = Vector2(24, -30)
+		"uproot":
+			spr.texture = _load_tex("res://assets/ui/carry_spade.png")
+			spr.scale = Vector2(0.55, 0.55)
+			spr.position = Vector2(22, -32)
+		_:
+			spr.texture = null
+			spr.visible = false
+			return
+	spr.rotation_degrees = 0.0
 	spr.visible = spr.texture != null
 
 func _on_seed_cleared() -> void:
@@ -103,6 +130,16 @@ func _on_seed_cleared() -> void:
 	if spr:
 		spr.visible = false
 		spr.texture = null
+		spr.rotation_degrees = 0.0
+
+func _load_tex(path: String) -> Texture2D:
+	if ResourceLoader.exists(path):
+		return load(path)
+	if FileAccess.file_exists(path):
+		var img := Image.load_from_file(path)
+		if img:
+			return ImageTexture.create_from_image(img)
+	return null
 
 func _sprites() -> FarmSprites:
 	var world := get_parent()

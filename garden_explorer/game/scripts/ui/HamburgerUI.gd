@@ -267,6 +267,9 @@ func _on_concept(star_id: String) -> void:
 	var discovered: bool = progress.is_revealed(star_id) or progress.is_collected(star_id)
 	var topic: String = str(star_db.topic(star_id))
 	var key := "c:%s" % star_id
+	## Cut any prior concept line so taps never stack narrations.
+	var NarratorScript := preload("res://scripts/audio/Narrator.gd")
+	NarratorScript.stop()
 	if discovered:
 		var r: String = _arm.press(key, _now())
 		if r == DoubleTapArmScript.RESULT_TRIGGER:
@@ -283,10 +286,10 @@ func _on_concept(star_id: String) -> void:
 		_arm_step[key] = 1
 		return
 	if r2 == DoubleTapArmScript.RESULT_TRIGGER and step == 1:
-		_play_unlock_demo(star_id)
 		_arm_step[key] = 2
 		_arm.press(key, _now()) ## re-arm for peek
-		SpeakScript.line("Tap again if you want to see the video without discovering it.")
+		## Unlock demo owns the narration — don't speak over it.
+		_play_unlock_demo(star_id)
 		return
 	if r2 == DoubleTapArmScript.RESULT_TRIGGER and step >= 2:
 		_play_concept(star_id, false)
@@ -363,6 +366,7 @@ func _play_unlock_demo(star_id: String) -> void:
 		hint,
 		guide if not guide.is_empty() else "Follow the gold outline in the garden.",
 		"Do that action in the garden to discover this video for real.",
+		"Tap again if you want to see the video without discovering it.",
 	])
 	if media and media.has_method("play_unlock_demo"):
 		media.call("play_unlock_demo", "How to unlock", lines)

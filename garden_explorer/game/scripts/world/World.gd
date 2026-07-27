@@ -7,6 +7,7 @@ const StarProgressScript := preload("res://scripts/sim/StarProgress.gd")
 const SpeakScript := preload("res://scripts/audio/Speak.gd")
 const NarratorScript := preload("res://scripts/audio/Narrator.gd")
 const AnimalSfxScript := preload("res://scripts/audio/AnimalSfx.gd")
+const GardenSfxScript := preload("res://scripts/audio/GardenSfx.gd")
 const RoamingAnimalScript := preload("res://scripts/world/RoamingAnimal.gd")
 const PenGateScript := preload("res://scripts/world/PenGate.gd")
 const AnimalCatalogScript := preload("res://scripts/content/AnimalCatalog.gd")
@@ -55,9 +56,15 @@ var _grid_after_video: String = ""
 ## RevealTile on arrive. No chase / repath onto moving animals or bugs.
 var _pending: Dictionary = {}
 var _animal_sfx_played: bool = false
+## After first animal meet: single tap = SFX; second tap within window = reveal.
+var _animal_met: Dictionary = {} ## animal_id -> true
+var _animal_last_tap_ms: Dictionary = {} ## animal_id -> msec
+const ANIMAL_DOUBLE_TAP_MS := 2000
 
 var _ripple_left: float = 0.0
 var _guide_return_left: float = 0.0
+var _uproot_armed_bed: String = ""
+var _water_anim: Node2D = null
 
 func _ready() -> void:
 	seed_db.load_all()
@@ -490,10 +497,10 @@ func _on_player_arrived() -> void:
 func _open_pending_prompt() -> void:
 	if _pending.is_empty():
 		return
-	## Animals: SFX → named portrait tile → tap for video.
+	## Animals: first meet → reveal; later → SFX, double-tap within 2s → reveal.
 	if str(_pending.get("kind", "")) == "animal":
 		var aid := str(_pending.get("id", ""))
-		_show_animal_reveal(aid)
+		_handle_animal_arrive(aid)
 		return
 	if str(_pending.get("kind", "")) == "bug":
 		_show_roaming_bug_reveal()
@@ -502,7 +509,15 @@ func _open_pending_prompt() -> void:
 		_pending.clear()
 		_show_coop_look()
 		return
+	## Beds: tools apply immediately; hands-free shows Bugs/Examine tiles.
+	if str(_pending.get("kind", "")) == "bed":
+		var bed_id := str(_pending.get("id", ""))
+		_pending.clear()
+		if _apply_bed_tool(bed_id):
+			return
+		_pending = {"kind": "bed", "id": bed_id, "slot": 0, "approach": Vector2.ZERO}
 	if action_prompt == null:
+		_pending.clear()
 		return
 	var actions := _build_actions_for_pending()
 	if actions.is_empty():
@@ -512,6 +527,74 @@ func _open_pending_prompt() -> void:
 		action_prompt.call("show_actions", actions)
 	else:
 		action_prompt.call("show_action", actions[0])
+
+func _handle_animal_arrive(animal_id: String) -> void:
+	_pending.clear()
+	var now := Time.get_ticks_msec()
+	var met := bool(_animal_met.get(animal_id, false))
+	if not met:
+		_animal_met[animal_id] = true
+		_animal_last_tap_ms[animal_id] = now
+		_show_animal_reveal(animal_id)
+		return
+	var last := int(_animal_last_tap_ms.get(animal_id, 0))
+	_animal_last_tap_ms[animal_id] = now
+	if now - last <= ANIMAL_DOUBLE_TAP_MS:
+		_show_animal_reveal(animal_id)
+		return
+	AnimalSfxScript.play(animal_id)
+	Events.animal_tapped.emit(animal_id)
+	print("Garden Explorer: animal:%s (sfx)" % animal_id)
+	_animal_sfx_played = false
+
+func _apply_bed_tool(bed_id: String) -> bool:
+	## Returns true if the interaction was fully handled (no action tiles).
+	if garden.is_bed_harvestable(bed_id):
+		_do_harvest_bed(bed_id)
+		return true
+	var tool := _shed_tool()
+	match tool:
+		"seed":
+			var held := ""
+			if shed_ui and shed_ui.has_method("selected_seed"):
+				held = str(shed_ui.call("selected_seed"))
+			if held.is_empty():
+				SpeakScript.line("Pick a seed at the shed first.")
+				return true
+			if garden.is_bed_empty(bed_id):
+				_do_plant_bed(bed_id, held)
+			else:
+				SpeakScript.line("This bed already has plants. Go to the shed and get the spade to uproot them.")
+			return true
+		"water":
+			if garden.is_bed_empty(bed_id):
+				SpeakScript.line("Nothing to water yet. Get seeds from the shed and plant them.")
+				return true
+			if garden.is_bed_thirsty(bed_id):
+				_do_water_bed(bed_id)
+			else:
+				SpeakScript.line("This bed is not thirsty right now.")
+			return true
+		"uproot":
+			if garden.is_bed_empty(bed_id):
+				SpeakScript.line("No plants here. Get seeds from the shed to plant some.")
+				return true
+			_arm_uproot(bed_id)
+			return true
+		_:
+			return false
+
+func _arm_uproot(bed_id: String) -> void:
+	_uproot_armed_bed = bed_id
+	if action_prompt == null:
+		return
+	action_prompt.call("show_actions", [{
+		"kind": "uproot_confirm",
+		"bed_id": bed_id,
+		"label": "Uproot?",
+		"icon": "res://assets/ui/tile_uproot_confirm.png",
+		"narration": "Are you sure you want to uproot these plants? Tap again to pull them out.",
+	}])
 
 var _interacting_animal: String = ""
 
@@ -620,6 +703,11 @@ func _on_video_closed() -> void:
 	if bug_grid and bug_grid.has_method("show_catch"):
 		bug_grid.call("show_catch", bid)
 
+func _shed_tool() -> String:
+	if shed_ui and shed_ui.has_method("selected_tool"):
+		return str(shed_ui.call("selected_tool"))
+	return ""
+
 func _build_actions_for_pending() -> Array:
 	var kind := str(_pending.get("kind", ""))
 	var zid := str(_pending.get("id", ""))
@@ -628,8 +716,9 @@ func _build_actions_for_pending() -> Array:
 		"shed":
 			return [{
 				"kind": "open_shed",
-				"label": "Seeds",
-				"narration": "Open the shed to pick a seed.",
+				"label": "Supplies",
+				"icon": "res://assets/ui/tile_supplies.png",
+				"narration": "Get or switch your garden supplies at the shed.",
 			}]
 		"bed":
 			return _build_bed_actions(zid, slot)
@@ -637,87 +726,48 @@ func _build_actions_for_pending() -> Array:
 			return []
 
 func _build_bed_actions(bed_id: String, slot: int) -> Array:
-	## Bed-level actions: Plant fills plots in fixed order (back-left →
-	## back-right → front-left → front-right, no plot choice), Water soaks
-	## every thirsty plot in the bed. Look/Harvest/Uproot stay per tapped plant.
+	## Tool decided at the shed. Holding a tool auto-applies on arrive
+	## (see _open_pending_prompt). Hands-free: Bugs + Examine tiles only.
 	if slot < 0:
 		slot = 0
 	var out: Array = []
-	var held := ""
-	if shed_ui and shed_ui.has_method("selected_seed"):
-		held = str(shed_ui.call("selected_seed"))
-	var next_empty := garden.first_empty_slot(bed_id)
-	if not held.is_empty() and next_empty >= 0:
+	var tool := _shed_tool()
+	## Harvestable beds: any interaction harvests (handled in _apply_bed_tool).
+	if garden.is_bed_harvestable(bed_id):
+		return [] ## auto-harvest path
+	match tool:
+		"seed", "water", "uproot":
+			return [] ## auto-applied on arrive
+		_:
+			pass
+	var awaiting := garden.bed_awaiting_media(bed_id)
+	var pid := garden.bed_plant_id(bed_id)
+	if awaiting == GardenState.STAGE_SPROUT or awaiting == GardenState.STAGE_GROWN:
 		out.append({
-			"kind": "plant",
+			"kind": "media",
 			"bed_id": bed_id,
-			"slot": next_empty,
-			"plant_id": held,
-			"label": "Plant",
-			"narration": "Plant the %s seed here?" % seed_db.display_name(held),
-		})
-	if _bed_thirsty_count(bed_id) > 0:
-		out.append({
-			"kind": "water",
-			"bed_id": bed_id,
-			"slot": -1,
-			"label": "Water",
-			"narration": "Water the bed?",
-		})
-	if not garden.is_empty(bed_id, slot):
-		var st := garden.get_slot(bed_id, slot)
-		var stage := str(st.get("stage", ""))
-		var pid := str(st.get("plant_id", ""))
-		var pname := seed_db.display_name(pid)
-		var awaiting := str(st.get("awaiting_media", ""))
-		if awaiting == GardenState.STAGE_SPROUT or awaiting == GardenState.STAGE_GROWN:
-			out.append({
-				"kind": "media",
-				"bed_id": bed_id,
-				"slot": slot,
-				"plant_id": pid,
-				"media_kind": awaiting,
-				"label": "Look",
-				"narration": "Look at the %s!" % pname,
-			})
-		if stage == GardenState.STAGE_GROWN:
-			out.append({
-				"kind": "harvest",
-				"bed_id": bed_id,
-				"slot": slot,
-				"plant_id": pid,
-				"label": "Harvest",
-				"narration": "Harvest the %s?" % pname,
-			})
-		out.append({
-			"kind": "uproot",
-			"bed_id": bed_id,
-			"slot": slot,
+			"slot": 0,
 			"plant_id": pid,
-			"label": "Uproot",
-			"narration": "Pull out the %s?" % pname,
+			"media_kind": awaiting,
+			"label": "Examine",
+			"icon": "res://assets/ui/tile_examine.png",
+			"narration": "Examine the %s!" % seed_db.display_name(pid),
 		})
-	## Bugs discovery — always available on a planted or empty plot interaction.
 	out.append({
 		"kind": "bugs",
 		"bed_id": bed_id,
 		"slot": slot,
 		"label": "Bugs",
+		"icon": "res://assets/ui/icon_bugs.png",
 		"narration": "Let's look for bugs in the garden!",
-		"silent": true, ## Narrate on confirm in _start_bug_hunt.
+		"silent": true,
 	})
 	return out
-
-func _bed_thirsty_count(bed_id: String) -> int:
-	var n := 0
-	for i in garden.slots_per_bed:
-		if garden.is_thirsty(bed_id, i):
-			n += 1
-	return n
 
 func _on_action_cancelled() -> void:
 	_pending.clear()
 	_animal_sfx_played = false
+	_uproot_armed_bed = ""
 
 func _on_action_confirmed(action: Dictionary) -> void:
 	_pending.clear()
@@ -728,17 +778,18 @@ func _on_action_confirmed(action: Dictionary) -> void:
 				shed_ui.call("open_shed")
 				print("Garden Explorer: open shed (%s)" % seed_db.current_season)
 		"plant":
-			_do_plant(str(action.bed_id), int(action.slot), str(action.plant_id))
+			_do_plant_bed(str(action.bed_id), str(action.plant_id))
 		"water":
-			_do_water(str(action.bed_id), int(action.slot))
+			_do_water_bed(str(action.bed_id))
 		"harvest":
-			_do_harvest(str(action.bed_id), int(action.slot))
+			_do_harvest_bed(str(action.bed_id))
 		"uproot":
-			var removed := garden.uproot(str(action.bed_id), int(action.slot))
-			Events.plant_uprooted.emit(str(action.bed_id), int(action.slot), removed)
-			print("Garden Explorer: uprooted %s" % removed)
+			_do_uproot_bed(str(action.bed_id))
+		"uproot_confirm":
+			## Second tap on the confirm tile.
+			_do_uproot_bed(str(action.bed_id))
 		"media":
-			garden.clear_awaiting_media(str(action.bed_id), int(action.slot))
+			garden.clear_awaiting_media(str(action.bed_id))
 			_offer_plant_media(str(action.plant_id), str(action.media_kind), true)
 		"bugs":
 			_start_bug_hunt(str(action.get("bed_id", "")))
@@ -802,38 +853,90 @@ func _on_reveal_cancelled() -> void:
 	else:
 		_reveal_ctx.clear()
 
-func _do_plant(bed_id: String, slot: int, plant_id: String) -> void:
+func _do_plant_bed(bed_id: String, plant_id: String) -> void:
 	if not seed_db.is_seed_available(plant_id):
 		SpeakScript.line("That seed is out of season.")
 		if shed_ui and shed_ui.has_method("clear_selection"):
 			shed_ui.call("clear_selection")
 		return
-	if garden.plant(bed_id, slot, plant_id):
-		Events.plant_planted.emit(bed_id, slot, plant_id)
-		print("Garden Explorer: planted %s in %s[%d]" % [plant_id, bed_id, slot])
+	if garden.plant_bed(bed_id, plant_id):
+		GardenSfxScript.plant()
+		Events.plant_planted.emit(bed_id, 0, plant_id)
+		var pname := seed_db.display_name(plant_id)
+		SpeakScript.line("You planted %s seeds!" % pname)
+		print("Garden Explorer: planted %s in %s (bed)" % [plant_id, bed_id])
 	else:
-		var empty := garden.first_empty_slot(bed_id)
-		if empty >= 0 and garden.plant(bed_id, empty, plant_id):
-			Events.plant_planted.emit(bed_id, empty, plant_id)
-			print("Garden Explorer: planted %s in %s[%d]" % [plant_id, bed_id, empty])
-		else:
-			SpeakScript.line("This garden box is full.")
+		SpeakScript.line("This garden box is full.")
 
-func _do_water(bed_id: String, slot: int) -> void:
-	## One Water action soaks every thirsty plot in the bed (slot < 0), or a
-	## single plot when a specific slot is given (legacy path).
-	var watered := 0
-	var slots := range(garden.slots_per_bed) if slot < 0 else [slot]
-	for i in slots:
-		if not garden.is_thirsty(bed_id, i):
-			continue
-		var result := garden.water(bed_id, i, seed_db)
-		if bool(result.get("ok", false)):
-			watered += 1
-			Events.plant_watered.emit(bed_id, i, str(result.plant_id), str(result.stage))
-			print("Garden Explorer: watered %s → %s" % [result.plant_id, result.stage])
-	if watered == 0:
-		SpeakScript.line("Not thirsty yet.")
+func _do_water_bed(bed_id: String) -> void:
+	var result := garden.water_bed(bed_id, seed_db)
+	if bool(result.get("ok", false)):
+		GardenSfxScript.water()
+		_play_water_anim(bed_id)
+		Events.plant_watered.emit(bed_id, 0, str(result.plant_id), str(result.stage))
+		SpeakScript.line("You watered the bed.")
+		print("Garden Explorer: watered bed %s → %s" % [bed_id, result.stage])
+	elif bool(result.get("not_thirsty", false)):
+		SpeakScript.line("This bed is not thirsty right now.")
+	else:
+		SpeakScript.line("Nothing to water yet. Get seeds from the shed and plant them.")
+
+func _do_uproot_bed(bed_id: String) -> void:
+	NarratorScript.stop()
+	var removed := garden.uproot_bed(bed_id)
+	_uproot_armed_bed = ""
+	if removed.is_empty():
+		SpeakScript.line("No plants here. Get seeds from the shed to plant some.")
+		return
+	GardenSfxScript.uproot()
+	Events.plant_uprooted.emit(bed_id, 0, removed)
+	SpeakScript.line("You uprooted the %s." % seed_db.display_name(removed))
+	print("Garden Explorer: uprooted bed %s (%s)" % [bed_id, removed])
+
+func _play_water_anim(bed_id: String) -> void:
+	## Watering can rises, tilts, and streams a few droplets over the bed.
+	if _water_anim and is_instance_valid(_water_anim):
+		_water_anim.queue_free()
+	var center: Vector2 = farm_map.bed_centers.get(bed_id, player.global_position if player else Vector2.ZERO)
+	var n := Node2D.new()
+	n.name = "WaterAnim"
+	n.z_index = 80
+	add_child(n)
+	_water_anim = n
+	var can := Sprite2D.new()
+	can.centered = true
+	can.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	if ResourceLoader.exists("res://assets/ui/carry_watering_can.png"):
+		can.texture = load("res://assets/ui/carry_watering_can.png")
+	elif FileAccess.file_exists("res://assets/ui/carry_watering_can.png"):
+		var img := Image.load_from_file("res://assets/ui/carry_watering_can.png")
+		if img:
+			can.texture = ImageTexture.create_from_image(img)
+	can.scale = Vector2(0.45, 0.45)
+	can.position = center + Vector2(0, -FarmMap.BED_HEIGHT - 20)
+	n.add_child(can)
+	var tw := create_tween()
+	tw.set_parallel(true)
+	tw.tween_property(can, "position", can.position + Vector2(0, -18), 0.25)
+	tw.tween_property(can, "rotation_degrees", -55.0, 0.35)
+	tw.chain().tween_callback(func() -> void:
+		for i in 6:
+			var drop := Polygon2D.new()
+			drop.color = Color(0.35, 0.65, 1.0, 0.85)
+			drop.polygon = PackedVector2Array([Vector2(0, -4), Vector2(3, 2), Vector2(0, 6), Vector2(-3, 2)])
+			drop.position = can.global_position + Vector2(14, 10) + Vector2(randf_range(-6, 6), 0)
+			n.add_child(drop)
+			var dtw := create_tween()
+			dtw.tween_property(drop, "position", drop.position + Vector2(0, 28), 0.35)
+			dtw.parallel().tween_property(drop, "modulate:a", 0.0, 0.35)
+	)
+	tw.chain().tween_interval(0.45)
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(n):
+			n.queue_free()
+		if _water_anim == n:
+			_water_anim = null
+	)
 
 func _handle_animal_tap(animal_id: String) -> void:
 	## Legacy hook — prefer arrive→prompt path.
@@ -857,21 +960,24 @@ func _show_coop_look() -> void:
 	if not played:
 		SpeakScript.line("Chickens lay their eggs in cozy nesting boxes. Farmers collect them every morning!")
 
-func _do_harvest(bed_id: String, slot: int) -> void:
-	var pid := garden.harvest(bed_id, slot)
+func _do_harvest_bed(bed_id: String) -> void:
+	var pid := garden.harvest_bed(bed_id)
 	if pid.is_empty():
 		return
-	harvest_totals[pid] = int(harvest_totals.get(pid, 0)) + 1
+	## One bed harvest counts as four plants of that type.
+	var yield_n := garden.slots_per_bed
+	harvest_totals[pid] = int(harvest_totals.get(pid, 0)) + yield_n
 	var total := int(harvest_totals[pid])
+	GardenSfxScript.harvest()
 	Events.plant_harvested.emit(pid, total)
-	print("Garden Explorer: harvest %s — total %d" % [pid, total])
+	print("Garden Explorer: harvest bed %s — %s total %d" % [bed_id, pid, total])
 	var save := _save()
 	var first: bool = save != null and save.has_method("has_flag") and not save.has_flag("harvest_first:%s" % pid)
 	if first:
 		save.set_flag("harvest_first:%s" % pid, true)
 		_run_first_harvest_ceremony(pid)
 	else:
-		_speak_harvest(pid, total)
+		SpeakScript.line("You harvested the %s!" % seed_db.display_name(pid))
 	if shed_ui and shed_ui.has_method("set_harvest_totals"):
 		shed_ui.call("set_harvest_totals", harvest_totals)
 

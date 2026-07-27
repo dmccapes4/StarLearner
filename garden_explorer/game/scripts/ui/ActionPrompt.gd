@@ -154,6 +154,14 @@ func _resolve_icon(action: Dictionary) -> Texture2D:
 	var tex = action.get("texture", null)
 	if tex is Texture2D:
 		return tex
+	var path := str(action.get("icon", ""))
+	if not path.is_empty():
+		if ResourceLoader.exists(path):
+			return load(path)
+		if FileAccess.file_exists(path):
+			var img := Image.load_from_file(path)
+			if img:
+				return ImageTexture.create_from_image(img)
 	if sprites == null:
 		return null
 	if sprites.has_method("action_icon"):

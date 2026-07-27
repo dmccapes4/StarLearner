@@ -66,7 +66,7 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='planted:' in 7 events",
+			"detail": "needle='planted:' in 4 events",
 			"name": "plant_log",
 			"ok": true
 		},
@@ -76,12 +76,12 @@
 			"ok": true
 		},
 		{
-			"detail": "thirsty after bed water=0",
+			"detail": "thirsty after bed water=false",
 			"name": "bed_watered",
 			"ok": true
 		},
 		{
-			"detail": "needle='watered:' in 12 events",
+			"detail": "needle='watered:' in 6 events",
 			"name": "water_log",
 			"ok": true
 		},
@@ -106,7 +106,7 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='harvest:' in 32 events",
+			"detail": "needle='harvest:' in 23 events",
 			"name": "harvest_log",
 			"ok": true
 		},
@@ -126,7 +126,7 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='guide:' in 33 events",
+			"detail": "needle='guide:' in 24 events",
 			"name": "guide_log",
 			"ok": true
 		},
@@ -146,7 +146,7 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='star_collected:01_seeds' in 34 events",
+			"detail": "needle='star_collected:01_seeds' in 25 events",
 			"name": "star_collected_log",
 			"ok": true
 		},
@@ -166,7 +166,7 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='animal:' in 35 events",
+			"detail": "needle='animal:' in 26 events",
 			"name": "animal_tap_log",
 			"ok": true
 		},
@@ -181,7 +181,7 @@
 			"ok": true
 		},
 		{
-			"detail": "needle='season:' in 37 events",
+			"detail": "needle='season:' in 28 events",
 			"name": "season_log",
 			"ok": true
 		},
@@ -202,34 +202,25 @@
 		"seed_selected:lettuce",
 		"planted:lettuce:bed_0:0",
 		"revealed:03_planting",
-		"planted:lettuce:bed_0:1",
-		"planted:lettuce:bed_0:2",
-		"planted:lettuce:bed_0:3",
 		"watered:lettuce:bed_0:0:seed",
 		"revealed:04_watering",
-		"watered:lettuce:bed_0:1:seed",
-		"watered:lettuce:bed_0:2:seed",
-		"watered:lettuce:bed_0:3:seed",
 		"stage:lettuce:bed_0:0:sprout",
 		"revealed:05_sprouting",
+		"stage:lettuce:bed_0:1:sprout",
+		"stage:lettuce:bed_0:2:sprout",
+		"stage:lettuce:bed_0:3:sprout",
 		"stage:lettuce:bed_0:0:growing",
 		"revealed:07_growing",
-		"stage:lettuce:bed_0:0:grown",
-		"stage:lettuce:bed_0:1:sprout",
 		"stage:lettuce:bed_0:1:growing",
-		"stage:lettuce:bed_0:1:grown",
-		"stage:lettuce:bed_0:2:sprout",
 		"stage:lettuce:bed_0:2:growing",
-		"stage:lettuce:bed_0:2:grown",
-		"stage:lettuce:bed_0:3:sprout",
 		"stage:lettuce:bed_0:3:growing",
+		"stage:lettuce:bed_0:0:grown",
+		"stage:lettuce:bed_0:1:grown",
+		"stage:lettuce:bed_0:2:grown",
 		"stage:lettuce:bed_0:3:grown",
-		"harvest:lettuce:1",
+		"harvest:lettuce:4",
 		"revealed:09_harvest",
 		"revealed:12_store",
-		"harvest:lettuce:2",
-		"harvest:lettuce:3",
-		"harvest:lettuce:4",
 		"guide:08_weeding",
 		"star_collected:01_seeds",
 		"animal:chicken_a",

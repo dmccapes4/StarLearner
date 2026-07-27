@@ -674,15 +674,20 @@ func is_blocked(world_pos: Vector2) -> bool:
 func in_pen(world_pos: Vector2) -> bool:
 	return fence_poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, fence_poly)
 
-const GATE_PASS_RADIUS := 46.0
+const GATE_PASS_RADIUS := 52.0
 
 func crossing_allowed(a: Vector2, b: Vector2) -> bool:
 	## A move between two points may not cross the pen fence except at the gate.
+	## Both endpoints (and the midpoint) must sit near the gate corridor so the
+	## avatar cannot clip under the fence rails by the coop.
 	if in_pen(a) == in_pen(b):
 		return true
 	if gate_world == Vector2.ZERO:
 		return true
-	return ((a + b) * 0.5).distance_to(gate_world) <= GATE_PASS_RADIUS
+	var mid := (a + b) * 0.5
+	return a.distance_to(gate_world) <= GATE_PASS_RADIUS \
+		and b.distance_to(gate_world) <= GATE_PASS_RADIUS \
+		and mid.distance_to(gate_world) <= GATE_PASS_RADIUS
 
 func nearest_walkable(world_pos: Vector2, max_radius_tiles: int = 8) -> Vector2:
 	## Snap a goal (often inside an obstacle) to the closest walkable nav cell.

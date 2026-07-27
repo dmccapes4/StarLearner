@@ -38,6 +38,9 @@ func _run() -> void:
 			save.clear_all()
 		if save.has_method("set_intro_completed"):
 			save.set_intro_completed(true)
+		## Skip the long shed-tools gold-outline intro in automated runs.
+		if save.has_method("set_flag"):
+			save.set_flag("shed_tools_intro", true)
 	_install_log_hook()
 
 	var MainScene := load("res://scenes/Main.tscn")
@@ -90,28 +93,27 @@ func _run() -> void:
 	await _settle(4)
 
 	var garden: GardenState = world.garden
-	for i in 4:
-		await _tap_and_confirm(main, farm.slot_world("bed_0", i))
+	## One bed tap with seed tool plants all four plots.
+	await _tap_and_confirm(main, farm.slot_world("bed_0", 0))
+	await _drain_freezes(main, 900)
 	_check("planted_four", garden.occupied_count("bed_0") == 4, "occupied=%d" % garden.occupied_count("bed_0"))
 	_check_log_contains("plant_log", "planted:")
 	await _shot("bed_full")
 
-	# Clear seed so bed taps don't try to plant
-	if shed and shed.has_method("clear_selection"):
-		shed.call("clear_selection")
-	await _settle(2)
-
-	## Per-bed watering: one Water action soaks every thirsty plot in the bed.
-	await _tap_and_confirm_kind(main, farm.slot_world("bed_0", 0), "water")
-	var still_thirsty := 0
-	for i in 4:
-		if garden.is_thirsty("bed_0", i):
-			still_thirsty += 1
-	_check("bed_watered", still_thirsty == 0, "thirsty after bed water=%d" % still_thirsty)
+	## Switch to watering can, then water the bed (auto-applies — no prompt).
+	if shed and shed.has_method("set_tool"):
+		shed.call("set_tool", "water")
+	await _drain_freezes(main, 200)
+	_events().world_tapped.emit(farm.slot_world("bed_0", 0))
+	for _i in 900:
+		await process_frame
+		if not garden.is_bed_thirsty("bed_0"):
+			break
+	await _drain_freezes(main, 400)
+	_check("bed_watered", not garden.is_bed_thirsty("bed_0"), "thirsty after bed water=%s" % garden.is_bed_thirsty("bed_0"))
 	_check_log_contains("water_log", "watered:")
 
-	for i in 4:
-		_force_grown(garden, db, "bed_0", i)
+	_force_grown_bed(garden, db, "bed_0")
 	await _settle(6)
 	var grown_n := 0
 	for i in 4:
@@ -126,18 +128,16 @@ func _run() -> void:
 	_check("stage_or_water_log", stage_hit, "saw stage/water events")
 	await _shot("grown")
 
+	## Hands free — any bed tap harvests a ready bed.
+	if shed and shed.has_method("clear_selection"):
+		shed.call("clear_selection")
+	await _settle(2)
 	var before_total := _sum_totals(world.harvest_totals)
-	for i in 4:
-		## First interact may open grown media; second picks Harvest from action tiles.
-		await _tap_and_confirm(main, farm.slot_world("bed_0", i))
-		await _drain_freezes(main, 900)
-		## Retry: a roaming animal near the bed can steal a tap.
-		for _try in 3:
-			if garden.is_empty("bed_0", i):
-				break
-			await _tap_and_confirm_kind(main, farm.slot_world("bed_0", i), "harvest")
-			## First harvest runs the full ceremony (grid + video) — drain it.
-			await _drain_freezes(main, 1800)
+	for _try in 3:
+		if garden.is_bed_empty("bed_0"):
+			break
+		await _tap_and_confirm(main, farm.slot_world("bed_0", 0))
+		await _drain_freezes(main, 1800)
 	var after_total := _sum_totals(world.harvest_totals)
 	_check("harvest_stored", after_total >= before_total + 4, "totals %d→%d" % [before_total, after_total])
 	_check_log_contains("harvest_log", "harvest:")
@@ -401,22 +401,25 @@ func _close_any_media(main: Node) -> void:
 			n.call("_close")
 	paused = false
 
-func _force_grown(garden: GardenState, db: SeedDB, bed_id: String, slot: int) -> void:
-	## Fast-forward waters + stage time for tests (respects thirst + stage gates).
-	for _i in 40:
-		var s: Dictionary = garden.get_slot(bed_id, slot)
-		if str(s.get("stage", "")) == GardenState.STAGE_GROWN:
+func _force_grown_bed(garden: GardenState, db: SeedDB, bed_id: String) -> void:
+	## Fast-forward water-then-wait stages until grown.
+	for _i in 12:
+		if garden.bed_stage(bed_id) == GardenState.STAGE_GROWN:
 			return
-		if str(s.get("plant_id", "")).is_empty():
+		if garden.is_bed_empty(bed_id):
 			return
-		s["thirsty"] = true
+		if garden.is_bed_thirsty(bed_id):
+			garden.water_bed(bed_id, db)
+		var s: Dictionary = garden.get_slot(bed_id, 0)
 		s["stage_time"] = 999.0
-		garden.beds[bed_id][slot] = s
-		garden.water(bed_id, slot, db)
-		s = garden.get_slot(bed_id, slot)
-		s["stage_time"] = 999.0
-		garden.beds[bed_id][slot] = s
-		garden._try_advance(bed_id, slot, db)
+		s["watered_stage"] = true
+		s["thirsty"] = false
+		garden.beds[bed_id][0] = s
+		garden._sync_slots_from_lead(bed_id)
+		garden._try_advance_bed(bed_id, db)
+
+func _force_grown(garden: GardenState, db: SeedDB, bed_id: String, _slot: int) -> void:
+	_force_grown_bed(garden, db, bed_id)
 
 func _settle(frames: int) -> void:
 	## Media / video panels pause the tree; keep the suite moving.

@@ -1,71 +1,84 @@
 class_name PenGate
 extends Node2D
-## Animated pen gate — opens for the player only (animals stay in pen bounds).
+## Simple isometric-friendly brown fence bar that slides/fades open for the
+## player. Animals stay in pen bounds regardless.
 
 const OPEN_DIST := 52.0
 const CLOSE_DIST := 78.0
-const FRAME_SEC := 0.05
+const ANIM_SEC := 0.28
 
 var player: Node2D
 var is_open: bool = false
-var _spr: Sprite2D
-var _frames: Array = [] ## Array[Texture2D] closed → open
-var _anim_t: float = 0.0
-var _frame_i: int = 0
-var _anim_dir: int = 0 ## -1 closing, 0 idle, 1 opening
+var _bar: Polygon2D
+var _closed_poly: PackedVector2Array
+var _open_poly: PackedVector2Array
+var _t: float = 0.0 ## 0 closed → 1 open
+var _dir: int = 0 ## -1 closing, 0 idle, 1 opening
 
-func setup(art: FarmSprites, world_pos: Vector2) -> void:
+func setup(_art: FarmSprites, world_pos: Vector2) -> void:
 	position = world_pos
-	_frames.clear()
-	if art and art.has_method("gate_frame_textures"):
-		_frames = art.gate_frame_textures()
-	_spr = Sprite2D.new()
-	_spr.name = "GateSprite"
-	_spr.centered = true
-	_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_spr.scale = Vector2(2.4, 2.4)
-	_spr.position = Vector2(0, -10)
-	if not _frames.is_empty():
-		_spr.texture = _frames[0]
-	add_child(_spr)
+	## Short brown rail that matches the west fence gap — solid when closed.
+	_closed_poly = PackedVector2Array([
+		Vector2(-22, -6), Vector2(22, -6), Vector2(18, 10), Vector2(-18, 10),
+	])
+	_open_poly = PackedVector2Array([
+		Vector2(-22, -6), Vector2(-10, -6), Vector2(-14, 10), Vector2(-26, 10),
+	])
+	_bar = Polygon2D.new()
+	_bar.name = "GateBar"
+	_bar.color = Color(0.42, 0.28, 0.14, 1.0)
+	_bar.polygon = _closed_poly
+	add_child(_bar)
+	## Top highlight for a bit of iso depth.
+	var lip := Polygon2D.new()
+	lip.color = Color(0.55, 0.38, 0.20, 1.0)
+	lip.polygon = PackedVector2Array([
+		Vector2(-20, -8), Vector2(20, -8), Vector2(22, -6), Vector2(-22, -6),
+	])
+	lip.name = "GateLip"
+	add_child(lip)
 	z_index = IsoUtil.depth_from_y(position.y) + 40
 
 func bind_player(p: Node2D) -> void:
 	player = p
 
 func _process(delta: float) -> void:
-	if player == null or not is_instance_valid(player) or _frames.is_empty():
+	if player == null or not is_instance_valid(player):
 		return
 	var d := global_position.distance_to(player.global_position)
-	if not is_open and d <= OPEN_DIST:
+	if not is_open and d <= OPEN_DIST and _dir == 0:
 		_begin_open()
-	elif is_open and d >= CLOSE_DIST and _anim_dir == 0 and _frame_i >= _frames.size() - 1:
+	elif is_open and d >= CLOSE_DIST and _dir == 0:
 		_begin_close()
-	if _anim_dir == 0:
+	if _dir == 0:
 		return
-	_anim_t += delta
-	if _anim_t < FRAME_SEC:
-		return
-	_anim_t = 0.0
-	_frame_i = clampi(_frame_i + _anim_dir, 0, _frames.size() - 1)
-	_spr.texture = _frames[_frame_i]
-	if _anim_dir > 0 and _frame_i >= _frames.size() - 1:
-		_anim_dir = 0
+	_t = clampf(_t + float(_dir) * delta / ANIM_SEC, 0.0, 1.0)
+	_bar.polygon = _lerp_poly(_closed_poly, _open_poly, _t)
+	_bar.modulate.a = lerpf(1.0, 0.15, _t)
+	if _dir > 0 and _t >= 1.0:
+		_dir = 0
 		is_open = true
-	elif _anim_dir < 0 and _frame_i <= 0:
-		_anim_dir = 0
+	elif _dir < 0 and _t <= 0.0:
+		_dir = 0
 		is_open = false
 
 func _begin_open() -> void:
-	if _anim_dir > 0 or (is_open and _frame_i >= _frames.size() - 1):
+	if _dir > 0 or (is_open and _t >= 1.0):
 		return
-	_anim_dir = 1
+	_dir = 1
 	var GateSfxScript := preload("res://scripts/audio/GateSfx.gd")
 	GateSfxScript.play_open()
 
 func _begin_close() -> void:
-	if _anim_dir < 0 or (not is_open and _frame_i <= 0):
+	if _dir < 0 or (not is_open and _t <= 0.0):
 		return
-	_anim_dir = -1
+	_dir = -1
 	var GateSfxScript := preload("res://scripts/audio/GateSfx.gd")
 	GateSfxScript.play_close()
+
+func _lerp_poly(a: PackedVector2Array, b: PackedVector2Array, t: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var n := mini(a.size(), b.size())
+	for i in n:
+		out.append(a[i].lerp(b[i], t))
+	return out

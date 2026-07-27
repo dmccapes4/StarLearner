@@ -151,5 +151,17 @@ original list.
   Tap walks once to the critter's position at tap time, then opens the
   reveal on arrive. If they wander off, tap again.
 
+## Round 7 — shed tools + per-bed growth (2026-07-26)
+- Shed: supplies tile → four-tool modal (seeds / water / spade / return) with
+  first-open gold-outline narration. Player carries the chosen tool sprite.
+- Bed actions decided by tool: plant/water/uproot auto-apply; hands-free shows
+  Bugs + Examine. Uproot is tile-gated confirm (game keeps running).
+- Per-bed crop: one plant fills all four plots; water-then-wait stage advances;
+  one water / harvest-ready icon above the bed. Harvest any tap when ready.
+- Pen: brown sliding gate bar; stricter gate-only fence crossing; animal first
+  meet → reveal, later SFX + double-tap within 2s for tile.
+- Bug world sprites: generated PNGs under assets/bugs/; concept narration no
+  longer stacks overlapping lines.
+
 ## Always
 - Headless unit tests + ux_suite after each phase; rebuild APK & install last.

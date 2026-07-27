@@ -1,5 +1,5 @@
 extends RefCounted
-## Phase 2 acceptance: plant 4 in one bed, uproot one.
+## Per-bed planting: one plant fills all four plots; uproot clears the bed.
 
 func run() -> TestAssert:
 	var t := TestAssert.new("GardenPlant")
@@ -15,26 +15,26 @@ func run() -> TestAssert:
 
 	var garden := GardenState.new()
 	garden.setup(farm.bed_ids(), 4)
-	t.eq(garden.first_empty_slot("bed_0"), 0, "first empty is 0")
+	t.eq(garden.first_empty_slot("bed_0"), 0, "empty bed → slot 0")
 
-	for i in 4:
-		t.ok(garden.plant("bed_0", i, "tomato"), "plant slot %d" % i)
-	t.eq(garden.occupied_count("bed_0"), 4, "bed full")
+	t.ok(garden.plant_bed("bed_0", "tomato"), "plant tomato bed")
+	t.eq(garden.occupied_count("bed_0"), 4, "all four plots filled")
 	t.eq(garden.first_empty_slot("bed_0"), -1, "no empty")
-	t.ok(not garden.plant("bed_0", 0, "carrot"), "cannot overwrite")
+	t.ok(not garden.plant_bed("bed_0", "carrot"), "cannot overwrite bed")
+	t.eq(garden.bed_plant_id("bed_0"), "tomato", "bed crop id")
+	t.eq(garden.bed_stage("bed_0"), GardenState.STAGE_SEED, "starts as seed")
 
-	var removed := garden.uproot("bed_0", 2)
+	var removed := garden.uproot_bed("bed_0")
 	t.eq(removed, "tomato", "uprooted tomato")
-	t.eq(garden.occupied_count("bed_0"), 3, "3 remain")
-	t.ok(garden.is_empty("bed_0", 2), "slot 2 empty after uproot")
-	t.ok(garden.plant("bed_0", 2, "radish"), "replant radish")
+	t.eq(garden.occupied_count("bed_0"), 0, "bed empty")
+	t.ok(garden.plant_bed("bed_0", "radish"), "replant radish")
+	t.eq(garden.occupied_count("bed_0"), 4, "full again")
 
 	var layer := PlantLayer.new()
 	host.add_child(layer)
 	layer.setup(farm, garden, art)
-	t.ok(layer.get_child_count() >= 4, "plant sprites present")
+	t.ok(layer.get_child_count() >= 1, "plant sprites present")
 
-	# Seasonal shed list
 	var db := SeedDB.new()
 	db.load_all()
 	db.set_season("spring")
