@@ -80,3 +80,38 @@ static func words_for_lang(lang: String) -> Array:
 		if str(row.get("lang", "")) == lang:
 			out.append(row)
 	return out
+
+## Kid-friendly glosses for book vocabulary (offline). Missing word → "".
+static func definitions() -> Dictionary:
+	return load_json_dict("res://data/definitions.json")
+
+static func definition_key(word: String) -> String:
+	var w := word.strip_edges().to_lower()
+	while w.length() > 0:
+		var last := w.substr(w.length() - 1, 1)
+		if ".,!?;:'\"".contains(last):
+			w = w.substr(0, w.length() - 1)
+		else:
+			break
+	return w
+
+static func definition_for(word: String, lang: String = "en") -> String:
+	var key := definition_key(word)
+	if key.is_empty():
+		return ""
+	var root: Dictionary = definitions()
+	var by_lang: Dictionary = root.get(lang, {})
+	if by_lang.has(key):
+		return str(by_lang[key])
+	return ""
+
+static func definition_vo_lines() -> Array:
+	var out: Array = []
+	var root := definitions()
+	for lang_key in root.keys():
+		var table: Variant = root[lang_key]
+		if typeof(table) != TYPE_DICTIONARY:
+			continue
+		for k in (table as Dictionary).keys():
+			out.append(str((table as Dictionary)[k]))
+	return out

@@ -18,10 +18,12 @@ static func texture(id: String) -> Texture2D:
 	var img := Image.create(SIZE, SIZE, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
 	match id:
-		"read":
+		"home_read", "read":
 			_draw_book_open(img)
-		"write":
+		"home_write", "write":
 			_draw_pencil(img)
+		"home_voice", "voice":
+			_draw_mic_pencil(img)
 		"sentences":
 			_draw_sentences(img)
 		"books":
@@ -112,6 +114,16 @@ static func _draw_pencil(img: Image) -> void:
 	# Scribble line.
 	_fill_round_rect(img, Rect2(72, 78, 36, 8), 4, Color(0.30, 0.55, 0.95))
 	_fill_round_rect(img, Rect2(80, 92, 28, 6), 3, Color(0.36, 0.78, 0.45))
+
+static func _draw_mic_pencil(img: Image) -> void:
+	# Mic capsule.
+	_fill_round_rect(img, Rect2(28, 28, 36, 52), 16, Color(0.95, 0.94, 0.88))
+	_fill_round_rect(img, Rect2(36, 36, 20, 36), 10, Color(0.45, 0.78, 0.55))
+	_fill_rect(img, Rect2(42, 80, 8, 16), Color(0.72, 0.78, 0.92))
+	_fill_round_rect(img, Rect2(30, 94, 32, 8), 4, Color(0.72, 0.78, 0.92))
+	# Pencil.
+	_fill_tri(img, Vector2(78, 90), Vector2(96, 34), Vector2(110, 90), Color(1.0, 0.82, 0.30))
+	_fill_tri(img, Vector2(96, 28), Vector2(90, 42), Vector2(102, 42), Color(0.20, 0.20, 0.24))
 
 static func _draw_sentences(img: Image) -> void:
 	_fill_round_rect(img, Rect2(18, 28, 52, 52), 12, Color(0.36, 0.78, 0.45))

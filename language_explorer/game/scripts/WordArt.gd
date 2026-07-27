@@ -21,4 +21,20 @@ static func texture_for(word: Dictionary) -> Texture2D:
 			motif = "hat"
 		"sun", "sol":
 			motif = "sun"
+		"dog", "perro":
+			motif = "dog"
+		"fish", "pez":
+			motif = "fish"
+		"ball", "pelota":
+			motif = "ball"
+		"tree", "arbol", "árbol":
+			motif = "tree"
+		"star", "estrella":
+			motif = "star"
+		"moon", "luna":
+			motif = "moon"
+		"bird", "pajaro", "pájaro":
+			motif = "bird"
+		"bee", "abeja":
+			motif = "bee"
 	return SpriteArt.texture_for(motif, path)

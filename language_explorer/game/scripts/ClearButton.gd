@@ -29,7 +29,11 @@ func set_context(ctx: int, language: String = "en") -> void:
 
 func refresh() -> void:
 	match context:
-		Context.NEXT_SENTENCE, Context.NEXT_PAGE, Context.NEXT_WORD:
+		Context.NEXT_SENTENCE:
+			# Open-book tile = advance sentence (reading companion).
+			LangTheme.style_primary(self)
+			ChromeIcons.apply_button(self, "read", 56)
+		Context.NEXT_PAGE, Context.NEXT_WORD:
 			LangTheme.style_primary(self)
 			ChromeIcons.apply_button(self, "next", 56)
 		_:

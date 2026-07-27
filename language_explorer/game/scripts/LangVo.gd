@@ -23,8 +23,8 @@ const EN := {
 	"english": "English.",
 	"spanish": "Español.",
 	"credits": "Language Explorer. A Star Learner title for reading and writing.",
-	"read_blurb": "Read. Practice sentences, or open a book.",
-	"write_blurb": "Write. Practice with pictures, or with narration.",
+	"read_blurb": "Read. Open a book and follow along.",
+	"write_blurb": "Write. Spell words from pictures.",
 	"demo_apple": "Let's spell Apple.",
 	"demo_manzana": "Vamos a deletrear Manzana.",
 	"books_blurb": "Books. Tap a cover once to hear about it, tap again to open.",
@@ -36,6 +36,25 @@ const EN := {
 	"write_narration_blurb": "Write with narration. Pick a word, then tap letters.",
 	"trace_hint": "Trace the grey letter with your finger.",
 	"next_word": "Next word.",
+	"tap_picture_again": "Tap the picture to hear the letters again.",
+	"voice_needs_wifi": "I can't reach the writing helper right now. Check Wi-Fi, or try Read or Write.",
+	"voice_intro": "This mode is meant to be played while you write with pen and paper. Keep your pencil on the paper — I'll listen for next and back.",
+	"voice_intro_first": "This mode is meant to be played alongside writing with pen and paper. You say what you want to write — like, I want to go to the zoo. First we learn next and back, so your pencil can stay on the paper. Then you say your idea into the microphone, and we write it letter by letter. Say next or back to move.",
+	"voice_tap_say_next": "Tap the microphone, then say next.",
+	"voice_tap_say_back": "Tap the microphone, then say back.",
+	"voice_tap_say_idea": "Tap the microphone and say what you want to write. Tap again when you are done, or wait ten seconds.",
+	"voice_enroll_next": "First, say next.",
+	"voice_enroll_back": "Now say back.",
+	"voice_say_idea": "Tell me what you want to write.",
+	"voice_listening": "I'm listening.",
+	"voice_thinking": "One moment.",
+	"voice_try_again": "Let's try again.",
+	"voice_mic_busy": "I couldn't hear you. Tap the microphone and say it again.",
+	"voice_got_it": "Got it!",
+	"voice_say_next_back": "Say next or back.",
+	"voice_upper_letter": "Upper case {letter}.",
+	"voice_lower_letter": "Lower case {letter}.",
+	"voice_first_letter": "First letter.",
 }
 
 const ES := {
@@ -58,8 +77,8 @@ const ES := {
 	"english": "English.",
 	"spanish": "Español.",
 	"credits": "Explorador de Lenguaje. Un título de Star Learner para leer y escribir.",
-	"read_blurb": "Leer. Practica oraciones, o abre un libro.",
-	"write_blurb": "Escribir. Practica con imágenes, o con narración.",
+	"read_blurb": "Leer. Abre un libro y sigue la historia.",
+	"write_blurb": "Escribir. Deletrea palabras con dibujos.",
 	"demo_apple": "Let's spell Apple.",
 	"demo_manzana": "Vamos a deletrear Manzana.",
 	"books_blurb": "Libros. Toca una portada para oír, toca otra vez para abrir.",
@@ -71,6 +90,25 @@ const ES := {
 	"write_narration_blurb": "Escribe con narración. Elige una palabra, luego toca letras.",
 	"trace_hint": "Traza la letra gris con el dedo.",
 	"next_word": "Siguiente palabra.",
+	"tap_picture_again": "Toca la imagen para oír las letras otra vez.",
+	"voice_needs_wifi": "No puedo alcanzar el ayudante de escritura. Revisa el Wi-Fi, o prueba Leer o Escribir.",
+	"voice_intro": "Este modo se juega mientras escribes con lápiz y papel. Deja el lápiz en el papel — voy a escuchar next y back.",
+	"voice_intro_first": "Este modo se juega junto con escribir con lápiz y papel. Dices lo que quieres escribir — por ejemplo, quiero ir al zoológico. Primero aprendemos next y back, para que tu lápiz se quede en el papel. Luego dices tu idea al micrófono, y la escribimos letra por letra. Di next o back para moverte.",
+	"voice_tap_say_next": "Toca el micrófono y di next.",
+	"voice_tap_say_back": "Toca el micrófono y di back.",
+	"voice_tap_say_idea": "Toca el micrófono y di lo que quieres escribir. Toca otra vez cuando termines, o espera diez segundos.",
+	"voice_enroll_next": "Primero, di next.",
+	"voice_enroll_back": "Ahora di back.",
+	"voice_say_idea": "Dime qué quieres escribir.",
+	"voice_listening": "Te escucho.",
+	"voice_thinking": "Un momento.",
+	"voice_try_again": "Intentemos otra vez.",
+	"voice_mic_busy": "No te oí. Toca el micrófono y dilo otra vez.",
+	"voice_got_it": "¡Listo!",
+	"voice_say_next_back": "Di next o back.",
+	"voice_upper_letter": "Mayúscula {letter}.",
+	"voice_lower_letter": "Minúscula {letter}.",
+	"voice_first_letter": "Primera letra.",
 }
 
 static func line(key: String, lang: String = "en") -> String:
@@ -94,17 +132,11 @@ static func vo_lines() -> Array:
 	for k in ES.keys():
 		out.append(str(ES[k]))
 	# Seed practice words / sentences spoken as wholes.
-	for w in ["Apple", "Manzana", "Cat", "Gato", "Sun", "Sol", "Hat", "Sombrero"]:
+	for w in ["Apple", "Manzana", "Cat", "Gato", "Sun", "Sol", "Hat", "Sombrero",
+			"Dog", "Perro", "Fish", "Pez", "Ball", "Pelota", "Tree", "Arbol",
+			"Star", "Estrella", "Moon", "Luna", "Bird", "Pajaro", "Bee", "Abeja",
+			"Árbol", "Pájaro"]:
 		out.append(w)
-	for s in [
-		"The apple is red.",
-		"La manzana es roja.",
-		"The cat has a hat.",
-		"El gato tiene un sombrero.",
-		"The sun is big.",
-		"El sol es grande.",
-	]:
-		out.append(s)
 	for n in range(1, 9):
 		out.append(page_saved_line(n, "en"))
 		out.append(page_saved_line(n, "es"))

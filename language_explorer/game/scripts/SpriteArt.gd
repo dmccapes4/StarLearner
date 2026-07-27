@@ -40,6 +40,45 @@ static func _placeholder(sprite_id: String) -> Texture2D:
 			_fill_round_rect(img, Rect2(12, 12, 72, 72), Color(0.90, 0.30, 0.28))
 		"swatch_gold", "big", "gold":
 			_fill_round_rect(img, Rect2(12, 12, 72, 72), Color(1.0, 0.82, 0.30))
+		"dog", "perro":
+			_fill_circle(img, Vector2(48, 58), 26, Color(0.72, 0.48, 0.28))
+			_fill_circle(img, Vector2(48, 36), 18, Color(0.72, 0.48, 0.28))
+			_fill_circle(img, Vector2(40, 34), 3, Color(0.1, 0.1, 0.1))
+			_fill_circle(img, Vector2(56, 34), 3, Color(0.1, 0.1, 0.1))
+			_fill_tri(img, Vector2(30, 28), Vector2(36, 12), Vector2(42, 28), Color(0.62, 0.40, 0.22))
+			_fill_tri(img, Vector2(54, 28), Vector2(60, 12), Vector2(66, 28), Color(0.62, 0.40, 0.22))
+		"fish", "pez":
+			_fill_circle(img, Vector2(44, 48), 22, Color(0.30, 0.62, 0.90))
+			_fill_tri(img, Vector2(62, 48), Vector2(84, 30), Vector2(84, 66), Color(0.25, 0.52, 0.80))
+			_fill_circle(img, Vector2(36, 44), 4, Color(0.05, 0.08, 0.12))
+		"ball", "pelota":
+			_fill_circle(img, Vector2(48, 48), 30, Color(0.95, 0.45, 0.20))
+			_fill_rect(img, Rect2(18, 45, 60, 6), Color(1, 1, 1, 0.85))
+			_fill_rect(img, Rect2(45, 18, 6, 60), Color(1, 1, 1, 0.85))
+		"tree", "arbol", "árbol":
+			_fill_rect(img, Rect2(42, 52, 12, 30), Color(0.45, 0.28, 0.14))
+			_fill_circle(img, Vector2(48, 40), 26, Color(0.28, 0.62, 0.32))
+			_fill_circle(img, Vector2(34, 48), 14, Color(0.24, 0.55, 0.28))
+			_fill_circle(img, Vector2(62, 48), 14, Color(0.24, 0.55, 0.28))
+		"star", "estrella":
+			_fill_circle(img, Vector2(48, 48), 10, Color(1.0, 0.86, 0.30))
+			for a in range(0, 360, 72):
+				var rad := deg_to_rad(float(a) - 90.0)
+				var p := Vector2(48, 48) + Vector2(cos(rad), sin(rad)) * 28.0
+				_fill_circle(img, p, 7, Color(1.0, 0.82, 0.25))
+		"moon", "luna":
+			_fill_circle(img, Vector2(48, 48), 28, Color(0.92, 0.90, 0.70))
+			_fill_circle(img, Vector2(60, 40), 22, Color(0.12, 0.16, 0.28))
+		"bird", "pajaro", "pájaro":
+			_fill_circle(img, Vector2(48, 50), 18, Color(0.35, 0.55, 0.85))
+			_fill_circle(img, Vector2(62, 40), 12, Color(0.35, 0.55, 0.85))
+			_fill_tri(img, Vector2(72, 40), Vector2(86, 36), Vector2(72, 48), Color(0.95, 0.70, 0.25))
+			_fill_circle(img, Vector2(66, 38), 2, Color(0.08, 0.08, 0.1))
+		"bee", "abeja":
+			_fill_circle(img, Vector2(48, 52), 18, Color(1.0, 0.82, 0.20))
+			_fill_rect(img, Rect2(30, 48, 36, 6), Color(0.12, 0.12, 0.12))
+			_fill_circle(img, Vector2(34, 40), 10, Color(0.85, 0.92, 1.0, 0.7))
+			_fill_circle(img, Vector2(62, 40), 10, Color(0.85, 0.92, 1.0, 0.7))
 		_:
 			_fill_round_rect(img, Rect2(12, 12, 72, 72), Color(0.45, 0.55, 0.80))
 			_fill_circle(img, Vector2(48, 48), 18, Color(0.85, 0.90, 1.0))

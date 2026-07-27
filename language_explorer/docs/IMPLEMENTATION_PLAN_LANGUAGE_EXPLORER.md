@@ -6,6 +6,11 @@ and the learning-console patterns of `math_explorer/`.
 Target: **Godot 4.3+, GDScript, 2D landscape console**, Android export to the Star Learner
 kiosk (Moto G Play 2024). Player: one ~6-year-old, one finger. Languages: **English and Spanish**.*
 
+> **2026-07-26 playtest pivot:** Home is **two tiles only** — **Read** (books companion) and
+> **Write** (picture + narration + alphabet). Sentence matching and Write sub-choosers are
+> retired from the shell. Roadmaps: `STRATEGY_LETTERS_AND_NUMBERS.md`,
+> `STRATEGY_VOICE_TO_WRITING.md`. North star: `STRATEGY_LANGUAGE_EXPLORER.md`.
+
 ---
 
 ## 0. How to use this document
@@ -35,8 +40,10 @@ Language Explorer teaches **reading and writing** as two big console tiles.
 
 | Mode | What she does | Feel |
 |------|---------------|------|
-| **Read** | Match sprites to words in practice sentences, or open public-domain children’s books | See → hear letters → match → green |
-| **Write** | Trace grey letter outlines for a word cued by image (v1) or narration (v1) | Trace → hear letter → celebrate |
+| **Read** | Open a children’s book; follow one sentence at a time with gold word-follow VO | Hear → see gold → tap to spell → next sentence |
+| **Write** | Pick a picture; hear letters then the word; spell on the alphabet board | See → hear letters → tap letters → celebrate |
+
+**Not on home yet:** Letters & Numbers (trace shapes), Voice-to-Writing (ASR via 245) — see strategy docs.
 
 **Core literacy grammar (reuse everywhere):**
 - **Red + larger** = target / unmatched word

@@ -34,10 +34,6 @@ func _run() -> void:
 		_add(str(s))
 	for s in SpellDemoS.vo_lines():
 		_add(str(s))
-	var SentenceMatchS: GDScript = load("res://scripts/read/SentenceMatch.gd")
-	if SentenceMatchS != null:
-		for s in SentenceMatchS.vo_lines():
-			_add(str(s))
 	var BookShelfS: GDScript = load("res://scripts/read/BookShelf.gd")
 	if BookShelfS != null:
 		for s in BookShelfS.vo_lines():
@@ -50,9 +46,9 @@ func _run() -> void:
 	if WriteImageS != null:
 		for s in WriteImageS.vo_lines():
 			_add(str(s))
-	var WriteNarrS: GDScript = load("res://scripts/write/WriteFromNarration.gd")
-	if WriteNarrS != null:
-		for s in WriteNarrS.vo_lines():
+	var VoiceS: GDScript = load("res://scripts/voice/VoiceToWrite.gd")
+	if VoiceS != null:
+		for s in VoiceS.vo_lines():
 			_add(str(s))
 	var TutorialS: GDScript = load("res://scripts/ui/TutorialPlayer.gd")
 	if TutorialS != null:
@@ -62,9 +58,8 @@ func _run() -> void:
 	# Mode labels spoken on tile entry.
 	_add("Read")
 	_add("Write")
+	_add("Voice")
 	_add("Books")
-	_add("Images")
-	_add("Narration")
 
 	var chars := 0
 	for key in _lines:

@@ -19,8 +19,9 @@ const TEXT_DIM := Color(0.72, 0.78, 0.92)
 const MODES := {
 	"read": {"label": "Read", "symbol": "Aa", "color": Color(0.30, 0.55, 0.95)},
 	"write": {"label": "Write", "symbol": "A", "color": Color(1.00, 0.72, 0.28)},
+	"voice": {"label": "Voice", "symbol": "🎤", "color": Color(0.45, 0.78, 0.55)},
 }
-const MODE_ORDER := ["read", "write"]
+const MODE_ORDER := ["read", "write", "voice"]
 
 const LETTER_INPUT_SKETCH := "sketch"
 const LETTER_INPUT_ALPHABET := "alphabet"

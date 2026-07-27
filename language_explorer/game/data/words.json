@@ -78,5 +78,149 @@
     "image_id": "hat",
     "narration_word": "Sombrero",
     "pair_id": "en_hat"
+  },
+  {
+    "id": "en_dog",
+    "lang": "en",
+    "word": "Dog",
+    "letters": ["D", "o", "g"],
+    "image_id": "dog",
+    "narration_word": "Dog",
+    "pair_id": "es_perro"
+  },
+  {
+    "id": "es_perro",
+    "lang": "es",
+    "word": "Perro",
+    "letters": ["P", "e", "r", "r", "o"],
+    "image_id": "dog",
+    "narration_word": "Perro",
+    "pair_id": "en_dog"
+  },
+  {
+    "id": "en_fish",
+    "lang": "en",
+    "word": "Fish",
+    "letters": ["F", "i", "s", "h"],
+    "image_id": "fish",
+    "narration_word": "Fish",
+    "pair_id": "es_pez"
+  },
+  {
+    "id": "es_pez",
+    "lang": "es",
+    "word": "Pez",
+    "letters": ["P", "e", "z"],
+    "image_id": "fish",
+    "narration_word": "Pez",
+    "pair_id": "en_fish"
+  },
+  {
+    "id": "en_ball",
+    "lang": "en",
+    "word": "Ball",
+    "letters": ["B", "a", "l", "l"],
+    "image_id": "ball",
+    "narration_word": "Ball",
+    "pair_id": "es_pelota"
+  },
+  {
+    "id": "es_pelota",
+    "lang": "es",
+    "word": "Pelota",
+    "letters": ["P", "e", "l", "o", "t", "a"],
+    "image_id": "ball",
+    "narration_word": "Pelota",
+    "pair_id": "en_ball"
+  },
+  {
+    "id": "en_tree",
+    "lang": "en",
+    "word": "Tree",
+    "letters": ["T", "r", "e", "e"],
+    "image_id": "tree",
+    "narration_word": "Tree",
+    "pair_id": "es_arbol"
+  },
+  {
+    "id": "es_arbol",
+    "lang": "es",
+    "word": "Arbol",
+    "letters": ["A", "r", "b", "o", "l"],
+    "image_id": "tree",
+    "narration_word": "Árbol",
+    "pair_id": "en_tree"
+  },
+  {
+    "id": "en_star",
+    "lang": "en",
+    "word": "Star",
+    "letters": ["S", "t", "a", "r"],
+    "image_id": "star",
+    "narration_word": "Star",
+    "pair_id": "es_estrella"
+  },
+  {
+    "id": "es_estrella",
+    "lang": "es",
+    "word": "Estrella",
+    "letters": ["E", "s", "t", "r", "e", "l", "l", "a"],
+    "image_id": "star",
+    "narration_word": "Estrella",
+    "pair_id": "en_star"
+  },
+  {
+    "id": "en_moon",
+    "lang": "en",
+    "word": "Moon",
+    "letters": ["M", "o", "o", "n"],
+    "image_id": "moon",
+    "narration_word": "Moon",
+    "pair_id": "es_luna"
+  },
+  {
+    "id": "es_luna",
+    "lang": "es",
+    "word": "Luna",
+    "letters": ["L", "u", "n", "a"],
+    "image_id": "moon",
+    "narration_word": "Luna",
+    "pair_id": "en_moon"
+  },
+  {
+    "id": "en_bird",
+    "lang": "en",
+    "word": "Bird",
+    "letters": ["B", "i", "r", "d"],
+    "image_id": "bird",
+    "narration_word": "Bird",
+    "pair_id": "es_pajaro"
+  },
+  {
+    "id": "es_pajaro",
+    "lang": "es",
+    "word": "Pajaro",
+    "letters": ["P", "a", "j", "a", "r", "o"],
+    "image_id": "bird",
+    "narration_word": "Pájaro",
+    "pair_id": "en_bird"
+  },
+  {
+    "id": "en_bee",
+    "lang": "en",
+    "word": "Bee",
+    "letters": ["B", "e", "e"],
+    "image_id": "bee",
+    "narration_word": "Bee",
+    "pair_id": "es_abeja"
+  },
+  {
+    "id": "es_abeja",
+    "lang": "es",
+    "word": "Abeja",
+    "letters": ["A", "b", "e", "j", "a"],
+    "image_id": "bee",
+    "narration_word": "Abeja",
+    "pair_id": "en_bee"
   }
 ]

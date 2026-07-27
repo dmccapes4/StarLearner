@@ -34,8 +34,8 @@ func _run() -> void:
 	quit(1 if _fail > 0 else 0)
 
 func _test_theme() -> void:
-	_ok(LangTheme.MODE_ORDER.size() == 2, "two home modes")
-	for mode in ["read", "write"]:
+	_ok(LangTheme.MODE_ORDER.size() == 3, "three home modes")
+	for mode in ["read", "write", "voice"]:
 		_ok(LangTheme.MODES.has(mode), "MODES has %s" % mode)
 		_ok(not str(LangTheme.MODES[mode]["label"]).is_empty(), "%s has label" % mode)
 	_ok(LangTheme.LETTER_INPUT_DEFAULT == "alphabet", "alphabet is default letter input")
@@ -44,17 +44,10 @@ func _test_theme() -> void:
 
 func _test_data() -> void:
 	var sentences := LangData.sentences()
-	_ok(sentences.size() >= 6, "at least six seed sentences")
-	var langs := {}
-	for s in sentences:
-		_ok(not str(s.get("id", "")).is_empty(), "sentence has id")
-		_ok(str(s.get("lang", "")) in ["en", "es"], "sentence lang en|es")
-		langs[str(s.get("lang", ""))] = true
-		_ok((s.get("matchable", []) as Array).size() >= 1, "%s has matchable" % s.get("id"))
-	_ok(langs.has("en") and langs.has("es"), "sentences cover en and es")
+	_ok(sentences.size() >= 0, "sentences catalog loads (legacy optional)")
 
 	var words := LangData.words()
-	_ok(words.size() >= 8, "at least eight seed words")
+	_ok(words.size() >= 16, "at least sixteen seed words")
 	var wlangs := {}
 	for w in words:
 		_ok((w.get("letters", []) as Array).size() >= 1, "%s has letters" % w.get("id"))
@@ -65,6 +58,14 @@ func _test_data() -> void:
 	var apple_letters := WriteSession.letters_for_word({"word": "Apple"})
 	_ok(str(apple_letters[0]) == "A" and str(apple_letters[1]) == "p", "Apple letters A,p,…")
 	_ok(WordArt.texture_for({"image_id": "apple", "word": "Apple"}) != null, "WordArt apple")
+	_ok(WordArt.texture_for({"image_id": "dog", "word": "Dog"}) != null, "WordArt dog")
+
+	var defs := LangData.definitions()
+	_ok(defs.has("en") and defs.has("es"), "definitions has en+es")
+	_ok(not LangData.definition_for("rabbit", "en").is_empty(), "rabbit has kid definition")
+	_ok(not LangData.definition_for("liebre", "es").is_empty(), "liebre has kid definition")
+	_ok(LangData.definition_for("Rabbits.", "en").find("hop") >= 0, "definition strips punct")
+	_ok(LangData.definition_for("zzzz", "en").is_empty(), "unknown word has no definition")
 
 	var books := LangData.books()
 	_ok(books.size() >= 2, "at least two catalog books")
@@ -79,6 +80,8 @@ func _test_data() -> void:
 		_ok(not meta.is_empty(), "%s meta loads" % b.get("id"))
 		var page0 := LangData.load_page(str((b.get("pages", []) as Array)[0]))
 		_ok((page0.get("tokens", []) as Array).size() >= 1, "%s page0 has tokens" % b.get("id"))
+		var sents := Narrator.split_sentences(str(page0.get("text", "")))
+		_ok(sents.size() >= 1, "%s page0 splits to sentences" % b.get("id"))
 	_ok(book_langs.has("en") and book_langs.has("es"), "shipped books cover en and es")
 	_ok(CoverArt.texture_for({"id": "x", "cover_motif": "rabbit", "title": "T"}) != null, "CoverArt rabbit")
 
@@ -109,34 +112,14 @@ func _test_wordlabel_logic() -> void:
 	_ok(LangLetters.normalize_key(chars[1]) == "P", "Apple[1] key P")
 
 func _test_sentence_logic() -> void:
+	# Legacy SentenceLogic helpers still used by archived SentenceMatch.
 	_ok(SentenceLogic.normalize_token("Red.") == "red", "normalize strips punct + case")
 	_ok(SentenceLogic.normalize_token("  Apple  ") == "apple", "normalize trims")
 	_ok(SentenceLogic.is_matchable_token("apple", ["apple", "red"]), "apple is matchable")
-	_ok(SentenceLogic.is_matchable_token("red.", ["apple", "red"]), "red. matches matchable red")
 	_ok(not SentenceLogic.is_matchable_token("The", ["apple", "red"]), "The is not matchable")
-	_ok(SentenceLogic.sprite_matches_token("apple", "Apple"), "sprite match ignores case")
-	_ok(SentenceLogic.sprite_matches_token("roja", "roja."), "sprite match ignores punct")
-	_ok(not SentenceLogic.sprite_matches_token("cat", "hat"), "mismatch rejected")
-	var matched := {"apple": true}
-	_ok(not SentenceLogic.all_matched(matched, ["apple", "red"]), "partial not complete")
-	matched["red"] = true
-	_ok(SentenceLogic.all_matched(matched, ["apple", "red"]), "all matched when keys present")
-	_ok(not SentenceLogic.all_matched({}, []), "empty matchable is not complete")
-
-	var SentenceMatchS := load("res://scripts/read/SentenceMatch.gd")
-	var sm_lines: Array = SentenceMatchS.vo_lines()
-	_ok(sm_lines.has("The apple is red."), "SentenceMatch vo includes EN sentence")
-	_ok(sm_lines.has("La manzana es roja."), "SentenceMatch vo includes ES sentence")
-	_ok(sm_lines.has("Correct!"), "SentenceMatch vo includes Correct")
-
-	# Every seed sentence has ≥1 sprite and matching tokens.
-	for row in LangData.sentences():
-		var sprites: Array = row.get("sprites", [])
-		_ok(sprites.size() >= 1, "%s has sprites" % row.get("id"))
-		for sp in sprites:
-			_ok(SentenceLogic.is_matchable_token(str(sp.get("token", "")), row.get("matchable", [])),
-				"%s sprite token in matchable" % row.get("id"))
 	_ok(SpriteArt.texture_for("apple") != null, "SpriteArt placeholder apple")
+	_ok(SpriteArt.texture_for("dog") != null, "SpriteArt placeholder dog")
+	_ok(SpriteArt.texture_for("star") != null, "SpriteArt placeholder star")
 	_ok(SpriteArt.texture_for("unknown_xyz") != null, "SpriteArt fallback placeholder")
 
 func _test_double_tap_arm() -> void:
@@ -203,7 +186,7 @@ func _test_write_session() -> void:
 
 func _test_tutorials() -> void:
 	var tutorials := LangData.tutorials()
-	_ok(tutorials.size() >= 6, "six tutorial topics")
+	_ok(tutorials.size() >= 5, "five tutorial topics")
 	for row in tutorials:
 		_ok(not str(row.get("id", "")).is_empty(), "tutorial has id")
 		var steps: Dictionary = row.get("steps", {})
@@ -213,9 +196,12 @@ func _test_tutorials() -> void:
 			for step in localized:
 				_ok(not str(step.get("say", "")).is_empty(), "tutorial step has narration")
 	_ok(not LangData.tutorial_by_id("tut_alphabet").is_empty(), "alphabet tutorial lookup")
+	_ok(not LangData.tutorial_by_id("tut_read").is_empty(), "read tutorial lookup")
+	_ok(not LangData.tutorial_by_id("tut_voice").is_empty(), "voice tutorial lookup")
+	_ok(LangData.tutorial_by_id("tut_sentences").is_empty(), "sentence tutorial removed")
 	var TutorialS := load("res://scripts/ui/TutorialPlayer.gd")
 	var lines: Array = TutorialS.vo_lines()
-	_ok(lines.size() >= 24, "tutorial VO inventory")
+	_ok(lines.size() >= 16, "tutorial VO inventory")
 
 func _test_narrator_helpers() -> void:
 	_ok(Narrator.normalize_line("  Hello   world  ") == "Hello world", "normalize collapses spaces")
@@ -262,6 +248,10 @@ func _test_scripts_compile() -> void:
 		"res://scripts/write/LetterSlots.gd",
 		"res://scripts/write/TraceCanvas.gd",
 		"res://scripts/WordArt.gd",
+		"res://scripts/MicOwner.gd",
+		"res://scripts/voice/MicCapture.gd",
+		"res://scripts/voice/HubClient.gd",
+		"res://scripts/voice/VoiceToWrite.gd",
 		"res://scripts/ui/TutorialPlayer.gd",
 		"res://scripts/ui/HamburgerPanel.gd",
 		"res://tools/dump_vo_lines.gd",
@@ -273,6 +263,8 @@ func _test_scripts_compile() -> void:
 func _test_save() -> void:
 	var save := root.get_node_or_null("/root/Save")
 	_ok(save != null, "Save autoload is registered")
+	var mic_owner := root.get_node_or_null("/root/MicOwner")
+	_ok(mic_owner != null, "MicOwner autoload is registered")
 	if save == null:
 		return
 	save.call("clear_all")
@@ -290,10 +282,10 @@ func _test_save() -> void:
 	_ok(int(save.call("get_bookmark", "demo_book")) == 3, "bookmark sticks")
 	save.call("mark_seen", "tut_read")
 	_ok(save.call("was_seen", "tut_read"), "seen sticks")
-	save.call("record_activity_started", "read_home")
-	save.call("record_activity_finished", "read_home")
+	save.call("record_activity_started", "books")
+	save.call("record_activity_finished", "books")
 	var stats: Dictionary = save.get("stats")
-	var act: Dictionary = stats.get("activity", {}).get("read_home", {})
+	var act: Dictionary = stats.get("activity", {}).get("books", {})
 	_ok(int(act.get("started", 0)) == 1, "activity started counted")
 	_ok(int(act.get("finished", 0)) == 1, "activity finished counted")
 

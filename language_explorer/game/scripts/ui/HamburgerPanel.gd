@@ -65,25 +65,22 @@ func _build() -> void:
 	close_btn.pressed.connect(close_panel)
 	add_child(close_btn)
 
-	# Row 1 — tutorials (match Main menu ids 0..5)
+	# Row 1 — tutorials
 	var tut := [
 		{"id": 0, "icon": "read"},
-		{"id": 1, "icon": "sentences"},
 		{"id": 2, "icon": "books"},
 		{"id": 3, "icon": "write"},
 		{"id": 4, "icon": "alphabet"},
-		{"id": 5, "icon": "sketch"},
+		{"id": 6, "icon": "home_voice"},
 	]
 	_add_row(tut, Vector2(200, 70))
 
-	# Row 2 — language (10, 11) + letter input (20, 21)
+	# Row 2 — language
 	var mid := [
 		{"id": 10, "icon": "english"},
 		{"id": 11, "icon": "spanish"},
-		{"id": 20, "icon": "alphabet"},
-		{"id": 21, "icon": "sketch"},
 	]
-	_add_row(mid, Vector2(340, 220))
+	_add_row(mid, Vector2(460, 220))
 
 	# Row 3 — about
 	var about := [
@@ -111,14 +108,13 @@ func _add_row(items: Array, origin: Vector2) -> void:
 func _on_tap(id: int) -> void:
 	action.emit(id)
 	# Keep panel open for language / letter-input toggles; close for navigations.
-	if id in [10, 11, 20, 21, 30]:
+	if id in [10, 11, 30]:
 		_refresh()
 	else:
 		close_panel()
 
 func _refresh() -> void:
 	var lang := Save.get_lang()
-	var input := Save.get_letter_input()
 	for id in _btns.keys():
 		var b: Button = _btns[id]
 		var active := false
@@ -127,10 +123,6 @@ func _refresh() -> void:
 				active = lang == "en"
 			11:
 				active = lang == "es"
-			20:
-				active = input == "alphabet"
-			21:
-				active = input == "sketch"
 		if active:
 			LangTheme.style_primary(b)
 			ChromeIcons.apply_button(b, _icon_for(int(id)), 64)
@@ -142,16 +134,14 @@ func _icon_for(id: int) -> String:
 	match id:
 		0:
 			return "read"
-		1:
-			return "sentences"
 		2:
 			return "books"
 		3:
 			return "write"
-		4, 20:
+		4:
 			return "alphabet"
-		5, 21:
-			return "sketch"
+		6:
+			return "home_voice"
 		10:
 			return "english"
 		11:

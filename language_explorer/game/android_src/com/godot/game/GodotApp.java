@@ -10,21 +10,26 @@ package com.godot.game;
 
 import org.godotengine.godot.GodotActivity;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.splashscreen.SplashScreen;
 
 import java.io.File;
 
 /**
  * Language Explorer activity: keep the task alive on Back (progress stays warm),
- * and honor a wipe-save intent from the Star Learner kiosk — the same
- * EXTRA_WIPE_SAVE contract Ant/Math Explorer use.
+ * honor wipe-save from the Star Learner kiosk, and claim RECORD_AUDIO up front
+ * so the first Voice mic tap is not eaten by the permission dialog.
  */
 public class GodotApp extends GodotActivity {
 	public static final String EXTRA_WIPE_SAVE = "com.dylan.antexplorer.EXTRA_WIPE_SAVE";
+	private static final int REQ_RECORD_AUDIO = 4401;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -35,6 +40,7 @@ public class GodotApp extends GodotActivity {
 			intent.removeExtra(EXTRA_WIPE_SAVE);
 		}
 		super.onCreate(savedInstanceState);
+		requestMicUpFront();
 		getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
 			@Override
 			public void handleOnBackPressed() {
@@ -51,6 +57,24 @@ public class GodotApp extends GodotActivity {
 			wipeSaveFiles();
 			intent.removeExtra(EXTRA_WIPE_SAVE);
 		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		// Selfish: if the user bounced through another title, re-assert permission.
+		requestMicUpFront();
+	}
+
+	private void requestMicUpFront() {
+		if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+				== PackageManager.PERMISSION_GRANTED) {
+			return;
+		}
+		ActivityCompat.requestPermissions(
+				this,
+				new String[] {Manifest.permission.RECORD_AUDIO},
+				REQ_RECORD_AUDIO);
 	}
 
 	private void wipeSaveFiles() {

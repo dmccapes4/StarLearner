@@ -59,7 +59,7 @@ for need in 01_open 02_read 03_write 04_alphabet 05_menu 06_close; do
     exit 1
   }
 done
-for shot in 00_home 02_read_home 04_write_home 06_alphabet_apple 01_tutorial_read 07_write_narration; do
+for shot in 00_home 03_books 05_write_picker 06_alphabet_apple 01_tutorial_read; do
   [[ -f "$SHOTS/${shot}.png" ]] || {
     echo "missing $SHOTS/${shot}.png — run: godot --path game -s res://tools/capture_shots.gd"
     exit 1
@@ -104,12 +104,12 @@ format=yuv420p" \
 }
 
 mkslide "$SHOTS/00_home.png"            "$d0" "$WORK/s0.mp4" in
-mkslide "$SHOTS/02_read_home.png"       "$d1" "$WORK/s1.mp4" out
-mkslide "$SHOTS/04_write_home.png"      "$d2" "$WORK/s2.mp4" in
+mkslide "$SHOTS/03_books.png"           "$d1" "$WORK/s1.mp4" out
+mkslide "$SHOTS/05_write_picker.png"    "$d2" "$WORK/s2.mp4" in
 mkslide "$SHOTS/06_alphabet_apple.png"  "$d3" "$WORK/s3.mp4" out
 mkslide "$SHOTS/01_tutorial_read.png"   "$d4" "$WORK/s4.mp4" in
 d5_pad=$(python3 -c "print(float('$d5') + 5 * float('$XFADE'))")
-mkslide "$SHOTS/07_write_narration.png" "$d5_pad" "$WORK/s5.mp4" out
+mkslide "$SHOTS/00_home.png" "$d5_pad" "$WORK/s5.mp4" out
 
 python3 - <<PY
 import subprocess

@@ -7,12 +7,15 @@ extends Control
 
 signal spell_finished()
 signal letter_spoken(index: int, letter: String)
+signal tapped()
+signal long_pressed()
 
 enum State { NORMAL, TARGET_RED, SPELLING_GOLD, DONE_GREEN }
 
 const BASE_SIZE := 42
 const TARGET_SIZE := 54
 const SPELL_SIZE := 56
+const LONG_PRESS_MS := 550
 
 var word: String = ""
 var state: int = State.NORMAL
@@ -21,11 +24,61 @@ var _gen: int = 0
 var _busy: bool = false
 var _built_row: HBoxContainer
 var _font_size: int = BASE_SIZE
+var _press_active: bool = false
+var _press_start_ms: int = 0
+var _long_emitted: bool = false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	set_process(false)
 	if _built_row == null:
 		_ensure_row()
+
+func _gui_input(ev: InputEvent) -> void:
+	if _busy:
+		return
+	if ev is InputEventMouseButton:
+		var mb := ev as InputEventMouseButton
+		if mb.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if mb.pressed:
+			_begin_press()
+		else:
+			_end_press()
+		accept_event()
+	elif ev is InputEventScreenTouch:
+		var st := ev as InputEventScreenTouch
+		if st.pressed:
+			_begin_press()
+		else:
+			_end_press()
+		accept_event()
+
+func _process(_delta: float) -> void:
+	if not _press_active or _long_emitted:
+		return
+	if Time.get_ticks_msec() - _press_start_ms >= LONG_PRESS_MS:
+		_long_emitted = true
+		_press_active = false
+		set_process(false)
+		long_pressed.emit()
+
+func _begin_press() -> void:
+	_press_active = true
+	_long_emitted = false
+	_press_start_ms = Time.get_ticks_msec()
+	set_process(true)
+
+func _end_press() -> void:
+	if not _press_active:
+		_press_active = false
+		set_process(false)
+		return
+	_press_active = false
+	set_process(false)
+	if _long_emitted:
+		return
+	tapped.emit()
 
 func setup(text: String, font_size: int = BASE_SIZE) -> void:
 	word = text
