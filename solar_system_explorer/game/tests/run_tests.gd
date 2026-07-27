@@ -4,6 +4,11 @@ extends SceneTree
 ## Exit code 0 = all passed; 1 = failures. Also force-loads every view script so
 ## a compile error anywhere fails the run (headless can't render the scenes).
 
+## Preloaded (not class_name lookups) so headless runs see fresh classes
+## before the editor rescans the global class cache.
+const NavModes := preload("res://scripts/NavModes.gd")
+const PlaygroundScene := preload("res://scripts/PlaygroundScene.gd")
+
 var _pass := 0
 var _fail := 0
 
@@ -27,6 +32,7 @@ func _run() -> void:
 	_test_scale_tune()
 	_test_cockpit_hud()
 	_test_ux_cruise()
+	_test_nav_modes()
 	_test_narration_vo()
 	_test_scripts_compile()
 	print("======== TOTAL: %d passed, %d failed ========" % [_pass, _fail])
@@ -760,6 +766,141 @@ func _test_ux_cruise() -> void:
 		"outer hop zooms plot board out (scale %.2f)" % board.board_scale)
 	board.free()
 
+func _test_nav_modes() -> void:
+	## New nav-mode math: pacing bounds, fly-by swap, and the honest
+	## real-scale reconstruction behind SIM_VIEW.
+	var cfg := SolarFlyerConfig.load_default()
+
+	# Pacing: wall time is bounded — long hops play faster, short hops slower.
+	for dur in [3.0, 12.0, 30.0, 55.0]:
+		var wall := 0.0
+		var u := 0.0
+		var steps := 0
+		while u < 1.0 and steps < 100000:
+			var rate := OrbitMath.flight_play_rate(u, dur)
+			u += (1.0 / 60.0) * rate / dur
+			wall += 1.0 / 60.0
+			steps += 1
+		_ok(wall <= OrbitMath.WALL_MAX_S * 1.55,
+			"hop of %.0fs plays in %.1fs wall (bounded)" % [dur, wall])
+		_ok(wall >= 3.0, "hop of %.0fs not instant (%.1fs)" % [dur, wall])
+	_ok(OrbitMath.flight_play_rate(0.95, 40.0) < OrbitMath.flight_play_rate(0.5, 40.0),
+		"pacing eases near arrival")
+
+	# Fly-by: far away no mesh; inside the window it grows toward hero.
+	_ok(OrbitMath.flyby_mesh_scale(200.0, 5.0, 2.0) == 0.0, "no fly-by mesh at distance")
+	var mid := OrbitMath.flyby_mesh_scale(9.0 * 5.0, 5.0, 2.0)
+	_ok(mid > 0.0 and mid <= 5.0, "fly-by mesh appears inside the window")
+	_ok(absf(OrbitMath.flyby_mesh_scale(4.0 * 5.0, 5.0, 2.0) - 5.0) < 0.01,
+		"fly-by mesh reaches full hero size on a close pass")
+	# Camera clearance: a course straight through a world never puts the
+	# camera inside the mesh — the radius is capped below the camera distance.
+	for d in [0.5, 2.0, 6.0, 12.0]:
+		_ok(OrbitMath.flyby_mesh_scale(d, 5.0, 2.0) <= d * OrbitMath.FLYBY_CLEARANCE + 0.001,
+			"fly-by mesh keeps camera clearance at dist %.1f" % d)
+
+	# Real-scale reconstruction: decompress inverts compress at the orbits.
+	for a in [0.39, 1.0, 5.2, 19.2, 39.5]:
+		var r_sim := OrbitMath.compress_orbit_r(a, cfg)
+		var back := OrbitMath.decompress_radius_au(r_sim, cfg)
+		_ok(absf(back - a) < a * 0.02 + 0.01,
+			"decompress inverts compress at %.2f AU (got %.2f)" % [a, back])
+
+	# Apparent sizes: real sun from Earth ≈ 0.25° half-angle; Mars from
+	# Earth at closest approach is tiny (that's WHY it's a dot).
+	var sun_half := OrbitMath.apparent_radius_rad(695700.0, 1.0)
+	_ok(absf(rad_to_deg(sun_half) - 0.266) < 0.03,
+		"sun subtends ~0.27 deg half-angle at 1 AU (%.3f)" % rad_to_deg(sun_half))
+	var mars_half := OrbitMath.apparent_radius_rad(3390.0, 0.52)
+	_ok(rad_to_deg(mars_half) < 0.01, "mars is honestly a dot from Earth")
+
+	# Brightness: Venus at its brightest ≈ 1; Neptune from Earth is far
+	# below the visibility floor (honest sky: you can't see it unaided).
+	var venus_b := OrbitMath.apparent_brightness(6052.0, 0.72, 0.28)
+	_ok(absf(venus_b - 1.0) < 0.1, "Venus reference brightness ≈ 1 (%.2f)" % venus_b)
+	var nep_b := OrbitMath.apparent_brightness(24622.0, 30.05, 29.05)
+	_ok(OrbitMath.brightness_alpha(nep_b) < 0.35,
+		"Neptune from Earth renders faint-to-invisible")
+	_ok(OrbitMath.brightness_alpha(1.0) >= 0.99, "full-flux body renders at full alpha")
+
+	# Playground tilt response: deadzoned around the calibrated neutral,
+	# smooth, symmetric, saturating at TILT_FULL_RAD.
+	_ok(PlaygroundScene._tilt_axis(0.0) == 0.0, "tilt: neutral is dead center")
+	_ok(PlaygroundScene._tilt_axis(PlaygroundScene.TILT_DEAD_RAD * 0.9) == 0.0,
+		"tilt: inside the deadzone nothing moves")
+	var half := PlaygroundScene._tilt_axis(PlaygroundScene.TILT_FULL_RAD * 0.6)
+	_ok(half > 0.05 and half < 0.95, "tilt: partial tilt steers partially")
+	_ok(absf(PlaygroundScene._tilt_axis(PlaygroundScene.TILT_FULL_RAD) - 1.0) < 0.001,
+		"tilt: full tilt = full deflection")
+	_ok(PlaygroundScene._tilt_axis(-PlaygroundScene.TILT_FULL_RAD) == \
+		-PlaygroundScene._tilt_axis(PlaygroundScene.TILT_FULL_RAD),
+		"tilt: response is symmetric")
+	_ok(PlaygroundScene._tilt_axis(99.0) <= 1.0, "tilt: response saturates")
+	# Angle extraction: sensitivity must not collapse for a vertical grip.
+	# 15° of pitch from the measured on-device neutral (near-vertical) must
+	# move the pitch angle by ~15° — the raw Y component only moved ~0.04 g.
+	var n_ang := PlaygroundScene._tilt_angles(Vector3(0.32, -9.98, -1.02))
+	var up_ang := PlaygroundScene._tilt_angles(
+		Vector3(0.32, -9.98, -1.02).rotated(Vector3.RIGHT, deg_to_rad(15.0)))
+	_ok(absf(absf(up_ang.y - n_ang.y) - deg_to_rad(15.0)) < deg_to_rad(1.5),
+		"tilt: pitch angle tracks device pitch at a vertical grip")
+	var roll_ang := PlaygroundScene._tilt_angles(
+		Vector3(0.32, -9.98, -1.02).rotated(Vector3(0, 0, -1).normalized(), deg_to_rad(15.0)))
+	_ok(absf(roll_ang.x - n_ang.x) > deg_to_rad(8.0),
+		"tilt: roll angle responds to device roll")
+	# Pitch direction: facing the phone up (screen toward the ceiling —
+	# z picks up more of gravity) must RAISE the pitch angle.
+	_ok(PlaygroundScene._tilt_angles(Vector3(0, -9.4, -2.8)).y \
+		> PlaygroundScene._tilt_angles(Vector3(0, -9.8, -0.5)).y,
+		"tilt: facing the phone up raises the pitch angle")
+
+	# Band hysteresis helpers (constants used by the soft-edge logic).
+	_ok(PlaygroundScene.Y_CLEAR < PlaygroundScene.Y_SOFT,
+		"band: clear band is inside the soft edge (hysteresis)")
+	_ok(PlaygroundScene.BAND_COOLDOWN_S >= 5.0,
+		"band: narration cooldown prevents edge-bounce spam")
+
+	# Offline voice-speed envelope matcher.
+	var VoiceCommands := preload("res://scripts/voice/VoiceCommands.gd")
+	var a := PackedFloat32Array()
+	var b := PackedFloat32Array()
+	var c := PackedFloat32Array()
+	for i in VoiceCommands.ENVELOPE_BINS:
+		a.append(sin(float(i) * 0.4) * 0.5 + 0.5)
+		b.append(sin(float(i) * 0.4 + 0.05) * 0.5 + 0.5)  # near-match
+		c.append(sin(float(i) * 1.7) * 0.5 + 0.5)          # different shape
+	_ok(VoiceCommands.envelope_score(a, b) > 0.9,
+		"voice: near-identical envelopes score high")
+	_ok(VoiceCommands.envelope_score(a, c) < VoiceCommands.envelope_score(a, b),
+		"voice: different envelopes score lower than near-matches")
+	_ok(VoiceCommands.envelope_score(a, a) > 0.99,
+		"voice: identical envelopes score ~1")
+	_ok(VoiceCommands.MATCH_MIN < 0.9,
+		"voice: match threshold leaves room for natural variation")
+
+	# Down-side detection: a decisively flipped vertical component rotates
+	# the frame 180° (x and y negate, z is unchanged).
+	var pg := PlaygroundScene.new()
+	var flipped: Vector3 = pg._frame_adjust(Vector3(0.5, 9.9, -1.0))
+	_ok(pg._flip == -1.0, "downside: +y gravity flips the frame")
+	_ok(flipped.is_equal_approx(Vector3(-0.5, -9.9, -1.0)),
+		"downside: flip negates x and y, keeps z")
+	var back: Vector3 = pg._frame_adjust(Vector3(0.3, -9.8, -1.0))
+	_ok(pg._flip == 1.0 and back.is_equal_approx(Vector3(0.3, -9.8, -1.0)),
+		"downside: -y gravity restores the identity frame")
+	var weak: Vector3 = pg._frame_adjust(Vector3(0.0, 2.0, -9.6))
+	_ok(pg._flip == 1.0 and weak.is_equal_approx(Vector3(0.0, 2.0, -9.6)),
+		"downside: an indecisive vertical never toggles the flip")
+	pg.free()
+
+	# NavModes persistence round-trip.
+	var before := NavModes.mode()
+	NavModes.set_mode(NavModes.MODE_SIM_VIEW)
+	NavModes._mode = -1   # force re-load from disk
+	_ok(NavModes.mode() == NavModes.MODE_SIM_VIEW, "nav mode persists")
+	NavModes.set_mode(before)
+	_ok(NavModes.label(NavModes.MODE_PLAYGROUND) == "Free flight", "mode labels")
+
 func _test_narration_vo() -> void:
 	## Baked ElevenLabs narration: every sentence the game can speak must have
 	## a clip in audio/vo (Narrator falls back to robo-TTS only if one is missing).
@@ -785,7 +926,8 @@ func _test_narration_vo() -> void:
 	var lines: Array = [
 		load("res://scripts/TitleView.gd").WELCOME,
 		load("res://scripts/OrreryView.gd").CLOSING,
-		load("res://scripts/AstronautIntro.gd").BRIEFING,
+		load("res://scripts/AstronautIntro.gd").BRIEFING_MISSION,
+		load("res://scripts/AstronautIntro.gd").BRIEFING_FREE_FLIGHT,
 	]
 	for b in SolarData.bodies():
 		lines.append(str(b.get("blurb", "")) + " A video about it is coming soon.")
@@ -832,7 +974,9 @@ func _test_scripts_compile() -> void:
 		"res://scripts/PlotBoard.gd", "res://scripts/FlyScene.gd",
 		"res://scripts/ScaleTune.gd", "res://scripts/CockpitHud.gd",
 		"res://scripts/PlanetSkins.gd", "res://scripts/VoStream.gd",
-		"res://scripts/NarratorVoice.gd",
+		"res://scripts/NarratorVoice.gd", "res://scripts/NavModes.gd",
+		"res://scripts/OrbitCinematic.gd", "res://scripts/PlaygroundScene.gd",
+		"res://scripts/FlightChooser.gd",
 	]:
 		_ok(load(path) != null, "compiles: %s" % path)
 

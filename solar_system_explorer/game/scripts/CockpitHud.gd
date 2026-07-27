@@ -4,6 +4,11 @@ extends CanvasLayer
 ## Arrival choices: learn more (video) or star panel (chart a new course).
 
 const COCKPIT_PATH := "res://images/cockpit.png"
+## Square COURSE console: flat solar-system overview reaching the bottom of
+## the cockpit screen. FlyScene projects into these pixel coords.
+const CONSOLE_SIZE := Vector2(210, 210)
+const CONSOLE_POS := Vector2(535, 390)   # 390 + 210 = 600 (screen bottom)
+const CONSOLE_PAD := 10.0
 
 signal boost_pressed()
 signal go_home()
@@ -29,7 +34,9 @@ var _map_ship: Vector2 = Vector2.ZERO
 var _map_dest: Vector2 = Vector2.ZERO
 var _map_pts: PackedVector2Array = PackedVector2Array()
 var _map_progress: float = 0.0
-var _map_bodies: Array = []  ## [{pos: Vector2, color: Color, name: String}]
+var _map_bodies: Array = []  ## [{pos: Vector2, color: Color, r: float, hot: bool}]
+var _map_rings: PackedFloat32Array = PackedFloat32Array()  ## orbit ring radii (px)
+var _map_belt: Vector2 = Vector2.ZERO   ## belt band inner/outer radii (px)
 
 func _ready() -> void:
 	layer = 15
@@ -64,11 +71,14 @@ func update_flight(progress_u: float, heading_rad: float) -> void:
 		_console.queue_redraw()
 
 func set_console_map(ship: Vector2, dest: Vector2, course: PackedVector2Array,
-		bodies: Array) -> void:
+		bodies: Array, rings: PackedFloat32Array = PackedFloat32Array(),
+		belt_band: Vector2 = Vector2.ZERO) -> void:
 	_map_ship = ship
 	_map_dest = dest
 	_map_pts = course
 	_map_bodies = bodies
+	_map_rings = rings
+	_map_belt = belt_band
 	if _console != null:
 		_console.queue_redraw()
 
@@ -271,31 +281,46 @@ func _build() -> void:
 	add_child(_arrival)
 
 func _make_console() -> Control:
-	## Top-down solar console parked above the steering wheel in the cockpit art.
+	## Square COURSE screen: Sun-centred flat solar-system overview with
+	## faint orbit rings, the belt band, small planet circles, and the
+	## flown course. Sized/scaled by FlyScene (adaptive extent).
 	var c := Control.new()
 	c.name = "CourseConsole"
-	c.position = Vector2(490, 395)
-	c.size = Vector2(300, 130)
+	c.position = CONSOLE_POS
+	c.size = CONSOLE_SIZE
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	c.draw.connect(func() -> void:
 		var sz := c.size
-		c.draw_rect(Rect2(Vector2.ZERO, sz), Color(0.04, 0.08, 0.14, 0.82), true)
+		var center := sz * 0.5
+		c.draw_rect(Rect2(Vector2.ZERO, sz), Color(0.03, 0.06, 0.12, 0.88), true)
 		c.draw_rect(Rect2(Vector2.ZERO, sz), Color(0.45, 0.75, 1.0, 0.55), false, 2.0)
-		# Sun
-		c.draw_circle(sz * 0.5, 5.0, Color(1.0, 0.85, 0.3, 0.95))
+		# Faint orbit rings.
+		for r in _map_rings:
+			c.draw_arc(center, r, 0.0, TAU, 64, Color(0.42, 0.55, 0.85, 0.20), 1.0, true)
+		# Asteroid belt band: sparse deterministic speckles.
+		if _map_belt.y > _map_belt.x and _map_belt.x > 0.0:
+			var rng := RandomNumberGenerator.new()
+			rng.seed = 91
+			for i in 110:
+				var a: float = rng.randf_range(0.0, TAU)
+				var rr: float = rng.randf_range(_map_belt.x, _map_belt.y)
+				c.draw_circle(center + Vector2(cos(a), sin(a)) * rr, 0.7,
+					Color(0.62, 0.58, 0.52, 0.40))
+		# Sun.
+		c.draw_circle(center, 3.2, Color(1.0, 0.85, 0.3, 0.95))
+		# Planets: very small circles, relative sizes from the scroll strip.
 		for b in _map_bodies:
 			var p: Vector2 = b.get("pos", Vector2.ZERO)
 			var col: Color = b.get("color", Color(0.7, 0.7, 0.8))
-			c.draw_circle(p, 3.5, col)
+			var r: float = float(b.get("r", 2.0))
+			c.draw_circle(p, r, col)
 			if bool(b.get("hot", false)):
-				c.draw_arc(p, 6.5, 0.0, TAU, 20, Color(1.0, 0.85, 0.25, 0.95), 1.8)
+				c.draw_arc(p, r + 3.0, 0.0, TAU, 20, Color(1.0, 0.85, 0.25, 0.95), 1.6)
 		if _map_pts.size() >= 2:
-			c.draw_polyline(_map_pts, Color(0.45, 0.95, 1.0, 0.9), 2.5, true)
-		c.draw_circle(_map_dest, 6.0, Color(_dest_color.r, _dest_color.g, _dest_color.b, 0.9))
-		c.draw_arc(_map_dest, 8.0, 0.0, TAU, 20, Color(1, 1, 1, 0.85), 1.5)
-		# Ship wedge
-		var ship_col := Color(0.95, 0.9, 0.35, 0.98)
-		c.draw_circle(_map_ship, 4.5, ship_col)
+			c.draw_polyline(_map_pts, Color(0.45, 0.95, 1.0, 0.9), 1.8, true)
+		c.draw_arc(_map_dest, 4.5, 0.0, TAU, 20, Color(1, 1, 1, 0.85), 1.3)
+		# Ship.
+		c.draw_circle(_map_ship, 3.0, Color(0.95, 0.9, 0.35, 0.98))
 		c.draw_string(ThemeDB.fallback_font, Vector2(8, 16), "COURSE",
 			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color(0.75, 0.9, 1.0, 0.9))
 	)

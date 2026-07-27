@@ -5,11 +5,21 @@ extends Control
 ## scene just PLAYS BACK the route's timeline (positions, headings, events)
 ## and never re-derives geometry live — what was charted is what flies.
 ##
-## RENDERING: worlds are POINTS. In cruise every body is a flat icon MARKER
-## (constant screen size, recognition tiers). On final approach the TARGET
-## marker grows so it reads bigger than everything else — still on the sim
-## path, camera still facing travel. At the end we HARD-CUT to an orbit
-## cinematic with the destination mesh looming large (not a course blend).
+## RENDERING — two nav modes (NavModes), same sim underneath:
+##   MARKERS  — flat icon markers (constant screen size, recognition tiers);
+##              close passes swap to the real mesh (fly-by); the TARGET
+##              marker grows on final approach.
+##   SIM_VIEW — honest cockpit view: bearings from the sim, angular size and
+##              brightness from decompressed REAL distances. Bodies are
+##              brightness-scaled dots until their true angular size crosses
+##              a pixel threshold, then discs subtending exactly that angle.
+## Both end with a HARD-CUT to orbit; the standalone OrbitCinematic plays
+## over the cut on every arrival.
+
+## Preloaded so headless runs see fresh classes before the editor rescans
+## the global class cache.
+const NavModes := preload("res://scripts/NavModes.gd")
+const OrbitCinematic := preload("res://scripts/OrbitCinematic.gd")
 
 signal arrived(dest_id: String)
 signal go_home()
@@ -26,17 +36,24 @@ const ORBIT_CAM_YAW_DEG := 48.0
 const APPROACH_S := 0.0            ## unused — approach is late sim playback
 const ORBIT_ENTRY_BLEND_S := 0.0   ## unused — orbit is a hard cut
 const ICON_TEX_PX := 48
-## Playback rate. Cruise is steady; last stretch eases so the growing
-## target has time to read before the orbit cut.
-const CRUISE_RATE := 0.72
-const APPROACH_RATE := 0.35
-const APPROACH_SLOW_U := 0.82
 ## Path fraction where the DESTINATION marker starts growing larger than
 ## every other marker. Still on the sim course — no turn-away path.
 ## Growth targets an absolute recognition tier (above the Sun's 3.0) so a
 ## small world like Mars still reads bigger than peers on approach.
 const APPROACH_GROW_U := 0.72
 const APPROACH_SCREEN_TIER := 5.2
+## Sim-view rendering: bodies sit on a fixed shell around the camera at
+## their sim bearing; disc scale reproduces the true angular size exactly.
+const SIM_SHELL_R := 400.0
+const SIM_DISC_MIN_PX := 1.25   ## true angular radius (px) where dot → disc
+const SIM_DOT_PX := 2.6         ## screen size of a sub-threshold body dot
+const SIM_MIN_ALPHA := 0.03     ## below this flux-alpha nothing is rendered
+## Near a body the hero sphere IS the world at local scale (the orbit cut
+## relies on exactly that), so within its neighborhood real distance is
+## hero-scaled sim distance; beyond it, radial decompression rules. The
+## regimes span orders of magnitude, so the blend runs in LOG space.
+const SIM_LOCAL_NEAR_X := 6.0   ## dist/hero fully in the local regime
+const SIM_LOCAL_FAR_X := 36.0   ## dist/hero fully in the decompressed regime
 
 ## Burn-phase narration (baked VO; see dump_vo_lines.gd). The lines describe
 ## the ship, not passing geometry, so they can never go stale mid-flight.
@@ -45,6 +62,12 @@ const APPROACH_SCREEN_TIER := 5.2
 const LINE_LAUNCH := "Engines on — hold tight, we're speeding up!"
 const LINE_CRUISE := "Cruising speed!"
 const LINE_BRAKE := "Getting close — time to start slowing down!"
+
+## Which nav rendering runs (NavModes.MODE_MARKERS / MODE_SIM_VIEW) — set by
+## Main before begin_flight. Playground is its own scene, never this one.
+var render_mode: int = NavModes.MODE_MARKERS
+## Arrival cinematic overlay (standalone scene). Harnesses may disable it.
+var cinematic_enabled: bool = true
 
 var _cfg: SolarFlyerConfig
 var _viewport: SubViewport
@@ -84,6 +107,8 @@ var _belt_mm: MultiMeshInstance3D
 var _belt_ring_r: float = 0.0
 var _hud: CockpitHud
 var _highlight_id: String = ""
+var _console_extent: float = 60.0   ## half-span (world units) of the course chart
+var _cine: OrbitCinematic
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -97,6 +122,9 @@ func _ready() -> void:
 	_hud.go_home.connect(func() -> void: go_home.emit())
 	_hud.learn_more_pressed.connect(func() -> void: learn_more.emit(_dest_id))
 	_hud.chart_course_pressed.connect(func() -> void: chart_course.emit(_dest_id))
+	_cine = OrbitCinematic.new()
+	add_child(_cine)
+	_cine.finished.connect(_on_cinematic_finished)
 	visible = false
 
 func set_active(on: bool) -> void:
@@ -138,7 +166,14 @@ func begin_flight(dest_id: String, route: Dictionary, t0: float) -> void:
 	_tl_entry = tl.get("entry", {})
 	_ev_idx = 0
 	_build_tl_path_u()
-	_spawn_belt_encounter()
+	if render_mode == NavModes.MODE_SIM_VIEW:
+		# Honest view: the real belt is invisibly sparse — no cinematic rocks.
+		if _belt_mm != null:
+			_belt_mm.visible = false
+			_belt_mm.multimesh.instance_count = 0
+	else:
+		_spawn_belt_encounter()
+	_console_extent = _course_extent(route)
 	_flying = true
 	_orbiting = false
 	_orbit_blend = 0.0
@@ -154,10 +189,12 @@ func begin_flight(dest_id: String, route: Dictionary, t0: float) -> void:
 		_cam.position = Vector3.ZERO
 		_cam.rotation = Vector3.ZERO
 	_cam.current = true
+	_cine.stop()
+	_sun_light.position = Vector3.ZERO
 	_place_ship_at_path(0.0)
 
 	_place_bodies_at(_clock)
-	_update_markers()
+	_render_bodies()
 	var dest := SolarData.flyer_body_by_id(dest_id, _cfg)
 	_hud.set_destination(dest)
 	_hud.update_flight(0.0, 0.0)
@@ -187,14 +224,15 @@ func _process(delta: float) -> void:
 	if not _flying:
 		return
 
-	# Path-uniform playback of the sim (no live re-derivation). Late
-	# approach only grows the dest marker — camera still faces travel.
-	_play_u = minf(1.0, _play_u + delta * _flight_play_rate() / _duration)
+	# Path-uniform playback of the sim (no live re-derivation). Pacing is
+	# wall-time bounded (OrbitMath.flight_play_rate) so Uranus never drags.
+	_play_u = minf(1.0,
+		_play_u + delta * OrbitMath.flight_play_rate(_play_u, _duration) / _duration)
 	_progress_u = _play_u
 	_place_ship_at_path(_play_u)
 	_fire_timeline_events()
 	_place_bodies_at(_clock)
-	_update_markers()
+	_render_bodies()
 	_update_hud()
 	_update_console()
 	_spin_bodies(delta)
@@ -203,13 +241,12 @@ func _process(delta: float) -> void:
 	if _play_u >= 1.0:
 		_enter_orbit_from_timeline()
 
-## Path-progress rate: steady cruise, easing in the last stretch so the
-## growing target has time to read before the orbit cut.
-func _flight_play_rate() -> float:
-	if _play_u < APPROACH_SLOW_U:
-		return CRUISE_RATE
-	var t: float = (_play_u - APPROACH_SLOW_U) / maxf(1.0 - APPROACH_SLOW_U, 0.001)
-	return lerpf(CRUISE_RATE, APPROACH_RATE, smoothstep(0.0, 1.0, t))
+## Route to the active nav rendering (markers vs honest sim view).
+func _render_bodies() -> void:
+	if _flying and render_mode == NavModes.MODE_SIM_VIEW:
+		_update_sim_view()
+	else:
+		_update_markers()
 
 ## Cumulative path fraction along the timeline (for path-uniform playback).
 func _build_tl_path_u() -> void:
@@ -293,6 +330,7 @@ func _enter_orbit_from_timeline() -> void:
 	var hero: float = float(dest.get("hero_r", 2.0))
 	_orbit_park = OrbitMath.sun_approach_standoff(_cfg) \
 		if bool(dest.get("is_star", false)) else OrbitMath.orbit_standoff(hero)
+	_sun_light.position = Vector3.ZERO   # sim view may have moved it
 	if _tl_entry.is_empty():
 		var center := OrbitMath.body_pos(dest, _clock)
 		var rel := _ship_rig.global_position - center
@@ -313,7 +351,20 @@ func _enter_orbit_from_timeline() -> void:
 		_cam.position = Vector3.ZERO
 		_cam.rotation = Vector3.ZERO
 	_place_parked_cam()
-	arrived.emit(_dest_id)
+	_render_bodies()
+	# The standalone arrival cinematic plays over the cut; narration and the
+	# arrival UI wait for it (Main reacts to `arrived`). The cockpit HUD (a
+	# higher CanvasLayer) hides for a full-bleed letterboxed picture.
+	if cinematic_enabled and _cine != null:
+		_hud.visible = false
+		_cine.play(_dest_id)
+	else:
+		arrived.emit(_dest_id)
+
+func _on_cinematic_finished() -> void:
+	_hud.visible = true
+	if _orbiting:
+		arrived.emit(_dest_id)
 
 func _enter_orbit() -> void:
 	## Public/debug entry — jump playback to the end of the hop.
@@ -331,7 +382,7 @@ func _process_orbit(delta: float) -> void:
 	_orbit_ang += delta * ORBIT_SPEED * _orbit_dir * _orbit_dwell_factor()
 	_place_parked_cam()
 	_place_bodies_at(_clock)
-	_update_markers()
+	_render_bodies()
 	_update_console()
 	_spin_bodies(delta)
 
@@ -390,6 +441,10 @@ func _build_viewport() -> void:
 	_viewport = SubViewport.new()
 	_viewport.size = Vector2i(1280, 600)
 	_viewport.transparent_bg = false
+	# Isolated world: without this every SubViewport shares the root World3D,
+	# so the flight, playground and cinematic scenes all coexisted in ONE
+	# 3D world and filmed each other's planets.
+	_viewport.own_world_3d = true
 	_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	_host.add_child(_viewport)
 
@@ -586,8 +641,9 @@ func _place_bodies_at(at_t: float) -> void:
 
 ## Markers: constant screen size + recognition tiers. On late approach the
 ## DESTINATION marker grows so it clearly outranks every other body — still
-## on the sim path. Orbit cut swaps dest to full hero mesh; everyone else
-## stays a marker.
+## on the sim path. A CLOSE PASS swaps a non-destination marker for the real
+## mesh (fly-by) so a near world reads bigger than distant markers. Orbit
+## cut swaps dest to full hero mesh; everyone else stays a marker.
 func _update_markers() -> void:
 	var cam_pos: Vector3 = _cam.global_position
 	var grow_u: float = 0.0
@@ -604,6 +660,7 @@ func _update_markers() -> void:
 		var tier: float = float(info["tier"])
 		var base: float = OrbitMath.marker_world_size(dist, tier, _cfg)
 		var is_dest: bool = id == _dest_id
+		icon.modulate = Color(1, 1, 1, 1)
 		if _orbiting and is_dest:
 			icon.visible = false
 			mesh.visible = true
@@ -617,9 +674,86 @@ func _update_markers() -> void:
 			mesh.visible = false
 			icon.pixel_size = grown / float(ICON_TEX_PX)
 		else:
+			# Fly-by meshes ease out during the approach-grow finale so the
+			# DESTINATION always ends the trip as the biggest thing on glass.
+			# The Sun is exempt: its huge hero radius would keep a giant lit
+			# ball on the glass across most of the inner system — it stays
+			# the constant bright-yellow marker unless it IS the destination.
+			var flyby: float = 0.0
+			if _flying and not is_dest \
+					and not bool(info["data"].get("is_star", false)):
+				var gate: float = 1.0 - smoothstep(0.3, 0.8, grow_u)
+				flyby = OrbitMath.flyby_mesh_scale(dist, hero, base) * gate
+			icon.pixel_size = base / float(ICON_TEX_PX)
+			if flyby > 0.05:
+				icon.visible = false
+				mesh.visible = true
+				mesh.scale = Vector3.ONE * flyby
+			else:
+				icon.visible = true
+				mesh.visible = false
+
+## Honest cockpit rendering (SIM_VIEW): each body sits on a fixed shell at
+## its sim bearing; its disc subtends the TRUE angle computed from real AU
+## distances and real radii, its dot brightness follows real inverse-square
+## flux. Bodies too faint to see are not rendered at all. The camera is the
+## reference point — objects enter ITS field of view; nothing is faked.
+func _update_sim_view() -> void:
+	var cam_pos: Vector3 = _cam.global_position
+	var ship_real: Vector3 = OrbitMath.real_pos_au(cam_pos, _cfg)
+	var px_per_rad: float = float(_viewport.size.y) / deg_to_rad(_cam.fov)
+	for id in _body_nodes:
+		var info: Dictionary = _body_nodes[id]
+		var root: Node3D = info["root"]
+		var icon: Sprite3D = info["icon"]
+		var mesh: MeshInstance3D = info["sphere"]
+		var data: Dictionary = info["data"]
+		var body_sim: Vector3 = OrbitMath.body_pos(data, _clock)
+		var dir: Vector3 = body_sim - cam_pos
+		if dir.length() < 0.01:
+			icon.visible = false
+			mesh.visible = false
+			continue
+		dir = dir.normalized()
+		var is_star: bool = bool(data.get("is_star", false))
+		var body_real: Vector3 = OrbitMath.real_pos_au(body_sim, _cfg)
+		var radius_km: float = float(data.get("real_radius_km", 1000.0))
+		var hero: float = maxf(float(data.get("hero_r", 1.0)), 0.001)
+		var dist_sim: float = cam_pos.distance_to(body_sim)
+		# Far: decompressed real geometry. Near: hero-scaled local geometry
+		# (approach ends with the disc the orbit cut then holds).
+		var d_far_au: float = maxf(ship_real.distance_to(body_real), 1.0e-6)
+		var d_local_au: float = maxf(
+			dist_sim / hero * radius_km / OrbitMath.KM_PER_AU, 1.0e-9)
+		var local_w: float = 1.0 - smoothstep(
+			SIM_LOCAL_NEAR_X, SIM_LOCAL_FAR_X, dist_sim / hero)
+		var d_ship_au: float = exp(lerpf(log(d_far_au), log(d_local_au), local_w))
+		var theta: float = OrbitMath.apparent_radius_rad(radius_km, d_ship_au)
+		var alpha: float = 1.0
+		if not is_star:
+			var d_sun_au: float = maxf(body_real.length(), 0.05)
+			alpha = OrbitMath.brightness_alpha(
+				OrbitMath.apparent_brightness(radius_km, d_sun_au, d_ship_au))
+		root.position = cam_pos + dir * SIM_SHELL_R
+		var radius_px: float = theta * px_per_rad
+		if radius_px >= SIM_DISC_MIN_PX:
+			# True-angular-size disc.
+			icon.visible = false
+			mesh.visible = true
+			mesh.scale = Vector3.ONE * (SIM_SHELL_R * tan(theta))
+		elif alpha >= SIM_MIN_ALPHA or is_star:
+			# Point of light, brightness from real flux.
 			icon.visible = true
 			mesh.visible = false
-			icon.pixel_size = base / float(ICON_TEX_PX)
+			icon.modulate = Color(1, 1, 1, maxf(alpha, 0.12) if not is_star else 1.0)
+			icon.pixel_size = (SIM_DOT_PX * SIM_SHELL_R / px_per_rad) / float(ICON_TEX_PX)
+		else:
+			# Too faint to see — not rendered. That's the honest sky.
+			icon.visible = false
+			mesh.visible = false
+		if is_star:
+			# Light the discs from the sun's on-shell bearing.
+			_sun_light.position = root.position
 
 func _update_hud() -> void:
 	var dest := SolarData.flyer_body_by_id(_dest_id, _cfg)
@@ -631,51 +765,77 @@ func _update_hud() -> void:
 	var heading := CockpitHud.heading_angle(forward, aim)
 	_hud.update_flight(_progress_u, heading)
 
+## Half-span of the COURSE chart: at least the inner system (Mars orbit),
+## grown to fit the flown curve + destination orbit for outer hops.
+func _course_extent(route: Dictionary) -> float:
+	var mars := SolarData.flyer_body_by_id("mars", _cfg)
+	var extent: float = float(mars.get("orbit_r", 55.0)) * 1.05
+	var dest := SolarData.flyer_body_by_id(_dest_id, _cfg)
+	extent = maxf(extent, float(dest.get("orbit_r", 0.0)) * 1.06)
+	if route.has("curve"):
+		var curve: Curve3D = route["curve"]
+		var len: float = maxf(curve.get_baked_length(), 0.001)
+		for i in 33:
+			var p: Vector3 = curve.sample_baked(float(i) / 32.0 * len)
+			extent = maxf(extent, maxf(absf(p.x), absf(p.z)) * 1.06)
+	return extent
+
+## Project world XZ into COURSE panel pixels (Sun-centred, uniform scale).
+func _console_px(world: Vector3) -> Vector2:
+	var half: float = CockpitHud.CONSOLE_SIZE.x * 0.5
+	var k: float = (half - CockpitHud.CONSOLE_PAD) / maxf(_console_extent, 0.001)
+	return Vector2(half + world.x * k, half + world.z * k)
+
+## Flat solar-system overview: faint orbit rings + belt band + planets as
+## very small circles (sizes derived from the scroll strip's draw_radius,
+## shrinking further on wide charts), the flown course, ship and target.
 func _update_console() -> void:
 	if _route.is_empty() or not _route.has("curve"):
 		return
 	var curve: Curve3D = _route["curve"]
-	var panel := Vector2(300, 130)
-	var bmin := Vector2(-5, -5)
-	var bmax := Vector2(5, 5)
-	for b in SolarData.flyer_bodies(_cfg):
-		var p := OrbitMath.body_pos(b, _clock)
-		bmin.x = minf(bmin.x, p.x)
-		bmin.y = minf(bmin.y, p.z)
-		bmax.x = maxf(bmax.x, p.x)
-		bmax.y = maxf(bmax.y, p.z)
-	var pad := (bmax - bmin) * 0.08
-	bmin -= pad
-	bmax += pad
+	var half: float = CockpitHud.CONSOLE_SIZE.x * 0.5
+	var k: float = (half - CockpitHud.CONSOLE_PAD) / maxf(_console_extent, 0.001)
+	var mars := SolarData.flyer_body_by_id("mars", _cfg)
+	var mars_extent: float = float(mars.get("orbit_r", 55.0)) * 1.05
+	# Circles shrink as the chart widens (Uranus chart → smaller dots).
+	var size_k: float = clampf(mars_extent / _console_extent, 0.5, 1.0)
+	var rings := PackedFloat32Array()
 	var bodies: Array = []
+	var belt_band := Vector2.ZERO
 	for b in SolarData.flyer_bodies(_cfg):
-		if bool(b.get("is_star", false)) or bool(b.get("belt", false)):
+		var orbit_r: float = float(b.get("orbit_r", 0.0))
+		if bool(b.get("belt", false)):
+			if orbit_r * k < half:
+				belt_band = Vector2(orbit_r * 0.88 * k, orbit_r * 1.12 * k)
 			continue
+		if bool(b.get("major_asteroid", false)):
+			continue   # the belt band already tells that story at this scale
+		if bool(b.get("is_star", false)):
+			continue
+		if orbit_r > _console_extent * 1.42:
+			continue   # off-chart world: no ring, no dot
+		rings.append(orbit_r * k)
 		var wp := OrbitMath.body_pos(b, _clock)
 		bodies.append({
-			"pos": CockpitHud.console_project(wp, bmin, bmax, panel),
+			"pos": _console_px(wp),
 			"color": b["color"],
-			"name": b["name"],
-			"hot": false,
+			"r": maxf(1.0, float(b.get("draw_radius", 40.0)) * 0.042 * size_k),
+			"hot": str(b["id"]) == _dest_id,
 		})
 	# Console course = the sim curve exactly (same path the ship flies).
 	var pts := PackedVector2Array()
 	var len: float = maxf(curve.get_baked_length(), 0.001)
 	for i in 48:
 		var u := float(i) / 47.0
-		pts.append(CockpitHud.console_project(curve.sample_baked(u * len), bmin, bmax, panel))
-	var ship_w: Vector3
-	if _orbiting:
-		ship_w = _orbit_rig.global_position
-	else:
-		ship_w = _ship_rig.global_position
+		pts.append(_console_px(curve.sample_baked(u * len)))
+	var ship_w: Vector3 = _orbit_rig.global_position if _orbiting \
+		else _ship_rig.global_position
 	# Dest pin sits on the sim endpoint (parking arrival), not the planet
 	# center — so the line never looks like it jumps at the finish.
-	var dest_w: Vector3 = curve.sample_baked(len)
 	_hud.set_console_map(
-		CockpitHud.console_project(ship_w, bmin, bmax, panel),
-		CockpitHud.console_project(dest_w, bmin, bmax, panel),
-		pts, bodies)
+		_console_px(ship_w),
+		_console_px(curve.sample_baked(len)),
+		pts, bodies, rings, belt_band)
 
 func _on_boost() -> void:
 	if not _flying:

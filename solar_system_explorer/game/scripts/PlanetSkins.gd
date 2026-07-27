@@ -1,10 +1,16 @@
 class_name PlanetSkins
 extends RefCounted
-## Procedural albedo textures for flyer bodies (tools/gen_planet_skins.py).
+## Albedo textures for flyer bodies. Prefers the generated photoreal
+## cinematic maps (images/cinematic), falling back to the procedural skins
+## (tools/gen_planet_skins.py) so nothing ever renders untextured.
 
 const DIR := "res://images/planets"
+const CINE_DIR := "res://images/cinematic"
 
 static func texture_for(body_id: String) -> Texture2D:
+	var cine := "%s/%s.png" % [CINE_DIR, body_id]
+	if ResourceLoader.exists(cine):
+		return load(cine) as Texture2D
 	var path := "%s/%s.png" % [DIR, body_id]
 	if ResourceLoader.exists(path):
 		return load(path) as Texture2D

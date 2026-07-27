@@ -14,6 +14,9 @@ const AstronautIntro := preload("res://scripts/AstronautIntro.gd")
 const FlySceneScript := preload("res://scripts/FlyScene.gd")
 const PlotBoardScript := preload("res://scripts/PlotBoard.gd")
 const NarratorScript := preload("res://scripts/Narrator.gd")
+const PlaygroundScript := preload("res://scripts/PlaygroundScene.gd")
+const FlightChooserScript := preload("res://scripts/FlightChooser.gd")
+const SpeedModeChooser := preload("res://scripts/SpeedModeChooser.gd")
 
 const OUT_PATH := "res://data/solar_vo_manifest.json"
 
@@ -23,9 +26,16 @@ func _init() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	_add(TitleView.LINE_SHIP)
+	_add(TitleView.LINE_SOLAR)
 	_add(TitleView.WELCOME)
+	_add(FlightChooserScript.LINE_MISSION)
+	_add(FlightChooserScript.LINE_FREE)
+	_add(FlightChooserScript.NARRATION)
 	_add(OrreryView.CLOSING)
-	_add(AstronautIntro.BRIEFING)
+	_add(OrreryView.BOOT_LINE)
+	_add(AstronautIntro.BRIEFING_MISSION)
+	_add(AstronautIntro.BRIEFING_FREE_FLIGHT)
 
 	# Burn-phase beats spoken during every flight.
 	_add(FlySceneScript.LINE_LAUNCH)
@@ -33,6 +43,36 @@ func _run() -> void:
 	_add(FlySceneScript.LINE_BRAKE)
 	# Engines-arming beat while the entry cinematic is already baked in.
 	_add(PlotBoardScript.LINE_ENGINES)
+
+	# Free-flight playground beats (incl. first-play tutorial + launch gate).
+	_add(PlaygroundScript.LINE_WELCOME)
+	_add(PlaygroundScript.LINE_BAND)
+	_add(PlaygroundScript.LINE_TILE)
+	_add(PlaygroundScript.LINE_TUT_RIGHT)
+	_add(PlaygroundScript.LINE_TUT_LEFT)
+	_add(PlaygroundScript.LINE_TUT_UP)
+	_add(PlaygroundScript.LINE_TUT_DOWN)
+	_add(PlaygroundScript.LINE_TUT_SURGE_INTRO)
+	_add(PlaygroundScript.LINE_TUT_SURGE_INTRO_CRUISE)
+	_add(PlaygroundScript.LINE_TUT_JERK_STOP)
+	_add(PlaygroundScript.LINE_TUT_JERK_GO)
+	_add(PlaygroundScript.LINE_TUT_GO_PULL)
+	_add(PlaygroundScript.LINE_TUT_GO_PUSH)
+	_add(PlaygroundScript.LINE_AIM)
+	_add(SpeedModeChooser.LINE_GEARS)
+	_add(SpeedModeChooser.LINE_CRUISE)
+	_add(PlaygroundScript.LINE_STOP)
+	_add(PlaygroundScript.LINE_RESUME)
+	_add(PlaygroundScript.LINE_MIN)
+	_add(PlaygroundScript.LINE_CRUISE_SPEED)
+	_add(PlaygroundScript.LINE_MAX)
+	_add(PlaygroundScript.LINE_ALREADY_MAX)
+	_add(PlaygroundScript.LINE_ALREADY_STOP)
+	_add(PlaygroundScript.LINE_FASTER)
+	_add(PlaygroundScript.LINE_SLOWER)
+	_add(PlaygroundScript.LINE_READY)
+	for b in SolarData.flyer_destinations():
+		_add("You have arrived at %s!" % str(b.get("name", "")))
 
 	# Body blurbs (orrery tour + video card) + the video-card suffix.
 	for b in SolarData.bodies() + SolarData.major_asteroids():

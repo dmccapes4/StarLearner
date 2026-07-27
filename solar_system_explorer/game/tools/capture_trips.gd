@@ -121,6 +121,7 @@ func _run() -> void:
 		var fly: FlyScene = FlyScene.new()
 		root.add_child(bg)
 		root.add_child(fly)
+		fly.cinematic_enabled = false   # harness inspects the orbit view directly
 		fly.set_active(true)
 		fly.begin_flight(to_id, route, 0.0)
 		var curve: Curve3D = route["curve"]
@@ -225,8 +226,15 @@ func _run() -> void:
 						continue
 					var pr: Node3D = fly._body_nodes[oid]["root"]
 					var pd: float = maxf(cam_pos.distance_to(pr.global_position), 0.001)
-					var pw: float = (fly._body_nodes[oid]["icon"] as Sprite3D) \
-						.pixel_size * float(FlyScene.ICON_TEX_PX)
+					# Whichever representation is shown: marker icon width
+					# or fly-by mesh diameter.
+					var picon: Sprite3D = fly._body_nodes[oid]["icon"]
+					var pmesh: MeshInstance3D = fly._body_nodes[oid]["sphere"]
+					var pw: float = 0.0
+					if pmesh.visible:
+						pw = pmesh.scale.x * 2.0
+					elif picon.visible:
+						pw = picon.pixel_size * float(FlyScene.ICON_TEX_PX)
 					peer_max = maxf(peer_max, pw / pd)
 				_check(dest_screen > peer_max * 1.05,
 					"approach dest larger on screen (%.4f vs %.4f)" % [

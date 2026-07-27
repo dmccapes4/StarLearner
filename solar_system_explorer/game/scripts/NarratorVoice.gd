@@ -25,3 +25,6 @@ func stop_all() -> void:
 	_queue.clear()
 	if _player != null and _player.playing:
 		_player.stop()
+
+func is_busy() -> bool:
+	return not _queue.is_empty() or (_player != null and _player.playing)

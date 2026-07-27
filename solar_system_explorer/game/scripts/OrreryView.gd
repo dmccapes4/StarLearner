@@ -8,10 +8,16 @@ signal go_home()
 
 const OrreryBodies := preload("res://scripts/OrreryBodies.gd")
 const CLOSING := "That is the whole family of planets. Tap the arrow when you want to go home — or pick Spaceship to fly there yourself!"
+const BOOT_LINE := "Welcome to Solar System Explorer!"
+const BOOT_DURATION_S := 3.0
 
 var _bodies: OrreryBodies
 var _caption: Label
+var _header: Label
+var _home_btn: Button
+var _skip_btn: Button
 var _tour_gen: int = 0   ## bumped to cancel an in-flight tour
+var _boot_busy: bool = false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -20,14 +26,14 @@ func _ready() -> void:
 	_bodies = OrreryBodies.new()
 	add_child(_bodies)
 
-	var header := Label.new()
-	header.text = "Watch the planets circle the Sun"
-	header.add_theme_font_size_override("font_size", 24)
-	header.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
-	header.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	header.position = Vector2(0, 18)
-	add_child(header)
+	_header = Label.new()
+	_header.text = "Watch the planets circle the Sun"
+	_header.add_theme_font_size_override("font_size", 24)
+	_header.add_theme_color_override("font_color", Color(0.85, 0.9, 1.0))
+	_header.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_header.position = Vector2(0, 18)
+	add_child(_header)
 
 	_caption = Label.new()
 	_caption.add_theme_font_size_override("font_size", 22)
@@ -40,16 +46,42 @@ func _ready() -> void:
 	_caption.custom_minimum_size = Vector2(960, 70)
 	add_child(_caption)
 
-	add_child(_make_home_button())
-	add_child(_make_skip_button())
+	_home_btn = _make_home_button()
+	_skip_btn = _make_skip_button()
+	add_child(_home_btn)
+	add_child(_skip_btn)
 
 func set_active(on: bool) -> void:
 	_bodies.running = on
-	if not on:
+	if not on and not _boot_busy:
 		stop_tour()
+
+## Short launch cinematic: orrery spins while the welcome line plays.
+func play_boot_intro() -> void:
+	_boot_busy = true
+	_tour_gen += 1   # cancel any leftover tour
+	_header.visible = false
+	_caption.text = ""
+	_home_btn.visible = false
+	_skip_btn.visible = false
+	_bodies.set_highlight("")
+	_bodies.running = true
+	visible = true
+	Narrator.speak(BOOT_LINE)
+	await get_tree().create_timer(BOOT_DURATION_S).timeout
+	# Don't hard-stop mid-clip — title waits briefly before speaking.
+	_bodies.running = false
+	_header.visible = true
+	_home_btn.visible = true
+	_skip_btn.visible = true
+	visible = false
+	_boot_busy = false
 
 func begin_tour() -> void:
 	_bodies.running = true
+	_header.visible = true
+	_home_btn.visible = true
+	_skip_btn.visible = true
 	_tour_gen += 1
 	_run_tour(_tour_gen)
 

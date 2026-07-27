@@ -19,11 +19,11 @@ func _run() -> void:
 	var merc := SolarData.flyer_body_by_id("mercury", cfg)
 	var standoff := OrbitMath.orbit_standoff(float(earth["hero_r"]))
 	var route := OrbitMath.plot_route(OrbitMath.body_pos(earth, 0.0), merc, 0.0, cfg, standoff)
+	fly.cinematic_enabled = false
 	fly.begin_flight("mercury", route, 0.0)
-	fly._flight_t = float(route["duration"]) * 0.97
 	await process_frame
 	if not fly._orbiting:
-		fly._try_enter_orbit_from_approach(true)
+		fly._enter_orbit()
 
 	for setup in [
 		{"tag": "a0_e10", "energy": 1.0, "atten": 0.0},

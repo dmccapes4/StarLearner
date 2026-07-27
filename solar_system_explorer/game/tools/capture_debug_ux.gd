@@ -68,6 +68,7 @@ func _run() -> void:
 	root.add_child(bg)
 	root.add_child(fly)
 	fly.visible = true
+	fly.cinematic_enabled = false
 	fly.set_active(true)
 	var cfg := SolarFlyerConfig.load_default()
 	var earth := SolarData.flyer_body_by_id("earth", cfg)
@@ -91,7 +92,7 @@ func _run() -> void:
 	await _shot(dir + "/30_fly_entered_orbit.png")
 	for ang_i in 4:
 		fly._orbit_ang = float(ang_i) * 0.7
-		fly._place_orbit_cam()
+		fly._place_parked_cam()
 		fly._update_markers()
 		for i in 4:
 			await process_frame

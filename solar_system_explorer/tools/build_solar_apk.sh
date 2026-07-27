@@ -21,6 +21,14 @@ mkdir -p "$ROOT/tools/build"
 echo "=== export .pck ==="
 "$GODOT" --headless --path "$GAME" --export-pack "Android" /tmp/solar.pck
 
+echo "=== sync GodotApp wipe overlay ==="
+OVERLAY_APP="$GAME/android_src/com/godot/game/GodotApp.java"
+TEMPLATE_APP="$BUILD/src/com/godot/game/GodotApp.java"
+if [[ -f "$OVERLAY_APP" ]]; then
+  mkdir -p "$(dirname "$TEMPLATE_APP")"
+  cp -f "$OVERLAY_APP" "$TEMPLATE_APP"
+fi
+
 echo "=== unpack pck into gradle assets/ (official Android layout) ==="
 find "$ASSETS" -mindepth 1 -maxdepth 1 ! -name 'dexopt' -exec rm -rf {} +
 python3 "$ROOT/../ant_explorer/tools/unpack_godot_pck.py" /tmp/solar.pck "$ASSETS"

@@ -285,6 +285,86 @@ static func course_min_sun_dist(curve: Curve3D) -> float:
 static func marker_world_size(dist: float, tier: float, cfg: SolarFlyerConfig) -> float:
 	return maxf(cfg.icon_scale * maxf(dist, 0.001) * tier, 0.05)
 
+## ── Fly-by rendering (Mode 1) ───────────────────────────────────────
+## A close pass swaps the constant-size marker for the real 3D mesh so a
+## near world reads BIGGER than distant markers. Starts at the marker's
+## world size (seamless swap) and grows to full hero as the ship passes.
+const FLYBY_FAR_X := 14.0    ## dist/hero where the mesh starts appearing
+const FLYBY_NEAR_X := 5.0    ## dist/hero where the mesh is full hero size
+## The camera must NEVER enter the mesh: a course that passes right through a
+## world (worlds are points — nothing is dodged) would put the camera inside
+## a back-face-culled sphere, so the planet grows huge then just VANISHES.
+## Cap the mesh radius at a fraction of the camera distance instead: the
+## closest pass reads as a big world sliding past (~⅓ of the glass), never
+## a full-screen wall and never a clip-through.
+const FLYBY_CLEARANCE := 0.30   ## max mesh radius as a fraction of camera dist
+
+static func flyby_mesh_scale(dist: float, hero: float, marker_world: float) -> float:
+	var x: float = dist / maxf(hero, 0.001)
+	if x >= FLYBY_FAR_X:
+		return 0.0
+	var u: float = clampf((FLYBY_FAR_X - x) / (FLYBY_FAR_X - FLYBY_NEAR_X), 0.0, 1.0)
+	var s: float = lerpf(minf(marker_world, hero), hero, smoothstep(0.0, 1.0, u))
+	return minf(s, dist * FLYBY_CLEARANCE)
+
+## ── Presentation pacing (Mode 1) ────────────────────────────────────
+## Playback rate over path fraction u: wall time is bounded so an outer hop
+## (Uranus) never drags, with a gentle launch ramp and a soft final brake.
+## The sim clock stays synced to path position — only pacing changes.
+const WALL_TIME_FACTOR := 0.55
+const WALL_MIN_S := 10.0
+const WALL_MAX_S := 26.0
+
+static func flight_play_rate(u: float, duration: float) -> float:
+	var wall: float = clampf(duration * WALL_TIME_FACTOR, WALL_MIN_S, WALL_MAX_S)
+	var base: float = maxf(duration, 0.001) / wall
+	var launch: float = lerpf(0.55, 1.0, smoothstep(0.0, 0.12, u))
+	var brake: float = lerpf(1.0, 0.42, smoothstep(0.80, 1.0, u))
+	return base * launch * brake
+
+## ── Real-scale reconstruction (Mode 2 honest rendering) ─────────────
+## The nav sim runs on compressed radii. To render what the cockpit would
+## ACTUALLY see we decompress positions back to real AU (same angles) and
+## compute true angular sizes from real_radius_km and true relative
+## brightness from inverse-square sun/ship distances. Nothing faked.
+const KM_PER_AU := 1.495978707e8
+## Reference reflected flux: Venus near closest approach (R=6052 km,
+## d_sun=0.72 AU, d_ship=0.28 AU) — the brightest planet in our sky = 1.0.
+const BRIGHTNESS_REF := 9.0e8
+
+static func decompress_radius_au(r_sim: float, cfg: SolarFlyerConfig) -> float:
+	var u: float = (r_sim - cfg.distance_base) / maxf(cfg.distance_span, 0.001)
+	if u <= 0.0:
+		return 0.0
+	return pow(minf(u, 1.0), 1.0 / maxf(cfg.compression_exp, 0.001)) * cfg.a_max_au
+
+static func real_pos_au(sim_pos: Vector3, cfg: SolarFlyerConfig) -> Vector3:
+	var r: float = sim_pos.length()
+	if r < 0.0001:
+		return Vector3.ZERO
+	return sim_pos / r * decompress_radius_au(r, cfg)
+
+## Half-angle subtended by a body (radians). Floor keeps the destination
+## finite when ship and planet decompress to nearly the same point.
+static func apparent_radius_rad(radius_km: float, dist_au: float) -> float:
+	var d_km: float = maxf(dist_au * KM_PER_AU, radius_km * 2.5)
+	return atan(radius_km / d_km)
+
+## Reflected-light flux relative to Venus at its brightest (1.0). Purely
+## geometric (albedo/phase ignored) — monotonic and honest.
+static func apparent_brightness(radius_km: float, d_sun_au: float,
+		d_ship_au: float) -> float:
+	var den: float = maxf(
+		d_sun_au * d_sun_au * d_ship_au * d_ship_au, 1.0e-12)
+	return (radius_km * radius_km) / den / BRIGHTNESS_REF
+
+## Display alpha 0..1 from relative flux, log-scaled: Venus-bright = 1,
+## a thousandth of Venus fades to invisible (below → don't render at all).
+static func brightness_alpha(flux: float) -> float:
+	if flux <= 0.0:
+		return 0.0
+	return clampf((log(flux) / log(10.0) + 3.0) / 3.0, 0.0, 1.0)
+
 ## Safe parking distance outside the Sun's hero sphere (never dive into the star).
 static func sun_approach_standoff(cfg: SolarFlyerConfig) -> float:
 	return maxf(cfg.sun_clearance, orbit_standoff(cfg.sun_hero_r))

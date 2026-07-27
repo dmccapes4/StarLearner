@@ -10,10 +10,16 @@ config/description="A basic guided tour of the solar system — Star Learner pre
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.3", "Mobile")
 config/icon="res://icon.svg"
+config/quit_on_go_back=false
+
+[autoload]
+
+AndroidBack="*res://scripts/AndroidBack.gd"
 
 [audio]
 
 general/text_to_speech=true
+driver/enable_input=false
 
 [display]
 

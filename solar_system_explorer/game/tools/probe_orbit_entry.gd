@@ -42,6 +42,7 @@ func _fly_arrival(cfg: SolarFlyerConfig, from_id: String, to_id: String,
 	var fly: FlyScene = FlySceneScript.new()
 	root.add_child(bg)
 	root.add_child(fly)
+	fly.cinematic_enabled = false   # probe measures the orbit cut directly
 	fly.set_active(true)
 	fly.begin_flight(to_id, route, 0.0)
 	var dur: float = float(route["duration"])
@@ -76,8 +77,15 @@ func _fly_arrival(cfg: SolarFlyerConfig, from_id: String, to_id: String,
 				continue
 			var pr: Node3D = fly._body_nodes[oid]["root"]
 			var pd: float = maxf(cam_pos.distance_to(pr.global_position), 0.001)
-			var pw: float = (fly._body_nodes[oid]["icon"] as Sprite3D).pixel_size \
-				* float(FlyScene.ICON_TEX_PX)
+			# Measure whichever representation is actually shown: marker
+			# icon width, or fly-by mesh diameter.
+			var picon: Sprite3D = fly._body_nodes[oid]["icon"]
+			var pmesh: MeshInstance3D = fly._body_nodes[oid]["sphere"]
+			var pw: float = 0.0
+			if pmesh.visible:
+				pw = pmesh.scale.x * 2.0
+			elif picon.visible:
+				pw = picon.pixel_size * float(FlyScene.ICON_TEX_PX)
 			peer_max = maxf(peer_max, pw / pd)
 		_check(dest_screen > peer_max * 1.05,
 			"approach dest larger on screen (%.4f vs %.4f)" % [dest_screen, peer_max])

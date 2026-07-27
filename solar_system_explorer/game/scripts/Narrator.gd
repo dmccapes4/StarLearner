@@ -108,6 +108,13 @@ static func stop() -> void:
 	if _tts_available():
 		DisplayServer.tts_stop()
 
+## True while baked VO (or queued clips) are still playing — voice listen
+## must ignore the mic during this or it hears itself and re-fires commands.
+static func is_playing() -> bool:
+	if _voice != null and is_instance_valid(_voice):
+		return bool(_voice.call("is_busy"))
+	return false
+
 static func _ensure_voice() -> Node:
 	if _voice != null and is_instance_valid(_voice):
 		return _voice

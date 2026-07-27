@@ -1,14 +1,19 @@
 class_name AstronautIntro
 extends CanvasLayer
-## Cinematic hand-off between the orrery tour and the scroll strip: a cartoon
-## astronaut girl (helmet under one arm, waving) in front of her spaceship, with
-## a spoken "you are an astronaut" briefing. Fades out to reveal the scroll view
-## underneath, so it reads as changing into the piloting screen. Tap to skip.
+## Mode-specific briefing before Mission Flight or Free Flight: cartoon astronaut
+## girl (helmet under one arm, waving) in front of her spaceship, with baked VO.
+## Fades out to reveal the scroll strip or playground underneath. Tap to skip.
 
 signal finished()
 
 const IMG_PATH := "res://images/astronaut_girl.png"
-const BRIEFING := "You are an astronaut, about to blast off in your very own spaceship to explore the solar system! Pilot your ship to new places out in space. Tap on a planet or the Sun to learn more about it. Ready? Let's go!"
+
+const BRIEFING_MISSION := "Welcome aboard, astronaut! In Mission Flight, you'll travel on simulated courses — paths we plot between the planets, the Sun, and even worlds in the asteroid belt. Swipe to pick a destination, watch your route appear on the map, and your ship will follow that charted path through space. Tap a world when you're ready to plot your course!"
+
+const BRIEFING_FREE_FLIGHT := "You're the pilot now! In Free Flight, your phone is the joystick — tilt to steer anywhere in the solar system. Pull the phone toward you to go faster, push it away to slow down. A quick shove stops you; a quick pull starts you cruising again. We'll practice in just a moment. Ready? Let's fly!"
+
+## Back-compat alias — Mission briefing.
+const BRIEFING := BRIEFING_MISSION
 
 var _root: Control
 var _built: bool = false
@@ -18,14 +23,14 @@ func _ready() -> void:
 	layer = 15
 	visible = false
 
-func begin() -> void:
+func begin(briefing: String = BRIEFING_MISSION) -> void:
 	_build()
 	visible = true
 	_done = false
 	_root.modulate = Color(1, 1, 1, 0)
 	var fade_in := create_tween()
 	fade_in.tween_property(_root, "modulate:a", 1.0, 0.4)
-	var dur := Narrator.speak(BRIEFING)
+	var dur := Narrator.speak(briefing)
 	await get_tree().create_timer(maxf(dur, 3.5)).timeout
 	_advance()
 
@@ -60,7 +65,6 @@ func _build() -> void:
 		pic.texture = tex
 	_root.add_child(pic)
 
-	# Voice-only briefing — no on-screen script. Small skip hint only.
 	var hint := Label.new()
 	hint.text = "tap to continue \u25B6"
 	hint.add_theme_font_size_override("font_size", 18)

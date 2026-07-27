@@ -72,6 +72,9 @@ func _build() -> void:
 	_viewport = SubViewport.new()
 	_viewport.size = Vector2i(1280, 600)
 	_viewport.transparent_bg = true
+	# Isolated world (see FlyScene): shared root World3D let scenes film
+	# each other's planets.
+	_viewport.own_world_3d = true
 	_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	_host.add_child(_viewport)
 
