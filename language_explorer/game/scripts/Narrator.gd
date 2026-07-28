@@ -56,6 +56,17 @@ static func vo_key(sentence: String) -> String:
 static func vo_path(sentence: String) -> String:
 	return "%s/%s.wav" % [VO_DIR, vo_key(sentence)]
 
+static func is_playing() -> bool:
+	if _voice != null and is_instance_valid(_voice) and _voice.has_method("is_active"):
+		return bool(_voice.call("is_active"))
+	return false
+
+static func await_playback(tree: SceneTree) -> void:
+	if tree == null:
+		return
+	while is_playing() or blocks_input():
+		await tree.process_frame
+
 static func speak(text: String) -> float:
 	if text.strip_edges().is_empty():
 		return 0.0

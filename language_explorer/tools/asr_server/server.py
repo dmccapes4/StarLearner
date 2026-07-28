@@ -61,6 +61,8 @@ Rules:
 - If fixing: output ONLY the one short kid sentence (max 8 words). No quotes.
 - Keep English unless the input is clearly Spanish.
 - Kid-safe only. Preserve the child's meaning.
+- Use normal written capitalization: capitalize the first word, proper nouns (names, places),
+  and titles (Dr., Mrs., Mr., Ms.). End with . ! or ? as appropriate.
 """
 
 
@@ -88,6 +90,45 @@ def apply_known_speech_fixes(text: str) -> str:
         else:
             out.append(p)
     return "".join(out)
+
+
+def apply_proper_capitalization(text: str) -> str:
+    """Sentence case + common honorifics after ASR/cleanup."""
+    t = re.sub(r"\s+", " ", (text or "").strip())
+    if not t:
+        return t
+    honorifics = [
+        (r"\bmr\b\.?", "Mr."),
+        (r"\bmrs\b\.?", "Mrs."),
+        (r"\bms\b\.?", "Ms."),
+        (r"\bdr\b\.?", "Dr."),
+        (r"\bprof\b\.?", "Prof."),
+        (r"\bsr\b\.?", "Sr."),
+        (r"\bjr\b\.?", "Jr."),
+    ]
+    for pat, repl in honorifics:
+        t = re.sub(pat, repl, t, flags=re.IGNORECASE)
+
+    def _cap_start(m: re.Match[str]) -> str:
+        return m.group(1) + m.group(2).upper()
+
+    t = re.sub(r"(^|[.!?]\s+)([a-z])", _cap_start, t)
+    t = re.sub(r"\bi\b", "I", t)
+    t = re.sub(r"\bi'm\b", "I'm", t, flags=re.IGNORECASE)
+    t = re.sub(r"\bi've\b", "I've", t, flags=re.IGNORECASE)
+    t = re.sub(r"\bi'll\b", "I'll", t, flags=re.IGNORECASE)
+    return t
+
+
+def finalize_sentence(text: str) -> str:
+    t = apply_known_speech_fixes(strip_vo_echo(text or ""))
+    t = re.sub(r"\s+", " ", t.strip())
+    words = t.split(" ")
+    if len(words) > 8:
+        t = " ".join(words[:8])
+    if t and t[-1] not in ".!?":
+        t += "."
+    return apply_proper_capitalization(t)
 
 
 def looks_coherent(raw: str) -> bool:
@@ -197,29 +238,103 @@ def _rms_peak(path: str) -> tuple[float, int]:
         return 0.0, 0
 
 
-def transcribe_file(path: str, *, initial_prompt: str | None = None) -> str:
+COMMAND_MIN_PEAK = int(os.environ.get("ASR_COMMAND_MIN_PEAK", "280"))
+COMMAND_TARGET_PEAK = int(os.environ.get("ASR_COMMAND_TARGET_PEAK", "10000"))
+
+
+def _amplify_wav(path: str, target_peak: int = COMMAND_TARGET_PEAK) -> str:
+    """Boost quiet phone clips so Whisper hears soft 'next' without shouting."""
+    try:
+        import struct
+        import wave
+    except ImportError:
+        return path
+    try:
+        with wave.open(path, "rb") as w:
+            params = w.getparams()
+            raw = w.readframes(w.getnframes())
+    except Exception:
+        return path
+    if params.sampwidth != 2 or not raw:
+        return path
+    samples = list(struct.unpack("<" + "h" * (len(raw) // 2), raw))
+    peak = max((abs(s) for s in samples), default=0)
+    if peak < 1:
+        return path
+    gain = min(target_peak / peak, 32767 / peak)
+    if gain <= 1.05:
+        return path
+    boosted = [max(-32767, min(32767, int(s * gain))) for s in samples]
+    fd, out = tempfile.mkstemp(prefix="asr_boost_", suffix=".wav")
+    os.close(fd)
+    with wave.open(out, "wb") as w:
+        w.setparams(params)
+        w.writeframes(struct.pack("<" + "h" * len(boosted), *boosted))
+    _log(f"amplified peak {peak} → ~{int(peak * gain)} ({gain:.1f}x)")
+    return out
+
+
+def transcribe_file(
+    path: str,
+    *,
+    initial_prompt: str | None = None,
+    min_peak: int | None = None,
+    beam_size: int = 1,
+    no_speech_threshold: float | None = None,
+) -> str:
     model = get_whisper()
     # VAD off by default: phone kid mics often look "quiet" and VAD wiped the zoo
     # phrase to empty (HTTP 200 + ok:false). Opt in with ASR_VAD=1.
     use_vad = os.environ.get("ASR_VAD", "0") == "1"
     kwargs: dict[str, Any] = {
-        "beam_size": 1,
+        "beam_size": beam_size,
         "vad_filter": use_vad,
         "language": "en",
     }
+    if no_speech_threshold is not None:
+        kwargs["no_speech_threshold"] = no_speech_threshold
     if initial_prompt:
         kwargs["initial_prompt"] = initial_prompt
     _log(f"transcribe {_audio_stats(path)} vad={int(use_vad)}")
     rms, peak = _rms_peak(path)
     _log(f"audio level rms={rms:.1f} peak={peak}")
-    if peak < 800:
-        _log("audio too quiet — likely dead mic or another app holds RECORD_AUDIO")
+    floor = COMMAND_MIN_PEAK if min_peak is None else min_peak
+    if peak < floor:
+        _log(f"audio too quiet (peak {peak} < {floor})")
         return ""
     segments, _info = model.transcribe(path, **kwargs)
     parts = [s.text.strip() for s in segments if s.text and s.text.strip()]
     text = " ".join(parts).strip()
     _log(f"whisper → {text!r}" if text else "whisper → (empty)")
     return text
+
+
+def transcribe_command(path: str) -> str:
+    """Transcribe a short next/back utterance; boost gain before Whisper."""
+    _orig_rms, orig_peak = _rms_peak(path)
+    boosted = _amplify_wav(path)
+    _boost_rms, boost_peak = _rms_peak(boosted)
+    _log(
+        f"CMD audio orig_peak={orig_peak} boost_peak={boost_peak} "
+        f"floor={COMMAND_MIN_PEAK}"
+    )
+    try:
+        text = transcribe_file(
+            boosted,
+            initial_prompt="The child said next or back.",
+            min_peak=COMMAND_MIN_PEAK,
+            beam_size=3,
+            no_speech_threshold=0.35,
+        )
+        _log(f"CMD whisper={text!r}")
+        return text
+    finally:
+        if boosted != path:
+            try:
+                Path(boosted).unlink(missing_ok=True)
+            except OSError:
+                pass
+
 
 def ollama_cleanup(raw: str, lang: str = "en") -> str:
     raw = (raw or "").strip()
@@ -252,19 +367,19 @@ def ollama_cleanup(raw: str, lang: str = "en") -> str:
             data = json.loads(resp.read().decode("utf-8", errors="replace"))
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as e:
         _log(f"ollama cleanup failed: {e}; using raw")
-        return _fallback_sentence(raw)
+        return finalize_sentence(raw)
     msg = (data.get("message") or {}).get("content") or ""
     cleaned = _normalize_sentence(msg)
     compact = re.sub(r"[^A-Za-z]", "", cleaned).upper()
     if compact in ("NOCHANGE", "NOCHANGES", "UNCHANGED", "SAME", "OK"):
-        kept = apply_known_speech_fixes(_fallback_sentence(raw))
+        kept = finalize_sentence(raw)
         _log(f"cleanup NO_CHANGE → {kept!r}")
         return kept
     if not cleaned:
-        return apply_known_speech_fixes(_fallback_sentence(raw))
+        return finalize_sentence(raw)
     # Soft guard: if input already looks fine and model rewrote aggressively, keep raw.
     if looks_coherent(raw):
-        raw_norm = _fallback_sentence(raw).rstrip(".!?").lower()
+        raw_norm = finalize_sentence(raw).rstrip(".!?").lower()
         new_norm = cleaned.rstrip(".!?").lower()
         if raw_norm != new_norm:
             raw_tokens = set(re.findall(r"[a-z']+", raw_norm))
@@ -274,8 +389,8 @@ def ollama_cleanup(raw: str, lang: str = "en") -> str:
                     f"cleanup rejected rewrite of coherent input "
                     f"{raw!r} → {cleaned!r}; keeping raw"
                 )
-                return apply_known_speech_fixes(_fallback_sentence(raw))
-    return apply_known_speech_fixes(cleaned)
+                return finalize_sentence(raw)
+    return finalize_sentence(cleaned)
 
 
 def _normalize_sentence(text: str) -> str:
@@ -333,13 +448,7 @@ def strip_vo_echo(text: str) -> str:
 
 
 def _fallback_sentence(raw: str) -> str:
-    t = re.sub(r"\s+", " ", strip_vo_echo(raw or "").strip())
-    words = t.split(" ")
-    if len(words) > 8:
-        t = " ".join(words[:8])
-    if t and t[-1] not in ".!?":
-        t += "."
-    return t
+    return finalize_sentence(raw)
 
 
 def letters_for_sentence(text: str) -> list[str]:
@@ -358,7 +467,10 @@ def classify_command(text: str) -> str:
     # Prefer whole-word hits.
     tokens = t.split()
     for tok in tokens:
-        if tok in ("next", "nex", "nest", "necks", "neckst"):
+        if tok in (
+            "next", "nex", "net", "neks", "nekst", "nxt", "nest", "necks", "neckst",
+            "text", "nexx", "nextt",
+        ):
             return "next"
         if tok in ("back", "bak", "beck", "beckk", "beckwards"):
             return "back"
@@ -525,12 +637,9 @@ class Handler(BaseHTTPRequestHandler):
         if not audio_path:
             self._send_json(400, {"error": "missing audio", "command": "none"})
             return
-        text = transcribe_file(
-            audio_path,
-            initial_prompt="The child said next or back.",
-        )
+        text = transcribe_command(audio_path)
         cmd = classify_command(text)
-        _log(f"command → {cmd!r} from {text!r}")
+        _log(f"CMD → {cmd!r}")
         if cmd == "none":
             _keep_debug_copy(audio_path, "cmd_none")
         self._send_json(200, {"command": cmd, "text": text})

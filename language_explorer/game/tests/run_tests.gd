@@ -88,7 +88,14 @@ func _test_data() -> void:
 func _test_letters() -> void:
 	_ok(LangLetters.EN_ALPHABET.size() == 26, "EN alphabet has 26")
 	_ok(LangLetters.ES_ALPHABET.size() == 27, "ES alphabet has 27 (incl Ñ)")
-	_ok(LangLetters.letter_name("a", "en") == "A", "EN letter name A")
+	_ok(LangLetters.letter_name("a", "en") == "Ay", "EN letter name A")
+	_ok(LangLetters.letter_name("y", "en") == "Why", "EN letter name Y")
+	_ok(LangLetters.letter_name("u", "en") == "You", "EN letter name U")
+	_ok(LangLetters.letter_name("m", "en") == "Emm", "EN letter name M")
+	_ok(LangLetters.letter_name("n", "en") == "Enn", "EN letter name N")
+	for ch in LangLetters.EN_ALPHABET:
+		var spoken := LangLetters.letter_name(ch, "en")
+		_ok(spoken.length() >= 2, "EN letter %s spoken name is unambiguous (%s)" % [ch, spoken])
 	_ok(LangLetters.letter_name("ñ", "es") == "Eñe", "ES letter name Ñ")
 	var apple := LangLetters.spell_letters("Apple")
 	_ok(apple.size() == 5, "Apple has 5 letters")
@@ -96,11 +103,19 @@ func _test_letters() -> void:
 	var red := LangLetters.spell_letters("red.")
 	_ok(red.size() == 3, "punctuation skipped in spell_letters")
 	_ok(LangLetters.is_letter("M") and not LangLetters.is_letter("."), "is_letter filter")
+	var missing := 0
+	for line in LangLetters.vo_lines():
+		var path := "res://audio/vo/%s.wav" % Narrator.vo_key(str(line))
+		if not FileAccess.file_exists(path):
+			missing += 1
+			if missing <= 3:
+				print("  missing letter VO: ", line)
+	_ok(missing == 0, "every letter name has baked ElevenLabs clip (%d missing)" % missing)
 
 func _test_wordlabel_logic() -> void:
 	# Pure helpers — no need to mount in tree for spell_letters / vo_lines.
 	var lines: Array = WordLabel.vo_lines()
-	_ok(lines.has("A") and lines.has("Apple"), "WordLabel vo includes Apple letters")
+	_ok(lines.has("Ay") and lines.has("Apple"), "WordLabel vo includes Apple letters")
 	_ok(lines.has("Eme") and lines.has("Manzana"), "WordLabel vo includes Manzana letters")
 	_ok(ClearButton.vo_lines().size() >= 6, "ClearButton has EN+ES context lines")
 	_ok(not LangVo.line("correct", "en").is_empty(), "LangVo correct EN")

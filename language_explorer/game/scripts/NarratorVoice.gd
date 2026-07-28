@@ -21,6 +21,11 @@ func play_queue(streams: Array) -> void:
 	stop_all()
 	_queue = streams.duplicate()
 
+func is_active() -> bool:
+	if _player != null and _player.playing:
+		return true
+	return not _queue.is_empty()
+
 func stop_all() -> void:
 	_queue.clear()
 	if _player != null and _player.playing:

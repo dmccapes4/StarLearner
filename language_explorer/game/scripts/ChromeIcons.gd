@@ -58,6 +58,8 @@ static func texture(id: String) -> Texture2D:
 			_draw_star(img)
 		"hear":
 			_draw_note(img)
+		"rerecord_next":
+			_draw_rerecord_next(img)
 		_:
 			_fill_round_rect(img, Rect2(16, 16, 96, 96), 18, Color(0.45, 0.55, 0.80))
 	var tex := ImageTexture.create_from_image(img)
@@ -241,6 +243,16 @@ static func _draw_note(img: Image) -> void:
 	_fill_circle(img, Vector2(44, 88), 16, Color(1.0, 0.82, 0.30))
 	_fill_rect(img, Rect2(56, 28, 10, 60), Color(1.0, 0.82, 0.30))
 	_fill_round_rect(img, Rect2(56, 24, 36, 16), 6, Color(1.0, 0.82, 0.30))
+
+static func _draw_rerecord_next(img: Image) -> void:
+	var red := Color(0.92, 0.18, 0.18)
+	var head := Color(0.96, 0.97, 1.0)
+	for a in range(20, 320, 12):
+		var rad := deg_to_rad(float(a))
+		var p := Vector2(64, 64) + Vector2(cos(rad), sin(rad)) * 36.0
+		_fill_circle(img, p, 5, red)
+	_fill_tri(img, Vector2(90, 70), Vector2(98, 52), Vector2(76, 56), head)
+	_fill_tri(img, Vector2(90, 70), Vector2(98, 52), Vector2(88, 62), red)
 
 static func _fill_arc_dots(img: Image, c: Vector2, r: float, color: Color) -> void:
 	for a in range(-50, 55, 18):

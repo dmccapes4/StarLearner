@@ -39,6 +39,34 @@ from pathlib import Path
 Path(sys.argv[1]).write_bytes(struct.pack("<I", 0))
 PY
 
+echo "=== hub ASR assets (production token + pinned cert) ==="
+HUB_SECRETS="${HUB_SECRETS:-$ROOT/../ant_explorer/tools/secrets/hub245}"
+HUB_DATA="$ASSETS/data"
+mkdir -p "$HUB_DATA"
+HUB_DEV="${STARLEARNER_HUB_DEV:-0}"
+if [[ "$HUB_DEV" == "1" ]]; then
+  python3 "$ROOT/tools/render_hub_client.py" \
+    --out "$HUB_DATA/hub_client.json" \
+    --token-file "$HUB_SECRETS/token.txt" \
+    --dev
+elif [[ -f "$HUB_SECRETS/token.txt" ]]; then
+  python3 "$ROOT/tools/render_hub_client.py" \
+    --out "$HUB_DATA/hub_client.json" \
+    --token-file "$HUB_SECRETS/token.txt"
+else
+  echo "ERROR: missing $HUB_SECRETS/token.txt (hub245 ASR token for production APK)" >&2
+  echo "Copy hub245 secrets to that path on 245, or set STARLEARNER_HUB_DEV=1 for LAN dev bases." >&2
+  exit 1
+fi
+if [[ -f "$HUB_SECRETS/hub.crt" ]]; then
+  cp -f "$HUB_SECRETS/hub.crt" "$HUB_DATA/hub.crt"
+elif [[ -f "$GAME/data/hub.crt" ]]; then
+  cp -f "$GAME/data/hub.crt" "$HUB_DATA/hub.crt"
+else
+  echo "ERROR: missing hub.crt (expected $HUB_SECRETS/hub.crt or game/data/hub.crt)" >&2
+  exit 1
+fi
+
 echo "=== gradle assembleRelease ==="
 cd "$BUILD"
 chmod +x gradlew

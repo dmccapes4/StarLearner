@@ -14,6 +14,7 @@ BUNDLE="$ROOT/ant_explorer/tools/build/full_deploy"
 ADB_BIN="${ADB:-adb}"
 SERIAL=""
 REQUIRE_KIOSK=false
+VALIDATE=false
 
 usage() {
   cat <<'EOF'
@@ -25,6 +26,7 @@ Usage: tools/full_deploy.sh [options]
   --adb PATH           adb executable (adb.exe under WSL is supported)
   --serial SERIAL      Explicit target device serial
   --require-kiosk      Fail unless device-owner lock-task is active
+  --validate           Run tools/validate_deploy.sh after deploy
   -h, --help           Show help
 EOF
 }
@@ -38,6 +40,7 @@ while (($#)); do
     --adb) shift; ADB_BIN="${1:?--adb requires PATH}" ;;
     --serial) shift; SERIAL="${1:?--serial requires SERIAL}" ;;
     --require-kiosk) REQUIRE_KIOSK=true ;;
+    --validate) VALIDATE=true ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -315,6 +318,9 @@ deploy_bundle() {
     fi
   fi
   echo "FULL DEPLOY OK: $SERIAL"
+  if "$VALIDATE"; then
+    "$ROOT/tools/validate_deploy.sh" "$SERIAL"
+  fi
 }
 
 if "$BUILD_APKS"; then

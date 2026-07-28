@@ -15,13 +15,13 @@ const ES_ALPHABET := [
 	"N", "Ñ", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
 ]
 
-## Spoken letter names (uppercase keys). EN uses the letter itself; ES uses
-## traditional names so TTS is unambiguous (especially Ñ, H, W, Y).
+## Spoken letter names (uppercase keys). EN uses full names so ElevenLabs does not
+## read a lone glyph as a sound ("Y" → ee, "U" → ooh). ES uses traditional names.
 const EN_NAMES := {
-	"A": "A", "B": "B", "C": "C", "D": "D", "E": "E", "F": "F", "G": "G",
-	"H": "H", "I": "I", "J": "J", "K": "K", "L": "L", "M": "M", "N": "N",
-	"O": "O", "P": "P", "Q": "Q", "R": "R", "S": "S", "T": "T", "U": "U",
-	"V": "V", "W": "W", "X": "X", "Y": "Y", "Z": "Z",
+	"A": "Ay", "B": "Bee", "C": "See", "D": "Dee", "E": "Ee", "F": "Eff", "G": "Jee",
+	"H": "Aitch", "I": "Eye", "J": "Jay", "K": "Kay", "L": "Ell", "M": "Emm", "N": "Enn",
+	"O": "Oh", "P": "Pee", "Q": "Cue", "R": "Ar", "S": "Ess", "T": "Tee", "U": "You",
+	"V": "Vee", "W": "Double you", "X": "Ex", "Y": "Why", "Z": "Zee",
 }
 
 const ES_NAMES := {

@@ -9,3 +9,5 @@ tools/build/
 tools/secrets/
 # Local hub ASR client config (copy from hub_client.example.json)
 game/data/hub_client.json
+# Voice test capture logs
+logs/

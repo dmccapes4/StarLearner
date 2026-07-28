@@ -33,6 +33,11 @@ func hold() -> bool:
 		return false
 	return bool(_cap.hold())
 
+func recover_hold() -> bool:
+	if _cap == null:
+		return false
+	return await _cap.recover_hold()
+
 func release() -> void:
 	if _cap != null:
 		_cap.release()

@@ -74,13 +74,13 @@
     "steps": {
       "en": [
         {"target": "Your idea", "say": "In Voice, you say what you want to write — like, I want to go to the zoo."},
-        {"target": "Microphone", "say": "First tap the microphone and say next, then back. The red circle means it is listening."},
-        {"target": "Pencil", "say": "Then say your idea. Write the big letter with your pencil. Say next or back to move."}
+        {"target": "Microphone", "say": "First tap the microphone and say next. The red circle means it is listening."},
+        {"target": "Arrows", "say": "Write each letter with your pencil. Say next, or tap the arrow on the right. Tap the left arrow to go back."}
       ],
       "es": [
         {"target": "Tu idea", "say": "En Voz, dices lo que quieres escribir — por ejemplo, quiero ir al zoológico."},
-        {"target": "Micrófono", "say": "Primero toca el micrófono y di next, luego back. El círculo rojo significa que está escuchando."},
-        {"target": "Lápiz", "say": "Luego di tu idea. Escribe la letra grande con tu lápiz. Di next o back para moverte."}
+        {"target": "Micrófono", "say": "Primero toca el micrófono y di next. El círculo rojo significa que está escuchando."},
+        {"target": "Flechas", "say": "Escribe cada letra con tu lápiz. Di next, o toca la flecha de la derecha. Toca la flecha izquierda para volver."}
       ]
     }
   }

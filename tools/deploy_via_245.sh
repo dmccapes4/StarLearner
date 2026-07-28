@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-# Transfer the validated full-deploy bundle to 245 and deploy it to fogona USB.
-# 245 is Windows 10 + WSL2. A temporary Windows adb server exposes USB to the
-# native WSL adb client; the server is stopped again when deployment finishes.
+# DEPRECATED: SCP bundle from 82 → 245. Use 245-native build instead:
+#   On 245 WSL: ./tools/full_deploy_245.sh
+#   From 82:    ssh -p 2222 … 'cd ~/dev/star_learning && git pull && ./tools/full_deploy_245.sh'
+#
+# Legacy: transfer a pre-built bundle from 82 and deploy to fogona USB.
 set -euo pipefail
+
+echo "WARNING: deploy_via_245.sh is deprecated — prefer full_deploy_245.sh on 245 after git pull" >&2
+sleep 2
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUNDLE="${BUNDLE:-$ROOT/ant_explorer/tools/build/full_deploy}"
