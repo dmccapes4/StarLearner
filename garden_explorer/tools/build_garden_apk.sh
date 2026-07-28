@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Build com.dylan.antexplorer.garden.apk (Godot pack → Android assets + gradle).
+# Build com.dylan.garden_explorer.apk (Godot pack → Android assets + gradle).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 GAME="$ROOT/game"
 BUILD="$GAME/android/build"
 ASSETS="$BUILD/assets"
-OUT="$ROOT/tools/build/com.dylan.antexplorer.garden.apk"
+OUT="$ROOT/tools/build/com.dylan.garden_explorer.apk"
 GODOT="${GODOT:-$HOME/.local/bin/godot}"
 KS="${ANTS_KEYSTORE:-$HOME/moto_fogona_backup/ants-debug.keystore}"
 BT="${ANDROID_HOME:-$HOME/Android/Sdk}/build-tools/36.0.0"
@@ -75,7 +75,7 @@ echo "=== gradle assembleRelease ==="
 cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
-  -Pexport_package_name=com.dylan.antexplorer.garden \
+  -Pexport_package_name=com.dylan.garden_explorer \
   -Pexport_version_code=1 \
   -Pexport_version_name=0.1 \
   -Pexport_enabled_abis=arm64-v8a \

@@ -44,7 +44,7 @@ var isrgRootPEM []byte
 const (
 	catalogDst  = "/sdcard/AntPhone/catalog.json"
 	tmpDir      = "/data/local/tmp"
-	launcherPkg = "com.dylan.antexplorer"
+	launcherPkg = "com.dylan.star_learner"
 )
 
 type Config struct {

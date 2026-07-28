@@ -197,19 +197,36 @@ Documentary sourcing and the 12 topics:
    focused, and (on a production unit) device-owner lock-task is `LOCKED`.
 
 ```bash
-# Build everything and deploy to the one USB device attached here
-./tools/full_deploy.sh
-
-# Or target an explicit local serial
-./tools/full_deploy.sh --serial ZL8326FWKM
+# Build everything and deploy to the local dev fogona (82 USB)
+./tools/full_deploy.sh --serial ZL8326FWKM --validate
 
 # Build and validate the portable bundle without touching a device
 ./tools/full_deploy.sh --prepare-only
 
-# Transfer that same bundle to 245, deploy to fogona over 245 USB, and publish
-# identical APK/catalog artifacts into the starlearner.app OTA staging catalog
-./tools/deploy_via_245.sh
+# After git push, on 245 WSL (builds locally — no SCP from 82):
+git pull && ./tools/full_deploy_245.sh
+# → deploys to ZL8326G8ND, validates (logcat + hub_client in APK), publishes OTA staging
+
+# Legacy SCP relay (deprecated):
+# ./tools/deploy_via_245.sh
 ```
+
+**245 host:** `DESKTOP-KOMPK5V` / WSL `hilarious_marcupial` · LAN `192.168.0.245` · SSH `ssh -p 2222 -i ~/.ssh/id_ed25519 dylan@104.53.183.230`
+
+**Language ASR:** phones call **`https://hub.starlearner.app:8443/api/asr`** with bearer token baked at build time from `ant_explorer/tools/secrets/hub245/token.txt` (gitignored — must exist on 245 before production build).
+
+**Android package IDs** (canonical: `tools/packages.sh`):
+
+| Role | Package |
+|------|---------|
+| Launcher (HOME) | `com.dylan.star_learner` |
+| Ant Explorer | `com.dylan.ant_explorer` |
+| Garden Explorer | `com.dylan.garden_explorer` |
+| Solar System Explorer | `com.dylan.solar_system_explorer` |
+| Math Explorer | `com.dylan.math_explorer` |
+| Language Explorer | `com.dylan.language_explorer` |
+
+Migrating from legacy `com.dylan.antexplorer*`: `./tools/uninstall_legacy_packages.sh` then full deploy and re-run `enable_device_owner.sh` on kiosk phones.
 
 Production fogona deployment uses `--require-kiosk`; a personal/test phone with Android
 accounts can receive the complete launcher/games/media set but cannot become device owner
@@ -238,8 +255,12 @@ star_learning/                 ← platform / repo (this catalog)
 ├── garden_explorer/           ← Garden Explorer
 ├── language_explorer/         ← Language Explorer
 └── tools/
+    ├── packages.sh              ← canonical Android package IDs
     ├── full_deploy.sh         ← canonical build/bundle/USB deploy
-    └── deploy_via_245.sh      ← 82 → 245 → fogona USB + OTA publish
+    ├── full_deploy_245.sh     ← run on 245 WSL: git pull, build, fogona deploy, validate, OTA
+    ├── validate_deploy.sh     ← post-deploy packages + hub_client + logcat smoke
+    ├── uninstall_legacy_packages.sh ← one-time antexplorer → star_learner migration
+    └── deploy_via_245.sh      ← deprecated SCP relay from 82
 ```
 
 Agents do not use host `sudo`; anything requiring root is handed to the maintainer as a script

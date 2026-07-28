@@ -1,4 +1,4 @@
-package com.dylan.antexplorer;
+package com.dylan.star_learner;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -46,6 +46,10 @@ import java.util.Locale;
  * Star Learner home shell — catalog of educational game tiles.
  * Progress lives in each game; Back returns here without wiping.
  * Long-press a tile for a rare full reset. Help (?) narrates how to use the kiosk.
+ * <p>
+ * This launcher never requests {@code RECORD_AUDIO}. Language Explorer is the
+ * only title that uses the microphone — do not force-stop it on a normal tile
+ * tap, and stop TTS before handing off so we do not fight its audio path.
  */
 public class MainActivity extends Activity implements TextToSpeech.OnInitListener {
 
@@ -54,8 +58,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     /** Where deploy pushes the per-game explainer videos (first readable wins). */
     private static final String[] VIDEO_DIRS = {
             "/sdcard/AntPhone/videos", "/data/local/tmp/antphone_videos"};
-    private static final String COLONY_PACKAGE = "com.dylan.antexplorer.colony";
-    private static final String EXTRA_WIPE_SAVE = "com.dylan.antexplorer.EXTRA_WIPE_SAVE";
+    private static final String ANT_EXPLORER_PACKAGE = "com.dylan.ant_explorer";
+    private static final String EXTRA_WIPE_SAVE = "com.dylan.star_learner.EXTRA_WIPE_SAVE";
 
     private static final String HELP_SCRIPT =
             "Welcome to Star Learner. Tap a game to play. "
@@ -176,6 +180,9 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     @Override
     protected void onPause() {
         handler.removeCallbacks(keepImmersive);
+        // Never hold speech audio across a game handoff — Language Explorer
+        // owns the only mic on this appliance; leave audio focus alone.
+        releaseSpeechAudio();
         super.onPause();
     }
 
@@ -202,6 +209,16 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             return;
         }
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
+    }
+
+    /** Stop launcher TTS only — this app never records; do not touch mic/RECORD_AUDIO. */
+    private void releaseSpeechAudio() {
+        if (tts != null) {
+            try {
+                tts.stop();
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     // All catalog tiles share one size (dp). Silver rounded frame on the art.
@@ -507,10 +524,10 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             launch.addCategory(Intent.CATEGORY_LAUNCHER);
             launch.setClassName(t.packageName, t.activity);
         }
-        if (launch == null && COLONY_PACKAGE.equals(t.packageName)) {
+        if (launch == null && ANT_EXPLORER_PACKAGE.equals(t.packageName)) {
             launch = new Intent(Intent.ACTION_MAIN);
             launch.addCategory(Intent.CATEGORY_LAUNCHER);
-            launch.setClassName(COLONY_PACKAGE, "com.godot.game.GodotApp");
+            launch.setClassName(ANT_EXPLORER_PACKAGE, "com.godot.game.GodotApp");
         }
         return launch;
     }
@@ -563,6 +580,8 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                         | Intent.FLAG_ACTIVITY_CLEAR_TASK
                         | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 // Force a new process so Save reloads empty (in-memory autoload is sticky).
+                // Only on long-press wipe — never on a normal Language Explorer launch
+                // (that would kill an in-progress Voice session / mic).
                 forceStopPackage(t.packageName);
             } else {
                 // Resume existing task when possible — keeps mid-session progress warm.
@@ -578,6 +597,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             }
             // Speak first, then start immediately. A delayed startActivity loses the
             // tap's "user gesture" token on modern Android and fails with can't-open.
+            // onPause → releaseSpeechAudio() clears TTS once we leave the launcher.
             speak(line, "enter:" + t.id);
             activeGamePackage = t.packageName;
             startActivity(launch);
@@ -681,7 +701,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                     pkgs.add(t.packageName);
                 }
             }
-            if (!pkgs.contains(COLONY_PACKAGE)) pkgs.add(COLONY_PACKAGE);
+            if (!pkgs.contains(ANT_EXPLORER_PACKAGE)) pkgs.add(ANT_EXPLORER_PACKAGE);
             dpm.setLockTaskPackages(admin, pkgs.toArray(new String[0]));
         } catch (Exception ignored) {}
     }
@@ -741,7 +761,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             Tile t = new Tile();
             t.id = "colony";
             t.label = "ants";
-            t.packageName = COLONY_PACKAGE;
+            t.packageName = ANT_EXPLORER_PACKAGE;
             t.activity = "com.godot.game.GodotApp";
             t.drawableName = "tile_ants";
             t.enterName = "Ant Explorer";

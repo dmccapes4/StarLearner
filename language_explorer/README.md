@@ -6,7 +6,7 @@ reading and writing console for a six-year-old.
 - **Engine:** Godot **4.3** (Mobile renderer), landscape 1280×600, offline-first.
 - **Aesthetic:** learning console (same dark navy / gold language as
   [`math_explorer`](../math_explorer/)).
-- **Package:** `com.dylan.antexplorer.language` · tile `tile_language`.
+- **Package:** `com.dylan.language_explorer` · tile `tile_language`.
 
 > Full build sequence:
 > [`docs/IMPLEMENTATION_PLAN_LANGUAGE_EXPLORER.md`](docs/IMPLEMENTATION_PLAN_LANGUAGE_EXPLORER.md).

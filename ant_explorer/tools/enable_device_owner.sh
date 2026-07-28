@@ -2,7 +2,7 @@
 # Make Star Learner the device owner so enterprise lock-task works
 # (no "App is pinned" SystemUI tab). Safe to re-run.
 set -euo pipefail
-PKG=com.dylan.antexplorer
+PKG=com.dylan.star_learner
 ADMIN="$PKG/.AdminReceiver"
 
 adb devices | grep -q $'\tdevice$' || { echo "no adb device"; exit 1; }

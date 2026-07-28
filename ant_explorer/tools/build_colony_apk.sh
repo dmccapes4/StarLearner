@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build com.dylan.antexplorer.colony.apk (Godot pack → Android assets + gradle) and sign it.
+# Build com.dylan.ant_explorer.apk (Godot pack → Android assets + gradle) and sign it.
 #
 # Godot's Android loader does NOT open assets/main.pck. Official export writes each
 # res:// file into assets/ (project.binary, .godot/..., etc.) and an empty-ish _cl_.
@@ -8,7 +8,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 GAME="$ROOT/game"
 BUILD="$GAME/android/build"
 ASSETS="$BUILD/assets"
-OUT="$ROOT/tools/build/com.dylan.antexplorer.colony.apk"
+OUT="$ROOT/tools/build/com.dylan.ant_explorer.apk"
 GODOT="${GODOT:-$HOME/.local/bin/godot}"
 KS="${ANTS_KEYSTORE:-$HOME/moto_fogona_backup/ants-debug.keystore}"
 BT="${ANDROID_HOME:-$HOME/Android/Sdk}/build-tools/36.0.0"
@@ -51,7 +51,7 @@ echo "=== gradle assembleRelease ==="
 cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
-  -Pexport_package_name=com.dylan.antexplorer.colony \
+  -Pexport_package_name=com.dylan.ant_explorer \
   -Pexport_version_code=28 \
   -Pexport_version_name=0.28 \
   -Pexport_enabled_abis=arm64-v8a \

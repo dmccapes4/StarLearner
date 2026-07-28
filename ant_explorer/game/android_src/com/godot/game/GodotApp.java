@@ -23,7 +23,7 @@ import java.io.File;
  * and honor a wipe-save intent from the Star Learner kiosk.
  */
 public class GodotApp extends GodotActivity {
-	public static final String EXTRA_WIPE_SAVE = "com.dylan.antexplorer.EXTRA_WIPE_SAVE";
+	public static final String EXTRA_WIPE_SAVE = "com.dylan.star_learner.EXTRA_WIPE_SAVE";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

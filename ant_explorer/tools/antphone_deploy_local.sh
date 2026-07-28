@@ -36,7 +36,7 @@ KIOSK_RELEASE="$ROOT/kiosk_placeholder/app/build/outputs/apk/release/app-release
 for apk in "$@"; do
   [[ -f "$apk" ]] || { echo "missing $apk"; exit 1; }
   base="$(basename "$apk")"
-  if [[ "$base" == "com.dylan.antexplorer.apk" && -f "$KIOSK_RELEASE" ]]; then
+  if [[ "$base" == "com.dylan.star_learner.apk" && -f "$KIOSK_RELEASE" ]]; then
     if [[ "$KIOSK_RELEASE" -nt "$apk" ]]; then
       echo "refreshing stale kiosk APK from $KIOSK_RELEASE"
       mkdir -p "$(dirname "$apk")"
@@ -48,8 +48,8 @@ for apk in "$@"; do
 done
 
 adb shell am task lock stop 2>/dev/null || true
-adb shell am force-stop com.dylan.antexplorer || true
-adb shell am start -n com.dylan.antexplorer/.MainActivity || \
+adb shell am force-stop com.dylan.star_learner || true
+adb shell am start -n com.dylan.star_learner/.MainActivity || \
   adb shell am start -a android.intent.action.MAIN -c android.intent.category.HOME
 sleep 1
 # Enterprise lock-task is started by MainActivity when device-owner whitelist is set.

@@ -4,6 +4,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=packages.sh
+source "$ROOT/tools/packages.sh"
 CATALOG="$ROOT/ant_explorer/tools/catalog.json"
 LAUNCHER="$ROOT/ant_explorer/kiosk_placeholder"
 LAUNCHER_APK="$LAUNCHER/app/build/outputs/apk/release/app-release.apk"
@@ -47,21 +49,13 @@ while (($#)); do
   shift
 done
 
-PACKAGES=(
-  com.dylan.antexplorer
-  com.dylan.antexplorer.colony
-  com.dylan.antexplorer.garden
-  com.dylan.antexplorer.solar
-  com.dylan.antexplorer.math
-  com.dylan.antexplorer.language
-)
 APKS=(
-  "$ROOT/ant_explorer/tools/build/com.dylan.antexplorer.apk"
-  "$ROOT/ant_explorer/tools/build/com.dylan.antexplorer.colony.apk"
-  "$ROOT/garden_explorer/tools/build/com.dylan.antexplorer.garden.apk"
-  "$ROOT/solar_system_explorer/tools/build/com.dylan.antexplorer.solar.apk"
-  "$ROOT/math_explorer/tools/build/com.dylan.antexplorer.math.apk"
-  "$ROOT/language_explorer/tools/build/com.dylan.antexplorer.language.apk"
+  "$ROOT/ant_explorer/tools/build/com.dylan.star_learner.apk"
+  "$ROOT/ant_explorer/tools/build/com.dylan.ant_explorer.apk"
+  "$ROOT/garden_explorer/tools/build/com.dylan.garden_explorer.apk"
+  "$ROOT/solar_system_explorer/tools/build/com.dylan.solar_system_explorer.apk"
+  "$ROOT/math_explorer/tools/build/com.dylan.math_explorer.apk"
+  "$ROOT/language_explorer/tools/build/com.dylan.language_explorer.apk"
 )
 VIDEOS=(
   "$ROOT/ant_explorer/docs/demo/ant_explorer_explainer.mp4"
@@ -116,9 +110,9 @@ import json, sys
 p = sys.argv[1]
 d = json.load(open(p))
 want = {
- "com.dylan.antexplorer.colony", "com.dylan.antexplorer.garden",
- "com.dylan.antexplorer.solar", "com.dylan.antexplorer.math",
- "com.dylan.antexplorer.language",
+ "com.dylan.ant_explorer", "com.dylan.garden_explorer",
+ "com.dylan.solar_system_explorer", "com.dylan.math_explorer",
+ "com.dylan.language_explorer",
 }
 got = {a["package"] for a in d["apps"]}
 assert got == want, f"catalog package mismatch: got={sorted(got)} want={sorted(want)}"
@@ -250,12 +244,12 @@ deploy_bundle() {
   # copies so an updated video with the same filename is never stale.
   if "${ADB_CMD[@]}" shell su -c id 2>/dev/null | grep -q 'uid=0'; then
     "${ADB_CMD[@]}" shell su -c \
-      'rm -rf /data/data/com.dylan.antexplorer/files/videos'
+      'rm -rf /data/data/com.dylan.star_learner/files/videos'
   elif ! "${ADB_CMD[@]}" shell dpm list-owners |
-      grep -q com.dylan.antexplorer; then
+      grep -q com.dylan.star_learner; then
     # Developer/test phones cannot use root to remove the private cache.
     # Clearing launcher-only data is safe; game progress belongs to game APKs.
-    "${ADB_CMD[@]}" shell pm clear com.dylan.antexplorer >/dev/null
+    "${ADB_CMD[@]}" shell pm clear com.dylan.star_learner >/dev/null
   else
     echo "WARNING: root unavailable; launcher may retain same-length cached videos" >&2
   fi
@@ -272,10 +266,10 @@ deploy_bundle() {
   "${ADB_CMD[@]}" shell settings put secure lockscreen.disabled 1 || true
   "${ADB_CMD[@]}" shell wm dismiss-keyguard || true
   "${ADB_CMD[@]}" shell cmd role add-role-holder android.app.role.HOME \
-    com.dylan.antexplorer
+    com.dylan.star_learner
   "${ADB_CMD[@]}" shell am task lock stop 2>/dev/null || true
-  "${ADB_CMD[@]}" shell am force-stop com.dylan.antexplorer
-  "${ADB_CMD[@]}" shell am start -n com.dylan.antexplorer/.MainActivity
+  "${ADB_CMD[@]}" shell am force-stop com.dylan.star_learner
+  "${ADB_CMD[@]}" shell am start -n com.dylan.star_learner/.MainActivity
   sleep 2
 
   echo "=== Verify complete installation ==="
@@ -295,7 +289,7 @@ deploy_bundle() {
       die "video size mismatch: $(basename "$file")"
   done
   local is_owner=false
-  if "${ADB_CMD[@]}" shell dpm list-owners | grep -q com.dylan.antexplorer; then
+  if "${ADB_CMD[@]}" shell dpm list-owners | grep -q com.dylan.star_learner; then
     is_owner=true
   elif "$REQUIRE_KIOSK"; then
     die "Star Learner is not device owner"
@@ -305,15 +299,15 @@ deploy_bundle() {
   local activity
   activity="$("${ADB_CMD[@]}" shell dumpsys activity activities)"
   if "$is_owner"; then
-    grep -q 'topResumedActivity=.*com.dylan.antexplorer/.MainActivity' <<<"$activity" ||
+    grep -q 'topResumedActivity=.*com.dylan.star_learner/.MainActivity' <<<"$activity" ||
       die "launcher is not top-resumed"
     grep -q 'mLockTaskModeState=LOCKED' <<<"$activity" ||
       die "enterprise lock-task is not LOCKED"
   else
     local window
     window="$("${ADB_CMD[@]}" shell dumpsys window)"
-    if ! grep -q 'topResumedActivity=.*com.dylan.antexplorer/.MainActivity' <<<"$activity" &&
-       ! grep -q 'mFocusedApp=.*com.dylan.antexplorer/.MainActivity' <<<"$window"; then
+    if ! grep -q 'topResumedActivity=.*com.dylan.star_learner/.MainActivity' <<<"$activity" &&
+       ! grep -q 'mFocusedApp=.*com.dylan.star_learner/.MainActivity' <<<"$window"; then
       die "launcher is not the focused app"
     fi
   fi

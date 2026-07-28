@@ -12,10 +12,27 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 STAR="$(cd "$ROOT/.." && pwd)"
-APK="$ROOT/tools/build/com.dylan.antexplorer.language.apk"
+# shellcheck source=../tools/packages.sh
+source "$STAR/tools/packages.sh"
+APK="$ROOT/tools/build/com.dylan.language_explorer.apk"
 GODOT="${GODOT:-$HOME/.local/bin/godot}"
-PKG=com.dylan.antexplorer.language
+PKG=$PKG_LANGUAGE_EXPLORER
 HUB_JSON="$ROOT/game/data/hub_client.json"
+
+resolve_hub_json() {
+  if [[ -f "$HUB_JSON" ]]; then
+    echo "$HUB_JSON"
+    return
+  fi
+  local tok="$STAR/ant_explorer/tools/secrets/hub245/token.txt"
+  if [[ -f "$tok" ]]; then
+    local out=/tmp/voice_smoke_hub_client.json
+    python3 "$ROOT/tools/render_hub_client.py" --out "$out" --token-file "$tok"
+    echo "$out"
+    return
+  fi
+  echo "$HUB_JSON"
+}
 
 # Fixed post-deploy phrases (also exercised by ASR cleanup on the host).
 SENTENCE_A="I see a cat."
@@ -98,27 +115,9 @@ PY
 
   note "local — ASR /health (hub_client bases from workstation)"
   if [[ -f "$HUB_JSON" ]]; then
-    if python3 - "$HUB_JSON" <<'PY'
-import json, subprocess, sys
-d = json.load(open(sys.argv[1]))
-bases = d.get("bases") or []
-tok = d.get("token") or ""
-ok = 0
-for b in bases:
-    b = b.rstrip("/")
-    cmd = ["curl", "-sf", "--connect-timeout", "6", "--max-time", "12"]
-    if tok:
-        cmd.extend(["-H", f"Authorization: Bearer {tok}"])
-    cmd.append(f"{b}/health")
-    r = subprocess.run(cmd, capture_output=True)
-    status = "OK" if r.returncode == 0 else "FAIL"
-    print(f"{status}  {b}/health")
-    if r.returncode == 0:
-        ok += 1
-if ok == 0:
-    sys.exit(1)
-PY
-    then
+    HUB_ARGS=("$HUB_JSON")
+    [[ "${REQUIRE_HUB_ASR:-0}" == "1" ]] && HUB_ARGS+=(--require-hub)
+    if python3 "$STAR/tools/asr_health_check.py" "${HUB_ARGS[@]}"; then
       ok "at least one ASR base reachable from this host"
     else
       bad "no ASR base reachable (start tools/asr_server/run.sh on :8770?)"
@@ -178,31 +177,14 @@ run_remote() {
   fi
 
   note "remote — ASR from phone network (same bases as hub_client.json)"
+  HUB_JSON="$(resolve_hub_json)"
   if [[ -f "$HUB_JSON" ]]; then
-    if python3 - "$HUB_JSON" <<'PY'
-import json, subprocess, sys
-d = json.load(open(sys.argv[1]))
-bases = d.get("bases") or []
-tok = d.get("token") or ""
-ok = 0
-for b in bases:
-    b = b.rstrip("/")
-    cmd = ["curl", "-sf", "--connect-timeout", "6", "--max-time", "12"]
-    if tok:
-        cmd.extend(["-H", f"Authorization: Bearer {tok}"])
-    cmd.append(f"{b}/health")
-    r = subprocess.run(cmd, capture_output=True)
-    status = "OK" if r.returncode == 0 else "FAIL"
-    print(f"{status}  {b}/health")
-    if r.returncode == 0:
-        ok += 1
-if ok == 0:
-    sys.exit(1)
-PY
-    then
-      ok "at least one ASR base reachable (LAN and/or hub)"
+    HUB_ARGS=("$HUB_JSON")
+    [[ "${REQUIRE_HUB_ASR:-0}" == "1" ]] && HUB_ARGS+=(--require-hub)
+    if python3 "$STAR/tools/asr_health_check.py" "${HUB_ARGS[@]}"; then
+      ok "ASR health check passed"
     else
-      bad "no ASR base reachable for phone"
+      bad "ASR health check failed"
     fi
   fi
 

@@ -1,4 +1,4 @@
-package com.dylan.antexplorer;
+package com.dylan.star_learner;
 
 import android.app.admin.DeviceAdminReceiver;
 

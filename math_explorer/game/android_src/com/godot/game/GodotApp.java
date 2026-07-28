@@ -27,7 +27,7 @@ import java.io.File;
 public class GodotApp extends GodotActivity {
 	// The kiosk sends this same key to every game (see the launcher's
 	// MainActivity.EXTRA_WIPE_SAVE); keep the string identical.
-	public static final String EXTRA_WIPE_SAVE = "com.dylan.antexplorer.EXTRA_WIPE_SAVE";
+	public static final String EXTRA_WIPE_SAVE = "com.dylan.star_learner.EXTRA_WIPE_SAVE";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

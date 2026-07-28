@@ -17,9 +17,11 @@
 |----|-------|
 | Hostname / fleet label | `star-learner` |
 | Android `device_name` | `Star Learner` |
-| Home package (current) | `com.dylan.antexplorer` — keep until a clean reinstall window; eventual target `com.dylan.starlearner` |
-| On-device catalog path | `/sdcard/AntPhone/` for now (legacy); migrate to `/sdcard/StarLearner/` with the package rename |
-| Game packages | `com.dylan.antexplorer.colony`, future `…bees`, etc. |
+| Home package | `com.dylan.star_learner` |
+| On-device catalog path | `/sdcard/AntPhone/` for now (legacy); migrate to `/sdcard/StarLearner/` when convenient |
+| Game packages | `com.dylan.ant_explorer`, `com.dylan.garden_explorer`, `com.dylan.solar_system_explorer`, `com.dylan.math_explorer`, `com.dylan.language_explorer` |
+
+Canonical list: `tools/packages.sh`.
 
 ## Layout
 
@@ -33,3 +35,13 @@ dev/star_learning/
     ├── kiosk_placeholder/
     └── tools/
 ```
+
+## Package rename (2026-07-28)
+
+Migrating from legacy `com.dylan.antexplorer*` requires a **clean reinstall** on kiosk phones:
+
+1. Remove device owner / factory reset or `adb uninstall` all six legacy packages.
+2. Install fresh APKs from `tools/full_deploy.sh` (new IDs in `tools/packages.sh`).
+3. Re-run `ant_explorer/tools/enable_device_owner.sh` for production lock-task.
+
+Game saves under the old package IDs are **not** migrated automatically.

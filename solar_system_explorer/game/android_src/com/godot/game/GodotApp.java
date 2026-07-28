@@ -21,7 +21,7 @@ import java.io.File;
  * the mic held by that other title.
  */
 public class GodotApp extends GodotActivity {
-	public static final String EXTRA_WIPE_SAVE = "com.dylan.antexplorer.EXTRA_WIPE_SAVE";
+	public static final String EXTRA_WIPE_SAVE = "com.dylan.star_learner.EXTRA_WIPE_SAVE";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

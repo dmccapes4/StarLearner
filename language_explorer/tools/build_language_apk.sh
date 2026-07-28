@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Build and sign com.dylan.antexplorer.language.apk.
+# Build and sign com.dylan.language_explorer.apk.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 GAME="$ROOT/game"
 BUILD="$GAME/android/build"
 ASSETS="$BUILD/assets"
-OUT="$ROOT/tools/build/com.dylan.antexplorer.language.apk"
+OUT="$ROOT/tools/build/com.dylan.language_explorer.apk"
 GODOT="${GODOT:-$HOME/.local/bin/godot}"
 KS="${ANTS_KEYSTORE:-$HOME/moto_fogona_backup/ants-debug.keystore}"
 BT="${ANDROID_HOME:-$HOME/Android/Sdk}/build-tools/36.0.0"
@@ -71,7 +71,7 @@ echo "=== gradle assembleRelease ==="
 cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
-  -Pexport_package_name=com.dylan.antexplorer.language \
+  -Pexport_package_name=com.dylan.language_explorer \
   -Pexport_version_code=1 \
   -Pexport_version_name=1.0 \
   -Pexport_enabled_abis=arm64-v8a \

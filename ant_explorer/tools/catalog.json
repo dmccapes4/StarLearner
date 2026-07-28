@@ -1,11 +1,11 @@
 {
-  "version": 1,
-  "updated_at": "2026-07-25T18:55:00Z",
+  "version": 2,
+  "updated_at": "2026-07-28T05:35:00Z",
   "apps": [
     {
       "id": "colony",
       "label": "ants",
-      "package": "com.dylan.antexplorer.colony",
+      "package": "com.dylan.ant_explorer",
       "activity": "com.godot.game.GodotApp",
       "tile": "tile_ants",
       "enter_name": "Ant Explorer",
@@ -15,7 +15,7 @@
     {
       "id": "garden",
       "label": "garden",
-      "package": "com.dylan.antexplorer.garden",
+      "package": "com.dylan.garden_explorer",
       "activity": "com.godot.game.GodotApp",
       "tile": "tile_garden",
       "enter_name": "Garden Explorer",
@@ -25,7 +25,7 @@
     {
       "id": "solar",
       "label": "space",
-      "package": "com.dylan.antexplorer.solar",
+      "package": "com.dylan.solar_system_explorer",
       "activity": "com.godot.game.GodotApp",
       "tile": "tile_solar",
       "enter_name": "Solar System Explorer",
@@ -35,7 +35,7 @@
     {
       "id": "math",
       "label": "math",
-      "package": "com.dylan.antexplorer.math",
+      "package": "com.dylan.math_explorer",
       "activity": "com.godot.game.GodotApp",
       "tile": "tile_math",
       "enter_name": "Math Explorer",
@@ -45,7 +45,7 @@
     {
       "id": "language",
       "label": "words",
-      "package": "com.dylan.antexplorer.language",
+      "package": "com.dylan.language_explorer",
       "activity": "com.godot.game.GodotApp",
       "tile": "tile_language",
       "enter_name": "Language Explorer",

@@ -5,8 +5,11 @@
 
     <!-- Android 11+ package visibility: allow resolving game launch intents. -->
     <queries>
-        <package android:name="com.dylan.antexplorer.colony" />
-        <package android:name="com.dylan.antexplorer.solar" />
+        <package android:name="com.dylan.ant_explorer" />
+        <package android:name="com.dylan.garden_explorer" />
+        <package android:name="com.dylan.solar_system_explorer" />
+        <package android:name="com.dylan.math_explorer" />
+        <package android:name="com.dylan.language_explorer" />
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
@@ -32,7 +35,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Home + Launcher so this becomes the ants appliance -->
+        <!-- Home + Launcher so this becomes the Star Learner appliance -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

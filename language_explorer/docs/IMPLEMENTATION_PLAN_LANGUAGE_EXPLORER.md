@@ -67,7 +67,7 @@ Language Explorer teaches **reading and writing** as two big console tiles.
   as Math; secrets at `ant_explorer/tools/secrets/elevenlabs.env`).
 - **Video:** short sentence-play clips as Theora `.ogv` (one decoder at a time, Garden/Solar pattern).
 - **Books:** curated public-domain children’s texts + cover images; packaged under `game/books/`.
-- **Package:** `com.dylan.antexplorer.language` · catalog id `language` · tile `tile_language` ·
+- **Package:** `com.dylan.language_explorer` · catalog id `language` · tile `tile_language` ·
   label e.g. `words` or `letters`.
 
 ```
@@ -511,7 +511,7 @@ finish one word via sketch; three wrongs reveal gold hint; incomplete never fals
 ### Phase 6 — Tutorials, polish, kiosk ship ✅
 
 - [x] Hamburger tutorials + EN/ES toggle persistence
-- [x] APK script `build_language_apk.sh` → `com.dylan.antexplorer.language`
+- [x] APK script `build_language_apk.sh` → `com.dylan.language_explorer`
 - [x] Catalog entries in `ant_explorer/tools/catalog.json` **and** kiosk `assets/catalog.json`
 - [x] Tile art `tile_language` + explainer / playthrough demos (`docs/demo/`)
 - [x] Root `star_learning/README.md` catalog row
@@ -520,7 +520,7 @@ finish one word via sketch; three wrongs reveal gold hint; incomplete never fals
 - [x] Five-title kiosk layout compacted so no catalog tile is clipped
 
 **Acceptance:** signed 36 MiB APK installed on the connected kiosk; the `words` tile launched
-`com.dylan.antexplorer.language/com.godot.game.GodotApp`; wipe-intent and cold restart both
+`com.dylan.language_explorer/com.godot.game.GodotApp`; wipe-intent and cold restart both
 launched successfully; all shipped content remains offline. ✅ (2026-07-25)
 
 ---
@@ -556,7 +556,7 @@ ants-phone), `reports/system/AAR_2026-07-25_230_OUTAGE_AND_245_DEGRADED_RECOVERY
 - Phone cannot do serious on-device ASR (Moto G Play ~4 GB RAM, ~1.3 GiB free typical) →
   **record locally, upload to 245** is the realistic split.
 - Package / tile still follow existing convention when Phase 6 ships:
-  `com.dylan.antexplorer.language`, catalog id `language`, tile `tile_language`.
+  `com.dylan.language_explorer`, catalog id `language`, tile `tile_language`.
 
 ### 8.1 Hard constraints
 

@@ -5,7 +5,7 @@ adb devices | grep -q 'device$' || { echo "no adb device"; exit 1; }
 
 adb shell am task lock stop || true
 adb shell settings put global policy_control 'null*'
-adb shell cmd role remove-role-holder android.app.role.HOME com.dylan.antexplorer || true
+adb shell cmd role remove-role-holder android.app.role.HOME com.dylan.star_learner || true
 
 echo "Unpinned. Pick a home launcher on the phone if prompted."
 echo "Bars restored. Magisk / Settings reachable again."

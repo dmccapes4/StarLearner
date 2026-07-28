@@ -374,7 +374,7 @@ flag until the 3D loop clears the "calm + clear on-device" bar.
   to transparent with Pillow → import) — reused to make the **cockpit frame** (§6).
 - `SolarData` ids and colors; the asteroid-belt concept.
 - The kiosk catalog entry, `tile_solar` (astronaut) tile, and the **preview** badge/label — no
-  launcher changes needed; this stays one Godot APK (`com.dylan.antexplorer.solar`).
+  launcher changes needed; this stays one Godot APK (`com.dylan.solar_system_explorer`).
 
 ---
 

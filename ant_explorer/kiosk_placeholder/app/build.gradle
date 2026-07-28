@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace 'com.dylan.antexplorer'
+    namespace 'com.dylan.star_learner'
     compileSdk 36
 
     defaultConfig {
-        applicationId "com.dylan.antexplorer"
+        applicationId "com.dylan.star_learner"
         minSdk 26
         targetSdk 34
-        versionCode 3
-        versionName "0.3-progress"
+        versionCode 4
+        versionName "0.4-star-learner"
     }
 
     signingConfigs {

@@ -28,7 +28,7 @@ import java.io.File;
  * so the first Voice mic tap is not eaten by the permission dialog.
  */
 public class GodotApp extends GodotActivity {
-	public static final String EXTRA_WIPE_SAVE = "com.dylan.antexplorer.EXTRA_WIPE_SAVE";
+	public static final String EXTRA_WIPE_SAVE = "com.dylan.star_learner.EXTRA_WIPE_SAVE";
 	private static final int REQ_RECORD_AUDIO = 4401;
 
 	@Override

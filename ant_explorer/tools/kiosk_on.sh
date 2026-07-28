@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Re-apply ants appliance lockdown on the connected fogona device.
 set -euo pipefail
-PKG=com.dylan.antexplorer
+PKG=com.dylan.star_learner
 ACT=$PKG/.MainActivity
 
 adb devices | grep -q 'device$' || { echo "no adb device"; exit 1; }

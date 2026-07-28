@@ -33,5 +33,5 @@ Desktop Godot also prepends `http://127.0.0.1:<same-port>` when editing.
 No product telemetry — only local ASR logs + Godot `print` to logcat.
 
 ```bash
-adb shell pm grant com.dylan.antexplorer.language android.permission.RECORD_AUDIO
+adb shell pm grant com.dylan.language_explorer android.permission.RECORD_AUDIO
 ```

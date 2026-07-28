@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build com.dylan.antexplorer.math.apk (Godot pack -> Android assets + gradle) and sign it.
+# Build com.dylan.math_explorer.apk (Godot pack -> Android assets + gradle) and sign it.
 # Mirrors solar_system_explorer/tools/build_solar_apk.sh. The gradle template in
 # game/android/build was copied from solar (same Godot 4.3 android build template).
 set -euo pipefail
@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 GAME="$ROOT/game"
 BUILD="$GAME/android/build"
 ASSETS="$BUILD/assets"
-OUT="$ROOT/tools/build/com.dylan.antexplorer.math.apk"
+OUT="$ROOT/tools/build/com.dylan.math_explorer.apk"
 GODOT="${GODOT:-$HOME/.local/bin/godot}"
 KS="${ANTS_KEYSTORE:-$HOME/moto_fogona_backup/ants-debug.keystore}"
 BT="${ANDROID_HOME:-$HOME/Android/Sdk}/build-tools/36.0.0"
@@ -45,7 +45,7 @@ echo "=== gradle assembleRelease ==="
 cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
-  -Pexport_package_name=com.dylan.antexplorer.math \
+  -Pexport_package_name=com.dylan.math_explorer \
   -Pexport_version_code=1 \
   -Pexport_version_name=0.1 \
   -Pexport_enabled_abis=arm64-v8a \

@@ -314,7 +314,7 @@ flat across several videos (decoder freed).
 
 ### PHASE 6 — Android export, performance pass, kiosk integration
 **Goal:** ship the APK and lock the device.
-- Android export preset; landscape lock; package name e.g. `com.dylan.antexplorer`.
+- Android export preset; landscape lock; package name e.g. `com.dylan.star_learner`.
 - **Performance pass:** confirm locked 30 FPS + thermals over 30 min on-device; pooled sprites,
   `MultiMeshInstance2D` if needed for ants, texture atlases, mip off for pixel art, audio bus small.
 - **Video assets on device:** ship `.ogv` in the APK if small enough, else place on microSD/app

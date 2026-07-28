@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build com.dylan.antexplorer.solar.apk (Godot pack -> Android assets + gradle) and sign it.
+# Build com.dylan.solar_system_explorer.apk (Godot pack -> Android assets + gradle) and sign it.
 # Mirrors ant_explorer/tools/build_colony_apk.sh. Run AFTER installing the Godot
 # Android build template into game/ once (editor: Project > Install Android Build Template),
 # and after adding an "Android" export preset in game/export_presets.cfg.
@@ -8,7 +8,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 GAME="$ROOT/game"
 BUILD="$GAME/android/build"
 ASSETS="$BUILD/assets"
-OUT="$ROOT/tools/build/com.dylan.antexplorer.solar.apk"
+OUT="$ROOT/tools/build/com.dylan.solar_system_explorer.apk"
 GODOT="${GODOT:-$HOME/.local/bin/godot}"
 KS="${ANTS_KEYSTORE:-$HOME/moto_fogona_backup/ants-debug.keystore}"
 BT="${ANDROID_HOME:-$HOME/Android/Sdk}/build-tools/36.0.0"
@@ -44,7 +44,7 @@ echo "=== gradle assembleRelease ==="
 cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
-  -Pexport_package_name=com.dylan.antexplorer.solar \
+  -Pexport_package_name=com.dylan.solar_system_explorer \
   -Pexport_version_code=1 \
   -Pexport_version_name=0.1 \
   -Pexport_enabled_abis=arm64-v8a \

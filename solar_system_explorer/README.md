@@ -11,7 +11,7 @@ full 3D flyer loop (plot → burn → orbit).
   planet skins under `images/planets/` (see [`docs/STRATEGY_3D_FLYER.md`](docs/STRATEGY_3D_FLYER.md)
   and [`docs/STRATEGY_SOLAR_SYSTEM_NAVIGATION_EXPERIENCE.md`](docs/STRATEGY_SOLAR_SYSTEM_NAVIGATION_EXPERIENCE.md)).
   Each body has a **real 1–2 minute `.ogv` clip** in `game/videos/` (see below).
-- **Package:** `com.dylan.antexplorer.solar` · tile `tile_solar` · label **planets**.
+- **Package:** `com.dylan.solar_system_explorer` · tile `tile_solar` · label **planets**.
 
 ## The flow
 
@@ -134,12 +134,12 @@ The device work mirrors Ant Explorer (see `../ant_explorer/docs/STRATEGY_ANT_PHO
 
 1. Install the Godot **Android build template** into `game/` once (editor: *Project → Install
    Android Build Template*), then build/sign with [`tools/build_solar_apk.sh`](tools/build_solar_apk.sh)
-   (produces `com.dylan.antexplorer.solar.apk`).
+   (produces `com.dylan.solar_system_explorer.apk`).
 2. The launcher is already wired: a **planets** tile (`tile_solar`) and a catalog entry were added to
    `ant_explorer/kiosk_placeholder` (baked `assets/catalog.json`) and to the deploy staging copy
    `ant_explorer/tools/catalog.json`. Rebuilding the launcher APK shows two tiles; until the game
    APK lands, the tile toasts *"not installed yet"* (kid-safe).
-3. `adb install -r com.dylan.antexplorer.solar.apk` + push the updated `catalog.json` — done.
+3. `adb install -r com.dylan.solar_system_explorer.apk` + push the updated `catalog.json` — done.
 
 ## Status / honesty
 
