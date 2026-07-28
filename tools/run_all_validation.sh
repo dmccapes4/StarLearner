@@ -7,6 +7,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SERIAL="${1:-${ADB_SERIAL:-}}"
+export ADB="${ADB:-adb}"
 export ADB_SERIAL="$SERIAL"
 
 echo "=== validate_deploy ==="

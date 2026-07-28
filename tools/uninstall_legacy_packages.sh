@@ -3,7 +3,8 @@
 # Run once per device during the package rename migration (kiosk requires re-provisioning).
 set -euo pipefail
 SERIAL="${1:-${ADB_SERIAL:-}}"
-ADB=(adb)
+ADB_BIN="${ADB:-adb}"
+ADB=("$ADB_BIN")
 [[ -n "$SERIAL" ]] && ADB+=( -s "$SERIAL" )
 
 LEGACY=(

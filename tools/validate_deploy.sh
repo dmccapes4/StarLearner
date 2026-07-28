@@ -5,7 +5,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=packages.sh
 source "$ROOT/tools/packages.sh"
 SERIAL="${1:-${ADB_SERIAL:-}}"
-ADB=(adb)
+ADB_BIN="${ADB:-adb}"
+ADB=("$ADB_BIN")
 [[ -n "$SERIAL" ]] && ADB+=( -s "$SERIAL" )
 
 failures=0
