@@ -42,6 +42,9 @@ for f in token.txt hub.crt; do
   }
 done
 
+echo "=== bootstrap Godot Android templates ==="
+"$ROOT/tools/bootstrap_godot_android.sh"
+
 echo "=== legacy package cleanup ==="
 "$ROOT/tools/uninstall_legacy_packages.sh" "$FOGONA_SERIAL" || true
 
