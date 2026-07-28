@@ -36,12 +36,10 @@ find "$ASSETS" -mindepth 1 -maxdepth 1 ! -name 'dexopt' -exec rm -rf {} +
 python3 "$ROOT/tools/unpack_godot_pck.py" /tmp/ant_colony.pck "$ASSETS"
 
 echo "=== write assets/_cl_ (argc=0) ==="
-python3 - <<'PY'
-import struct
+python3 - "$ASSETS/_cl_" <<'PY'
+import struct, sys
 from pathlib import Path
-Path("/home/dylanmccapes/dev/star_learning/ant_explorer/game/android/build/assets/_cl_").write_bytes(
-    struct.pack("<I", 0)
-)
+Path(sys.argv[1]).write_bytes(struct.pack("<I", 0))
 PY
 
 # Match Godot template: do not ignore hidden assets (.godot/...), keep pck uncompressed if present.
