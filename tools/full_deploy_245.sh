@@ -15,6 +15,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# shellcheck source=245_env.sh
+[[ -f "$ROOT/tools/245_env.sh" ]] && source "$ROOT/tools/245_env.sh"
+
 FOGONA_SERIAL="${FOGONA_SERIAL:-ZL8326G8ND}"
 WIN_ADB="${WIN_ADB:-/mnt/c/Users/dylan/Android/platform-tools/adb.exe}"
 GATEWAY="$(ip route show default 2>/dev/null | awk '/default/ {print $3; exit}')"
