@@ -6,7 +6,7 @@ var camera_lerp: float = 0.08
 var camera_zoom: float = 2.05
 var arrive_eps: float = 14.0
 ## How close the gardener must be (world px) before an action prompt may open.
-var interact_arrive_eps: float = 28.0
+var interact_arrive_eps: float = 42.0
 var tap_ripple_sec: float = 0.35
 
 ## Phase 3 growth — keep first harvest under ~3 minutes with regular watering.

@@ -2,7 +2,7 @@
 # Canonical Android package IDs for Star Learner (source once in deploy/build scripts).
 PKG_LAUNCHER=com.dylan.star_learner
 PKG_ANT_EXPLORER=com.dylan.ant_explorer
-PKG_GARDEN_EXPLORER=com.dylan.garden_explorer
+PKG_GARDEN_EXPLORER=com.dylan.antexplorer.garden
 PKG_SOLAR_EXPLORER=com.dylan.solar_system_explorer
 PKG_MATH_EXPLORER=com.dylan.math_explorer
 PKG_LANGUAGE_EXPLORER=com.dylan.language_explorer

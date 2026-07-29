@@ -31,8 +31,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Lettuce seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Lettuce in spring.",
@@ -93,8 +93,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Pea seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Pea in spring.",
@@ -155,8 +155,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Radish seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Radish in spring.",
@@ -217,8 +217,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Carrot seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Carrot in spring.",
@@ -279,8 +279,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Spinach seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Spinach in spring.",
@@ -341,8 +341,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Onion seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Onion in spring.",
@@ -403,8 +403,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Cabbage seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Cabbage in spring.",
@@ -465,8 +465,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Strawberry seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Strawberry in spring.",
@@ -527,8 +527,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Tomato seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Tomato in summer.",
@@ -589,8 +589,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Corn seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Corn in summer.",
@@ -651,8 +651,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Cucumber seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Cucumber in summer.",
@@ -713,8 +713,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Bean seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Bean in summer.",
@@ -775,8 +775,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Bell Pepper seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Bell Pepper in summer.",
@@ -837,8 +837,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Zucchini seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Zucchini in summer.",
@@ -899,8 +899,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Melon seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Melon in summer.",
@@ -961,8 +961,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Eggplant seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Eggplant in summer.",
@@ -1023,8 +1023,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Pumpkin seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Pumpkin in fall.",
@@ -1085,8 +1085,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Potato seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Potato in fall.",
@@ -1147,8 +1147,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Broccoli seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Broccoli in fall.",
@@ -1209,8 +1209,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Cauliflower seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Cauliflower in fall.",
@@ -1271,8 +1271,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Grape seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Grape in fall.",
@@ -1333,8 +1333,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Raspberry seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Raspberry in fall.",
@@ -1395,8 +1395,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Turnip seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Turnip in fall.",
@@ -1457,8 +1457,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Celery seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Celery in fall.",
@@ -1519,8 +1519,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Garlic seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Garlic in winter.",
@@ -1581,8 +1581,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Leek seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Leek in winter.",
@@ -1643,8 +1643,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Kale seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Kale in winter.",
@@ -1705,8 +1705,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Artichoke seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Artichoke in winter.",
@@ -1767,8 +1767,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Wheat seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Wheat in winter.",
@@ -1829,8 +1829,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Chili Pepper seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Chili Pepper in winter.",
@@ -1891,8 +1891,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Blueberry seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Blueberry in winter.",
@@ -1953,8 +1953,8 @@
       "slides": {
         "seed": [
           {
-            "text": "This is a Oats seed.",
-            "stage": "seed"
+            "text": "This is what the plant looks like as it grows in the game.",
+            "stage": "growing"
           },
           {
             "text": "Plant Oats in winter.",

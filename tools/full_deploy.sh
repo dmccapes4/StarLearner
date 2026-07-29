@@ -6,6 +6,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=packages.sh
 source "$ROOT/tools/packages.sh"
+# shellcheck source=adb_helpers.sh
+source "$ROOT/tools/adb_helpers.sh"
 CATALOG="$ROOT/ant_explorer/tools/catalog.json"
 LAUNCHER="$ROOT/ant_explorer/kiosk_placeholder"
 LAUNCHER_APK="$LAUNCHER/app/build/outputs/apk/release/app-release.apk"
@@ -52,7 +54,7 @@ done
 APKS=(
   "$ROOT/ant_explorer/tools/build/com.dylan.star_learner.apk"
   "$ROOT/ant_explorer/tools/build/com.dylan.ant_explorer.apk"
-  "$ROOT/garden_explorer/tools/build/com.dylan.garden_explorer.apk"
+  "$ROOT/garden_explorer/tools/build/com.dylan.antexplorer.garden.apk"
   "$ROOT/solar_system_explorer/tools/build/com.dylan.solar_system_explorer.apk"
   "$ROOT/math_explorer/tools/build/com.dylan.math_explorer.apk"
   "$ROOT/language_explorer/tools/build/com.dylan.language_explorer.apk"
@@ -110,7 +112,7 @@ import json, sys
 p = sys.argv[1]
 d = json.load(open(p))
 want = {
- "com.dylan.ant_explorer", "com.dylan.garden_explorer",
+ "com.dylan.ant_explorer", "com.dylan.antexplorer.garden",
  "com.dylan.solar_system_explorer", "com.dylan.math_explorer",
  "com.dylan.language_explorer",
 }
@@ -191,6 +193,7 @@ wait_for_adb() {
 
 install_apk() {
   local apk="$1" attempt
+  apk="$(local_path_for_adb "$apk")"
   for attempt in 1 2 3; do
     wait_for_adb || true
     if "${ADB_CMD[@]}" install --no-streaming -r -g "$apk"; then
@@ -221,12 +224,14 @@ deploy_bundle() {
     /data/local/tmp/antphone_videos
   "${ADB_CMD[@]}" shell rm -f '/sdcard/AntPhone/videos/*' \
     '/data/local/tmp/antphone_videos/*'
-  "${ADB_CMD[@]}" push "$BUNDLE/catalog.json" /sdcard/AntPhone/catalog.json
-  "${ADB_CMD[@]}" push "$BUNDLE/catalog.json" /data/local/tmp/antphone_catalog.json
+  "${ADB_CMD[@]}" push "$(local_path_for_adb "$BUNDLE/catalog.json")" /sdcard/AntPhone/catalog.json
+  "${ADB_CMD[@]}" push "$(local_path_for_adb "$BUNDLE/catalog.json")" /data/local/tmp/antphone_catalog.json
   "${ADB_CMD[@]}" shell chmod 644 /data/local/tmp/antphone_catalog.json
   for file in "$BUNDLE"/videos/*.mp4; do
-    "${ADB_CMD[@]}" push "$file" "/sdcard/AntPhone/videos/$(basename "$file")"
-    "${ADB_CMD[@]}" push "$file" "/data/local/tmp/antphone_videos/$(basename "$file")"
+    local win_file
+    win_file="$(local_path_for_adb "$file")"
+    "${ADB_CMD[@]}" push "$win_file" "/sdcard/AntPhone/videos/$(basename "$file")"
+    "${ADB_CMD[@]}" push "$win_file" "/data/local/tmp/antphone_videos/$(basename "$file")"
     "${ADB_CMD[@]}" shell chmod 644 \
       "/data/local/tmp/antphone_videos/$(basename "$file")"
   done

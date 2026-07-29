@@ -348,7 +348,7 @@ func _make_tool_button(id: String, label: String, tex_path: String) -> Button:
 
 func _make_seed_button(plant_id: String) -> Button:
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(140, 160)
+	b.custom_minimum_size = Vector2(152, 176)
 	var collected := false
 	var harvested := int(_harvest_totals.get(plant_id, 0)) > 0
 	var save := get_node_or_null("/root/Save")
@@ -370,10 +370,18 @@ func _make_seed_button(plant_id: String) -> Button:
 	var box := VBoxContainer.new()
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.offset_left = 6
+	box.offset_top = 6
+	box.offset_right = -6
+	box.offset_bottom = -6
+	box.add_theme_constant_override("separation", 2)
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	b.add_child(box)
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(72, 72)
+	## Fill almost the whole tile so Mana Seed bags are readable for kids.
+	icon.custom_minimum_size = Vector2(128, 128)
+	icon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	icon.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -384,7 +392,7 @@ func _make_seed_button(plant_id: String) -> Button:
 	var lab := Label.new()
 	lab.text = seed_db.display_name(plant_id) if seed_db else plant_id
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lab.add_theme_font_size_override("font_size", 16)
+	lab.add_theme_font_size_override("font_size", 15)
 	lab.add_theme_color_override("font_color", Color(0.95, 0.95, 0.85))
 	lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(lab)

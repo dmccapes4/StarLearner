@@ -56,16 +56,23 @@ func _run() -> void:
 		self.paused = false
 	await _shot("01_intro")
 
-	print("DEMO: shed + first seed media")
+	print("DEMO: shed supplies + first seed media")
+	## Skip the long first-open tools intro so the demo stays paced;
+	## explainer VO covers the supplies flow.
+	if save and save.has_method("set_flag"):
+		save.set_flag("shed_tools_intro", true)
 	_events().world_tapped.emit(farm.shed_center)
 	await _sec(1.2)
 	var db: SeedDB = _world.seed_db
 	var seeds := db.available_seed_ids()
 	var pick := "lettuce" if seeds.has("lettuce") else str(seeds[0])
+	## Supplies modal → Seeds → pick crop (triggers first-seed media).
+	if shed and shed.has_method("_on_tool_pressed"):
+		shed.call("_on_tool_pressed", "seed")
+		await _sec(0.8)
 	if shed and shed.has_method("_on_seed_pressed"):
 		shed.call("_on_seed_pressed", pick)
 	await _sec(0.8)
-	## Close first-time seed media if it opened
 	await _close_media_if_open()
 	await _wait_narration()
 	await _shot("02_seed_media")
@@ -73,23 +80,23 @@ func _run() -> void:
 		shed.call("close_shed")
 	await _sec(0.5)
 
-	print("DEMO: plant — one tap per plot square, seed stays selected")
-	for i in 4:
-		_events().world_tapped.emit(farm.slot_world("bed_0", i))
-		await _confirm_prompt_action("plant")
-		await _wait_narration()
-		await _sec(0.4)
+	print("DEMO: plant whole bed with one tap (seed tool auto-applies)")
+	_events().world_tapped.emit(farm.bed_centers.get("bed_0", farm.slot_world("bed_0", 0)))
+	await _arrive_and_settle()
+	await _wait_narration()
+	await _sec(0.5)
 	await _shot("03_planted_thirst")
 
-	print("DEMO: water → sprout (respect thirst + time)")
-	if shed and shed.has_method("clear_selection"):
-		shed.call("clear_selection")
-	_world.call("set_tool", "water")
+	print("DEMO: watering can → sprout")
+	if shed and shed.has_method("set_tool"):
+		shed.call("set_tool", "water")
 	var garden: GardenState = _world.garden
 	await _grow_to_stage(garden, db, "bed_0", 0, GardenState.STAGE_SPROUT)
 	await _shot("04_sprout")
-	## Tap plant → sprout media (first time)
-	_events().world_tapped.emit(farm.slot_world("bed_0", 0))
+	## Hands-free examine: return tool, then tap bed → Examine tile.
+	if shed and shed.has_method("clear_selection"):
+		shed.call("clear_selection")
+	_events().world_tapped.emit(farm.bed_centers.get("bed_0", farm.slot_world("bed_0", 0)))
 	await _confirm_prompt_action("media")
 	await _sec(1.0)
 	await _close_media_if_open()
@@ -100,30 +107,24 @@ func _run() -> void:
 	var variety: Array = db.available_seed_ids()
 	var vi := 0
 	for b in ["bed_1", "bed_2", "bed_3", "bed_4", "bed_5"]:
-		for s2 in 4:
-			var pid2 := str(variety[vi % variety.size()])
-			vi += 1
-			if garden.plant(b, s2, pid2):
-				_events().plant_planted.emit(b, s2, pid2)
+		var pid2 := str(variety[vi % variety.size()])
+		vi += 1
+		if garden.plant_bed(b, pid2):
+			_events().plant_planted.emit(b, 0, pid2)
 	## Walk to the middle of the garden and watch it bloom.
 	_events().player_path_requested.emit(farm.nearest_walkable(farm.bed_centers.get("bed_1", Vector2.ZERO) + Vector2(0, 90)))
 	for b in ["bed_1", "bed_2", "bed_3", "bed_4", "bed_5"]:
-		for s3 in 4:
-			await _grow_to_stage(garden, db, b, s3, GardenState.STAGE_GROWN)
+		await _grow_to_stage(garden, db, b, 0, GardenState.STAGE_GROWN)
 	await _sec(1.0)
 	await _shot("06a_beautiful_garden")
 
 	print("DEMO: grow to harvest")
 	await _grow_to_stage(garden, db, "bed_0", 0, GardenState.STAGE_GROWN)
-	await _grow_to_stage(garden, db, "bed_0", 1, GardenState.STAGE_GROWN)
 	await _shot("06_grown_harvest_icon")
-	_events().world_tapped.emit(farm.slot_world("bed_0", 0))
-	await _confirm_prompt_action("harvest")
+	_events().world_tapped.emit(farm.bed_centers.get("bed_0", farm.slot_world("bed_0", 0)))
+	await _arrive_and_settle()
 	await _wait_narration()
 	await _close_media_if_open() ## first-harvest video
-	_events().world_tapped.emit(farm.slot_world("bed_0", 1))
-	await _confirm_prompt_action("harvest")
-	await _wait_narration()
 	await _shot("07_harvested")
 
 	print("DEMO: animals — reveal tile + educational video")
@@ -218,6 +219,16 @@ func _grow_to_stage(garden: GardenState, db: SeedDB, bed_id: String, slot: int, 
 		await _sec(0.12)
 		if str(garden.get_slot(bed_id, slot).get("stage", "")) == target:
 			return
+
+func _arrive_and_settle() -> void:
+	## Wait for walk + auto tool apply (plant / harvest) to finish.
+	var guard := 0
+	while guard < 180:
+		if _world.player and not bool(_world.player.get("moving")):
+			break
+		await _sec(0.1)
+		guard += 1
+	await _sec(0.45)
 
 func _confirm_prompt_action(kind: String) -> void:
 	## Wait for the walk-then-prompt flow, then pick the matching action tile.

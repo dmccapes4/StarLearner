@@ -100,7 +100,10 @@ func _plant_slides(plant_id: String, kind: String) -> Array:
 	if kind == "seed":
 		var sp := _photo_path("seeds", plant_id)
 		if not sp.is_empty():
-			out.append({"text": "This is a %s seed." % pname, "image": sp})
+			out.append({
+				"text": "This is a real image of %s %s seed." % [_article(pname), pname],
+				"image": sp,
+			})
 	elif kind == "sprout":
 		var pp := _photo_path("sprouts", plant_id)
 		if not pp.is_empty():
@@ -186,20 +189,26 @@ func _show_slide(i: int) -> void:
 		var parts := _media_id.split(":")
 		if parts.size() >= 2:
 			pid = parts[1]
+	var kind_guess := stage_hint
+	if kind_guess.is_empty():
+		kind_guess = "seed"
+		if _media_id.contains(":sprout"):
+			kind_guess = "sprout"
+		elif _media_id.contains(":grown"):
+			kind_guess = "grown"
 	if _tex.texture == null and sprites != null and not pid.is_empty():
-		var kind_guess := stage_hint
-		if kind_guess.is_empty():
-			kind_guess = "seed"
-			if _media_id.contains(":sprout"):
-				kind_guess = "sprout"
-			elif _media_id.contains(":grown"):
-				kind_guess = "grown"
 		_tex.texture = sprites.plant_stage_texture(pid, kind_guess)
-	## Seed-bag icon for the first seed slide when stage art is "seed" bag preferred.
+	## Last resort: shed pouch icon if stage art is missing.
 	if _tex.texture == null and sprites != null and not pid.is_empty():
 		_tex.texture = sprites.seed_icon(pid)
 	var dur := SpeakScript.line(text)
 	_slide_wait = maxf(2.4, dur + 0.35)
+
+static func _article(word: String) -> String:
+	if word.is_empty():
+		return "a"
+	var c := word.substr(0, 1).to_lower()
+	return "an" if c == "a" or c == "e" or c == "i" or c == "o" or c == "u" else "a"
 
 func _process(delta: float) -> void:
 	if not _open or _mode != "slides":

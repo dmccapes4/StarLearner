@@ -110,14 +110,16 @@ func _on_tool_carry(tool_id: String) -> void:
 		return ## seed_selected handles the icon
 	var spr := _held_sprite()
 	match tool_id:
+		## Carry art is 160×160; keep tools a bit larger than the held seed
+		## chip but still natural beside the ~2.3× gardener (~64px cells).
 		"water":
 			spr.texture = _load_tex("res://assets/ui/carry_watering_can.png")
-			spr.scale = Vector2(0.55, 0.55)
-			spr.position = Vector2(24, -30)
+			spr.scale = Vector2(0.32, 0.32)
+			spr.position = Vector2(22, -28)
 		"uproot":
 			spr.texture = _load_tex("res://assets/ui/carry_spade.png")
-			spr.scale = Vector2(0.55, 0.55)
-			spr.position = Vector2(22, -32)
+			spr.scale = Vector2(0.32, 0.32)
+			spr.position = Vector2(20, -30)
 		_:
 			spr.texture = null
 			spr.visible = false
@@ -213,7 +215,11 @@ func _process(delta: float) -> void:
 			_wp_i += 1
 			target = _waypoints[_wp_i]
 			return
+		## Soft-block at end of path — snap to last goal if possible, then arrive.
+		global_position = farm2.nearest_walkable(target)
 		moving = false
+		_waypoints = PackedVector2Array()
+		_wp_i = 0
 		Events.player_arrived.emit()
 		return
 	if farm2 and farm2.is_blocked(next):
@@ -222,8 +228,10 @@ func _process(delta: float) -> void:
 			_wp_i += 1
 			target = _waypoints[_wp_i]
 			return
-		global_position = farm2.nearest_walkable(global_position)
+		global_position = farm2.nearest_walkable(target)
 		moving = false
+		_waypoints = PackedVector2Array()
+		_wp_i = 0
 		Events.player_arrived.emit()
 		return
 	global_position = next

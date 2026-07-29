@@ -213,7 +213,7 @@ git pull && ./tools/full_deploy_245.sh
 
 **245 host:** `DESKTOP-KOMPK5V` / WSL `hilarious_marcupial` · LAN `192.168.0.245` · SSH `ssh -p 2222 -i ~/.ssh/id_ed25519 dylan@104.53.183.230`
 
-**Language ASR:** phones call **`https://hub.starlearner.app:8443/api/asr`** with bearer token baked at build time from `ant_explorer/tools/secrets/hub245/token.txt` (gitignored — must exist on 245 before production build).
+**Language ASR:** phones call **`https://starlearner.dylanmccapes.systems/api/asr`** (Cloudflare → 82 nginx → loopback `:8770`) with bearer token from `ant_explorer/tools/secrets/hub245/token.txt`. Deploy origin: `sudo bash deploy/deploy.sh`. Legacy fallback: `hub.starlearner.app:8443` on 245.
 
 **Android package IDs** (canonical: `tools/packages.sh`):
 
@@ -221,7 +221,7 @@ git pull && ./tools/full_deploy_245.sh
 |------|---------|
 | Launcher (HOME) | `com.dylan.star_learner` |
 | Ant Explorer | `com.dylan.ant_explorer` |
-| Garden Explorer | `com.dylan.garden_explorer` |
+| Garden Explorer | `com.dylan.antexplorer.garden` |
 | Solar System Explorer | `com.dylan.solar_system_explorer` |
 | Math Explorer | `com.dylan.math_explorer` |
 | Language Explorer | `com.dylan.language_explorer` |

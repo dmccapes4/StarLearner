@@ -69,7 +69,7 @@ func build_from_file(path: String = MAP_PATH) -> void:
 	else:
 		shed_door_world = nearest_walkable(shed_center + Vector2(36, 20))
 	if dog_spawn_world != Vector2.ZERO:
-		dog_spawn_world = nearest_walkable(dog_spawn_world)
+		dog_spawn_world = nearest_dog_walkable(dog_spawn_world)
 		animal_positions["dog"] = dog_spawn_world
 	if gate_world != Vector2.ZERO:
 		gate_world = nearest_walkable(gate_world)
@@ -536,6 +536,11 @@ func slot_plant_world(bed_id: String, slot: int) -> Vector2:
 	## Visual plant anchor on the raised soil top.
 	return slot_world(bed_id, slot) + Vector2(0, -BED_HEIGHT)
 
+func bed_plot_cross(bed_id: String) -> Vector2:
+	## Where the four plot furrows meet — soil-top center of the bed.
+	var center: Vector2 = bed_centers.get(bed_id, Vector2.ZERO)
+	return center + Vector2(0, -BED_HEIGHT)
+
 func _build_fence() -> void:
 	var fence: Dictionary = data.get("fence", {})
 	var tile := _vec2(fence.get("tile", {"x": 13, "y": 3}))
@@ -670,6 +675,50 @@ func is_blocked(world_pos: Vector2) -> bool:
 		if poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, poly):
 			return true
 	return false
+
+## Keep Buddy clear of bed tops / aisles kids are using for gardening.
+const DOG_BED_CLEARANCE := 92.0
+
+func near_garden_bed(world_pos: Vector2, clearance: float = DOG_BED_CLEARANCE) -> bool:
+	for id in bed_centers.keys():
+		var c: Vector2 = bed_centers[id]
+		if world_pos.distance_to(c) <= clearance:
+			return true
+	return false
+
+func is_blocked_for_dog(world_pos: Vector2) -> bool:
+	## Yard dog: no pen, no solids, and stay out of the garden-bed cluster.
+	if in_pen(world_pos):
+		return true
+	if is_blocked(world_pos):
+		return true
+	return near_garden_bed(world_pos)
+
+func nearest_dog_walkable(world_pos: Vector2, max_radius_tiles: int = 10) -> Vector2:
+	if not is_blocked_for_dog(world_pos) and _nav_id_at_world(world_pos) >= 0:
+		return world_pos
+	var origin := IsoUtil.world_to_tile(world_pos)
+	var best := world_pos
+	var best_d := INF
+	for r in range(0, max_radius_tiles + 1):
+		for dx in range(-r, r + 1):
+			for dy in range(-r, r + 1):
+				if maxi(absi(dx), absi(dy)) != r:
+					continue
+				var cell := origin + Vector2i(dx, dy)
+				var id: int = int(_nav_cell_to_id.get(cell, -1))
+				if id < 0:
+					continue
+				var w: Vector2 = _astar.get_point_position(id)
+				if is_blocked_for_dog(w):
+					continue
+				var d := world_pos.distance_squared_to(w)
+				if d < best_d:
+					best_d = d
+					best = w
+		if best_d < INF and r >= 1:
+			break
+	return best
 
 func in_pen(world_pos: Vector2) -> bool:
 	return fence_poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, fence_poly)

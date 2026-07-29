@@ -282,6 +282,8 @@ func _spawn_roaming_animals() -> void:
 			## Dog: yard wander (empty bound → yard logic). Prefer map spawn.
 			spawn = farm_map.dog_spawn_world if farm_map.dog_spawn_world != Vector2.ZERO \
 				else farm_map.spawn_world + Vector2(40, 20)
+			if farm_map.has_method("nearest_dog_walkable"):
+				spawn = farm_map.nearest_dog_walkable(spawn)
 		actor.setup(
 			id, farm_map, sprites, spawn, bound,
 			float(d.get("scale", 3.5)),
@@ -327,6 +329,18 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 		return
 	if season_card and season_card.has_method("is_open") and bool(season_card.call("is_open")):
 		return
+	## Beds / shed win over nearby animals — Buddy must not steal gardening taps.
+	var zone := farm_map.zone_at(world_pos)
+	var zone_kind := str(zone.get("kind", ""))
+	if zone_kind == "bed" or zone_kind == "shed":
+		var zid0 := str(zone.get("id", ""))
+		Events.zone_tapped.emit(zid0, zone_kind)
+		_queue_interact(zone_kind, zid0, world_pos)
+		return
+	## While walking to a gardening / interact goal, ignore distraction taps
+	## (ground spam, Buddy, bugs). Retargeting another bed/shed is handled above.
+	if _interact_pending_active() and player and bool(player.get("moving")):
+		return
 	## Roaming bugs: same side of the fence only; one walk to tap spot, no chase.
 	if bug_spawner and bug_spawner.has_method("bug_at") and player:
 		var bug: Node2D = bug_spawner.bug_at(world_pos, 34.0)
@@ -343,10 +357,10 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 	if farm_map.coop_world != Vector2.ZERO and world_pos.distance_to(farm_map.coop_world) <= 60.0:
 		_queue_interact("coop", "coop", farm_map.nearest_walkable(farm_map.coop_world + Vector2(0, 40)))
 		return
-	var zone := farm_map.zone_at(world_pos)
 	if zone.is_empty():
-		## Tap = navigate (immersive multi-tap walks). Gate routing is inside
-		## FarmMap.find_path when the goal is across the fence.
+		## Tap = navigate. Do not clear an in-flight interact if somehow still set.
+		if _interact_pending_active() and player and bool(player.get("moving")):
+			return
 		_pending.clear()
 		_animal_sfx_played = false
 		if not farm_map.is_blocked(world_pos):
@@ -354,7 +368,7 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 		else:
 			Events.player_path_requested.emit(farm_map.nearest_walkable(world_pos))
 		return
-	var kind := str(zone.get("kind", ""))
+	var kind := zone_kind
 	var zid := str(zone.get("id", ""))
 	## zone_at may report an animal under the tap — only interact if same zone.
 	if kind == "animal" and not _can_interact_animal(zid):
@@ -363,6 +377,10 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 	Events.zone_tapped.emit(zid, kind)
 	## Walk to the interactable first; action tile opens on arrive.
 	_queue_interact(kind, zid, world_pos)
+
+func _interact_pending_active() -> bool:
+	var k := str(_pending.get("kind", ""))
+	return k == "bed" or k == "shed" or k == "animal" or k == "bug" or k == "coop"
 
 func _nearest_roaming_animal(world_pos: Vector2, radius: float) -> String:
 	var best := ""
@@ -483,11 +501,33 @@ func _on_player_arrived() -> void:
 		_pending.clear()
 		return
 	## Animal / bug / shed / bed: open at the fixed approach from the tap.
-	## No repath if the critter has wandered — player can tap again.
 	var approach: Vector2 = _pending.get("approach", Vector2.ZERO)
-	if player and player.global_position.distance_to(approach) > Config.get_interact_arrive_eps() * 1.5:
-		return
-	if str(_pending.get("kind", "")) == "bug":
+	var kind := str(_pending.get("kind", ""))
+	var eps := Config.get_interact_arrive_eps() * 2.0
+	var close_enough := player != null and player.global_position.distance_to(approach) <= eps
+	if not close_enough and kind == "bed" and farm_map:
+		## Kids tap soil; approach is the walkable rim — also accept near bed center.
+		var bed_id := str(_pending.get("id", ""))
+		var center: Vector2 = farm_map.bed_centers.get(bed_id, approach)
+		var rim := farm_map.nearest_walkable(center)
+		close_enough = player.global_position.distance_to(rim) <= eps \
+			or player.global_position.distance_to(center) <= eps + 40.0
+	if not close_enough:
+		var attempts := int(_pending.get("repaths", 0))
+		if attempts < 2 and farm_map:
+			_pending["repaths"] = attempts + 1
+			Events.player_path_requested.emit(farm_map.nearest_walkable(approach))
+			return
+		## Soft-collision abort left us short — still try bed tools when nearby
+		## so watering / planting is not lost after a walk.
+		if kind == "bed" and farm_map and player:
+			var bed_id2 := str(_pending.get("id", ""))
+			var center2: Vector2 = farm_map.bed_centers.get(bed_id2, approach)
+			if player.global_position.distance_to(center2) > 120.0:
+				return
+		else:
+			return
+	if kind == "bug":
 		var bug := _pending_bug_node()
 		if bug == null:
 			_pending.clear()
@@ -497,7 +537,7 @@ func _on_player_arrived() -> void:
 func _open_pending_prompt() -> void:
 	if _pending.is_empty():
 		return
-	## Animals: first meet → reveal; later → SFX, double-tap within 2s → reveal.
+	## Animals: first meet → reveal; later → SFX (Buddy stays bark-only).
 	if str(_pending.get("kind", "")) == "animal":
 		var aid := str(_pending.get("id", ""))
 		_handle_animal_arrive(aid)
@@ -531,11 +571,18 @@ func _open_pending_prompt() -> void:
 func _handle_animal_arrive(animal_id: String) -> void:
 	_pending.clear()
 	var now := Time.get_ticks_msec()
-	var met := bool(_animal_met.get(animal_id, false))
-	if not met:
-		_animal_met[animal_id] = true
+	if not _is_animal_met(animal_id):
+		_mark_animal_met(animal_id)
 		_animal_last_tap_ms[animal_id] = now
 		_show_animal_reveal(animal_id)
+		return
+	## Buddy: after first meet, bark only — never reopen the reveal tile.
+	var kind := animal_db.kind_of(animal_id) if animal_db else ""
+	if animal_id == "dog" or kind == "dog":
+		AnimalSfxScript.play(animal_id)
+		Events.animal_tapped.emit(animal_id)
+		print("Garden Explorer: animal:%s (bark)" % animal_id)
+		_animal_sfx_played = false
 		return
 	var last := int(_animal_last_tap_ms.get(animal_id, 0))
 	_animal_last_tap_ms[animal_id] = now
@@ -546,6 +593,21 @@ func _handle_animal_arrive(animal_id: String) -> void:
 	Events.animal_tapped.emit(animal_id)
 	print("Garden Explorer: animal:%s (sfx)" % animal_id)
 	_animal_sfx_played = false
+
+func _is_animal_met(animal_id: String) -> bool:
+	if bool(_animal_met.get(animal_id, false)):
+		return true
+	var save := _save()
+	if save and save.has_method("has_flag") and save.has_flag("animal_met:%s" % animal_id):
+		_animal_met[animal_id] = true
+		return true
+	return false
+
+func _mark_animal_met(animal_id: String) -> void:
+	_animal_met[animal_id] = true
+	var save := _save()
+	if save and save.has_method("set_flag"):
+		save.set_flag("animal_met:%s" % animal_id, true)
 
 func _apply_bed_tool(bed_id: String) -> bool:
 	## Returns true if the interaction was fully handled (no action tiles).
@@ -646,7 +708,7 @@ func _show_animal_reveal(animal_id: String) -> void:
 				"title": name,
 				"texture": tex,
 				"narration": line,
-				"hint": "Tap to learn more",
+				"hint": "Tap picture to learn more · tap away to skip",
 				"video": animal_db.video_file(animal_id),
 				"topic": "%s the %s" % [name, animal_db.kind_of(animal_id)],
 			})
@@ -673,7 +735,7 @@ func _show_roaming_bug_reveal() -> void:
 			"title": bname,
 			"texture": tex,
 			"narration": str(d.get("line", "A garden bug! Tap to learn more.")),
-			"hint": "Tap to learn more",
+			"hint": "Tap picture to learn more · tap away to skip",
 			"video": str(d.get("video", "")),
 			"topic": "%s in the garden" % bname,
 		})
@@ -823,7 +885,7 @@ func _start_bug_hunt(bed_id: String) -> void:
 			"title": bname,
 			"texture": tex,
 			"narration": str(bug.get("line", "A garden bug! Tap to learn more.")),
-			"hint": "Tap to learn more",
+			"hint": "Tap picture to learn more · tap away to skip",
 			"video": str(bug.get("video", "")),
 			"topic": "%s in the garden" % bname,
 		})
@@ -912,7 +974,7 @@ func _play_water_anim(bed_id: String) -> void:
 		var img := Image.load_from_file("res://assets/ui/carry_watering_can.png")
 		if img:
 			can.texture = ImageTexture.create_from_image(img)
-	can.scale = Vector2(0.45, 0.45)
+	can.scale = Vector2(0.28, 0.28)
 	can.position = center + Vector2(0, -FarmMap.BED_HEIGHT - 20)
 	n.add_child(can)
 	var tw := create_tween()

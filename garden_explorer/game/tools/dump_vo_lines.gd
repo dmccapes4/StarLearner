@@ -138,12 +138,14 @@ func _run() -> void:
 	_add("You watered the bed.")
 	_add("This garden box is full.")
 	_add("That seed is out of season.")
+	_add("This is what the plant looks like as it grows in the game.")
 	var seeds_raw = JSON.parse_string(FileAccess.get_file_as_string("res://data/seeds.json"))
 	if typeof(seeds_raw) == TYPE_DICTIONARY:
 		for p in seeds_raw.get("plants", []):
 			var pn := str(p.get("name", str(p.get("id", "")).capitalize()))
+			var art := _article(pn)
 			_add("You harvested your first %s!" % pn)
-			_add("This is a %s seed." % pn)
+			_add("This is a real image of %s %s seed." % [art, pn])
 			_add("Look — a real %s sprout!" % pn)
 			_add("Farmers pick %s gently when it is ripe, so the plant is not hurt." % pn)
 			_add("Fresh %s is full of vitamins that help you grow strong." % pn)
@@ -157,6 +159,17 @@ func _run() -> void:
 			_add("You uprooted the %s." % pn)
 			_add("You harvested the %s!" % pn)
 			_add("You picked %s! Tap an empty garden bed to plant it." % pn)
+			## Keep baked VO in sync with every authored slide / blurb.
+			var blurb := str(p.get("blurb", ""))
+			if not blurb.is_empty():
+				_add(blurb)
+			var slides: Dictionary = p.get("slides", {})
+			for kind in slides.keys():
+				for s in slides[kind]:
+					if typeof(s) == TYPE_DICTIONARY:
+						var st := str(s.get("text", ""))
+						if not st.is_empty():
+							_add(st)
 
 	var abs_path := ProjectSettings.globalize_path(OUT)
 	var f := FileAccess.open(OUT, FileAccess.WRITE)
@@ -168,6 +181,12 @@ func _run() -> void:
 	f.close()
 	print("Garden VO manifest: %d sentences → %s" % [_lines.size(), abs_path])
 	quit(0)
+
+func _article(word: String) -> String:
+	if word.is_empty():
+		return "a"
+	var c := word.substr(0, 1).to_lower()
+	return "an" if c == "a" or c == "e" or c == "i" or c == "o" or c == "u" else "a"
 
 func _add(text: String) -> void:
 	for s in NarratorScript.split_sentences(text):

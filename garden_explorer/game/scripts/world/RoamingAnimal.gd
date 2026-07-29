@@ -123,6 +123,17 @@ func _start_hop() -> void:
 func _process(delta: float) -> void:
 	if farm_map == null:
 		return
+	## Yard dog: eject if we drifted onto / through a garden bed.
+	if bound_poly.size() < 3 and farm_map.has_method("is_blocked_for_dog") \
+			and farm_map.is_blocked_for_dog(position):
+		if farm_map.has_method("nearest_dog_walkable"):
+			position = farm_map.nearest_dog_walkable(position)
+		else:
+			position = farm_map.nearest_walkable(position)
+		_pick_new_target()
+		_pause_left = randf_range(0.4, 1.0)
+		_sync_map_pos()
+		return
 	if _interacting:
 		z_index = IsoUtil.depth_from_y(position.y) + 55
 		_sync_map_pos()
@@ -174,11 +185,13 @@ func _inside(p: Vector2) -> bool:
 	return IsoUtil.point_in_polygon(p, bound_poly)
 
 func _blocked_for_animal(p: Vector2) -> bool:
-	## Pen animals: bound_poly only. Yard dog: stay out of pen + solids.
+	## Pen animals: bound_poly only. Yard dog: stay out of pen + beds + solids.
 	if bound_poly.size() >= 3:
 		return false
 	if farm_map == null:
 		return false
+	if farm_map.has_method("is_blocked_for_dog"):
+		return farm_map.is_blocked_for_dog(p)
 	if farm_map.has_method("in_pen") and farm_map.in_pen(p):
 		return true
 	return farm_map.is_blocked(p)
@@ -193,17 +206,24 @@ func _pick_new_target() -> void:
 				return
 		_target = c
 		return
-	## Yard dog: walkable farm, never into the animal pen.
-	var base: Vector2 = farm_map.spawn_world if farm_map else position
-	for _i in 12:
-		var cand2 := base + Vector2(randf_range(-220, 260), randf_range(-120, 150))
-		if farm_map:
+	## Yard dog: walkable farm, never into the animal pen or garden beds.
+	var base: Vector2 = farm_map.dog_spawn_world if farm_map and farm_map.dog_spawn_world != Vector2.ZERO \
+		else (farm_map.spawn_world if farm_map else position)
+	if farm_map and farm_map.has_method("nearest_dog_walkable"):
+		base = farm_map.nearest_dog_walkable(base)
+	for _i in 16:
+		var cand2 := base + Vector2(randf_range(-220, 260), randf_range(-80, 160))
+		if farm_map == null:
+			_target = cand2
+			return
+		if farm_map.has_method("nearest_dog_walkable"):
+			cand2 = farm_map.nearest_dog_walkable(cand2)
+		else:
 			cand2 = farm_map.nearest_walkable(cand2)
-			if farm_map.has_method("in_pen") and farm_map.in_pen(cand2):
-				continue
-			if not farm_map.is_blocked(cand2):
-				_target = cand2
-				return
+		if farm_map.has_method("is_blocked_for_dog") and farm_map.is_blocked_for_dog(cand2):
+			continue
+		_target = cand2
+		return
 	_target = base
 
 func _poly_center() -> Vector2:

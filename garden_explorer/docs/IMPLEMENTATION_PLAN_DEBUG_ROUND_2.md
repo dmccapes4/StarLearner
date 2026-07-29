@@ -60,8 +60,9 @@ original list.
 - tools/build_edu_videos.sh: trim/concat footage → overlay baked ElevenLabs
   narration (structure: what it is → fun fact → role in garden/farm →
   gentle outro) → .ogv into res://stars/.
-- 10: first-seed video: real seed photo card ("This is a {plant} seed.") →
-  in-game stage art → when/where to plant + facts. No tap-exit.
+- 10: first-seed video: real seed photo ("This is a real image of a/an {plant}
+  seed.") → in-game growth art ("This is what the plant looks like as it grows
+  in the game.") → when/where to plant + facts. No tap-exit.
 - 11: first-harvest flow: freeze + no tap → "You harvested your first
   {plant}!" → PlantGrid panel (gold outline lights up) → real harvest video
   with narration → unfreeze.

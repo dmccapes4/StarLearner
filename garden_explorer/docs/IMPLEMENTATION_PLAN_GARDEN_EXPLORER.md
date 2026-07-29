@@ -217,7 +217,7 @@ fallback noted in BIBLIOGRAPHY.
 - [x] `Narrator` / `VoStream` / `Speak` — baked clips first, OS TTS fallback
 - [x] Full `Save` — beds, season, harvest, stars, intro + `.antphone_wipe` / `EXTRA_WIPE_SAVE`
 - [x] `IdleGuard` autoload
-- [x] APK: `tools/build_garden_apk.sh` → `com.dylan.garden_explorer`; catalog tile `garden`
+- [x] APK: `tools/build_garden_apk.sh` → `com.dylan.antexplorer.garden`; catalog tile `garden`
 - [x] Playthrough: `tools/make_demo_videos.sh` → `docs/demo/garden_explorer_playthrough.mp4`
 
 **Acceptance:** kill app → reopen restores beds/stars/season; Restart clears; APK boots offline. ✅ (APK build script ready; install when device on ADB)

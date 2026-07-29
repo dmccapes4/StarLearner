@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # shellcheck source=packages.sh
 source "$ROOT/tools/packages.sh"
+# shellcheck source=adb_helpers.sh
+source "$ROOT/tools/adb_helpers.sh"
 SERIAL="${1:-${ADB_SERIAL:-}}"
 ADB_BIN="${ADB:-adb}"
 ADB=("$ADB_BIN")
@@ -34,10 +36,14 @@ done
 note "Language hub_client.json in installed APK"
 LANG_APK="$("${ADB[@]}" shell pm path "$PKG_LANGUAGE" 2>/dev/null | head -1 | sed 's/package://' | tr -d '\r')"
 if [[ -n "$LANG_APK" ]]; then
-  TMP=/tmp/validate_lang_apk
+  if [[ "$ADB_BIN" == *.exe ]]; then
+    TMP=/mnt/c/Users/dylan/tmp/validate_lang_apk
+  else
+    TMP=/tmp/validate_lang_apk
+  fi
   rm -rf "$TMP" && mkdir -p "$TMP"
-  "${ADB[@]}" pull "$LANG_APK" "$TMP/lang.apk" >/dev/null
-  if unzip -l "$TMP/lang.apk" 2>/dev/null | grep -q 'assets/data/hub_client.json'; then
+  "${ADB[@]}" pull "$LANG_APK" "$(local_path_for_adb "$TMP/lang.apk")" >/dev/null
+  if unzip -p "$TMP/lang.apk" assets/data/hub_client.json >/dev/null 2>&1; then
     unzip -p "$TMP/lang.apk" assets/data/hub_client.json >"$TMP/hub_client.json"
     if python3 - "$TMP/hub_client.json" <<'PY'
 import json, sys
@@ -85,13 +91,14 @@ else
 fi
 
 note "Language mic permission + hardware"
-MIC="$("${ADB[@]}" shell dumpsys package "$PKG_LANGUAGE" 2>/dev/null | grep 'android.permission.RECORD_AUDIO' | head -1 || true)"
+MIC="$("${ADB[@]}" shell dumpsys package "$PKG_LANGUAGE" 2>/dev/null | grep 'android.permission.RECORD_AUDIO' | grep 'granted=true' | head -1 || true)"
 if echo "$MIC" | grep -q 'granted=true'; then
   ok "RECORD_AUDIO granted"
 else
   note "granting RECORD_AUDIO"
-  "${ADB[@]}" shell pm grant "$PKG_LANGUAGE" android.permission.RECORD_AUDIO || true
-  MIC="$("${ADB[@]}" shell dumpsys package "$PKG_LANGUAGE" 2>/dev/null | grep 'android.permission.RECORD_AUDIO' | head -1 || true)"
+  "${ADB[@]}" shell pm grant "$PKG_LANGUAGE" android.permission.RECORD_AUDIO 2>/dev/null || true
+  "${ADB[@]}" shell appops set "$PKG_LANGUAGE" RECORD_AUDIO allow 2>/dev/null || true
+  MIC="$("${ADB[@]}" shell dumpsys package "$PKG_LANGUAGE" 2>/dev/null | grep 'android.permission.RECORD_AUDIO' | grep 'granted=true' | head -1 || true)"
   if echo "$MIC" | grep -q 'granted=true'; then
     ok "RECORD_AUDIO granted after pm grant"
   else

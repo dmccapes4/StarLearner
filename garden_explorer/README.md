@@ -71,7 +71,7 @@ cd ~/dev/star_learning/garden_explorer
 
 ```bash
 ./tools/gen_vo.sh                          # ElevenLabs → game/audio/vo/
-./tools/build_garden_apk.sh                # → tools/build/com.dylan.garden_explorer.apk
+./tools/build_garden_apk.sh                # → tools/build/com.dylan.antexplorer.garden.apk
 ./tools/make_demo_videos.sh                # → docs/demo/garden_explorer_playthrough.mp4
 ```
 

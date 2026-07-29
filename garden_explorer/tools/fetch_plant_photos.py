@@ -2,7 +2,7 @@
 """Fetch real seed + sprout photos for every plant from Wikimedia Commons.
 
 Outputs 800px JPEGs:
-  game/assets/photos/seeds/<plant_id>.jpg    ("This is a {plant} seed.")
+  game/assets/photos/seeds/<plant_id>.jpg    ("This is a real image of a/an {plant} seed.")
   game/assets/photos/sprouts/<plant_id>.jpg  ("Look — a real {plant} sprout!")
 
 Skips files that already exist, so hand-curated replacements are kept.

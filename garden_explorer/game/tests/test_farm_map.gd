@@ -72,6 +72,12 @@ func run() -> TestAssert:
 	var pen_approach := farm.nearest_walkable(farm.fence_center)
 	t.ok(not farm.is_blocked(pen_approach), "pen interior / approach is walkable")
 	t.ok(farm.pen_roam_poly.size() >= 3, "animal roam bound")
+	## Buddy must stay clear of garden beds.
+	if farm.has_method("is_blocked_for_dog") and farm.dog_spawn_world != Vector2.ZERO:
+		t.ok(not farm.is_blocked_for_dog(farm.dog_spawn_world), "dog spawn clear of beds")
+		for bid in farm.bed_ids():
+			var bc: Vector2 = farm.bed_centers.get(bid, Vector2.ZERO)
+			t.ok(farm.is_blocked_for_dog(bc), "dog blocked at bed %s center" % bid)
 
 	## UI validation: slot markers sit fully inside the bed lip, no overlap.
 	for bid in farm.bed_ids():

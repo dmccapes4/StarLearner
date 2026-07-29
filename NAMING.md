@@ -16,10 +16,11 @@
 | Id | Value |
 |----|-------|
 | Hostname / fleet label | `star-learner` |
-| Android `device_name` | `Star Learner` |
+| Android `device_name` (production kiosk) | `Star Learner` |
+| Local test handset codename | **reef** (`ZL8326FWKM`) — distinct from gift **fogona** (`ZL8326G8ND`) |
 | Home package | `com.dylan.star_learner` |
 | On-device catalog path | `/sdcard/AntPhone/` for now (legacy); migrate to `/sdcard/StarLearner/` when convenient |
-| Game packages | `com.dylan.ant_explorer`, `com.dylan.garden_explorer`, `com.dylan.solar_system_explorer`, `com.dylan.math_explorer`, `com.dylan.language_explorer` |
+| Game packages | `com.dylan.ant_explorer`, **`com.dylan.antexplorer.garden`** (kept — her installs), `com.dylan.solar_system_explorer`, `com.dylan.math_explorer`, `com.dylan.language_explorer` |
 
 Canonical list: `tools/packages.sh`.
 

@@ -78,21 +78,24 @@ func _refresh_slot(bed_id: String, slot: int) -> void:
 		return
 
 	var stage := str(data.get("stage", GardenState.STAGE_SEED))
-	## Seed stage: only the centered seed sprite (slot 0).
+	## Seed stage: one plant-seed sprite (not the shed pouch) at the plot cross.
 	if stage == GardenState.STAGE_SEED:
 		if slot != 0:
 			node.position = ground
 			add_child(node)
 			_nodes[key] = node
 			return
-		var center: Vector2 = farm_map.bed_centers.get(bed_id, plant_pos)
-		node.position = center + Vector2(0, -FarmMap.BED_HEIGHT)
-		var seed_tex: Texture2D = sprites.seed_icon(pid) if sprites else null
+		var cross: Vector2 = farm_map.bed_plot_cross(bed_id) if farm_map.has_method("bed_plot_cross") \
+			else farm_map.bed_centers.get(bed_id, plant_pos) + Vector2(0, -FarmMap.BED_HEIGHT)
+		node.position = cross
+		## Ground-seed frame (Mana Seed col 2), not the seed-bag icon.
+		var seed_tex: Texture2D = sprites.plant_stage_texture(pid, GardenState.STAGE_SEED) if sprites else null
 		if seed_tex:
 			var sspr := Sprite2D.new()
 			sspr.texture = seed_tex
-			sspr.scale = Vector2(3.6, 3.6)
+			sspr.scale = Vector2(SPRITE_SCALE, SPRITE_SCALE)
 			sspr.centered = true
+			sspr.position = Vector2(0, -10)
 			sspr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			node.add_child(sspr)
 		add_child(node)

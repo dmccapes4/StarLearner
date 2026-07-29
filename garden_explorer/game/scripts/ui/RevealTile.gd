@@ -1,9 +1,8 @@
 class_name RevealTile
 extends CanvasLayer
 ## Large center portrait tile for animals / bugs.
-## Flow: narration plays first (taps ignored, player frozen by Narrator lock),
-## THEN a 5s window opens — tap tile confirms (launch video), tap outside or
-## timeout closes.
+## Flow: narration plays; tap the tile to learn more (after narration), tap the
+## dim / outside to skip anytime (including during narration).
 
 signal confirmed(payload: Dictionary)
 signal cancelled()
@@ -43,7 +42,7 @@ func show_reveal(payload: Dictionary) -> void:
 	_open = true
 	visible = true
 	_title.text = str(_payload.get("title", ""))
-	_hint.text = str(_payload.get("hint", "Tap to learn more"))
+	_hint.text = str(_payload.get("hint", "Tap picture to learn more · tap away to skip"))
 	_icon.texture = _payload.get("texture", null) as Texture2D
 	## Narration first — countdown starts only after it finishes.
 	_narrating_left = 0.0
@@ -147,13 +146,16 @@ func _build() -> void:
 func _on_dim_input(event: InputEvent) -> void:
 	if not _open:
 		return
-	## During narration taps are ignored — no accidental dismiss.
-	if _narrating_left > 0.0:
-		return
+	## Tap away skips immediately — even during narration (kids need an out).
 	if event is InputEventScreenTouch and event.pressed:
-		close_reveal(true)
+		_skip()
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		close_reveal(true)
+		_skip()
+
+func _skip() -> void:
+	SpeakScript.stop()
+	_narrating_left = 0.0
+	close_reveal(true)
 
 func _on_tile_pressed() -> void:
 	if not _open:
