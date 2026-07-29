@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Build com.dylan.antexplorer.garden.apk (Godot pack → Android assets + gradle).
+# Build com.dylan.garden_explorer.apk (Godot pack → Android assets + gradle).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 GAME="$ROOT/game"
 BUILD="$GAME/android/build"
 ASSETS="$BUILD/assets"
-OUT="$ROOT/tools/build/com.dylan.antexplorer.garden.apk"
+OUT="$ROOT/tools/build/com.dylan.garden_explorer.apk"
 GODOT="${GODOT:-$HOME/.local/bin/godot}"
 KS="${ANTS_KEYSTORE:-$HOME/moto_fogona_backup/ants-debug.keystore}"
 BT="${ANDROID_HOME:-$HOME/Android/Sdk}/build-tools/36.0.0"
@@ -75,7 +75,7 @@ echo "=== gradle assembleRelease ==="
 cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
-  -Pexport_package_name=com.dylan.antexplorer.garden \
+  -Pexport_package_name=com.dylan.garden_explorer \
   -Pexport_version_code=1 \
   -Pexport_version_name=0.1 \
   -Pexport_enabled_abis=arm64-v8a \
@@ -95,12 +95,12 @@ rm -f "$ALIGNED" "$SIGNED"
 "$BT/apksigner" verify "$SIGNED"
 cp -f "$SIGNED" "$OUT"
 # Fail loud if gradle ignored -Pexport_package_name (stale misnamed APKs confuse phones).
-WANT_PKG=com.dylan.antexplorer.garden
+WANT_PKG=com.dylan.garden_explorer
 GOT_PKG="$("$BT/aapt" dump badging "$OUT" | awk -F"'" '/^package: /{print $2; exit}')"
 if [[ "$GOT_PKG" != "$WANT_PKG" ]]; then
   echo "ERROR: APK package is '$GOT_PKG' (expected $WANT_PKG)" >&2
   exit 1
 fi
 echo "OK $OUT ($GOT_PKG, $(du -h "$OUT" | awk '{print $1}'))"
-# Do not leave the misnamed twin around.
-rm -f "$ROOT/tools/build/com.dylan.garden_explorer.apk"
+# Do not leave the legacy twin around.
+rm -f "$ROOT/tools/build/com.dylan.antexplorer.garden.apk"

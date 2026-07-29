@@ -266,11 +266,53 @@ func sheet_name_for(plant_id: String) -> String:
 	return str(SHEET_ALIAS.get(plant_id, plant_id))
 
 func seed_icon(plant_id: String) -> Texture2D:
-	## Seed bag (col 1) — shed tiles + held chip.
+	## Seed bag (col 1) — held chip / inventory. Native 16×32 pixel art.
 	var mana := _mana_cell(plant_id, 1)
 	if mana:
 		return mana
 	return _sprout_seed_icon(plant_id)
+
+func shed_pick_icon(plant_id: String) -> Texture2D:
+	## Prefer curated HD seed-bag tiles (assets/ui/seeds/<id>.png).
+	var key := "shed_pick:%s" % plant_id
+	if _action_icon_cache.has(key):
+		return _action_icon_cache[key]
+	var tile_path := "res://assets/ui/seeds/%s.png" % plant_id
+	var tile := _load(tile_path)
+	if tile:
+		_action_icon_cache[key] = tile
+		return tile
+	## Fallback: nearest-upscale the Mana Seed bag crop (pack is 16×32 only).
+	var sheet := _sheet_for(plant_id)
+	if sheet == null:
+		return seed_icon(plant_id)
+	var src: Image = sheet.get_image()
+	if src == null:
+		return seed_icon(plant_id)
+	var cell := src.get_region(Rect2i(1 * CELL_W, 0, CELL_W, CELL_H))
+	var bb := cell.get_used_rect()
+	if bb.size.x < 2 or bb.size.y < 2:
+		bb = Rect2i(1, 16, 14, 16)
+	var cropped := cell.get_region(bb)
+	var long_edge := maxi(cropped.get_width(), cropped.get_height())
+	var scale := maxi(10, int(round(160.0 / float(long_edge))))
+	cropped.resize(cropped.get_width() * scale, cropped.get_height() * scale, Image.INTERPOLATE_NEAREST)
+	var tex := ImageTexture.create_from_image(cropped)
+	_action_icon_cache[key] = tex
+	return tex
+
+## Back-compat alias.
+func seed_icon_ui(plant_id: String) -> Texture2D:
+	return shed_pick_icon(plant_id)
+
+func _sheet_for(plant_id: String) -> Texture2D:
+	var sheet_name := sheet_name_for(plant_id)
+	var sheet: Texture2D = _crop_sheets.get(sheet_name, null)
+	if sheet == null:
+		sheet = _load("%s/%s.png" % [MANA_CROPS, sheet_name])
+		if sheet:
+			_crop_sheets[sheet_name] = sheet
+	return sheet
 
 func harvest_icon(plant_id: String) -> Texture2D:
 	## Ripe inventory icon (col 0).

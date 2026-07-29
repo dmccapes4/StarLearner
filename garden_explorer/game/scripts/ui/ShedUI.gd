@@ -26,6 +26,7 @@ var _selected: String = "" ## plant id when tool == seed
 var _harvest_totals: Dictionary = {}
 var _panel: PanelContainer
 var _grid: GridContainer
+var _footer: HBoxContainer
 var _title: Label
 var _held_chip: Label
 var _held_icon: TextureRect
@@ -108,16 +109,29 @@ func refresh() -> void:
 		return
 	for c in _grid.get_children():
 		c.queue_free()
+	if _footer:
+		for c in _footer.get_children():
+			c.queue_free()
 	_tool_btns.clear()
 	if _view == "seeds":
 		_title.text = "Pick a seed — %s" % (seed_db.current_season.capitalize() if seed_db else "")
+		## Exactly 8 seasonal seeds → fixed 4×2, no scroll.
 		_grid.columns = 4
 		if seed_db:
 			for pid in seed_db.available_seed_ids():
 				_grid.add_child(_make_seed_button(pid))
 		var back := _make_tool_button("back", "Back", TILE_RETURN)
+		back.custom_minimum_size = Vector2(200, 88)
+		for child in back.get_children():
+			if child is VBoxContainer:
+				for sub in child.get_children():
+					if sub is TextureRect:
+						sub.custom_minimum_size = Vector2(48, 48)
+					elif sub is Label:
+						sub.add_theme_font_size_override("font_size", 18)
 		back.pressed.connect(_show_tools)
-		_grid.add_child(back)
+		if _footer:
+			_footer.add_child(back)
 		return
 	_title.text = "Garden supplies"
 	_grid.columns = 2
@@ -269,11 +283,11 @@ func _build() -> void:
 	_panel.set_anchors_preset(Control.PRESET_CENTER)
 	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_panel.offset_left = -340
-	_panel.offset_right = 340
-	_panel.offset_top = -240
-	_panel.offset_bottom = 240
-	_panel.custom_minimum_size = Vector2(680, 480)
+	_panel.offset_left = -420
+	_panel.offset_right = 420
+	_panel.offset_top = -280
+	_panel.offset_bottom = 280
+	_panel.custom_minimum_size = Vector2(840, 560)
 	root.add_child(_panel)
 
 	var sb := StyleBoxFlat.new()
@@ -284,31 +298,36 @@ func _build() -> void:
 	_panel.add_theme_stylebox_override("panel", sb)
 
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 12)
+	v.add_theme_constant_override("separation", 10)
 	_panel.add_child(v)
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.add_theme_constant_override("margin_right", 20)
-	margin.add_theme_constant_override("margin_top", 16)
-	margin.add_theme_constant_override("margin_bottom", 16)
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
 	v.add_child(margin)
 	var inner := VBoxContainer.new()
-	inner.add_theme_constant_override("separation", 14)
+	inner.add_theme_constant_override("separation", 10)
 	margin.add_child(inner)
 
 	_title = Label.new()
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_title.add_theme_font_size_override("font_size", 28)
+	_title.add_theme_font_size_override("font_size", 26)
 	_title.add_theme_color_override("font_color", Color(1, 0.95, 0.75))
 	inner.add_child(_title)
 
+	## No ScrollContainer — seasonal catalog is a fixed 4×2.
 	_grid = GridContainer.new()
 	_grid.columns = 2
-	_grid.add_theme_constant_override("h_separation", 16)
-	_grid.add_theme_constant_override("v_separation", 16)
-	_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_grid.add_theme_constant_override("h_separation", 10)
+	_grid.add_theme_constant_override("v_separation", 10)
+	_grid.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	inner.add_child(_grid)
+
+	_footer = HBoxContainer.new()
+	_footer.alignment = BoxContainer.ALIGNMENT_CENTER
+	_footer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	inner.add_child(_footer)
 
 func _make_tool_button(id: String, label: String, tex_path: String) -> Button:
 	var b := Button.new()
@@ -348,54 +367,55 @@ func _make_tool_button(id: String, label: String, tex_path: String) -> Button:
 
 func _make_seed_button(plant_id: String) -> Button:
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(152, 176)
+	## Compact enough for a fixed 4×2 on a phone panel.
+	b.custom_minimum_size = Vector2(168, 178)
+	b.flat = true
 	var collected := false
 	var harvested := int(_harvest_totals.get(plant_id, 0)) > 0
 	var save := get_node_or_null("/root/Save")
 	if save and save.has_method("has_flag"):
 		collected = save.has_flag("seed_collected:%s" % plant_id)
+	## Tile PNG already has the panel — keep button chrome as a thin outline only.
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.12, 0.18, 0.12, 0.95)
-	sb.set_corner_radius_all(12)
-	sb.set_border_width_all(4 if harvested or collected else 2)
+	sb.bg_color = Color(0, 0, 0, 0)
+	sb.set_corner_radius_all(16)
+	sb.set_border_width_all(3 if harvested or collected else 0)
 	if harvested:
 		sb.border_color = Color(1.0, 0.82, 0.2, 1.0)
 	elif collected:
 		sb.border_color = Color(0.75, 0.78, 0.85, 1.0)
-	else:
-		sb.border_color = Color(0.35, 0.45, 0.3, 1.0)
+	sb.content_margin_left = 0
+	sb.content_margin_right = 0
+	sb.content_margin_top = 0
+	sb.content_margin_bottom = 0
 	b.add_theme_stylebox_override("normal", sb)
 	b.add_theme_stylebox_override("hover", sb)
 	b.add_theme_stylebox_override("pressed", sb)
-	var box := VBoxContainer.new()
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	box.offset_left = 6
-	box.offset_top = 6
-	box.offset_right = -6
-	box.offset_bottom = -6
-	box.add_theme_constant_override("separation", 2)
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	b.add_child(box)
+
 	var icon := TextureRect.new()
-	## Fill almost the whole tile so Mana Seed bags are readable for kids.
-	icon.custom_minimum_size = Vector2(128, 128)
-	icon.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	icon.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	icon.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	icon.offset_bottom = -26
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	if sprites:
-		icon.texture = sprites.seed_icon(plant_id)
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(icon)
+	if sprites:
+		icon.texture = sprites.shed_pick_icon(plant_id) if sprites.has_method("shed_pick_icon") \
+			else sprites.seed_icon(plant_id)
+	b.add_child(icon)
+
 	var lab := Label.new()
 	lab.text = seed_db.display_name(plant_id) if seed_db else plant_id
+	lab.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	lab.offset_top = -26
+	lab.offset_bottom = -1
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lab.add_theme_font_size_override("font_size", 15)
-	lab.add_theme_color_override("font_color", Color(0.95, 0.95, 0.85))
+	lab.add_theme_font_size_override("font_size", 16)
+	lab.add_theme_color_override("font_color", Color(1, 0.98, 0.88))
+	lab.add_theme_color_override("font_outline_color", Color(0.05, 0.08, 0.04, 1))
+	lab.add_theme_constant_override("outline_size", 4)
 	lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_child(lab)
+	b.add_child(lab)
 	b.pressed.connect(_on_seed_pressed.bind(plant_id))
 	return b
 
