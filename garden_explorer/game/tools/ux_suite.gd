@@ -128,7 +128,7 @@ func _run() -> void:
 	_check("stage_or_water_log", stage_hit, "saw stage/water events")
 	await _shot("grown")
 
-	## Hands free — any bed tap harvests a ready bed.
+	## Hands free — ready bed shows harvest confirm tile, then tap to harvest.
 	if shed and shed.has_method("clear_selection"):
 		shed.call("clear_selection")
 	await _settle(2)

@@ -64,6 +64,7 @@ func clear_selection() -> void:
 	_refresh_held_chip()
 	Events.seed_cleared.emit()
 	Events.tool_changed.emit(TOOL_NONE)
+	_persist_tool()
 
 func set_tool(tool_id: String, plant_id: String = "") -> void:
 	_tool = tool_id
@@ -74,6 +75,27 @@ func set_tool(tool_id: String, plant_id: String = "") -> void:
 	elif tool_id == TOOL_NONE:
 		Events.seed_cleared.emit()
 	Events.tool_changed.emit(tool_id)
+	_persist_tool()
+
+func restore_tool(tool_id: String, plant_id: String = "") -> void:
+	## Boot restore — no VO; World suppresses seed-media ceremony while restoring.
+	_tool = tool_id
+	_selected = plant_id if tool_id == TOOL_SEED else ""
+	_refresh_held_chip()
+	Events.tool_changed.emit(_tool)
+	if _tool == TOOL_SEED and not _selected.is_empty():
+		Events.seed_selected.emit(_selected)
+	elif _tool == TOOL_NONE:
+		Events.seed_cleared.emit()
+	elif _tool == TOOL_WATER or _tool == TOOL_UPROOT:
+		## tool_changed may have been ignored if a seed sprite was still up.
+		Events.seed_cleared.emit()
+		Events.tool_changed.emit(_tool)
+
+func _persist_tool() -> void:
+	var save := get_node_or_null("/root/Save")
+	if save and save.has_method("set_tool"):
+		save.set_tool(_tool, _selected if _tool == TOOL_SEED else "")
 
 func open_shed() -> void:
 	_open = true
@@ -160,15 +182,15 @@ func _on_tool_pressed(tool_id: String) -> void:
 			SpeakScript.line("Choose a seed to plant.")
 		TOOL_WATER:
 			set_tool(TOOL_WATER)
-			SpeakScript.line("You picked up the watering can. Tap a garden bed to water it.")
+			SpeakScript.line("You picked up the watering can. Tap a garden bed to water it.", true)
 			close_shed()
 		TOOL_UPROOT:
 			set_tool(TOOL_UPROOT)
-			SpeakScript.line("You picked up the spade. Tap a garden bed to uproot the plants.")
+			SpeakScript.line("You picked up the spade. Tap a garden bed to uproot the plants.", true)
 			close_shed()
 		TOOL_NONE:
 			clear_selection()
-			SpeakScript.line("Hands free! Now you can search for bugs and examine your plants.")
+			SpeakScript.line("Hands free! Now you can search for bugs and examine your plants.", true)
 			close_shed()
 
 func _on_seed_pressed(plant_id: String) -> void:
@@ -180,7 +202,7 @@ func _on_seed_pressed(plant_id: String) -> void:
 	var save := get_node_or_null("/root/Save")
 	if save and save.has_method("set_flag"):
 		save.set_flag("seed_collected:%s" % plant_id, true)
-	SpeakScript.line("You picked %s! Tap an empty garden bed to plant it." % name)
+	SpeakScript.line("You picked %s! Tap an empty garden bed to plant it." % name, true)
 	close_shed()
 
 func _play_tools_intro() -> void:

@@ -152,6 +152,7 @@ func _run() -> void:
 			_add("You picked %s!" % pn)
 			_add("Plant the %s seed here?" % pn)
 			_add("Harvest the %s?" % pn)
+			_add("Tap to harvest %s." % pn)
 			_add("Pull out the %s?" % pn)
 			_add("Look at the %s!" % pn)
 			_add("Examine the %s!" % pn)

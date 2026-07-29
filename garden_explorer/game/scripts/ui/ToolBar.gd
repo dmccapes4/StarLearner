@@ -17,8 +17,10 @@ func _ready() -> void:
 	layer = 25
 	_build()
 	## Persistent tool intent removed — actions appear at interactables.
+	## Do not emit tool_changed here; ShedUI / save owns the hand.
 	visible = false
-	set_tool("water", false)
+	tool_id = ""
+	_sync_buttons()
 
 func hide_bar() -> void:
 	visible = false

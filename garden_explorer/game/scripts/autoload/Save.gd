@@ -12,7 +12,8 @@ var season_id: String = "spring"
 var season_elapsed: float = 0.0
 var harvest_totals: Dictionary = {} ## plant_id -> int
 var beds_blob: Dictionary = {} ## bed_id -> Array[slot dict]
-var tool_id: String = "water"
+var tool_id: String = "" ## shed hand: "", seed, water, uproot
+var selected_seed: String = "" ## plant id when tool_id == seed
 var caught_bugs: PackedStringArray = PackedStringArray()
 var year: int = 1
 
@@ -54,7 +55,10 @@ func _apply_blob(blob: Dictionary) -> void:
 	var bb = blob.get("beds", {})
 	if typeof(bb) == TYPE_DICTIONARY:
 		beds_blob = bb.duplicate(true)
-	tool_id = str(blob.get("tool_id", "water"))
+	tool_id = str(blob.get("tool_id", ""))
+	selected_seed = str(blob.get("selected_seed", ""))
+	if tool_id != "seed":
+		selected_seed = ""
 	caught_bugs = PackedStringArray()
 	for b in blob.get("caught_bugs", []):
 		caught_bugs.append(str(b))
@@ -76,6 +80,7 @@ func save_if_dirty() -> void:
 		"harvest_totals": harvest_totals.duplicate(),
 		"beds": beds_blob.duplicate(true),
 		"tool_id": tool_id,
+		"selected_seed": selected_seed,
 		"caught_bugs": Array(caught_bugs),
 		"year": year,
 	}
@@ -131,8 +136,9 @@ func set_beds_blob(blob: Dictionary) -> void:
 	mark_dirty()
 	save_if_dirty()
 
-func set_tool(id: String) -> void:
+func set_tool(id: String, plant_id: String = "") -> void:
 	tool_id = id
+	selected_seed = plant_id if id == "seed" else ""
 	mark_dirty()
 	save_if_dirty()
 
@@ -166,7 +172,8 @@ func _reset() -> void:
 	season_elapsed = 0.0
 	harvest_totals.clear()
 	beds_blob.clear()
-	tool_id = "water"
+	tool_id = ""
+	selected_seed = ""
 	caught_bugs = PackedStringArray()
 	year = 1
 	dirty = false

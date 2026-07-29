@@ -73,10 +73,10 @@ func _build() -> void:
 	panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	panel.offset_left = -320
-	panel.offset_right = 320
-	panel.offset_top = -240
-	panel.offset_bottom = -28
+	panel.offset_left = -360
+	panel.offset_right = 360
+	panel.offset_top = -320
+	panel.offset_bottom = -24
 	panel.alignment = BoxContainer.ALIGNMENT_CENTER
 	panel.add_theme_constant_override("separation", 10)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -111,7 +111,10 @@ func _rebuild_tiles() -> void:
 func _mk_tile(action: Dictionary) -> Button:
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(148, 148)
+	var tile_size: Vector2 = action.get("tile_size", Vector2(148, 148))
+	if typeof(tile_size) != TYPE_VECTOR2:
+		tile_size = Vector2(148, 148)
+	b.custom_minimum_size = tile_size
 	b.process_mode = Node.PROCESS_MODE_ALWAYS
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.12, 0.20, 0.12, 0.94)
@@ -131,8 +134,11 @@ func _mk_tile(action: Dictionary) -> Button:
 	v.add_theme_constant_override("separation", 4)
 	b.add_child(v)
 
+	var icon_size: Vector2 = action.get("icon_size", Vector2(80, 80))
+	if typeof(icon_size) != TYPE_VECTOR2:
+		icon_size = Vector2(80, 80)
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(80, 80)
+	icon.custom_minimum_size = icon_size
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -143,7 +149,7 @@ func _mk_tile(action: Dictionary) -> Button:
 	var lab := Label.new()
 	lab.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lab.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lab.add_theme_font_size_override("font_size", 18)
+	lab.add_theme_font_size_override("font_size", 17)
 	lab.add_theme_color_override("font_color", Color(1, 0.96, 0.85, 1))
 	lab.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	lab.text = str(action.get("label", "?"))

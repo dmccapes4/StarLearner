@@ -123,6 +123,7 @@ func _run() -> void:
 	await _shot("06_grown_harvest_icon")
 	_events().world_tapped.emit(farm.bed_centers.get("bed_0", farm.slot_world("bed_0", 0)))
 	await _arrive_and_settle()
+	await _confirm_prompt_action("harvest_confirm")
 	await _wait_narration()
 	await _close_media_if_open() ## first-harvest video
 	await _shot("07_harvested")

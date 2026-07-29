@@ -38,7 +38,7 @@ var stage_media: Node
 var season_hud: Node
 var star_menu: Node
 var harvest_totals: Dictionary = {} ## plant_id -> int
-var tool_id: String = "water"
+var tool_id: String = "" ## mirrored from shed hand / save
 var action_prompt: Node
 var reveal_tile: Node
 var video_panel: Node
@@ -64,7 +64,9 @@ const ANIMAL_DOUBLE_TAP_MS := 2000
 var _ripple_left: float = 0.0
 var _guide_return_left: float = 0.0
 var _uproot_armed_bed: String = ""
+var _harvest_armed_bed: String = ""
 var _water_anim: Node2D = null
+var _restoring_hand: bool = false
 
 func _ready() -> void:
 	seed_db.load_all()
@@ -146,6 +148,7 @@ func _bind_ui() -> void:
 		shed_ui.call("setup", seed_db, sprites)
 		if shed_ui.has_method("set_harvest_totals"):
 			shed_ui.call("set_harvest_totals", harvest_totals)
+		_restore_shed_hand()
 	tool_bar = get_tree().get_first_node_in_group("tool_bar")
 	if tool_bar:
 		if tool_bar.has_method("hide_bar"):
@@ -187,6 +190,27 @@ func _bind_ui() -> void:
 		plant_grid.call("setup", seed_db, sprites)
 	season_card = get_tree().get_first_node_in_group("season_card")
 
+func _restore_shed_hand() -> void:
+	## Save keeps the shed hand; ShedUI used to boot empty so water/spade/seed
+	## looked "held" (chip/carry) but beds ignored the tool until re-picked.
+	var save := _save()
+	if shed_ui == null or save == null:
+		return
+	var tid := str(save.tool_id)
+	var plant := str(save.selected_seed) if tid == "seed" else ""
+	if tid.is_empty():
+		tool_id = ""
+		## Clear any stale ToolBar carry sprite from older builds.
+		Events.tool_changed.emit("")
+		return
+	tool_id = tid
+	_restoring_hand = true
+	if shed_ui.has_method("restore_tool"):
+		shed_ui.call("restore_tool", tid, plant)
+	elif shed_ui.has_method("set_tool"):
+		shed_ui.call("set_tool", tid, plant)
+	_restoring_hand = false
+
 func set_tool(id: String) -> void:
 	tool_id = id
 	if tool_bar and tool_bar.has_method("set_tool"):
@@ -195,7 +219,10 @@ func set_tool(id: String) -> void:
 		Events.tool_changed.emit(id)
 	var save := _save()
 	if save and save.has_method("set_tool"):
-		save.set_tool(id)
+		var plant := ""
+		if id == "seed" and shed_ui and shed_ui.has_method("selected_seed"):
+			plant = str(shed_ui.call("selected_seed"))
+		save.set_tool(id, plant)
 
 func advance_season() -> String:
 	## Test / debug hook — same path as the wall-clock timer.
@@ -205,6 +232,8 @@ func advance_season() -> String:
 
 func _on_seed_selected(plant_id: String) -> void:
 	## First time a seed type is collected → seed media (discover).
+	if _restoring_hand:
+		return
 	_offer_plant_media(plant_id, "seed", true)
 
 func _on_seed_cleared() -> void:
@@ -317,10 +346,14 @@ func _can_interact_animal(animal_id: String) -> bool:
 
 func _on_world_tapped(world_pos: Vector2) -> void:
 	_show_ripple(world_pos)
+	## Shed tool-pickup VO (and similar): tap cancels so kids can act immediately.
+	if NarratorScript.is_tap_cancellable():
+		NarratorScript.stop()
 	## Action chip is non-blocking: tap elsewhere cancels and navigates.
 	if action_prompt and action_prompt.has_method("is_open") and bool(action_prompt.call("is_open")):
 		action_prompt.call("close_prompt")
 		_on_action_cancelled()
+		SpeakScript.stop()
 	if shed_ui and shed_ui.has_method("is_open") and shed_ui.call("is_open"):
 		return
 	if bug_grid and bug_grid.has_method("is_open") and bool(bug_grid.call("is_open")):
@@ -612,7 +645,8 @@ func _mark_animal_met(animal_id: String) -> void:
 func _apply_bed_tool(bed_id: String) -> bool:
 	## Returns true if the interaction was fully handled (no action tiles).
 	if garden.is_bed_harvestable(bed_id):
-		_do_harvest_bed(bed_id)
+		## Confirm first — kids often want to keep pretty grown plants.
+		_arm_harvest(bed_id)
 		return true
 	var tool := _shed_tool()
 	match tool:
@@ -630,12 +664,12 @@ func _apply_bed_tool(bed_id: String) -> bool:
 			return true
 		"water":
 			if garden.is_bed_empty(bed_id):
-				SpeakScript.line("Nothing to water yet. Get seeds from the shed and plant them.")
+				SpeakScript.soft("Nothing to water yet. Get seeds from the shed and plant them.")
 				return true
 			if garden.is_bed_thirsty(bed_id):
 				_do_water_bed(bed_id)
 			else:
-				SpeakScript.line("This bed is not thirsty right now.")
+				SpeakScript.soft("This bed is not thirsty right now.")
 			return true
 		"uproot":
 			if garden.is_bed_empty(bed_id):
@@ -645,6 +679,35 @@ func _apply_bed_tool(bed_id: String) -> bool:
 			return true
 		_:
 			return false
+
+func _arm_harvest(bed_id: String) -> void:
+	_harvest_armed_bed = bed_id
+	if action_prompt == null:
+		return
+	var pid := garden.bed_plant_id(bed_id)
+	var pname := seed_db.display_name(pid) if seed_db else pid
+	var tex: Texture2D = null
+	if sprites:
+		## Prefer the pretty grown plant in the bed over the harvested produce icon.
+		if sprites.has_method("plant_stage_texture"):
+			tex = sprites.plant_stage_texture(pid, "grown")
+		if tex == null and sprites.has_method("harvest_icon"):
+			tex = sprites.harvest_icon(pid)
+	var line := "Tap to harvest %s." % pname
+	## Speak here (not only via ActionPrompt) so the line always fires even when
+	## the prompt path is silent / TTS-only on device.
+	SpeakScript.line(line)
+	action_prompt.call("show_actions", [{
+		"kind": "harvest_confirm",
+		"bed_id": bed_id,
+		"plant_id": pid,
+		"label": "Tap to harvest %s" % pname,
+		"texture": tex,
+		"tile_size": Vector2(220, 220),
+		"icon_size": Vector2(120, 120),
+		"narration": line,
+		"silent": true,
+	}])
 
 func _arm_uproot(bed_id: String) -> void:
 	_uproot_armed_bed = bed_id
@@ -794,9 +857,9 @@ func _build_bed_actions(bed_id: String, slot: int) -> Array:
 		slot = 0
 	var out: Array = []
 	var tool := _shed_tool()
-	## Harvestable beds: any interaction harvests (handled in _apply_bed_tool).
+	## Harvestable beds: confirm tile (handled in _apply_bed_tool).
 	if garden.is_bed_harvestable(bed_id):
-		return [] ## auto-harvest path
+		return [] ## harvest_confirm path
 	match tool:
 		"seed", "water", "uproot":
 			return [] ## auto-applied on arrive
@@ -830,6 +893,7 @@ func _on_action_cancelled() -> void:
 	_pending.clear()
 	_animal_sfx_played = false
 	_uproot_armed_bed = ""
+	_harvest_armed_bed = ""
 
 func _on_action_confirmed(action: Dictionary) -> void:
 	_pending.clear()
@@ -844,6 +908,9 @@ func _on_action_confirmed(action: Dictionary) -> void:
 		"water":
 			_do_water_bed(str(action.bed_id))
 		"harvest":
+			_do_harvest_bed(str(action.bed_id))
+		"harvest_confirm":
+			## Second tap on the confirm tile — leave plants if they tap away instead.
 			_do_harvest_bed(str(action.bed_id))
 		"uproot":
 			_do_uproot_bed(str(action.bed_id))
@@ -939,9 +1006,9 @@ func _do_water_bed(bed_id: String) -> void:
 		SpeakScript.line("You watered the bed.")
 		print("Garden Explorer: watered bed %s → %s" % [bed_id, result.stage])
 	elif bool(result.get("not_thirsty", false)):
-		SpeakScript.line("This bed is not thirsty right now.")
+		SpeakScript.soft("This bed is not thirsty right now.")
 	else:
-		SpeakScript.line("Nothing to water yet. Get seeds from the shed and plant them.")
+		SpeakScript.soft("Nothing to water yet. Get seeds from the shed and plant them.")
 
 func _do_uproot_bed(bed_id: String) -> void:
 	NarratorScript.stop()
@@ -1023,6 +1090,7 @@ func _show_coop_look() -> void:
 		SpeakScript.line("Chickens lay their eggs in cozy nesting boxes. Farmers collect them every morning!")
 
 func _do_harvest_bed(bed_id: String) -> void:
+	_harvest_armed_bed = ""
 	var pid := garden.harvest_bed(bed_id)
 	if pid.is_empty():
 		return

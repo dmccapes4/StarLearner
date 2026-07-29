@@ -17,9 +17,14 @@ const _NarratorVoice := preload("res://scripts/audio/NarratorVoice.gd")
 
 ## While narration plays, player walk input is ignored (see Player).
 static var _busy_until_ms: int = 0
+## Shed tool-pickup lines (and similar): a world tap stops the VO immediately.
+static var _tap_cancellable: bool = false
 
 static func blocks_movement() -> bool:
 	return Time.get_ticks_msec() < _busy_until_ms
+
+static func is_tap_cancellable() -> bool:
+	return _tap_cancellable and blocks_movement()
 
 static func _lock_movement(seconds: float) -> void:
 	var until := Time.get_ticks_msec() + int(maxi(0, int(ceil(seconds * 1000.0))))
@@ -75,9 +80,13 @@ static func vo_path(sentence: String) -> String:
 
 ## Speak a line. Returns an estimated duration in seconds so a caller can pace a
 ## sequence without needing utterance callbacks.
-static func speak(text: String) -> float:
+## If tap_cancellable, a world tap stops the line (shed tool pickup, etc.).
+## If lock_movement is false, VO plays but the player can keep walking (soft tips).
+static func speak(text: String, tap_cancellable: bool = false, lock_movement: bool = true) -> float:
 	if text.strip_edges().is_empty():
+		_tap_cancellable = false
 		return 0.0
+	_tap_cancellable = tap_cancellable and lock_movement
 	var sentences := split_sentences(text)
 	var streams: Array = []
 	var baked_s := 0.0
@@ -89,23 +98,50 @@ static func speak(text: String) -> float:
 		streams.append(stream)
 		baked_s += stream.get_length()
 	if not streams.is_empty():
-		stop()
+		## Keep tap_cancellable across stop()'s clear of the busy lock.
+		var cancel := _tap_cancellable
+		## Soft tips must not clear an existing movement lock from a prior line.
+		if lock_movement:
+			stop()
+			_tap_cancellable = cancel
+		else:
+			## Still cut prior baked audio so the tip is heard, but keep busy lock.
+			var busy := _busy_until_ms
+			if _voice != null and is_instance_valid(_voice):
+				_voice.stop_all()
+			if _tts_available():
+				DisplayServer.tts_stop()
+			_busy_until_ms = busy
+			_tap_cancellable = false
 		var voice: Node = _ensure_voice()
 		var dur := baked_s + 0.15 * float(streams.size()) + 0.5
 		if voice != null:
 			voice.play_queue(streams)
-		_lock_movement(dur)
+		if lock_movement:
+			_lock_movement(dur)
 		return dur
 	# Fallback: live OS TTS (only when a sentence has no baked clip).
+	var cancel2 := _tap_cancellable
+	var busy2 := _busy_until_ms
+	if lock_movement:
+		stop() ## clear any prior baked queue so TTS isn't covered / skipped
+		_tap_cancellable = cancel2
+	else:
+		if _voice != null and is_instance_valid(_voice):
+			_voice.stop_all()
+		if _tts_available():
+			DisplayServer.tts_stop()
+		_busy_until_ms = busy2
+		_tap_cancellable = false
 	var est := estimate_seconds(text)
 	if _tts_available():
-		DisplayServer.tts_stop()
-		# volume is 0–100 (int). Passing 1.0 was ~1% — barely audible.
 		DisplayServer.tts_speak(text, "", 100, 1.0, 0.95)
-	_lock_movement(est)
+	if lock_movement:
+		_lock_movement(est)
 	return est
 
 static func stop() -> void:
+	_tap_cancellable = false
 	if _voice != null and is_instance_valid(_voice):
 		_voice.stop_all()
 	if _tts_available():
