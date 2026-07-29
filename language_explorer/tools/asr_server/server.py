@@ -38,31 +38,74 @@ HOST = os.environ.get("ASR_HOST", "127.0.0.1")
 PORT = int(os.environ.get("ASR_PORT", "8765"))
 ASR_MODEL = os.environ.get("ASR_MODEL", "tiny.en")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
-OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2:3b")
+# qwen3:8b judges whether a transcription makes sense in context; llama3.2:3b
+# accepted nonsense like "My Bonnie is so cute". Thinking stays off for latency.
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:8b")
+OLLAMA_THINK = os.environ.get("OLLAMA_THINK", "0") == "1"
 DELETE_UPLOADS = os.environ.get("ASR_DELETE_UPLOADS", "1") != "0"
 
 _whisper = None
 
-CLEANUP_SYSTEM = """You clean up kids' speech-to-text for a writing game.
+# Bias Whisper toward kid vocabulary (names like Bonnie beat bunny without this).
+VOICE_WRITE_PROMPT = (
+    "A young child said a short everyday sentence. "
+    "Prefer common kid words — bunny, puppy, kitty, mommy, daddy, grandma, "
+    "friend, school, park, zoo, candy, cookie — over similar-sounding adult "
+    "names or proper nouns (Bonnie, Carrie, etc.). "
+    "Do not invent people's names unless the child clearly said a name."
+)
 
-DEFAULT: If every word is already a real, clear English (or Spanish) word and the
-sentence makes sense, reply with exactly:
+CLEANUP_SYSTEM = """You fix speech-to-text of a ~6-year-old child for a writing game.
+
+The child speaks one short everyday sentence. Speech-to-text is unreliable on
+kid voices: it swaps in similar-sounding adult words and names, and it takes
+kid mispronunciations literally.
+
+STEP 1 — Ask two questions about the sentence:
+  (a) Does it make sense as something a young child would say about her own
+      life? Judge each word IN CONTEXT, not in isolation. Every word can be a
+      real English word and the sentence can still be wrong.
+        "My Bonnie is so cute." → does NOT make sense (Bonnie is a stranger's
+                                  name in "my ___"); she means her bunny.
+        "I love my Bonnie."     → she means bunny.
+        "My mommy is so cute."  → makes sense, leave it.
+  (b) Is every word spelled the way a teacher would accept in writing? She is
+      learning to WRITE, so baby-talk spellings must become the real word even
+      when they are cute and the sentence reads fine:
+        "The wabbit is fast."   → wabbit is not a word → "The rabbit is fast."
+        "I saw a aminal."       → aminal is not a word → "I saw an animal."
+        "I like pasghetti."     → "I like spaghetti."
+
+STEP 2 — If both answers are yes, reply with exactly:
 NO_CHANGE
 
-Only rewrite when something is actually wrong: garbled ASR, nonsense tokens,
-missing words, or obvious speech errors.
+Otherwise output the corrected sentence. Fix these kinds of errors:
 
-Leading-S restoration ONLY when a token is not a real word and clearly dropped
-an S (cout→scout). Examples of broken tokens: cout, tar (if they meant star),
-oup→soup. Do NOT change real words: zoo, park, to, the, I, want, go, and, a.
+1. Name-for-noun swaps. A child talking about "my ___" almost always means a
+   pet, family member, or thing — not a proper name she never introduced.
+   Bonnie/Bonny→bunny, Kitty (as a name)→kitty, Patty→potty, Molly→mommy.
+   Prefer bunny, puppy, kitty, mommy, daddy, grandma, teacher, friend.
+   Keep a real name only when she clearly marks it: "my friend Sam",
+   "Mrs. Lee", "my dog is named Max".
+2. Kid mispronunciation heard literally. Map to the word she meant:
+   pasghetti/basketti→spaghetti, libary→library, aminal→animal,
+   breffast→breakfast, wa-wa/wawa→water, nana→banana, brover→brother,
+   sissy→sister, wed→red, wabbit→rabbit, thumthing→something,
+   fank you→thank you, gimme→give me, member→remember.
+3. Dropped or garbled sounds: cout→scout, oup→soup, tar→star (only when the
+   token is not a real word, or the sentence is nonsense without the fix).
+4. Missing tiny words (a, the, is, my) when the sentence cannot stand alone.
 
 Rules:
-- If no fix needed: output exactly NO_CHANGE (nothing else).
-- If fixing: output ONLY the one short kid sentence (max 8 words). No quotes.
+- Change as few words as possible. Keep her meaning, her subject, her feeling.
+- After a fix, repair only the grammar it broke (a → an, is → are).
+- Never invent new details, people, or events she did not say.
+- Do NOT change already-sensible real words: zoo, park, to, the, I, want, go.
+- Output ONLY the one short sentence (max 8 words), no quotes, no explanation.
 - Keep English unless the input is clearly Spanish.
-- Kid-safe only. Preserve the child's meaning.
-- Use normal written capitalization: capitalize the first word, proper nouns (names, places),
-  and titles (Dr., Mrs., Mr., Ms.). End with . ! or ? as appropriate.
+- Kid-safe only.
+- Capitalize the first word and titles (Dr., Mrs., Mr., Ms.). Do NOT capitalize
+  ordinary nouns as if they were names (bunny, not Bonnie). End with . ! or ?
 """
 
 
@@ -73,18 +116,48 @@ S_DROP_FIXES = {
     "oup": "soup",
 }
 
+# ASR often prefers lookalike names over kid nouns (Bonny/Bonnie vs bunny).
+# Prefer the everyday kid word unless we later add an explicit "name mode".
+KID_NOUN_FIXES = {
+    "bonny": "bunny",
+    "bonnie": "bunny",
+}
+
+# Baby-talk spellings that are not English words. She is learning to write, so
+# these always become the real word; qwen3 covers the rest in context.
+KID_SPEECH_FIXES = {
+    "aminal": "animal",
+    "aminals": "animals",
+    "pasghetti": "spaghetti",
+    "basketti": "spaghetti",
+    "libary": "library",
+    "brover": "brother",
+    "breffast": "breakfast",
+    "wabbit": "rabbit",
+    "thumthing": "something",
+    "hostipal": "hospital",
+    "elephent": "elephant",
+    "buhsketball": "basketball",
+}
+
 
 def apply_known_speech_fixes(text: str) -> str:
     parts = re.findall(r"[A-Za-z']+|[^A-Za-z']+", text or "")
     out: list[str] = []
     for p in parts:
         key = p.lower()
-        if key in S_DROP_FIXES:
-            fixed = S_DROP_FIXES[key]
+        fixed = (
+            S_DROP_FIXES.get(key)
+            or KID_NOUN_FIXES.get(key)
+            or KID_SPEECH_FIXES.get(key)
+        )
+        if fixed is not None:
             if p.isupper():
                 out.append(fixed.upper())
             elif p[:1].isupper():
-                out.append(fixed[:1].upper() + fixed[1:])
+                # Mid-sentence names → lowercase kid noun; sentence start
+                # capitalization is re-applied in apply_proper_capitalization.
+                out.append(fixed)
             else:
                 out.append(fixed)
         else:
@@ -148,8 +221,10 @@ def looks_coherent(raw: str) -> bool:
             return False
         if re.search(r"[0-9]", w):
             return False
-        # Known broken tokens → not coherent; let fixes / llama handle.
-        if w_clean.lower() in S_DROP_FIXES:
+        # Known broken / baby-talk / name→noun tokens → let fixes + llama handle.
+        if w_clean.lower() in S_DROP_FIXES or w_clean.lower() in KID_NOUN_FIXES:
+            return False
+        if w_clean.lower() in KID_SPEECH_FIXES:
             return False
     return any(re.search(r"[A-Za-z]", w) for w in words)
 
@@ -342,19 +417,21 @@ def ollama_cleanup(raw: str, lang: str = "en") -> str:
         return ""
     user = (
         f"Language hint: {lang}\n"
-        f"Speech-to-text:\n{raw}\n\n"
-        "Reply with exactly NO_CHANGE if this is already a clear kid sentence. "
-        "Only rewrite if something is actually wrong:"
+        f"Child's speech-to-text:\n{raw}\n\n"
+        "Does this make sense as something a young child would say? "
+        "If yes, reply exactly NO_CHANGE. If not, reply with the corrected "
+        "sentence only:"
     )
     body = {
         "model": OLLAMA_MODEL,
         "stream": False,
-        "keep_alive": "10m",
+        "think": OLLAMA_THINK,
+        "keep_alive": "30m",
         "messages": [
             {"role": "system", "content": CLEANUP_SYSTEM},
             {"role": "user", "content": user},
         ],
-        "options": {"temperature": 0.0, "num_predict": 48},
+        "options": {"temperature": 0.0, "num_predict": 64},
     }
     req = urllib.request.Request(
         f"{OLLAMA_URL}/api/chat",
@@ -377,24 +454,31 @@ def ollama_cleanup(raw: str, lang: str = "en") -> str:
         return kept
     if not cleaned:
         return finalize_sentence(raw)
-    # Soft guard: if input already looks fine and model rewrote aggressively, keep raw.
-    if looks_coherent(raw):
-        raw_norm = finalize_sentence(raw).rstrip(".!?").lower()
-        new_norm = cleaned.rstrip(".!?").lower()
-        if raw_norm != new_norm:
-            raw_tokens = set(re.findall(r"[a-z']+", raw_norm))
-            new_tokens = set(re.findall(r"[a-z']+", new_norm))
-            if not new_tokens.issubset(raw_tokens) and len(new_tokens - raw_tokens) >= 1:
-                _log(
-                    f"cleanup rejected rewrite of coherent input "
-                    f"{raw!r} → {cleaned!r}; keeping raw"
-                )
-                return finalize_sentence(raw)
+    # Targeted swaps (Bonnie→bunny) are the point; only block wholesale rewrites.
+    if not _is_minimal_edit(raw, cleaned):
+        _log(f"cleanup rejected wholesale rewrite {raw!r} → {cleaned!r}; keeping raw")
+        return finalize_sentence(raw)
     return finalize_sentence(cleaned)
+
+
+def _is_minimal_edit(raw: str, cleaned: str, max_changed: int = 2) -> bool:
+    """True when cleaned looks like a few word fixes, not a new sentence."""
+    raw_words = re.findall(r"[a-z']+", finalize_sentence(raw).lower())
+    new_words = re.findall(r"[a-z']+", cleaned.lower())
+    if not raw_words or not new_words:
+        return bool(new_words)
+    if abs(len(new_words) - len(raw_words)) > max_changed:
+        return False
+    kept = len(set(raw_words) & set(new_words))
+    changed = max(len(raw_words), len(new_words)) - kept
+    return changed <= max_changed
 
 
 def _normalize_sentence(text: str) -> str:
     t = (text or "").strip()
+    # Reasoning models may still emit a think block even with think disabled.
+    t = re.sub(r"<think>.*?</think>", " ", t, flags=re.DOTALL | re.IGNORECASE).strip()
+    t = re.sub(r"^<think>.*$", "", t, flags=re.DOTALL | re.IGNORECASE).strip()
     t = t.strip('"').strip("'").strip()
     low = t.lower().strip()
     if low in ("no_change", "no change", "nochange", "unchanged", "same"):
@@ -604,7 +688,13 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": "missing audio"})
             return
         lang = str(fields.get("lang") or "en")
-        raw = strip_vo_echo(transcribe_file(audio_path))
+        raw = strip_vo_echo(
+            transcribe_file(
+                audio_path,
+                initial_prompt=VOICE_WRITE_PROMPT,
+                beam_size=3,
+            )
+        )
         text = ollama_cleanup(raw, lang=lang) if raw else ""
         if raw and text:
             _log(f"cleanup → {text!r}")

@@ -8,7 +8,9 @@ import sys
 from pathlib import Path
 
 # Phone reaches the hub over WAN (hairpin OK). LAN dev ASR is editor-only.
+# Primary: Cloudflare → 82 nginx → loopback ASR. Legacy 245 hub kept as fallback.
 PRODUCTION_BASES = [
+    "https://starlearner.dylanmccapes.systems/api/asr",
     "https://hub.starlearner.app:8443/api/asr",
 ]
 

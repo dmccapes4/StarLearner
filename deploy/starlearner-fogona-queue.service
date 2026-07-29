@@ -1,0 +1,20 @@
+# systemd USER unit — one-shot fogona APK deliver via Pop 245.
+# Does NOT poll. Start only when you press "Deliver now" on /ops/ or:
+#   systemctl --user start starlearner-fogona-queue.service
+#
+#   cp deploy/starlearner-fogona-queue.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#
+# Needs: SSH key auth dylanmccapes@104.53.183.230:2222, adb on 245, fogona USB.
+
+[Unit]
+Description=Star Learner fogona APK deliver (one-shot → Pop 245)
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/dev/star_learning
+ExecStart=%h/dev/star_learning/deploy/fogona_queue_worker.sh
+Environment=PYTHONUNBUFFERED=1
+Environment=STARLEARNER_245_HOST=dylanmccapes@104.53.183.230
+Environment=STARLEARNER_245_PORT=2222

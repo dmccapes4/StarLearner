@@ -1,7 +1,7 @@
 {
   "bases": [
     "http://10.0.0.82:8770",
-    "https://hub.starlearner.app:8443/api/asr"
+    "https://starlearner.dylanmccapes.systems/api/asr"
   ],
   "token": ""
 }

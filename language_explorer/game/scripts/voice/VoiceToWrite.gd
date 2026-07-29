@@ -31,9 +31,11 @@ const ARROW_SIZE := Vector2(64, 168)
 const ARROW_GAP := 28.0
 
 const MIC_SIZE := Vector2(160, 160)
+const PRACTICE_MIC_SIZE := Vector2(72, 72)
 const RERECORD_SIZE := Vector2(100, 100)
 const TILE_GAP := 20.0
 const RED_SIZE := 48.0
+const PRACTICE_MIC_GAP := 18.0
 const DESK_SIZE := Vector2(760, 400)
 const DESK_PATH := "res://images/ui/voice_desk.png"
 const ENROLL_SECS := 2.2
@@ -339,6 +341,7 @@ func _process(_delta: float) -> void:
 		_desk_frame.add_theme_stylebox_override("panel", _desk_sb)
 
 func _layout_mic_tiles(show_rerecord: bool) -> void:
+	_apply_mic_chrome(MIC_SIZE, 90)
 	var y := (VIEW_H - MIC_SIZE.y) * 0.5
 	if show_rerecord:
 		var row_w := RERECORD_SIZE.x + TILE_GAP + MIC_SIZE.x
@@ -347,6 +350,33 @@ func _layout_mic_tiles(show_rerecord: bool) -> void:
 		_mic_wrap.position = Vector2(x + RERECORD_SIZE.x + TILE_GAP, y)
 	else:
 		_mic_wrap.position = Vector2((VIEW_W - MIC_SIZE.x) * 0.5, y)
+
+func _apply_mic_chrome(size: Vector2, icon_px: int) -> void:
+	if _mic_wrap == null or _mic_btn == null:
+		return
+	_mic_wrap.size = size
+	_mic_btn.custom_minimum_size = size
+	_mic_btn.size = size
+	_mic_btn.position = Vector2.ZERO
+	ChromeIcons.apply_button(_mic_btn, "home_voice", icon_px)
+	if _red_dot != null:
+		var dot := minf(RED_SIZE, size.x * 0.42)
+		_red_dot.size = Vector2(dot, dot)
+		_red_dot.position = (size - _red_dot.size) * 0.5
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(0.92, 0.18, 0.18, 0.95)
+		sb.set_corner_radius_all(int(dot))
+		(_red_dot as Panel).add_theme_stylebox_override("panel", sb)
+
+func _layout_practice_mic() -> void:
+	if _mic_wrap == null or _wheel == null:
+		return
+	_apply_mic_chrome(PRACTICE_MIC_SIZE, 44)
+	var wheel_bottom := _wheel.position.y + LetterWheelS.SLOT_HEIGHT
+	_mic_wrap.position = Vector2(
+		(VIEW_W - PRACTICE_MIC_SIZE.x) * 0.5,
+		wheel_bottom + PRACTICE_MIC_GAP
+	)
 
 func _set_tile_gold(on: bool) -> void:
 	LangTheme.style_mode_tile(_mic_btn, LangTheme.MODES["voice"]["color"], false, on)
@@ -401,6 +431,8 @@ func _layout_practice_ui() -> void:
 	_prev_btn.position = Vector2(row_x, row_y)
 	_wheel.position = Vector2(row_x + ARROW_SIZE.x + ARROW_GAP, wheel_y)
 	_next_btn.position = Vector2(row_x + ARROW_SIZE.x + ARROW_GAP + wheel_w + ARROW_GAP, row_y)
+	if _mic_wrap != null and _mic_wrap.visible and _phase == Phase.PRACTICE:
+		_layout_practice_mic()
 
 func _show_practice_text(on: bool) -> void:
 	_sentence_rtl.visible = on
@@ -413,11 +445,17 @@ func _show_practice_text(on: bool) -> void:
 	if on:
 		_layout_practice_ui()
 		_show_desk(false, false)
-		if _mic_btn != null:
-			_mic_wrap.visible = false
 		if _rerecord_wrap != null:
 			_rerecord_wrap.visible = false
+		if _mic_wrap != null:
+			_mic_wrap.visible = true
+			_layout_practice_mic()
+			_set_tile_gold(false)
 		_update_arrow_state()
+	else:
+		if _mic_wrap != null:
+			_mic_wrap.visible = false
+		_set_recording(false, "")
 
 func _arm_mic_tap() -> void:
 	Narrator.stop()
@@ -522,6 +560,9 @@ func _on_mic_pressed() -> void:
 			return
 		_record_phrase_stop()
 		return
+	if _phase == Phase.PRACTICE:
+		_rerecord_phrase_from_practice()
+		return
 	if _busy:
 		return
 	match _phase:
@@ -531,6 +572,19 @@ func _on_mic_pressed() -> void:
 			_record_phrase_start()
 		_:
 			pass
+
+func _rerecord_phrase_from_practice() -> void:
+	if _busy or _nav_in_progress:
+		return
+	_listen_looping = false
+	_write_pause_pending = false
+	_cancel_listen_capture()
+	_gen += 1
+	Narrator.stop()
+	_show_practice_text(false)
+	_set_listen_indicator(false)
+	VoiceTelemetryS.log("phrase_rerecord", {"from": "practice_mic"})
+	_record_phrase_start()
 
 func _record_enroll() -> void:
 	_gen += 1
@@ -619,6 +673,8 @@ func _record_phrase_start() -> void:
 	var gen := _gen
 	_busy = true
 	_phase = Phase.REC_PHRASE
+	_show_practice_text(false)
+	_show_mic_tiles(true, false, false)
 	_set_recording(false, "")
 	if not await _prep_capture(gen):
 		return
@@ -695,7 +751,17 @@ func _finish_phrase(gen: int) -> void:
 	_narrating = true
 	_show_desk(false, false)
 	_show_practice_text(true)
+	_refresh_sentence_hl()
 	Save.record_activity_started("voice_write")
+	# Confirm aloud so mishears (bunny→Bonnie) are obvious before spelling.
+	if not await _speak_line(_sentence, gen):
+		_narrating = false
+		return
+	if not Save.was_seen("tut_voice_confirm_rerecord"):
+		if not await _speak_line(LangVo.line("voice_confirm_rerecord", _lang), gen):
+			_narrating = false
+			return
+		Save.mark_seen("tut_voice_confirm_rerecord")
 	await _begin_current_word(gen)
 	_narrating = false
 	if gen != _gen:
@@ -1040,7 +1106,7 @@ static func vo_lines() -> Array:
 	var keys := [
 		"voice_needs_wifi", "voice_intro", "voice_intro_first", "voice_listen_dot", "voice_tap_say_next",
 		"voice_tap_say_idea", "voice_rerecord_or_phrase", "voice_thinking", "voice_try_again",
-		"voice_mic_busy", "voice_got_it", "voice_say_next", "voice_first_letter",
+		"voice_mic_busy", "voice_got_it", "voice_say_next", "voice_confirm_rerecord", "voice_first_letter",
 	]
 	var out: Array = []
 	for k in keys:

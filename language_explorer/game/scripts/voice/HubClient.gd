@@ -5,7 +5,7 @@ extends RefCounted
 ## (self-signed hub); falls back to client_unsafe if the cert is missing.
 
 const LOCAL_BASE := "http://127.0.0.1:8770"
-const HUB_ASR_BASE := "https://hub.starlearner.app:8443/api/asr"
+const HUB_ASR_BASE := "https://starlearner.dylanmccapes.systems/api/asr"
 const TIMEOUT_SEC := 60.0
 const HEALTH_TIMEOUT_SEC := 8.0
 
@@ -58,11 +58,15 @@ static func auth_token() -> String:
 static func _tls_for_url(url: String) -> TLSOptions:
 	if not url.begins_with("https://"):
 		return null
-	var cert := X509Certificate.new()
-	if cert.load("res://data/hub.crt") == OK:
-		return TLSOptions.client(cert)
-	# Self-signed hub without a bundled cert — still allow Voice to work.
-	return TLSOptions.client_unsafe()
+	# Legacy 245 hub used a self-signed cert (pinned via hub.crt). Cloudflare
+	# edge certs need the system trust store — pinning hub.crt would fail.
+	var needs_pin := ("hub.starlearner.app" in url) or (":8443" in url)
+	if needs_pin:
+		var cert := X509Certificate.new()
+		if cert.load("res://data/hub.crt") == OK:
+			return TLSOptions.client(cert)
+		return TLSOptions.client_unsafe()
+	return TLSOptions.client()
 
 static func _apply_tls(http: HTTPRequest, url: String) -> void:
 	var tls := _tls_for_url(url)

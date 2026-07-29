@@ -15,6 +15,17 @@ STAR="$(cd "$ROOT/.." && pwd)"
 # shellcheck source=../tools/packages.sh
 source "$STAR/tools/packages.sh"
 ADB="${ADB:-adb}"
+ADB_SERIAL="${ADB_SERIAL:-}"
+adb_has_device() {
+  "$ADB" devices | tr -d '\r' | awk 'NR>1 && $2=="device" {found=1} END{exit !found}'
+}
+adb_cmd() {
+  if [[ -n "$ADB_SERIAL" ]]; then
+    "$ADB" -s "$ADB_SERIAL" "$@"
+  else
+    "$ADB" "$@"
+  fi
+}
 APK="$ROOT/tools/build/com.dylan.language_explorer.apk"
 GODOT="${GODOT:-$HOME/.local/bin/godot}"
 PKG=$PKG_LANGUAGE_EXPLORER
@@ -130,15 +141,15 @@ PY
 
 try_disable_pin() {
   note "remote — soften lock screen (no Settings needed)"
-  "$ADB" devices | grep -q $'\tdevice$' || { bad "no adb device for PIN"; return; }
-  "$ADB" shell settings put secure lock_to_app_exit_locked 0 2>/dev/null || true
-  "$ADB" shell settings put secure lockscreen.disabled 1 2>/dev/null || true
-  "$ADB" shell locksettings set-disabled true 2>/dev/null || true
-  "$ADB" shell wm dismiss-keyguard 2>/dev/null || true
+  adb_has_device || { bad "no adb device for PIN"; return; }
+  adb_cmd shell settings put secure lock_to_app_exit_locked 0 2>/dev/null || true
+  adb_cmd shell settings put secure lockscreen.disabled 1 2>/dev/null || true
+  adb_cmd shell locksettings set-disabled true 2>/dev/null || true
+  adb_cmd shell wm dismiss-keyguard 2>/dev/null || true
   local cred
-  cred="$("$ADB" shell dumpsys lock_settings 2>/dev/null | grep -E 'CredentialType' | head -1 | tr -d '\r' || true)"
+  cred="$(adb_cmd shell dumpsys lock_settings 2>/dev/null | grep -E 'CredentialType' | head -1 | tr -d '\r' || true)"
   local disabled
-  disabled="$("$ADB" shell locksettings get-disabled 2>/dev/null | tr -d '\r' || true)"
+  disabled="$(adb_cmd shell locksettings get-disabled 2>/dev/null | tr -d '\r' || true)"
   echo "    $cred"
   echo "    locksettings disabled=$disabled"
   if echo "$cred" | grep -qi 'none'; then
@@ -153,7 +164,7 @@ try_disable_pin() {
 
 run_remote() {
   note "remote — adb device"
-  "$ADB" devices | grep -q $'\tdevice$' || { bad "no adb device"; return; }
+  adb_has_device || { bad "no adb device"; return; }
   ok "adb device connected"
 
   if [[ "$DO_DEPLOY" == 1 ]]; then
@@ -165,12 +176,12 @@ run_remote() {
   fi
 
   note "remote — package + mic permission"
-  if "$ADB" shell pm path "$PKG" 2>/dev/null | grep -q package:; then
+  if adb_cmd shell pm path "$PKG" 2>/dev/null | grep -q package:; then
     ok "$PKG installed"
   else
     bad "$PKG not installed — re-run with --deploy"
   fi
-  "$ADB" shell pm grant "$PKG" android.permission.RECORD_AUDIO 2>/dev/null || true
+  adb_cmd shell pm grant "$PKG" android.permission.RECORD_AUDIO 2>/dev/null || true
   ok "RECORD_AUDIO grant attempted"
 
   if [[ "$DO_PIN" == 1 ]]; then
@@ -229,7 +240,7 @@ maybe_capture() {
     return
   fi
   note "capture — VoiceTel logcat (Ctrl+C when manual protocol done)"
-  "$ADB" logcat -c 2>/dev/null || true
+  adb_cmd logcat -c 2>/dev/null || true
   exec bash "$ROOT/tools/voice_test_capture.sh"
 }
 

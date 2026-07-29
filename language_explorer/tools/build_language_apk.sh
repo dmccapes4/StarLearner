@@ -39,7 +39,7 @@ from pathlib import Path
 Path(sys.argv[1]).write_bytes(struct.pack("<I", 0))
 PY
 
-echo "=== hub ASR assets (production token + pinned cert) ==="
+echo "=== hub ASR assets (production token; optional legacy pin) ==="
 HUB_SECRETS="${HUB_SECRETS:-$ROOT/../ant_explorer/tools/secrets/hub245}"
 HUB_DATA="$ASSETS/data"
 mkdir -p "$HUB_DATA"
@@ -54,17 +54,18 @@ elif [[ -f "$HUB_SECRETS/token.txt" ]]; then
     --out "$HUB_DATA/hub_client.json" \
     --token-file "$HUB_SECRETS/token.txt"
 else
-  echo "ERROR: missing $HUB_SECRETS/token.txt (hub245 ASR token for production APK)" >&2
-  echo "Copy hub245 secrets to that path on 245, or set STARLEARNER_HUB_DEV=1 for LAN dev bases." >&2
+  echo "ERROR: missing $HUB_SECRETS/token.txt (hub ASR token for production APK)" >&2
+  echo "Need ant_explorer/tools/secrets/hub245/token.txt, or set STARLEARNER_HUB_DEV=1." >&2
   exit 1
 fi
+# hub.crt pins the legacy 245 self-signed hub only; Cloudflare uses system CAs.
 if [[ -f "$HUB_SECRETS/hub.crt" ]]; then
   cp -f "$HUB_SECRETS/hub.crt" "$HUB_DATA/hub.crt"
 elif [[ -f "$GAME/data/hub.crt" ]]; then
   cp -f "$GAME/data/hub.crt" "$HUB_DATA/hub.crt"
 else
-  echo "ERROR: missing hub.crt (expected $HUB_SECRETS/hub.crt or game/data/hub.crt)" >&2
-  exit 1
+  echo "NOTE: no hub.crt — legacy hub.starlearner.app:8443 fallback will use unsafe TLS"
+  rm -f "$HUB_DATA/hub.crt"
 fi
 
 echo "=== gradle assembleRelease ==="

@@ -1,0 +1,26 @@
+# systemd USER unit — Language Explorer ASR on loopback :8770.
+# nginx terminates TLS and proxies /api/asr; this unit never binds publicly.
+#
+#   cp deploy/starlearner-asr.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now starlearner-asr
+#   sudo loginctl enable-linger $USER   # once, so it survives logout
+#
+[Unit]
+Description=Star Learner Language ASR (loopback :8770)
+After=network-online.target
+
+[Service]
+WorkingDirectory=%h/dev/star_learning/language_explorer
+Environment=PYTHONUNBUFFERED=1
+Environment=ASR_HOST=127.0.0.1
+Environment=ASR_PORT=8770
+Environment=ASR_MODEL=tiny.en
+Environment=OLLAMA_URL=http://127.0.0.1:11434
+Environment=OLLAMA_MODEL=qwen3:8b
+ExecStart=%h/dev/star_learning/language_explorer/tools/asr_server/run.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
