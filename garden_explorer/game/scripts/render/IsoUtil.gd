@@ -1,10 +1,24 @@
 class_name IsoUtil
 extends RefCounted
 ## 2:1 dimetric helpers. Tile (cell) → world; world → nearest cell.
+## Depth contract: z = depth_from_y(feet_y) + role bias (see BIAS_*).
 
 const TILE_W: float = 64.0
 const TILE_H: float = 32.0
 const DEPTH_OFFSET: int = 2000
+
+## Faux-3D sort biases — keep buildings/posts/player/gate in one band.
+const BIAS_MEADOW := -30
+const BIAS_GROUND := -20
+const BIAS_PATH := -15
+const BIAS_RAIL := 3
+const BIAS_POST := 55
+const BIAS_BUILDING := 55
+## Same band as buildings; +1 so lip standers win ties against bed stack offsets.
+const BIAS_PLAYER := 56
+const BIAS_ANIMAL := 55
+const BIAS_GATE := 55 ## In-line with fence posts (near post above, far post behind).
+const BIAS_UI := 500
 
 static func tile_to_world(cell: Vector2) -> Vector2:
 	return Vector2(
@@ -24,6 +38,20 @@ static func world_to_tile(world: Vector2) -> Vector2i:
 
 static func depth_from_y(world_y: float) -> int:
 	return int(world_y) + DEPTH_OFFSET
+
+static func depth_z(feet_y: float, bias: int) -> int:
+	return depth_from_y(feet_y) + bias
+
+static func apply_depth(node: CanvasItem, feet_y: float, bias: int) -> void:
+	node.z_as_relative = false
+	node.z_index = depth_z(feet_y, bias)
+
+static func solid_diamond(tile: Vector2, half_tiles: Vector2) -> PackedVector2Array:
+	return diamond_polygon(tile, half_tiles)
+
+static func feet_south(tile: Vector2, half_tiles: Vector2, along := 0.85) -> Vector2:
+	## Ground contact toward the near (south) side of an iso footprint.
+	return tile_to_world(tile + Vector2(half_tiles.x * 0.35, half_tiles.y * along))
 
 ## Axis-aligned diamond (iso footprint) centered on a tile with half-extents in tile units.
 ## Vertex order: far, east, near, west (screen: N, E, S, W of the diamond).

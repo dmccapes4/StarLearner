@@ -22,4 +22,9 @@ static func panels_open(tree: SceneTree) -> bool:
 	return false
 
 static func frozen(tree: SceneTree) -> bool:
+	## Idle / Back pause must freeze seasons + growth (IdleGuard sets tree.paused,
+	## but also report here so World keeps SeasonClock.paused latched).
+	var idle := tree.root.get_node_or_null("IdleGuard")
+	if idle != null and idle.has_method("is_paused_ui") and bool(idle.call("is_paused_ui")):
+		return true
 	return panels_open(tree) or NarratorScript.blocks_movement()

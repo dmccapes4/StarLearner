@@ -66,7 +66,7 @@ func setup(id: String, map: FarmMap, art: FarmSprites, spawn: Vector2, bound: Pa
 	_spr.scale = Vector2(scale_mul, scale_mul)
 	_spr.position = Vector2(0, -6)
 	add_child(_spr)
-	z_index = IsoUtil.depth_from_y(position.y) + 55
+	IsoUtil.apply_depth(self, position.y, IsoUtil.BIAS_ANIMAL)
 	_sync_map_pos()
 	_pick_new_target()
 
@@ -134,8 +134,22 @@ func _process(delta: float) -> void:
 		_pause_left = randf_range(0.4, 1.0)
 		_sync_map_pos()
 		return
+	## Buddy yields when the gardener is about to walk through him.
+	if not _interacting and bound_poly.size() < 3:
+		var player := _player_node()
+		if player and position.distance_to(player.global_position) < 40.0:
+			var away := position - player.global_position
+			if away.length_squared() < 1.0:
+				away = Vector2(1.0, 0.0)
+			var yield_to := position + away.normalized() * 48.0
+			if farm_map.has_method("nearest_dog_walkable"):
+				yield_to = farm_map.nearest_dog_walkable(yield_to)
+			else:
+				yield_to = farm_map.nearest_walkable(yield_to)
+			_target = yield_to
+			_pause_left = 0.0
 	if _interacting:
-		z_index = IsoUtil.depth_from_y(position.y) + 55
+		IsoUtil.apply_depth(self, position.y, IsoUtil.BIAS_ANIMAL)
 		_sync_map_pos()
 		return
 	if _pause_left > 0.0:
@@ -144,7 +158,7 @@ func _process(delta: float) -> void:
 			_spr.frame = _dir_col
 		if _pause_left <= 0.0:
 			_pick_new_target()
-		z_index = IsoUtil.depth_from_y(position.y) + 55
+		IsoUtil.apply_depth(self, position.y, IsoUtil.BIAS_ANIMAL)
 		_sync_map_pos()
 		return
 	var to := _target - position
@@ -172,7 +186,7 @@ func _process(delta: float) -> void:
 		_frame = (_frame + 1) % 4
 	if _has_walk_sheet and _spr:
 		_spr.frame = _frame * 4 + _dir_col
-	z_index = IsoUtil.depth_from_y(position.y) + 55
+	IsoUtil.apply_depth(self, position.y, IsoUtil.BIAS_ANIMAL)
 	_sync_map_pos()
 
 func _sync_map_pos() -> void:
@@ -231,3 +245,9 @@ func _poly_center() -> Vector2:
 	for p in bound_poly:
 		s += p
 	return s / float(bound_poly.size())
+
+func _player_node() -> Node2D:
+	var world := get_parent()
+	if world and world.get("player") != null:
+		return world.get("player") as Node2D
+	return null

@@ -75,10 +75,11 @@ func _build() -> void:
 	panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	panel.offset_left = -360
 	panel.offset_right = 360
-	panel.offset_top = -320
-	panel.offset_bottom = -24
+	## Sit low so the tile's top corners don't cover the gardener mid-screen.
+	panel.offset_top = -200
+	panel.offset_bottom = -12
 	panel.alignment = BoxContainer.ALIGNMENT_CENTER
-	panel.add_theme_constant_override("separation", 10)
+	panel.add_theme_constant_override("separation", 8)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(panel)
 

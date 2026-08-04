@@ -27,6 +27,12 @@ func is_open() -> bool:
 	return _open
 
 func show_season(season_id: String, label: String, year: int) -> void:
+	## Never interrupt the idle PAUSED overlay with a season card.
+	var idle := get_node_or_null("/root/IdleGuard")
+	if idle != null and idle.has_method("is_paused_ui") and bool(idle.call("is_paused_ui")):
+		push_warning("SeasonCard: skipped while IdleGuard paused")
+		card_closed.emit()
+		return
 	var path := "res://assets/seasons/season_%s.jpg" % season_id
 	_art.texture = load(path) if ResourceLoader.exists(path) else null
 	_season_lbl.text = label

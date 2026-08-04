@@ -9,6 +9,13 @@ const SLOT_OFFSETS := [
 	Vector2(-0.35, 0.25), Vector2(0.35, 0.25),
 ]
 const BED_HEIGHT := 28.0
+## Collision pad beyond visual half — keep in sync with bed_approach stand-off.
+## Keep modest so aisle gaps between beds stay A*-walkable.
+const BED_SOLID_PAD := 1.08
+## Stand just outside the raised lip — next to the bed for gardening, not mid-path.
+const BED_STAND_TILES := 0.68
+## Opposite-face taps may be longer than the near face; still prefer gap routes.
+const BED_GAP_PATH_MAX := 320.0
 const SHED_WALL_H := 64.0
 const SHED_ROOF_H := 42.0
 
@@ -229,6 +236,162 @@ func slot_world(bed_id: String, slot: int) -> Vector2:
 	if slot < 0 or slot >= arr.size():
 		return bed_centers.get(bed_id, Vector2.ZERO)
 	return arr[slot]
+
+## Stand point for gardening a bed: face from tap + shortest sensible path.
+## Kids expect to walk through the gap / path, not loop around the whole row.
+func bed_approach_world(bed_id: String, from_player: Vector2, tap: Vector2) -> Vector2:
+	var center: Vector2 = bed_centers.get(bed_id, tap)
+	var cands := _bed_approach_candidates(bed_id, tap)
+	if cands.is_empty():
+		return _stand_clear_of_bed(bed_id, nearest_walkable(center))
+	var from_dir := from_player - center
+	if from_dir.length_squared() < 1.0:
+		from_dir = Vector2(0, 1)
+	from_dir = from_dir.normalized()
+	var tap_off := tap - center
+	var tap_clear := tap_off.length_squared() >= 120.0 ## clear side tap vs center poke
+	var tap_dir := from_dir if not tap_clear else tap_off.normalized()
+	## Opposite-side tap: don't discard the far face just because near is shorter.
+	var opposite_tap := tap_clear and tap_dir.dot(from_dir) < -0.15
+	## North beds sit above the dirt path — prefer the path-facing (south) rim so
+	## the gardener isn't painted under the raised wood. South beds → north rim.
+	var path_ty := float((data.get("path", {}) as Dictionary).get("tile_y", 3.0))
+	var bed_ty := float((bed_tiles.get(bed_id, Vector2.ZERO) as Vector2).y)
+	var prefer_path_south := bed_ty < path_ty
+	var lateral := absf(from_dir.x) >= absf(from_dir.y) - 0.05
+	var lengths: Array = []
+	for c in cands:
+		lengths.append(path_world_length(from_player, c))
+	## Pass 1: geometric filters (face / path side). Length gates use only survivors
+	## so a short wrong-face stand can't veto the correct lip.
+	var viable: Array = [] ## indices
+	for i in cands.size():
+		var ap0: Vector2 = cands[i]
+		var ap_dir0 := ap0 - center
+		if ap_dir0.length_squared() < 1.0:
+			continue
+		ap_dir0 = ap_dir0.normalized()
+		var player_align0 := ap_dir0.dot(from_dir)
+		var tap_align0 := ap_dir0.dot(tap_dir)
+		if opposite_tap and tap_align0 < 0.2:
+			continue
+		if not opposite_tap and not lateral and player_align0 < 0.08:
+			continue
+		if not opposite_tap and lateral:
+			if prefer_path_south and ap0.y < center.y + 10.0:
+				continue
+			if not prefer_path_south and ap0.y > center.y - 10.0:
+				continue
+		viable.append(i)
+	if viable.is_empty():
+		for j in cands.size():
+			viable.append(j)
+	var min_len := INF
+	for vi in viable:
+		min_len = minf(min_len, float(lengths[vi]))
+	var best: Vector2 = cands[viable[0]]
+	var best_score := INF
+	for i in viable:
+		var ap: Vector2 = cands[i]
+		var plen: float = float(lengths[i])
+		if plen > BED_GAP_PATH_MAX and plen > min_len * 1.6:
+			continue
+		if not opposite_tap and min_len < INF and plen > min_len * 1.45 and plen - min_len > 80.0:
+			continue
+		var ap_dir := (ap - center).normalized()
+		var player_align := ap_dir.dot(from_dir)
+		var tap_align := ap_dir.dot(tap_dir)
+		var tap_d: float = ap.distance_to(tap)
+		var score := plen + tap_d * 0.15 - player_align * 55.0 \
+			- tap_align * (140.0 if opposite_tap else (70.0 if tap_clear else 35.0))
+		if not opposite_tap:
+			if prefer_path_south:
+				score -= (ap.y - center.y) * 2.6
+				score += absf(ap.x - center.x) * 0.2
+				var sort_y := _bed_sort_y(bed_tiles[bed_id], bed_halves[bed_id])
+				if ap.y >= sort_y + 2.0:
+					score -= 40.0
+				else:
+					score += 80.0
+			else:
+				score += (ap.y - center.y) * 2.6
+				score += absf(ap.x - center.x) * 0.2
+		if score < best_score:
+			best_score = score
+			best = ap
+	return _stand_clear_of_bed(bed_id, best)
+
+func _bed_approach_candidates(bed_id: String, tap: Vector2) -> Array:
+	var tile: Vector2 = bed_tiles.get(bed_id, Vector2.ZERO)
+	var half: Vector2 = bed_halves.get(bed_id, Vector2(1.05, 0.8)) * BED_SOLID_PAD
+	var stand := BED_STAND_TILES
+	## Faces + corner gaps (walk between beds, not around the whole row).
+	var offsets := [
+		Vector2(0.0, -(half.y + stand)), ## north
+		Vector2(0.0, +(half.y + stand)), ## south
+		Vector2(+(half.x + stand), 0.0), ## east
+		Vector2(-(half.x + stand), 0.0), ## west
+		Vector2(+(half.x + stand * 0.85), +(half.y + stand * 0.85)),
+		Vector2(-(half.x + stand * 0.85), +(half.y + stand * 0.85)),
+		Vector2(+(half.x + stand * 0.85), -(half.y + stand * 0.85)),
+		Vector2(-(half.x + stand * 0.85), -(half.y + stand * 0.85)),
+	]
+	var out: Array = []
+	var seen: Dictionary = {}
+	for o in offsets:
+		var ideal := IsoUtil.tile_to_world(tile + o)
+		_push_unique_approach(out, seen, _stand_clear_of_bed(bed_id, ideal))
+	## Camera-front apron: just south of the near tip (clears the raised NW corner).
+	var center: Vector2 = bed_centers.get(bed_id, Vector2.ZERO)
+	var near_tip := IsoUtil.tile_to_world(tile + Vector2(0.0, half.y))
+	_push_unique_approach(out, seen, _stand_clear_of_bed(bed_id, near_tip + Vector2(0.0, 18.0)))
+	## Tap-biased rim: walk to the side of the bed the kid actually touched.
+	## Skip for center taps — world +Y is not iso-south and parks mid-aisle.
+	var dir := tap - center
+	if dir.length_squared() >= 120.0:
+		dir = dir.normalized()
+		_push_unique_approach(out, seen, _stand_clear_of_bed(bed_id, center + dir * 56.0))
+	return out
+
+func _stand_clear_of_bed(bed_id: String, ideal: Vector2) -> Vector2:
+	## Prefer the face stand (half + small lip). Only nudge out if blocked.
+	var center: Vector2 = bed_centers.get(bed_id, ideal)
+	var dir := ideal - center
+	if dir.length_squared() < 1.0:
+		dir = Vector2(0.0, 1.0)
+	dir = dir.normalized()
+	var min_d := _bed_min_stand_dist(bed_id)
+	var p := ideal if ideal.distance_to(center) >= min_d * 0.85 else center + dir * min_d
+	for _i in 12:
+		if not is_blocked(p) and _nav_id_at_world(p) >= 0:
+			return p
+		p += dir * 6.0
+	return nearest_walkable(center + dir * min_d, 6)
+
+func _bed_min_stand_dist(bed_id: String) -> float:
+	var half: Vector2 = bed_halves.get(bed_id, Vector2(1.05, 0.8)) * BED_SOLID_PAD
+	## Shorter axis (N/S) dominates "next to the lip" — keep a modest floor.
+	var face_s := IsoUtil.tile_to_world(Vector2(0.0, half.y + BED_STAND_TILES)) \
+		- IsoUtil.tile_to_world(Vector2.ZERO)
+	return maxf(face_s.length(), 40.0)
+
+func _push_unique_approach(out: Array, seen: Dictionary, w: Vector2) -> void:
+	if is_blocked(w):
+		return
+	var key := "%d,%d" % [int(round(w.x / 8.0)), int(round(w.y / 8.0))]
+	if seen.has(key):
+		return
+	seen[key] = true
+	out.append(w)
+
+func path_world_length(from_world: Vector2, to_world: Vector2) -> float:
+	var pts := find_path(from_world, to_world)
+	if pts.is_empty():
+		return from_world.distance_to(to_world) * 12.0
+	var L := from_world.distance_to(pts[0])
+	for i in range(1, pts.size()):
+		L += pts[i - 1].distance_to(pts[i])
+	return L
 
 func nearest_slot(bed_id: String, world_pos: Vector2) -> int:
 	var arr: Array = slot_positions.get(bed_id, [])
@@ -465,7 +628,7 @@ func _segs_for_edge(a: Vector2, b: Vector2) -> int:
 	## ~2.2 tiles per rail — denser joints so near-corner posts aren't skipped.
 	return maxi(4, int(ceil(a.distance_to(b) / 2.2)))
 
-func _place_fence_sprite(name: String, tex: Texture2D, world: Vector2, scale: float, z_extra: int) -> void:
+func _place_fence_sprite(name: String, tex: Texture2D, world: Vector2, scale: float, bias: int) -> void:
 	if tex == null:
 		return
 	var spr := Sprite2D.new()
@@ -475,8 +638,7 @@ func _place_fence_sprite(name: String, tex: Texture2D, world: Vector2, scale: fl
 	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	spr.scale = Vector2(scale, scale)
 	spr.position = world + Vector2(0, -6)
-	spr.z_as_relative = false
-	spr.z_index = IsoUtil.depth_from_y(world.y) + z_extra
+	IsoUtil.apply_depth(spr, world.y, bias)
 	add_child(spr)
 
 func _place_fence_rail(name: String, kind: String, tile_a: Vector2, tile_b: Vector2) -> void:
@@ -494,8 +656,7 @@ func _place_fence_rail(name: String, kind: String, tile_a: Vector2, tile_b: Vect
 	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	spr.scale = Vector2(2.0, 2.0)
 	spr.position = mid + Vector2(0, -6)
-	spr.z_as_relative = false
-	spr.z_index = IsoUtil.depth_from_y(minf(wa.y, wb.y)) + 3
+	IsoUtil.apply_depth(spr, minf(wa.y, wb.y), IsoUtil.BIAS_RAIL)
 	add_child(spr)
 
 func _try_place_post(name: String, tile: Vector2) -> bool:
@@ -513,9 +674,15 @@ func _try_place_post(name: String, tile: Vector2) -> bool:
 			return false
 	_fence_post_keys[key] = true
 	var tex: Texture2D = sprites.pen_fence_segment("post")
-	## +55 beats adjacent rail midpoints (~40 world-y) while staying near animal bias.
-	_place_fence_sprite(name, tex, world, 2.35, 55)
+	_place_fence_sprite(name, tex, world, 2.35, IsoUtil.BIAS_POST)
 	return true
+
+func _force_place_post(name: String, tile: Vector2) -> void:
+	## Gate framing — always place even if a nearby joint already has a post.
+	var key := "%.1f,%.1f" % [snappedf(tile.x, 0.1), snappedf(tile.y, 0.1)]
+	_fence_post_keys[key] = true
+	var tex: Texture2D = sprites.pen_fence_segment("post")
+	_place_fence_sprite(name, tex, IsoUtil.tile_to_world(tile), 2.35, IsoUtil.BIAS_POST)
 
 func _gate_seg_index(a: Vector2, b: Vector2) -> int:
 	## One fence-section opening on the divider, aligned with the path tile-y.
@@ -591,9 +758,9 @@ func _build_shed() -> void:
 	## Solid body matches the tall facade; shifted north so the door apron stays walkable.
 	var solid_tile := tile + Vector2(0.0, -0.45)
 	var solid_half := half + Vector2(1.15, 0.85)
-	shed_poly = IsoUtil.diamond_polygon(solid_tile, solid_half)
+	shed_poly = IsoUtil.solid_diamond(solid_tile, solid_half)
 	shed_center = IsoUtil.tile_to_world(tile)
-	var z := IsoUtil.depth_from_y(shed_center.y)
+	var z := IsoUtil.depth_z(shed_center.y, IsoUtil.BIAS_BUILDING)
 
 	## Bottom of the facade sits on the south corner row of the footprint,
 	## so the door lands at the footprint's near edge, centered.
@@ -610,11 +777,8 @@ func _build_shed() -> void:
 		spr.scale = Vector2(SHED_SPRITE_SCALE, SHED_SPRITE_SCALE)
 		var h := float(tex.get_height()) * SHED_SPRITE_SCALE
 		spr.position = south + Vector2(0, 8) - Vector2(0, h * 0.5)
-		## Sort with facade feet. Bias beats nearby fence posts (+55) when those
-		## posts sit behind the shed, but stays below the player (+50) out front
-		## so the gardener is never drawn under the building.
-		spr.z_as_relative = false
-		spr.z_index = IsoUtil.depth_from_y(south.y) + 20
+		## Feet-based sort in the building/post band (see IsoUtil.BIAS_*).
+		IsoUtil.apply_depth(spr, south.y, IsoUtil.BIAS_BUILDING)
 		add_child(spr)
 	else:
 		## Fallback: simple extruded box (headless tests without the asset).
@@ -622,6 +786,11 @@ func _build_shed() -> void:
 		_add_poly("ShedWallW", faces[0], Color(0.62, 0.42, 0.24, 1.0), z + 1)
 		_add_poly("ShedWallE", faces[1], Color(0.50, 0.32, 0.16, 1.0), z + 2)
 		_add_poly("ShedEave", IsoUtil.raise_poly(base, SHED_WALL_H), Color(0.52, 0.34, 0.18, 1.0), z + 3)
+
+func _bed_sort_y(tile: Vector2, half: Vector2) -> float:
+	## Near-side ground contact, inset from the extreme south tip so a gardener
+	## at the lip sorts in front of the raised NW corner (not under it).
+	return IsoUtil.feet_south(tile, half, 0.62).y
 
 func _build_beds() -> void:
 	var beds: Array = data.get("beds", [])
@@ -632,23 +801,25 @@ func _build_beds() -> void:
 		var tile := _vec2(bed.get("tile", {"x": 0, "y": 0}))
 		var half := _vec2(bed.get("half_tiles", {"x": 1.1, "y": 0.85}))
 		var base := IsoUtil.diamond_polygon(tile, half)
-		bed_polys[id] = base
+		## Solid padded past the wood lip so soft-step / nav can't slip onto the soil.
+		bed_polys[id] = IsoUtil.solid_diamond(tile, half * BED_SOLID_PAD)
 		bed_tiles[id] = tile
 		bed_halves[id] = half
 		var center := IsoUtil.tile_to_world(tile)
 		bed_centers[id] = center
-		var z := IsoUtil.depth_from_y(center.y)
+		var z := IsoUtil.depth_z(_bed_sort_y(tile, half), IsoUtil.BIAS_BUILDING)
 
-		## Wood side walls (extrusion)
+		## Wood side walls (extrusion) — visual uses unpadded footprint.
+		## Keep the bed stack shallow (+1..+3) so lip standers clear it with little Y.
 		var faces: Array = IsoUtil.extrusion_side_faces(base, BED_HEIGHT)
 		_add_poly(id + "_wall_w", faces[0], Color(0.62, 0.42, 0.22, 1.0), z + 1)
-		_add_poly(id + "_wall_e", faces[1], Color(0.48, 0.30, 0.14, 1.0), z + 2)
+		_add_poly(id + "_wall_e", faces[1], Color(0.48, 0.30, 0.14, 1.0), z + 1)
 
 		## Bed top: lighter wooden frame with dark freshly-turned soil inside.
 		var top := IsoUtil.raise_poly(base, BED_HEIGHT)
-		_add_poly(id, top, Color(0.55, 0.36, 0.18, 1.0), z + 3)
+		_add_poly(id, top, Color(0.55, 0.36, 0.18, 1.0), z + 2)
 		var soil_poly := IsoUtil.raise_poly(IsoUtil.diamond_polygon(tile, half * 0.86), BED_HEIGHT)
-		var soil := _add_poly(id + "_soil", soil_poly, Color(0.30, 0.185, 0.09, 1.0), z + 4)
+		var soil := _add_poly(id + "_soil", soil_poly, Color(0.30, 0.185, 0.09, 1.0), z + 2)
 		if sprites:
 			var ttex := sprites.tilled_texture()
 			if ttex:
@@ -657,7 +828,7 @@ func _build_beds() -> void:
 
 		## Two perpendicular furrows split the soil into four iso plots — clean
 		## "plant here" squares, no grey overlay.
-		_add_plot_grid(id, tile, half, z + 5)
+		_add_plot_grid(id, tile, half, z + 3)
 		_add_slot_markers(id, tile, half)
 
 ## Iso half-size (in tiles) of one "plant here" patch. Kept comfortably inside
@@ -698,6 +869,7 @@ func _add_line(node_name: String, pts: Array, color: Color, z: int) -> Line2D:
 	line.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	line.end_cap_mode = Line2D.LINE_CAP_ROUND
 	line.antialiased = true
+	line.z_as_relative = false
 	line.z_index = z
 	add_child(line)
 	return line
@@ -763,17 +935,20 @@ func _build_fence() -> void:
 	var gseg := _gate_seg_index(div_a, div_b)
 	var gt := (float(gseg) + 0.5) / float(n_segs)
 	gate_world = IsoUtil.tile_to_world(div_a.lerp(div_b, gt) + Vector2(0.05, 0.0))
+	## Framing posts: nearer (SW / higher world-y) above the leaf; farther (NW) behind it.
+	## Force both — proximity dedupe can skip the far post when a divider joint is close.
+	if _has_fence_sprites():
+		_force_place_post("PenGatePost_near", div_a.lerp(div_b, float(gseg) / float(n_segs)))
+		_force_place_post("PenGatePost_far", div_a.lerp(div_b, float(gseg + 1) / float(n_segs)))
 
 	var coop_tile := _vec2(fence.get("coop_tile", {"x": 13.0, "y": -2.2}))
 	coop_world = IsoUtil.tile_to_world(coop_tile)
+	var coop_half := Vector2(1.25, 1.05)
 	## Solid body for the 64×80 @ 2× sprite — path must go around, never through.
-	coop_poly = IsoUtil.diamond_polygon(coop_tile, Vector2(1.25, 1.05))
+	coop_poly = IsoUtil.solid_diamond(coop_tile, coop_half)
 	## Approach stands on the south (door) side, outside the solid.
 	coop_door_world = IsoUtil.tile_to_world(coop_tile + Vector2(0.15, 1.25))
-	## Sort by stilts/ramp feet (south of the tile), not the roof anchor — and use the
-	## same bias family as the player (+50) / posts (+55). The old +150 kept the
-	## gardener painted under the coop even when standing in front of it.
-	var coop_feet := IsoUtil.tile_to_world(coop_tile + Vector2(0.35, 0.95))
+	var coop_feet := IsoUtil.feet_south(coop_tile, coop_half, 0.95)
 	if sprites:
 		var coop := sprites.chicken_coop_texture()
 		if coop:
@@ -782,13 +957,10 @@ func _build_fence() -> void:
 			spr.texture = coop
 			spr.centered = true
 			spr.position = coop_world + Vector2(0, -28)
-			spr.z_as_relative = false
-			spr.z_index = IsoUtil.depth_from_y(coop_feet.y) + 55
+			IsoUtil.apply_depth(spr, coop_feet.y, IsoUtil.BIAS_BUILDING)
 			spr.scale = Vector2(2.0, 2.0)
 			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			add_child(spr)
-
-	_add_label("FenceLabel", fence_center + Vector2(0, -72), "ANIMALS", Color(1, 0.95, 0.8, 0.9))
 
 func coop_approach_world() -> Vector2:
 	## Always walk to the door apron — never into / through the coop body.
@@ -894,9 +1066,10 @@ func is_blocked(world_pos: Vector2) -> bool:
 
 func _nav_point_blocked(world_pos: Vector2) -> bool:
 	## Block a nav cell if its center hits a solid, or if nearby samples enter
-	## the shed/coop (stops slipping through between integer tile centers).
+	## the shed/coop/beds (stops slipping through between integer tile centers).
 	if is_blocked(world_pos):
 		return true
+	## Shed/coop: wider samples (tall solids). Beds: tighter so aisle gaps stay open.
 	for off in [
 		Vector2(18, 0), Vector2(-18, 0), Vector2(0, 12), Vector2(0, -12),
 		Vector2(14, 10), Vector2(-14, 10), Vector2(14, -10), Vector2(-14, -10),
@@ -906,10 +1079,44 @@ func _nav_point_blocked(world_pos: Vector2) -> bool:
 			return true
 		if coop_poly.size() >= 3 and IsoUtil.point_in_polygon(p, coop_poly):
 			return true
+	for off_b in [Vector2(10, 0), Vector2(-10, 0), Vector2(0, 8), Vector2(0, -8)]:
+		var pb: Vector2 = world_pos + off_b
+		for id in bed_polys.keys():
+			var poly: PackedVector2Array = bed_polys[id]
+			if poly.size() >= 3 and IsoUtil.point_in_polygon(pb, poly):
+				return true
 	return false
 
 ## Keep Buddy clear of bed tops / aisles kids are using for gardening.
 const DOG_BED_CLEARANCE := 92.0
+## Stand beside a pet — never on top of them.
+const ANIMAL_STAND_OFF := 36.0
+## Soft footprint so the gardener sidesteps instead of walking through.
+const ANIMAL_SOFT_R := 28.0
+
+func animal_approach_world(from_player: Vector2, animal_pos: Vector2) -> Vector2:
+	var dir := from_player - animal_pos
+	if dir.length_squared() < 1.0:
+		dir = Vector2(0.0, 1.0)
+	var ideal := animal_pos + dir.normalized() * ANIMAL_STAND_OFF
+	## Prefer path-side rim if the stand lands in a solid.
+	var w := nearest_walkable(ideal)
+	if w.distance_to(animal_pos) < ANIMAL_STAND_OFF * 0.55:
+		w = nearest_walkable(animal_pos + Vector2(0.0, ANIMAL_STAND_OFF))
+	return w
+
+func near_roaming_animal(world_pos: Vector2, radius: float = ANIMAL_SOFT_R, ignore_id: String = "") -> String:
+	var best := ""
+	var best_d := radius
+	for id in animal_positions.keys():
+		if str(id) == ignore_id:
+			continue
+		var p: Vector2 = animal_positions[id]
+		var d := world_pos.distance_to(p)
+		if d <= best_d:
+			best_d = d
+			best = str(id)
+	return best
 
 func near_garden_bed(world_pos: Vector2, clearance: float = DOG_BED_CLEARANCE) -> bool:
 	for id in bed_centers.keys():
@@ -925,6 +1132,41 @@ func is_blocked_for_dog(world_pos: Vector2) -> bool:
 	if is_blocked(world_pos):
 		return true
 	return near_garden_bed(world_pos)
+
+func is_blocked_for_bug(world_pos: Vector2) -> bool:
+	## Bugs may loiter on the rim, but not under the raised wood / on soil.
+	if is_blocked(world_pos):
+		return true
+	for id in bed_centers.keys():
+		if world_pos.distance_to(bed_centers[id]) < _bed_min_stand_dist(id) * 0.9:
+			return true
+	return false
+
+func nearest_bug_walkable(world_pos: Vector2, max_radius_tiles: int = 8) -> Vector2:
+	if not is_blocked_for_bug(world_pos) and _nav_id_at_world(world_pos) >= 0:
+		return world_pos
+	var origin := IsoUtil.world_to_tile(world_pos)
+	var best := world_pos
+	var best_d := INF
+	for r in range(0, max_radius_tiles + 1):
+		for dx in range(-r, r + 1):
+			for dy in range(-r, r + 1):
+				if maxi(absi(dx), absi(dy)) != r:
+					continue
+				var cell := origin + Vector2i(dx, dy)
+				var id: int = int(_nav_cell_to_id.get(cell, -1))
+				if id < 0:
+					continue
+				var w: Vector2 = _astar.get_point_position(id)
+				if is_blocked_for_bug(w):
+					continue
+				var d := world_pos.distance_squared_to(w)
+				if d < best_d:
+					best_d = d
+					best = w
+		if best_d < INF and r >= 1:
+			break
+	return best
 
 func nearest_dog_walkable(world_pos: Vector2, max_radius_tiles: int = 10) -> Vector2:
 	if not is_blocked_for_dog(world_pos) and _nav_id_at_world(world_pos) >= 0:
@@ -1106,6 +1348,7 @@ func _nav_id_at_world(world_pos: Vector2) -> int:
 func _add_poly(node_name: String, poly: PackedVector2Array, color: Color, z: int) -> Polygon2D:
 	var p := Polygon2D.new()
 	p.name = node_name
+	p.z_as_relative = false
 	p.z_index = z
 	p.color = color
 	p.polygon = poly

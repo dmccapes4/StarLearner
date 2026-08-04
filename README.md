@@ -221,7 +221,7 @@ git pull && ./tools/full_deploy_245.sh
 |------|---------|
 | Launcher (HOME) | `com.dylan.star_learner` |
 | Ant Explorer | `com.dylan.ant_explorer` |
-| Garden Explorer | `com.dylan.antexplorer.garden` |
+| Garden Explorer | `com.dylan.garden_explorer` |
 | Solar System Explorer | `com.dylan.solar_system_explorer` |
 | Math Explorer | `com.dylan.math_explorer` |
 | Language Explorer | `com.dylan.language_explorer` |
@@ -265,3 +265,9 @@ star_learning/                 ← platform / repo (this catalog)
 
 Agents do not use host `sudo`; anything requiring root is handed to the maintainer as a script
 (see [`../.cursor/rules/no-host-sudo.mdc`](../.cursor/rules/no-host-sudo.mdc)).
+
+## Agent QA suites
+
+Each game should grow a `qa/` folder with Godot screenshot suites agents can re-run after
+visual / routing changes. Shared process: [`docs/QA_SUITE_PROCESS.md`](docs/QA_SUITE_PROCESS.md).
+Reference implementation: [`garden_explorer/qa/`](garden_explorer/qa/).

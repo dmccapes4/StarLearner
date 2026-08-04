@@ -205,7 +205,7 @@ func _process(delta: float) -> void:
 		_handle_back()
 		return
 	# Java overlay may already be up — keep sim paused.
-	var act := _android()
+	var act: Variant = _android()
 	if act != null and bool(act.call("isPauseOverlayShowing")) and not _paused_ui:
 		_show_paused()
 		return
@@ -306,7 +306,7 @@ func _motion_activity() -> bool:
 func _show_paused() -> void:
 	_paused_ui = true
 	# Prefer Godot overlay; clear any Java splash-pause shell.
-	var act := _android()
+	var act: Variant = _android()
 	if act != null:
 		act.call("hidePauseOverlay")
 	_set_sim_enabled(false)
@@ -320,7 +320,7 @@ func _show_paused() -> void:
 func _hide_paused() -> void:
 	_paused_ui = false
 	get_tree().paused = false
-	var act := _android()
+	var act: Variant = _android()
 	if act != null:
 		act.call("hidePauseOverlay")
 	if is_instance_valid(_overlay):
@@ -339,9 +339,23 @@ func _on_back_to_launcher() -> void:
 
 
 func _set_sim_enabled(on: bool) -> void:
+	## Legacy SimClock hook (unused) + pause the live SeasonClock on World.
 	var clock := get_node_or_null("/root/SimClock")
 	if clock != null and clock.has_method("set_enabled"):
 		clock.call("set_enabled", on)
+	var season := _find_season_clock()
+	if season != null:
+		season.set("paused", not on)
+
+func _find_season_clock() -> Node:
+	var scene := get_tree().current_scene if is_inside_tree() else null
+	if scene == null:
+		return null
+	var world: Node = scene.get_node_or_null("World")
+	if world == null:
+		return null
+	var sc: Variant = world.get("season_clock")
+	return sc as Node if sc != null else world.get_node_or_null("SeasonClock")
 
 
 func _save_soft() -> void:

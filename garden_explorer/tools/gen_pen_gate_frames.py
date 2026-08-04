@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Generate isometric pen-gate leaf frames (closed → open).
 
-Leaf-only — FarmMap already draws gap posts + stub rails. Palette matches
-Sprout Lands Fences.png / FarmMap pen rails.
+Leaf + free-swinging end post. FarmMap draws the hinge-side framing post.
+Palette matches Sprout Lands Fences.png / FarmMap pen rails.
+
+Rails sit mid-post so they line up with neighboring fence rails.
 """
 from __future__ import annotations
 
@@ -82,6 +84,7 @@ def _draw_rail(draw: ImageDraw.ImageDraw, a: tuple, b: tuple, y_off: float, thic
 def make_frame(open_t: float) -> Image.Image:
     im = _blank()
     d = ImageDraw.Draw(im)
+    ## Ground contact of the hinge (FarmMap draws the real hinge post).
     hinge = (14.0, 48.0)
     closed = (2.0, -1.0)  # west-edge iso dy/dx = -0.5
     opened = (1.6, 1.1)
@@ -90,16 +93,18 @@ def make_frame(open_t: float) -> Image.Image:
     n = math.hypot(dx, dy) or 1.0
     dx, dy = dx / n, dy / n
     tip = (hinge[0] + dx * 40.0, hinge[1] + dy * 40.0)
-    _draw_post(d, tip[0], tip[1], h=24, r=3.0)
-    _draw_post(d, hinge[0], hinge[1], h=24, r=2.6)
-    _draw_rail(d, hinge, tip, -18, thick=3.2)
-    _draw_rail(d, hinge, tip, -10, thick=3.2)
+    ## Seat rails into the end post (stop short of tip center).
+    tip_rail = (tip[0] - dx * 2.5, tip[1] - dy * 2.5)
+    _draw_post(d, tip[0], tip[1], h=28, r=3.1)
+    _draw_rail(d, hinge, tip_rail, -16, thick=3.2)
+    _draw_rail(d, hinge, tip_rail, -9, thick=3.2)
     for i in range(1, 4):
         t = i / 4.0
-        px = hinge[0] + (tip[0] - hinge[0]) * t
-        py = hinge[1] + (tip[1] - hinge[1]) * t
-        d.line([(px, py - 20), (px, py - 8)], fill=WOOD_MID, width=2)
-        d.point((int(px), int(py - 20)), fill=WOOD_HI)
+        px = hinge[0] + (tip_rail[0] - hinge[0]) * t
+        py = hinge[1] + (tip_rail[1] - hinge[1]) * t
+        d.line([(px, py - 17), (px, py - 7)], fill=WOOD_MID, width=2)
+        d.point((int(px), int(py - 17)), fill=WOOD_HI)
+    _draw_post(d, tip[0], tip[1], h=28, r=3.1)
     return im
 
 

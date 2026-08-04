@@ -67,6 +67,10 @@ func force_spawn(bid: String, near: Vector2) -> Node2D:
 	if bug.is_empty():
 		return null
 	var spot := farm_map.nearest_walkable(near)
+	if farm_map.has_method("nearest_bug_walkable"):
+		spot = farm_map.nearest_bug_walkable(near)
+	elif farm_map.has_method("is_blocked_for_bug") and farm_map.is_blocked_for_bug(spot):
+		spot = farm_map.nearest_walkable(near + Vector2(0, 64))
 	var tex: Texture2D = null
 	if sprites and sprites.has_method("bug_sprite"):
 		tex = sprites.bug_sprite(bid)
@@ -75,7 +79,7 @@ func force_spawn(bid: String, near: Vector2) -> Node2D:
 	var actor: Node2D = RoamingBugScript.new()
 	actor.name = "Bug_%s_%d" % [bid, Time.get_ticks_msec()]
 	add_child(actor)
-	actor.setup(bid, tex, spot, 22.0)
+	actor.setup(bid, tex, spot, 22.0, farm_map)
 	_active[actor.get_instance_id()] = actor
 	actor.despawned.connect(func(_id: String) -> void:
 		_active.erase(actor.get_instance_id()))
@@ -98,7 +102,7 @@ func _spawn_one() -> void:
 	var actor: Node2D = RoamingBugScript.new()
 	actor.name = "Bug_%s_%d" % [bid, Time.get_ticks_msec()]
 	add_child(actor)
-	actor.setup(bid, tex, spot, 22.0)
+	actor.setup(bid, tex, spot, 22.0, farm_map)
 	_active[actor.get_instance_id()] = actor
 	actor.despawned.connect(func(_id: String) -> void:
 		_active.erase(actor.get_instance_id()))
@@ -116,8 +120,11 @@ func _habitat_spot(habitat: String) -> Vector2:
 			if ids.size() > 0:
 				var bid := ids[randi() % ids.size()]
 				var c: Vector2 = farm_map.bed_centers.get(bid, farm_map.spawn_world)
-				## Edge of the bed (walkable rim) so player can reach it.
-				return farm_map.nearest_walkable(c + Vector2(randf_range(-30, 30), randf_range(24, 44)))
+				## Clear of the raised lip (south rim) so bugs aren't under the wood.
+				var rim := farm_map.nearest_walkable(c + Vector2(randf_range(-40, 40), randf_range(56, 78)))
+				if farm_map.has_method("is_blocked_for_bug") and farm_map.is_blocked_for_bug(rim):
+					rim = farm_map.nearest_walkable(c + Vector2(0, 72))
+				return rim
 			return farm_map.spawn_world
 		"pen":
 			return farm_map.nearest_walkable(farm_map.fence_center + Vector2(randf_range(-50, 50), randf_range(-20, 40)))

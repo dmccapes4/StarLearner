@@ -159,6 +159,8 @@ func _bind_ui() -> void:
 	if stage_media and stage_media.has_method("setup"):
 		stage_media.call("setup", seed_db, sprites)
 	season_hud = get_tree().get_first_node_in_group("season_hud")
+	if season_hud and season_hud.has_method("setup"):
+		season_hud.call("setup", season_clock, seed_db)
 	_sync_season_hud(false)
 	star_menu = get_tree().get_first_node_in_group("star_menu")
 	if star_menu and star_menu.has_method("setup"):
@@ -385,8 +387,8 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 		_queue_interact("animal", hit_animal, actor.global_position if actor else world_pos)
 		return
 	## Chicken coop look — egg-collecting video (pen interaction).
-	## Always approach the door apron; never path into the coop body.
-	if farm_map.coop_world != Vector2.ZERO and world_pos.distance_to(farm_map.coop_world) <= 72.0:
+	## Hit the door apron / footprint only — not a wide walk-past radius.
+	if farm_map.coop_world != Vector2.ZERO and _coop_tap_hit(world_pos):
 		var coop_goal: Vector2 = farm_map.coop_approach_world() if farm_map.has_method("coop_approach_world") \
 			else farm_map.nearest_walkable(farm_map.coop_world + Vector2(0, 52))
 		_queue_interact("coop", "coop", coop_goal)
@@ -416,6 +418,16 @@ func _interact_pending_active() -> bool:
 	var k := str(_pending.get("kind", ""))
 	return k == "bed" or k == "shed" or k == "animal" or k == "bug" or k == "coop"
 
+func _coop_tap_hit(world_pos: Vector2) -> bool:
+	## Require a tap on the coop body or near the door — not the whole pen approach.
+	if farm_map.coop_poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, farm_map.coop_poly):
+		return true
+	var door: Vector2 = farm_map.coop_door_world
+	if door == Vector2.ZERO:
+		door = farm_map.coop_world + Vector2(0, 40)
+	return world_pos.distance_to(door) <= 36.0 \
+		or world_pos.distance_to(farm_map.coop_world) <= 40.0
+
 func _nearest_roaming_animal(world_pos: Vector2, radius: float) -> String:
 	var best := ""
 	var best_d := radius
@@ -438,7 +450,13 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 				else farm_map.nearest_walkable(farm_map.shed_center + Vector2(36, 20))
 		"bed":
 			slot = farm_map.nearest_slot(zid, world_pos)
-			approach = farm_map.nearest_walkable(farm_map.slot_world(zid, slot))
+			## Face from tap + shortest gap/path route (not nearest rim cell,
+			## which often lands on the far side and loops the whole row).
+			var from_p: Vector2 = player.global_position if player else world_pos
+			if farm_map.has_method("bed_approach_world"):
+				approach = farm_map.bed_approach_world(zid, from_p, world_pos)
+			else:
+				approach = farm_map.nearest_walkable(farm_map.slot_world(zid, slot))
 		"fence":
 			## Pen ground tap: gate routing only from outside. Same-zone animal
 			## hits become a one-shot walk to that animal's current spot.
@@ -451,7 +469,12 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 				kind = "animal"
 				zid = near
 				var a := _animal_node(near)
-				approach = a.global_position if a else farm_map.animal_positions.get(near, farm_map.fence_center)
+				var apos: Vector2 = a.global_position if a \
+					else farm_map.animal_positions.get(near, farm_map.fence_center)
+				if farm_map.has_method("animal_approach_world") and player:
+					approach = farm_map.animal_approach_world(player.global_position, apos)
+				else:
+					approach = farm_map.nearest_walkable(apos)
 			else:
 				## Enter / walk the pen via the gate.
 				approach = farm_map.nearest_walkable(world_pos)
@@ -474,8 +497,13 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 					Events.player_path_requested.emit(approach)
 				return
 			var actor := _animal_node(zid)
-			## Freeze approach at tap time — do not chase if they wander.
-			approach = actor.global_position if actor else farm_map.animal_positions.get(zid, farm_map.fence_center)
+			## Freeze approach at tap time — stand beside the pet, not on top.
+			var animal_pos: Vector2 = actor.global_position if actor \
+				else farm_map.animal_positions.get(zid, farm_map.fence_center)
+			if farm_map.has_method("animal_approach_world") and player:
+				approach = farm_map.animal_approach_world(player.global_position, animal_pos)
+			else:
+				approach = farm_map.nearest_walkable(animal_pos)
 		_:
 			approach = farm_map.nearest_walkable(world_pos)
 	_pending = {
@@ -527,6 +555,29 @@ func _pending_bug_node() -> Node2D:
 		return obj as Node2D
 	return null
 
+func _prepare_interact_pose() -> void:
+	## Face the target only — no teleport. Walk already ends at the approach stand.
+	if player == null or farm_map == null:
+		return
+	var kind := str(_pending.get("kind", ""))
+	var look := Vector2.ZERO
+	match kind:
+		"bed":
+			look = farm_map.bed_centers.get(str(_pending.get("id", "")), Vector2.ZERO)
+		"shed":
+			look = farm_map.shed_center
+		"coop":
+			look = farm_map.coop_world if farm_map.coop_world != Vector2.ZERO else farm_map.fence_center
+		"animal":
+			var a := _animal_node(str(_pending.get("id", "")))
+			look = a.global_position if a else farm_map.animal_positions.get(str(_pending.get("id", "")), Vector2.ZERO)
+		"bug":
+			var bug := _pending_bug_node()
+			look = bug.global_position if bug else Vector2.ZERO
+	if look != Vector2.ZERO and player.has_method("face_toward"):
+		player.call("face_toward", look)
+	IsoUtil.apply_depth(player, player.global_position.y, IsoUtil.BIAS_PLAYER)
+
 func _on_player_arrived() -> void:
 	if _pending.is_empty():
 		return
@@ -571,6 +622,8 @@ func _on_player_arrived() -> void:
 func _open_pending_prompt() -> void:
 	if _pending.is_empty():
 		return
+	## Stand on the approach and face the interactable before UI / tools.
+	_prepare_interact_pose()
 	## Animals: first meet → reveal; later → SFX. Buddy is bark-only (no video).
 	if str(_pending.get("kind", "")) == "animal":
 		var aid := str(_pending.get("id", ""))

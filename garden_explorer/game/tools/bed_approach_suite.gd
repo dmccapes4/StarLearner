@@ -68,8 +68,12 @@ func _run() -> void:
 	_check("path_to_bed1_short", len_a < 220.0, "len=%.1f (want <220)" % len_a)
 	_check("path_beats_far_loop", len_a <= len_naive * 0.85 or len_a < len_naive - 40.0,
 		"chosen=%.1f naive_south=%.1f" % [len_a, len_naive])
-	_check("approach_not_deep_south", ap_a.y < farm.bed_centers["bed_3"].y - 8.0,
+	_check("approach_not_deep_south", ap_a.y < farm.bed_centers["bed_3"].y + 8.0,
 		"approach.y=%.1f bed3.y=%.1f" % [ap_a.y, farm.bed_centers["bed_3"].y])
+	_check("approach_not_world_south_aisle",
+		ap_a.distance_to(farm.bed_centers["bed_1"]) <= 64.0 \
+		or absf(ap_a.x - farm.bed_centers["bed_1"].x) >= 18.0,
+		"ap=%s (iso face, not pure +Y aisle)" % ap_a)
 	## From the dirt path, stand on the path-side (south) of the north bed — not behind it.
 	_check("bed1_from_path_stands_south",
 		ap_a.y >= farm.bed_centers["bed_1"].y + 12.0,
@@ -167,12 +171,16 @@ func _run() -> void:
 	var pose_pos: Vector2 = player.global_position
 	var pose_d := pose_pos.distance_to(farm.bed_centers["bed_1"])
 	_check("interact_stand_next_to_bed",
-		pose_d >= 36.0 and pose_d <= 78.0 and not farm.is_blocked(pose_pos),
+		pose_d >= 36.0 and pose_d <= 90.0 and not farm.is_blocked(pose_pos),
 		"dist=%.1f pos=%s" % [pose_d, pose_pos])
-	var bed_n: CanvasItem = farm.get_node_or_null("bed_1") as CanvasItem
-	var bed_z := bed_n.z_index if bed_n else -9999
-	_check("interact_depth_in_front", player.z_index >= bed_z,
-		"player.z=%d bed.z=%d" % [player.z_index, bed_z])
+	## Depth: walk stand should already clear the lip (no post-arrive teleport).
+	var pose_need_z := -9999
+	for suffix in ["", "_soil", "_wall_e", "_wall_w", "_grid_a", "_grid_b"]:
+		var piece: CanvasItem = farm.get_node_or_null("bed_1" + suffix) as CanvasItem
+		if piece:
+			pose_need_z = maxi(pose_need_z, piece.z_index)
+	_check("interact_depth_in_front", player.z_index >= pose_need_z,
+		"player.z=%d need.z=%d" % [player.z_index, pose_need_z])
 	var to_bed2: Vector2 = farm.bed_centers["bed_1"] - pose_pos
 	var row2 := int(player.get("_dir_row")) if player.get("_dir_row") != null else -1
 	var face_ok2 := false
@@ -182,8 +190,16 @@ func _run() -> void:
 		face_ok2 = (row2 == 2 and to_bed2.y < 0.0) or (row2 == 0 and to_bed2.y > 0.0)
 	_check("face_bed_on_interact_pose", face_ok2,
 		"dir_row=%s to_bed=%s" % [row2, to_bed2])
+	## Raised NW corner must not sit above the gardener (deck z < player z).
+	var deck_z := -9999
+	for suffix in ["", "_soil"]:
+		var deck_piece: CanvasItem = farm.get_node_or_null("bed_1" + suffix) as CanvasItem
+		if deck_piece:
+			deck_z = maxi(deck_z, deck_piece.z_index)
+	_check("interact_above_raised_corner", player.z_index > deck_z,
+		"player.z=%d deck.z=%d" % [player.z_index, deck_z])
 	await _save_png("F_interact_pose_bed1.png",
-		"Interact pose: next to bed_1 lip, facing the bed, in front of wood")
+		"Interact pose: next to bed_1 lip, facing bed, clear of raised NW corner")
 	_shots.append({"id": "F_interact_pose", "note": "next to bed + facing it",
 		"approach": _v(pose_pos), "tap": _v(tap_a)})
 

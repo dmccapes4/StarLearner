@@ -2,6 +2,8 @@ class_name PenGate
 extends Node2D
 ## Isometric pen gate (sprite frames) that opens when the player is near.
 ## Animals stay in pen bounds regardless.
+## Depth: same bias as fence posts, sorted at gate feet — nearer post (south) draws
+## above the leaf, farther post (north) behind it, so the gate sits in the fence line.
 
 const OPEN_DIST := 40.0
 const CLOSE_DIST := 62.0
@@ -28,13 +30,12 @@ func setup(art: FarmSprites, world_pos: Vector2) -> void:
 	_spr.centered = true
 	_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_spr.scale = Vector2(GATE_SCALE, GATE_SCALE)
-	## Feet of posts sit on gate_world; sprite is taller than wide.
-	_spr.offset = Vector2(0, -4)
+	## Leaf + swinging end post. Slight down vs fence mid-rails (0 still read high).
+	_spr.offset = Vector2(0, 3)
 	add_child(_spr)
 	_apply_frame()
-	## Well above west-divider fence posts so the gate leaf is never buried.
-	z_as_relative = false
-	z_index = IsoUtil.depth_from_y(position.y) + 150
+	## In-line with divider posts (not +150 above the fence run).
+	IsoUtil.apply_depth(self, position.y, IsoUtil.BIAS_GATE)
 
 func bind_player(p: Node2D) -> void:
 	player = p

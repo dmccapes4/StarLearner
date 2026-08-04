@@ -199,7 +199,9 @@ func dog_texture() -> Texture2D:
 	return _load("res://assets/animals/dog_idle.png")
 
 func dog_walk_sheet() -> Texture2D:
-	return _load("res://assets/animals/dog_walk.png")
+	## Idle-only like pig/cow/rabbit so Buddy matches pen animal style.
+	## (Legacy 4-dir sheet kept at res://assets/animals/dog_walk.png.)
+	return null
 
 func shed_texture() -> Texture2D:
 	return _load("res://assets/buildings/shed.png")

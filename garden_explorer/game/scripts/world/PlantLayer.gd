@@ -69,7 +69,7 @@ func _refresh_slot(bed_id: String, slot: int) -> void:
 		else ground + Vector2(0, -10)
 	var node := Node2D.new()
 	node.name = key
-	node.z_index = IsoUtil.depth_from_y(ground.y) + 40
+	IsoUtil.apply_depth(node, ground.y, 40)
 
 	if pid.is_empty():
 		node.position = ground + Vector2(0, -FarmMap.BED_HEIGHT + 4)
@@ -145,7 +145,7 @@ func _refresh_bed_icon(bed_id: String) -> void:
 	var icon := Node2D.new()
 	icon.name = "BedIcon_%s" % bed_id
 	icon.position = center + Vector2(0, -FarmMap.BED_HEIGHT - 36)
-	icon.z_index = IsoUtil.depth_from_y(center.y) + 55
+	IsoUtil.apply_depth(icon, center.y, IsoUtil.BIAS_ANIMAL)
 	if garden.is_bed_harvestable(bed_id):
 		var star := _load_tex("res://assets/ui/icon_harvest_ready.png")
 		if star:

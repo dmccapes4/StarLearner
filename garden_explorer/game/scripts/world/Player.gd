@@ -73,9 +73,32 @@ func place_at(world_pos: Vector2) -> void:
 	moving = false
 	_waypoints = PackedVector2Array()
 	_wp_i = 0
-	z_as_relative = false
-	z_index = IsoUtil.depth_from_y(global_position.y) + 50
+	IsoUtil.apply_depth(self, global_position.y, IsoUtil.BIAS_PLAYER)
 	_wire_seed_carry()
+
+func face_toward(world_pos: Vector2) -> void:
+	## Idle pose looking at a target (bed / pet / door) after arrive.
+	var d := world_pos - global_position
+	if d.length_squared() < 0.25:
+		return
+	if absf(d.x) >= absf(d.y) * 0.85:
+		_dir_row = 1
+		_face_left = d.x < 0.0
+	else:
+		## Row 0 = toward camera (+y), row 2 = away (-y).
+		_dir_row = 0 if d.y > 0.0 else 2
+	_anim_col = IDLE_COL
+	_anim_t = 0.0
+	var spr := get_node_or_null("Sprite") as Sprite2D
+	if spr and _anim_mode:
+		spr.frame = _dir_row * 6 + _anim_col
+		spr.flip_h = _dir_row == 1 and _face_left
+	elif spr:
+		spr.flip_h = d.x < 0.0
+	elif _body:
+		_body.scale.x = -1.0 if d.x < 0.0 else 1.0
+		if _hat:
+			_hat.scale.x = _body.scale.x
 
 func _wire_seed_carry() -> void:
 	if not Events.seed_selected.is_connected(_on_seed_carry):
@@ -194,8 +217,7 @@ func _process(delta: float) -> void:
 		if _wp_i + 1 < _waypoints.size():
 			_wp_i += 1
 			target = _waypoints[_wp_i]
-			z_as_relative = false
-			z_index = IsoUtil.depth_from_y(global_position.y) + 50
+			IsoUtil.apply_depth(self, global_position.y, IsoUtil.BIAS_PLAYER)
 			return
 		moving = false
 		_waypoints = PackedVector2Array()
@@ -204,8 +226,7 @@ func _process(delta: float) -> void:
 		var farm := _farm()
 		if farm and farm.is_blocked(global_position):
 			global_position = farm.nearest_walkable(global_position)
-		z_as_relative = false
-		z_index = IsoUtil.depth_from_y(global_position.y) + 50
+		IsoUtil.apply_depth(self, global_position.y, IsoUtil.BIAS_PLAYER)
 		Events.player_arrived.emit()
 		return
 	var step := to.normalized() * speed * delta
@@ -237,9 +258,35 @@ func _process(delta: float) -> void:
 		_wp_i = 0
 		Events.player_arrived.emit()
 		return
+	## Soft-avoid pets (Buddy): slide around instead of walking through them.
+	if farm2 and farm2.has_method("near_roaming_animal") \
+			and not str(farm2.near_roaming_animal(next)).is_empty():
+		var fwd := to.normalized()
+		var perp := Vector2(-fwd.y, fwd.x)
+		var slid := false
+		for side in [perp * 18.0, -perp * 18.0, perp * 28.0, -perp * 28.0]:
+			var cand: Vector2 = next + side
+			if farm2.is_blocked(cand):
+				continue
+			if farm2.has_method("crossing_allowed") and not farm2.crossing_allowed(global_position, cand):
+				continue
+			if not str(farm2.near_roaming_animal(cand)).is_empty():
+				continue
+			next = cand
+			slid = true
+			break
+		if not slid:
+			if _wp_i + 1 < _waypoints.size():
+				_wp_i += 1
+				target = _waypoints[_wp_i]
+				return
+			moving = false
+			_waypoints = PackedVector2Array()
+			_wp_i = 0
+			Events.player_arrived.emit()
+			return
 	global_position = next
-	z_as_relative = false
-	z_index = IsoUtil.depth_from_y(global_position.y) + 50
+	IsoUtil.apply_depth(self, global_position.y, IsoUtil.BIAS_PLAYER)
 	_update_anim(to, delta)
 
 func _update_anim(move_dir: Vector2, delta: float) -> void:

@@ -11,12 +11,12 @@
     "label": "Shed"
   },
   "beds": [
-    {"id": "bed_0", "tile": {"x": 0, "y": 0.15}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_1", "tile": {"x": 3, "y": 0.15}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_2", "tile": {"x": 6, "y": 0.15}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_3", "tile": {"x": 0, "y": 5.85}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_4", "tile": {"x": 3, "y": 5.85}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_5", "tile": {"x": 6, "y": 5.85}, "half_tiles": {"x": 1.05, "y": 0.8}}
+    {"id": "bed_0", "tile": {"x": 0, "y": -0.4}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_1", "tile": {"x": 3.7, "y": -0.4}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_2", "tile": {"x": 7.4, "y": -0.4}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_3", "tile": {"x": 0, "y": 6.4}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_4", "tile": {"x": 3.7, "y": 6.4}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_5", "tile": {"x": 7.4, "y": 6.4}, "half_tiles": {"x": 1.05, "y": 0.8}}
   ],
   "path": {
     "tile_y": 3.0,

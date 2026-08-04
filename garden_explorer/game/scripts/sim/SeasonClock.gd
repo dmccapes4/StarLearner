@@ -11,6 +11,7 @@ var duration_sec: float = 180.0
 
 func setup(db: SeedDB, duration_override: float = -1.0) -> void:
 	seed_db = db
+	process_mode = Node.PROCESS_MODE_PAUSABLE
 	if duration_override > 0.0:
 		duration_sec = duration_override
 	elif db != null:
@@ -19,6 +20,10 @@ func setup(db: SeedDB, duration_override: float = -1.0) -> void:
 
 func _process(delta: float) -> void:
 	if paused or seed_db == null:
+		return
+	## Belt-and-suspenders: never tick under the idle PAUSED overlay.
+	var idle := get_node_or_null("/root/IdleGuard")
+	if idle != null and idle.has_method("is_paused_ui") and bool(idle.call("is_paused_ui")):
 		return
 	elapsed += delta
 	if elapsed >= duration_sec:

@@ -55,6 +55,27 @@ func run() -> TestAssert:
 	t.ok(farm.gate_world != Vector2.ZERO, "pen gate placed")
 	t.ok(farm.is_blocked(farm.bed_centers["bed_1"]), "garden bed is solid")
 	t.ok(not farm.is_blocked(farm.spawn_world), "spawn is walkable")
+	## Bed approach: from the path, tapping bed_1 stands on the path-side face.
+	if farm.has_method("bed_approach_world"):
+		var path_y := IsoUtil.tile_to_world(Vector2(0.0, 3.0)).y
+		var from_path := farm.nearest_walkable(Vector2(farm.bed_centers["bed_0"].x, path_y))
+		var ap1: Vector2 = farm.bed_approach_world("bed_1", from_path, farm.bed_centers["bed_1"])
+		t.ok(farm.path_world_length(from_path, ap1) < 220.0, "bed_1 approach short from path")
+		t.ok(ap1.y >= farm.bed_centers["bed_1"].y + 12.0, "bed_1 approach on path/south face")
+		var d1 := ap1.distance_to(farm.bed_centers["bed_1"])
+		t.ok(d1 >= 36.0 and d1 <= 72.0, "bed_1 stand next to lip")
+		## Opposite-side tap walks the gap, not a south-row loop.
+		var west := farm.nearest_walkable(farm.bed_centers["bed_1"] + Vector2(-70, 10))
+		var tap_e: Vector2 = farm.bed_centers["bed_1"] + Vector2(40, 0)
+		var ap_e: Vector2 = farm.bed_approach_world("bed_1", west, tap_e)
+		var plen_e := farm.path_world_length(west, ap_e)
+		t.ok(plen_e < 280.0, "opposite-side path short (gap)")
+		var max_y := west.y
+		for p in farm.find_path(west, ap_e):
+			max_y = maxf(max_y, p.y)
+		t.ok(max_y < farm.bed_centers["bed_4"].y + 30.0, "opposite-side not south loop")
+
+
 	## Perimeter fence is a hard wall — meadow / far side of rails is blocked.
 	var past_north_fence := IsoUtil.tile_to_world(Vector2(2, -5.2))
 	t.ok(farm.is_blocked(past_north_fence), "cannot walk past the far (north) fence")
@@ -95,6 +116,13 @@ func run() -> TestAssert:
 		for bid in farm.bed_ids():
 			var bc: Vector2 = farm.bed_centers.get(bid, Vector2.ZERO)
 			t.ok(farm.is_blocked_for_dog(bc), "dog blocked at bed %s center" % bid)
+	## Pet approach stands beside the animal, not on top.
+	if farm.has_method("animal_approach_world"):
+		var dog_pos: Vector2 = farm.dog_spawn_world
+		var from_p := farm.nearest_walkable(dog_pos + Vector2(-80, 0))
+		var ap_dog: Vector2 = farm.animal_approach_world(from_p, dog_pos)
+		t.ok(ap_dog.distance_to(dog_pos) >= 28.0, "animal approach stand-off")
+		t.ok(not farm.is_blocked(ap_dog), "animal approach walkable")
 
 	## UI validation: slot markers sit fully inside the bed lip, no overlap.
 	for bid in farm.bed_ids():
