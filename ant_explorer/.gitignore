@@ -5,3 +5,6 @@ secrets/*
 
 # Star video pipeline cache (full YouTube sources)
 tools/build/
+
+# QA harness outputs (regenerable screenshots / device captures)
+qa/out/

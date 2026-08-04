@@ -131,7 +131,11 @@ cd tools
 ```bash
 godot --path game                                        # play
 godot --headless --path game -s res://tests/run_tests.gd # 560+ headless logic tests
+./qa/run_chamber_suite.sh                                # chamber + interaction screenshots
 ```
+
+Agent playtest suites (asserts + PNGs under `qa/out/`): see [`qa/README.md`](qa/README.md).
+Shared process: [`../docs/QA_SUITE_PROCESS.md`](../docs/QA_SUITE_PROCESS.md).
 
 ## Recapture screenshots
 
