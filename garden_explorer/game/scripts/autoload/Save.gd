@@ -55,10 +55,10 @@ func _apply_blob(blob: Dictionary) -> void:
 	var bb = blob.get("beds", {})
 	if typeof(bb) == TYPE_DICTIONARY:
 		beds_blob = bb.duplicate(true)
-	tool_id = str(blob.get("tool_id", ""))
-	selected_seed = str(blob.get("selected_seed", ""))
-	if tool_id != "seed":
-		selected_seed = ""
+	## Tools are session-only — always boot hands-free (ignore saved hand).
+	tool_id = ""
+	selected_seed = ""
+	## beds / season / stars still load from blob above.
 	caught_bugs = PackedStringArray()
 	for b in blob.get("caught_bugs", []):
 		caught_bugs.append(str(b))

@@ -45,4 +45,24 @@ func run() -> TestAssert:
 	var ground := farm.get_node_or_null("Ground") as Polygon2D
 	t.ok(ground != null, "ground exists")
 	t.ok(ground.modulate != Color(1, 1, 1, 1), "winter tint applied")
+
+	## Season change must NOT clear plants already in beds — only harvest / spade do.
+	var garden := GardenState.new()
+	garden.setup(["bed_0"], 4)
+	t.ok(garden.plant_bed("bed_0", "lettuce"), "plant lettuce in spring bed")
+	## Force grown without watering loop.
+	var s: Dictionary = garden.get_slot("bed_0", 0)
+	s["stage"] = GardenState.STAGE_GROWN
+	s["thirsty"] = false
+	garden.beds["bed_0"][0] = s
+	garden._sync_slots_from_lead("bed_0")
+	t.ok(garden.is_bed_harvestable("bed_0"), "lettuce harvestable before season flip")
+	db.set_season("spring")
+	db.advance_season() ## → summer; shed seeds change, beds must stay
+	t.eq(db.current_season, "summer", "now summer")
+	t.eq(garden.bed_plant_id("bed_0"), "lettuce", "plant remains after season change")
+	t.eq(garden.bed_stage("bed_0"), GardenState.STAGE_GROWN, "stage remains grown")
+	t.ok(garden.is_bed_harvestable("bed_0"), "still harvestable after season change")
+	t.ok(not db.is_seed_available("lettuce"), "lettuce off shed in summer")
+	t.ok(db.is_seed_available("tomato"), "tomato on shed in summer")
 	return t

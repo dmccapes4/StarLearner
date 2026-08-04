@@ -123,6 +123,13 @@ func path_texture() -> Texture2D:
 func fence_texture() -> Texture2D:
 	return _fence_tex
 
+func pen_fence_segment(kind: String) -> Texture2D:
+	## Generated isometric pen fence:
+	##   rail_a / rail_b — rails only (primary edge sections)
+	##   post — standalone posts (placed on joints, above rails)
+	##   run_* / seg_diag_* — legacy composites (unused by current placer)
+	return _load("res://assets/ui/fence/%s.png" % kind)
+
 func chicken_texture(color: String = "default") -> Texture2D:
 	var sheet: Texture2D = _chicken_sheets.get(color, null)
 	if sheet == null:
@@ -142,12 +149,21 @@ func chicken_coop_texture() -> Texture2D:
 	return _atlas(_coop_tex, Rect2(64 * 3, 0, 64, 80))
 
 func gate_frame_textures() -> Array:
-	## Sprout Lands fence gate sheet: 5 frames × 32×48 (closed → open).
-	var path := "res://assets/tiles/sprout_lands/Tilesets/Building parts/Fence gates animation sprites .png"
-	var sheet := _load(path)
-	if sheet == null:
-		return []
+	## Prefer generated isometric frames (match pen fence wood + 2:1 iso).
+	## Fallback: Sprout Lands sheet (5 × 32×48).
 	var frames: Array = []
+	for i in 5:
+		var path := "res://assets/ui/gate/open_%d.png" % i
+		var tex := _load(path)
+		if tex:
+			frames.append(tex)
+	if frames.size() == 5:
+		return frames
+	var sheet_path := "res://assets/tiles/sprout_lands/Tilesets/Building parts/Fence gates animation sprites .png"
+	var sheet := _load(sheet_path)
+	if sheet == null:
+		return frames
+	frames.clear()
 	for i in 5:
 		frames.append(_atlas(sheet, Rect2(i * 32, 0, 32, 48)))
 	return frames

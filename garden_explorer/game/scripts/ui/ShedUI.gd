@@ -160,7 +160,7 @@ func refresh() -> void:
 	_add_tool_tile(TOOL_SEED, "Seeds", TILE_SEED)
 	_add_tool_tile(TOOL_WATER, "Water", TILE_WATER)
 	_add_tool_tile(TOOL_UPROOT, "Spade", TILE_SPADE)
-	_add_tool_tile(TOOL_NONE, "Return", TILE_RETURN)
+	_add_tool_tile(TOOL_NONE, "Hands free", TILE_RETURN)
 
 func _add_tool_tile(tool_id: String, label: String, tex_path: String) -> void:
 	var b := _make_tool_button(tool_id, label, tex_path)

@@ -61,6 +61,8 @@ func is_bed_thirsty(bed_id: String) -> bool:
 
 func is_harvestable(bed_id: String, slot: int = 0) -> bool:
 	var s := get_slot(bed_id, slot)
+	if s.is_empty() or str(s.get("plant_id", "")).is_empty():
+		return false
 	return str(s.get("stage", "")) == STAGE_GROWN
 
 func is_bed_harvestable(bed_id: String) -> bool:

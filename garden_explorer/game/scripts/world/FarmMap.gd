@@ -1,8 +1,7 @@
 class_name FarmMap
 extends Node2D
-## Builds the wide farm: shed (left) · 2×3 beds (middle) · full-end animal pen (right).
-## Beds + shed are extruded iso volumes (fake-3D). Pen is walkable via a west gate
-## (player only — roaming animals stay inside fence_poly). Shed / beds block walking.
+## Builds the wide farm: shed (left) · path shed→gate · 3 beds north + 3 south · east pen.
+## One sprite fence around the yard; the pen shares N/E/S rails. West divider + gate only.
 
 const MAP_PATH := "res://data/map.json"
 const SLOT_OFFSETS := [
@@ -38,6 +37,8 @@ var _astar: AStar2D = AStar2D.new()
 var _nav_cell_to_id: Dictionary = {} ## Vector2i -> int
 var _yard_min: Vector2 = Vector2.ZERO
 var _yard_max: Vector2 = Vector2.ZERO
+## Dedupes fence posts where yard perimeter meets the pen divider (T-junctions).
+var _fence_post_keys: Dictionary = {}
 
 func _ready() -> void:
 	## World owns the authoritative build (with sprites). Skip auto-build to
@@ -59,6 +60,7 @@ func build_from_file(path: String = MAP_PATH) -> void:
 	_build_shed()
 	_build_beds()
 	_build_fence()
+	_build_path()
 	_register_animal_spawns()
 	_compute_bounds()
 	_rebuild_nav()
@@ -93,8 +95,8 @@ func zone_at(world_pos: Vector2) -> Dictionary:
 		if IsoUtil.point_in_polygon(world_pos, bed_polys[id]):
 			return {"id": str(id), "kind": "bed"}
 	if IsoUtil.point_in_polygon(world_pos, fence_poly):
-		## Keep fence_center as fence; animals need a near-direct tap.
-		var animal_id := animal_at(world_pos, 34.0)
+		## Prefer a direct animal tap; otherwise the pen floor zone.
+		var animal_id := animal_at(world_pos, 28.0)
 		if not animal_id.is_empty():
 			return {"id": animal_id, "kind": "animal"}
 		return {"id": "fence", "kind": "fence"}
@@ -348,11 +350,32 @@ func _build_ground() -> void:
 		if gtex:
 			ground.texture = gtex
 			ground.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+func _path_tile_y() -> float:
+	return float(data.get("path", {}).get("tile_y", 3.0))
+
+func _build_path() -> void:
+	## Dirt strip shed door → pen gate. With 3 beds on each side, path is centered
+	## (map.json tile_y); a single-sided 6-bed row would push the path lower/left.
+	var cfg: Dictionary = data.get("path", {})
+	var ty := float(cfg.get("tile_y", 3.0))
+	var hy := float(cfg.get("half_y", 0.55))
+	var pen_x := float(data.get("fence", {}).get("pen_min_x", 8.5))
+	var from_x := float(cfg.get("from_x", -4.8))
+	var to_x := float(cfg.get("to_x", pen_x))
+	var shed: Dictionary = data.get("shed", {})
+	if not shed.is_empty():
+		var stile := _vec2(shed.get("tile", {"x": -7, "y": 2}))
+		var shalf := _vec2(shed.get("half_tiles", {"x": 2.0, "y": 1.7}))
+		## Start just east of the shed footprint so the path meets the door apron.
+		from_x = stile.x + shalf.x * 0.55
+	to_x = pen_x
+	var cx := (from_x + to_x) * 0.5
+	var hx := absf(to_x - from_x) * 0.5
 	var path := Polygon2D.new()
 	path.name = "Path"
 	path.z_index = -15
 	path.color = Color(0.72, 0.62, 0.42, 1.0)
-	path.polygon = IsoUtil.diamond_polygon(Vector2(3.0, 4.2), Vector2(8.5, 0.7))
+	path.polygon = IsoUtil.diamond_polygon(Vector2(cx, ty), Vector2(hx, hy))
 	add_child(path)
 	if sprites:
 		var ptex := sprites.path_texture()
@@ -361,16 +384,18 @@ func _build_ground() -> void:
 			path.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
 
 func _build_perimeter_fence() -> void:
-	## Rails + posts around the farm yard so meadows read as "outside".
+	## Sprite fence around the whole farm yard (meadows read as outside).
+	_fence_post_keys.clear()
 	var corners := [
 		_yard_min,
 		Vector2(_yard_max.x, _yard_min.y),
 		_yard_max,
 		Vector2(_yard_min.x, _yard_max.y),
 	]
-	_draw_fence_loop("Yard", corners, 5)
+	_draw_sprite_fence_loop("Yard", corners, -1)
 
 func _draw_fence_loop(prefix: String, corners: Array, posts_per_edge: int) -> void:
+	## Legacy poly fence (tests / no sprites).
 	for i in 4:
 		var a: Vector2 = corners[i]
 		var b: Vector2 = corners[(i + 1) % 4]
@@ -380,7 +405,7 @@ func _draw_fence_loop(prefix: String, corners: Array, posts_per_edge: int) -> vo
 			var rail := Polygon2D.new()
 			rail.name = "%sRail_%d_%d" % [prefix, i, int(rail_y)]
 			rail.z_index = IsoUtil.depth_from_y(maxf(wa.y, wb.y)) + 2
-			rail.color = Color(0.48, 0.32, 0.16, 1.0)
+			rail.color = Color(196 / 255.0, 154 / 255.0, 108 / 255.0, 1.0)
 			var n := (wb - wa).normalized().orthogonal() * 2.2
 			rail.polygon = PackedVector2Array([
 				wa + Vector2(0, rail_y) - n,
@@ -395,13 +420,156 @@ func _draw_fence_loop(prefix: String, corners: Array, posts_per_edge: int) -> vo
 			var world := IsoUtil.tile_to_world(pt)
 			var post := Polygon2D.new()
 			post.name = "%sPost_%d_%d" % [prefix, i, step]
-			post.z_index = IsoUtil.depth_from_y(world.y) + 3
-			post.color = Color(0.42, 0.28, 0.14, 1.0)
+			post.z_index = IsoUtil.depth_from_y(world.y) + 4
+			post.color = Color(170 / 255.0, 121 / 255.0, 89 / 255.0, 1.0)
 			post.polygon = PackedVector2Array([
 				world + Vector2(-3.5, -24), world + Vector2(3.5, -24),
 				world + Vector2(3.5, 5), world + Vector2(-3.5, 5),
 			])
 			add_child(post)
+
+func _has_fence_sprites() -> bool:
+	return sprites != null and sprites.has_method("pen_fence_segment") \
+		and sprites.pen_fence_segment("rail_a") != null \
+		and sprites.pen_fence_segment("post") != null
+
+func _fence_rail_kind(edge_i: int) -> String:
+	## Rails only (no baked posts). Match iso slope — no flip_h.
+	##   slope +0.5 (edges 0, 2) → rail_b
+	##   slope -0.5 (edges 1, 3) → rail_a
+	if edge_i == 0 or edge_i == 2:
+		return "rail_b"
+	return "rail_a"
+
+func _segs_for_edge(a: Vector2, b: Vector2) -> int:
+	## ~2.2 tiles per rail — denser joints so near-corner posts aren't skipped.
+	return maxi(4, int(ceil(a.distance_to(b) / 2.2)))
+
+func _place_fence_sprite(name: String, tex: Texture2D, world: Vector2, scale: float, z_extra: int) -> void:
+	if tex == null:
+		return
+	var spr := Sprite2D.new()
+	spr.name = name
+	spr.texture = tex
+	spr.centered = true
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.scale = Vector2(scale, scale)
+	spr.position = world + Vector2(0, -6)
+	spr.z_as_relative = false
+	spr.z_index = IsoUtil.depth_from_y(world.y) + z_extra
+	add_child(spr)
+
+func _place_fence_rail(name: String, kind: String, tile_a: Vector2, tile_b: Vector2) -> void:
+	## Rails sort by farther endpoint so neighboring posts (higher bias) stay on top.
+	var tex: Texture2D = sprites.pen_fence_segment(kind)
+	if tex == null:
+		return
+	var wa := IsoUtil.tile_to_world(tile_a)
+	var wb := IsoUtil.tile_to_world(tile_b)
+	var mid := (wa + wb) * 0.5
+	var spr := Sprite2D.new()
+	spr.name = name
+	spr.texture = tex
+	spr.centered = true
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.scale = Vector2(2.0, 2.0)
+	spr.position = mid + Vector2(0, -6)
+	spr.z_as_relative = false
+	spr.z_index = IsoUtil.depth_from_y(minf(wa.y, wb.y)) + 3
+	add_child(spr)
+
+func _shed_blocks_fence_at(tile: Vector2) -> bool:
+	## West-edge posts sit behind the shed facade; skip them so tips don't draw on the roof.
+	var shed: Dictionary = data.get("shed", {})
+	if shed.is_empty():
+		return false
+	var stile := _vec2(shed.get("tile", {"x": -7, "y": 2}))
+	var shalf := _vec2(shed.get("half_tiles", {"x": 2.0, "y": 1.7}))
+	var pad := Vector2(1.35, 1.0)
+	var poly := IsoUtil.diamond_polygon(stile, shalf + pad)
+	return IsoUtil.point_in_polygon(IsoUtil.tile_to_world(tile), poly)
+
+func _try_place_post(name: String, tile: Vector2) -> bool:
+	## One post per joint. Deduped by key + proximity (corners / T-junctions).
+	if _shed_blocks_fence_at(tile):
+		return false
+	var key := "%.1f,%.1f" % [snappedf(tile.x, 0.1), snappedf(tile.y, 0.1)]
+	if _fence_post_keys.has(key):
+		return false
+	var world := IsoUtil.tile_to_world(tile)
+	for other_key in _fence_post_keys:
+		var parts: PackedStringArray = str(other_key).split(",")
+		if parts.size() != 2:
+			continue
+		var ot := Vector2(float(parts[0]), float(parts[1]))
+		if world.distance_to(IsoUtil.tile_to_world(ot)) < 22.0:
+			return false
+	_fence_post_keys[key] = true
+	var tex: Texture2D = sprites.pen_fence_segment("post")
+	## +55 beats adjacent rail midpoints (~40 world-y) while staying near animal bias.
+	_place_fence_sprite(name, tex, world, 2.35, 55)
+	return true
+
+func _gate_seg_index(a: Vector2, b: Vector2) -> int:
+	## One fence-section opening on the divider, aligned with the path tile-y.
+	var n_segs := _segs_for_edge(a, b)
+	var path_y := _path_tile_y()
+	var denom := b.y - a.y
+	var t := 0.5
+	if absf(denom) > 0.001:
+		t = clampf((path_y - a.y) / denom, 0.05, 0.95)
+	var seg := int(floor(t * float(n_segs)))
+	return clampi(seg, 1, maxi(n_segs - 2, 0))
+
+func _draw_edge_fence(prefix: String, edge_i: int, a: Vector2, b: Vector2, leave_gate: bool, include_end: bool) -> void:
+	var kind := _fence_rail_kind(edge_i)
+	var n_segs := _segs_for_edge(a, b)
+	var gate_seg := _gate_seg_index(a, b) if leave_gate else -1
+	## Rails first (under).
+	for step in range(0, n_segs):
+		if leave_gate and step == gate_seg:
+			continue
+		var t0 := float(step) / float(n_segs)
+		var t1 := float(step + 1) / float(n_segs)
+		var ta: Vector2 = a.lerp(b, t0 + 0.10)
+		var tb: Vector2 = a.lerp(b, t1 - 0.10)
+		_place_fence_rail("%sRail_%d_%d" % [prefix, edge_i, step], kind, ta, tb)
+	## Posts on joints (gate opening keeps its two framing posts — one section wide).
+	for p in range(0, n_segs):
+		var t := float(p) / float(n_segs)
+		var pt: Vector2 = a.lerp(b, t)
+		if not include_end and p > 0 and pt.distance_to(b) < 2.0:
+			continue
+		_try_place_post("%sPost_%d_%d" % [prefix, edge_i, p], pt)
+	if include_end:
+		_try_place_post("%sPost_end" % prefix, b)
+
+func _draw_sprite_fence_loop(prefix: String, corners: Array, gate_edge: int) -> void:
+	## Per-piece rails + posts with local iso depth (not one mega-sprite).
+	if not _has_fence_sprites():
+		_draw_fence_loop(prefix, corners, 5)
+		return
+	for i in 4:
+		var a: Vector2 = corners[i]
+		var b: Vector2 = corners[(i + 1) % 4]
+		_draw_edge_fence(prefix, i, a, b, i == gate_edge, false)
+	## Guarantee the four geometric corners.
+	for i in 4:
+		_try_place_post("%sCorner_%d" % [prefix, i], corners[i])
+	## Pen T-junctions on N/S yard edges.
+	if prefix == "Yard":
+		var pen_x := float(data.get("fence", {}).get("pen_min_x", 8.5))
+		_try_place_post("YardPenTee_N", Vector2(pen_x, _yard_min.y))
+		_try_place_post("YardPenTee_S", Vector2(pen_x, _yard_max.y))
+		## Fill near-corner gaps on the back (north) + west edges.
+		var nw: Vector2 = corners[0]
+		var ne: Vector2 = corners[1]
+		var sw: Vector2 = corners[3]
+		for t in [0.08, 0.16, 0.24]:
+			_try_place_post("YardNorthNearW_%s" % str(t), nw.lerp(ne, t))
+		_try_place_post("YardNorthNearE", nw.lerp(ne, 0.88))
+		for t in [0.76, 0.88, 0.96]:
+			_try_place_post("YardWestNearN_%s" % str(t), sw.lerp(nw, t))
 
 const SHED_SPRITE := "res://assets/buildings/shed_v2.png"
 const SHED_SPRITE_SCALE := 2.2
@@ -432,7 +600,9 @@ func _build_shed() -> void:
 		spr.scale = Vector2(SHED_SPRITE_SCALE, SHED_SPRITE_SCALE)
 		var h := float(tex.get_height()) * SHED_SPRITE_SCALE
 		spr.position = south + Vector2(0, 8) - Vector2(0, h * 0.5)
-		spr.z_index = z + 4
+		## Sort with the facade feet; stay above nearby fence posts (+55).
+		spr.z_as_relative = false
+		spr.z_index = IsoUtil.depth_from_y(south.y) + 70
 		add_child(spr)
 	else:
 		## Fallback: simple extruded box (headless tests without the asset).
@@ -542,30 +712,48 @@ func bed_plot_cross(bed_id: String) -> Vector2:
 	return center + Vector2(0, -BED_HEIGHT)
 
 func _build_fence() -> void:
+	## Pen = east strip of the yard, full N–S height. Shares the yard perimeter
+	## on north / east / south; only the west divider + gate is drawn here.
 	var fence: Dictionary = data.get("fence", {})
-	var tile := _vec2(fence.get("tile", {"x": 13, "y": 3}))
-	var half := _vec2(fence.get("half_tiles", {"x": 3.4, "y": 4.4}))
-	fence_poly = IsoUtil.diamond_polygon(tile, half)
-	pen_roam_poly = IsoUtil.diamond_polygon(tile, half * 0.78)
-	fence_center = IsoUtil.tile_to_world(tile)
-	var z := IsoUtil.depth_from_y(fence_center.y)
-	_add_poly("FenceYard", fence_poly, Color(0.50, 0.68, 0.36, 1.0), z - 2)
-
-	## Posts + rails with a gap on the west edge for the player-only gate.
+	var pen_min_x := float(fence.get("pen_min_x", 8.5))
+	var pen_min := Vector2(pen_min_x, _yard_min.y)
+	var pen_max := Vector2(_yard_max.x, _yard_max.y)
 	var corners := [
-		tile + Vector2(-half.x, -half.y),
-		tile + Vector2(half.x, -half.y),
-		tile + Vector2(half.x, half.y),
-		tile + Vector2(-half.x, half.y),
+		Vector2(pen_min.x, pen_min.y),
+		Vector2(pen_max.x, pen_min.y),
+		Vector2(pen_max.x, pen_max.y),
+		Vector2(pen_min.x, pen_max.y),
 	]
-	_draw_pen_fence_with_gate("Pen", corners, 5)
+	fence_poly = PackedVector2Array()
+	for c in corners:
+		fence_poly.append(IsoUtil.tile_to_world(c))
+	var inset := 0.55
+	var roam_corners := [
+		Vector2(pen_min.x + inset, pen_min.y + inset),
+		Vector2(pen_max.x - inset, pen_min.y + inset),
+		Vector2(pen_max.x - inset, pen_max.y - inset),
+		Vector2(pen_min.x + inset, pen_max.y - inset),
+	]
+	pen_roam_poly = PackedVector2Array()
+	for c in roam_corners:
+		pen_roam_poly.append(IsoUtil.tile_to_world(c))
+	var center_tile := (pen_min + pen_max) * 0.5
+	fence_center = IsoUtil.tile_to_world(center_tile)
+	var z := IsoUtil.depth_from_y(fence_center.y)
 
-	## Gate world position — west midpoint of the pen (faces garden beds).
-	gate_world = IsoUtil.tile_to_world(tile + Vector2(-half.x + 0.05, 0.0))
+	## No separate pen floor fill — pen is just the east strip of the yard grass.
 
-	## Chicken coop at the *upper* end of the pen.
-	var coop_off := _vec2(fence.get("coop_offset", {"x": -0.2, "y": -2.6}))
-	coop_world = IsoUtil.tile_to_world(tile + coop_off)
+	## West divider only (SW→NW along pen_min_x) — one fence-section gate on the path.
+	var div_a := Vector2(pen_min.x, pen_max.y)
+	var div_b := Vector2(pen_min.x, pen_min.y)
+	_draw_pen_divider("Pen", div_a, div_b)
+	var n_segs := _segs_for_edge(div_a, div_b)
+	var gseg := _gate_seg_index(div_a, div_b)
+	var gt := (float(gseg) + 0.5) / float(n_segs)
+	gate_world = IsoUtil.tile_to_world(div_a.lerp(div_b, gt) + Vector2(0.05, 0.0))
+
+	var coop_tile := _vec2(fence.get("coop_tile", {"x": 13.0, "y": -2.2}))
+	coop_world = IsoUtil.tile_to_world(coop_tile)
 	if sprites:
 		var coop := sprites.chicken_coop_texture()
 		if coop:
@@ -574,40 +762,42 @@ func _build_fence() -> void:
 			spr.texture = coop
 			spr.centered = true
 			spr.position = coop_world + Vector2(0, -28)
-			spr.z_index = z + 4
+			## Well above fence posts (+55) even when an east-rail sprite overlaps the coop bbox.
+			spr.z_as_relative = false
+			spr.z_index = IsoUtil.depth_from_y(coop_world.y) + 150
 			spr.scale = Vector2(2.0, 2.0)
 			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			add_child(spr)
 
 	_add_label("FenceLabel", fence_center + Vector2(0, -72), "ANIMALS", Color(1, 0.95, 0.8, 0.9))
 
-func _draw_pen_fence_with_gate(prefix: String, corners: Array, posts_per_edge: int) -> void:
-	for i in 4:
-		var a: Vector2 = corners[i]
-		var b: Vector2 = corners[(i + 1) % 4]
-		var west_edge := (i == 3)
-		## Rails — skip middle third on west edge (gate opening).
-		for rail_y in [-18.0, -9.0]:
-			if west_edge:
-				_add_rail_segment("%sRail_%d_a_%d" % [prefix, i, int(rail_y)], a, a.lerp(b, 0.30), rail_y)
-				_add_rail_segment("%sRail_%d_b_%d" % [prefix, i, int(rail_y)], a.lerp(b, 0.70), b, rail_y)
-			else:
-				_add_rail_segment("%sRail_%d_%d" % [prefix, i, int(rail_y)], a, b, rail_y)
-		for step in posts_per_edge:
-			var t: float = float(step) / float(maxi(posts_per_edge - 1, 1))
-			if west_edge and t > 0.32 and t < 0.68:
-				continue
+func _draw_pen_divider(prefix: String, tile_sw: Vector2, tile_nw: Vector2) -> void:
+	## West divider between garden beds and pen — one fence-section gate on the path.
+	var a := tile_sw
+	var b := tile_nw
+	if not _has_fence_sprites():
+		var n_segs := _segs_for_edge(a, b)
+		var gseg := _gate_seg_index(a, b)
+		var t0 := float(gseg) / float(n_segs)
+		var t1 := float(gseg + 1) / float(n_segs)
+		_add_rail_segment("%sRail_a_-18" % prefix, a, a.lerp(b, t0), -18.0)
+		_add_rail_segment("%sRail_a_-9" % prefix, a, a.lerp(b, t0), -9.0)
+		_add_rail_segment("%sRail_b_-18" % prefix, a.lerp(b, t1), b, -18.0)
+		_add_rail_segment("%sRail_b_-9" % prefix, a.lerp(b, t1), b, -9.0)
+		for t in [0.0, t0, t1, 1.0]:
 			var pt: Vector2 = a.lerp(b, t)
 			var world := IsoUtil.tile_to_world(pt)
 			var post := Polygon2D.new()
-			post.name = "%sPost_%d_%d" % [prefix, i, step]
-			post.z_index = IsoUtil.depth_from_y(world.y) + 3
-			post.color = Color(0.42, 0.28, 0.14, 1.0)
+			post.name = "%sPost_%s" % [prefix, str(t)]
+			post.z_index = IsoUtil.depth_from_y(world.y) + 4
+			post.color = Color(170 / 255.0, 121 / 255.0, 89 / 255.0, 1.0)
 			post.polygon = PackedVector2Array([
-				world + Vector2(-3.5, -24), world + Vector2(3.5, -24),
-				world + Vector2(3.5, 5), world + Vector2(-3.5, 5),
+				world + Vector2(-4.5, -26), world + Vector2(4.5, -26),
+				world + Vector2(4.5, 6), world + Vector2(-4.5, 6),
 			])
 			add_child(post)
+		return
+	_draw_edge_fence(prefix, 3, a, b, true, true)
 
 func _add_rail_segment(name: String, tile_a: Vector2, tile_b: Vector2, rail_y: float) -> void:
 	var wa := IsoUtil.tile_to_world(tile_a)
@@ -615,13 +805,13 @@ func _add_rail_segment(name: String, tile_a: Vector2, tile_b: Vector2, rail_y: f
 	var rail := Polygon2D.new()
 	rail.name = name
 	rail.z_index = IsoUtil.depth_from_y(maxf(wa.y, wb.y)) + 2
-	rail.color = Color(0.48, 0.32, 0.16, 1.0)
-	var n := (wb - wa).normalized().orthogonal() * 2.2
+	rail.color = Color(196 / 255.0, 154 / 255.0, 108 / 255.0, 1.0) ## Sprout Lands rail light
+	var n := (wb - wa).normalized().orthogonal() * 3.0
 	rail.polygon = PackedVector2Array([
 		wa + Vector2(0, rail_y) - n,
 		wb + Vector2(0, rail_y) - n,
-		wb + Vector2(0, rail_y + 3.5) + n,
-		wa + Vector2(0, rail_y + 3.5) + n,
+		wb + Vector2(0, rail_y + 4.5) + n,
+		wa + Vector2(0, rail_y + 4.5) + n,
 	])
 	add_child(rail)
 
@@ -723,7 +913,8 @@ func nearest_dog_walkable(world_pos: Vector2, max_radius_tiles: int = 10) -> Vec
 func in_pen(world_pos: Vector2) -> bool:
 	return fence_poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, fence_poly)
 
-const GATE_PASS_RADIUS := 52.0
+## One fence-section opening (~2 tiles / ~72 world units).
+const GATE_PASS_RADIUS := 40.0
 
 func crossing_allowed(a: Vector2, b: Vector2) -> bool:
 	## A move between two points may not cross the pen fence except at the gate.

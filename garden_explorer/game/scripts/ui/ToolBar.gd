@@ -5,7 +5,7 @@ extends CanvasLayer
 var _bar: HBoxContainer
 var _buttons: Dictionary = {} ## id -> Button
 var _icons: Dictionary = {} ## id -> Control (visual)
-var tool_id: String = "water"
+var tool_id: String = ""
 
 const TOOLS := [
 	{"id": "water", "label": "Water", "line": "Water can ready. Tap a thirsty plant."},

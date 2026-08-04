@@ -1,43 +1,40 @@
 class_name PenGate
 extends Node2D
-## Simple isometric-friendly brown fence bar that slides/fades open for the
-## player. Animals stay in pen bounds regardless.
+## Isometric pen gate (sprite frames) that opens when the player is near.
+## Animals stay in pen bounds regardless.
 
-const OPEN_DIST := 52.0
-const CLOSE_DIST := 78.0
+const OPEN_DIST := 40.0
+const CLOSE_DIST := 62.0
 const ANIM_SEC := 0.28
+## Match one fence rail span (rail_a ~38px @ 2.0 → gate content ~30px).
+const GATE_SCALE := 2.55
 
 var player: Node2D
 var is_open: bool = false
-var _bar: Polygon2D
-var _closed_poly: PackedVector2Array
-var _open_poly: PackedVector2Array
+var _spr: Sprite2D
+var _frames: Array = [] ## Texture2D closed → open
 var _t: float = 0.0 ## 0 closed → 1 open
 var _dir: int = 0 ## -1 closing, 0 idle, 1 opening
 
-func setup(_art: FarmSprites, world_pos: Vector2) -> void:
+func setup(art: FarmSprites, world_pos: Vector2) -> void:
 	position = world_pos
-	## Short brown rail that matches the west fence gap — solid when closed.
-	_closed_poly = PackedVector2Array([
-		Vector2(-22, -6), Vector2(22, -6), Vector2(18, 10), Vector2(-18, 10),
-	])
-	_open_poly = PackedVector2Array([
-		Vector2(-22, -6), Vector2(-10, -6), Vector2(-14, 10), Vector2(-26, 10),
-	])
-	_bar = Polygon2D.new()
-	_bar.name = "GateBar"
-	_bar.color = Color(0.42, 0.28, 0.14, 1.0)
-	_bar.polygon = _closed_poly
-	add_child(_bar)
-	## Top highlight for a bit of iso depth.
-	var lip := Polygon2D.new()
-	lip.color = Color(0.55, 0.38, 0.20, 1.0)
-	lip.polygon = PackedVector2Array([
-		Vector2(-20, -8), Vector2(20, -8), Vector2(22, -6), Vector2(-22, -6),
-	])
-	lip.name = "GateLip"
-	add_child(lip)
-	z_index = IsoUtil.depth_from_y(position.y) + 40
+	_frames.clear()
+	if art and art.has_method("gate_frame_textures"):
+		_frames = art.gate_frame_textures()
+	if _frames.is_empty():
+		_frames = _load_disk_frames()
+	_spr = Sprite2D.new()
+	_spr.name = "GateSprite"
+	_spr.centered = true
+	_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_spr.scale = Vector2(GATE_SCALE, GATE_SCALE)
+	## Feet of posts sit on gate_world; sprite is taller than wide.
+	_spr.offset = Vector2(0, -4)
+	add_child(_spr)
+	_apply_frame()
+	## Well above west-divider fence posts so the gate leaf is never buried.
+	z_as_relative = false
+	z_index = IsoUtil.depth_from_y(position.y) + 150
 
 func bind_player(p: Node2D) -> void:
 	player = p
@@ -53,14 +50,22 @@ func _process(delta: float) -> void:
 	if _dir == 0:
 		return
 	_t = clampf(_t + float(_dir) * delta / ANIM_SEC, 0.0, 1.0)
-	_bar.polygon = _lerp_poly(_closed_poly, _open_poly, _t)
-	_bar.modulate.a = lerpf(1.0, 0.15, _t)
+	_apply_frame()
 	if _dir > 0 and _t >= 1.0:
 		_dir = 0
 		is_open = true
 	elif _dir < 0 and _t <= 0.0:
 		_dir = 0
 		is_open = false
+
+func _apply_frame() -> void:
+	if _spr == null:
+		return
+	if _frames.is_empty():
+		return
+	var idx := int(round(_t * float(_frames.size() - 1)))
+	idx = clampi(idx, 0, _frames.size() - 1)
+	_spr.texture = _frames[idx]
 
 func _begin_open() -> void:
 	if _dir > 0 or (is_open and _t >= 1.0):
@@ -76,9 +81,14 @@ func _begin_close() -> void:
 	var GateSfxScript := preload("res://scripts/audio/GateSfx.gd")
 	GateSfxScript.play_close()
 
-func _lerp_poly(a: PackedVector2Array, b: PackedVector2Array, t: float) -> PackedVector2Array:
-	var out := PackedVector2Array()
-	var n := mini(a.size(), b.size())
-	for i in n:
-		out.append(a[i].lerp(b[i], t))
+func _load_disk_frames() -> Array:
+	var out: Array = []
+	for i in 5:
+		var path := "res://assets/ui/gate/open_%d.png" % i
+		if ResourceLoader.exists(path):
+			out.append(load(path))
+		elif FileAccess.file_exists(path):
+			var img := Image.load_from_file(path)
+			if img:
+				out.append(ImageTexture.create_from_image(img))
 	return out

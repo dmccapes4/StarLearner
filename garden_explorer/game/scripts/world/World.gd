@@ -191,25 +191,23 @@ func _bind_ui() -> void:
 	season_card = get_tree().get_first_node_in_group("season_card")
 
 func _restore_shed_hand() -> void:
-	## Save keeps the shed hand; ShedUI used to boot empty so water/spade/seed
-	## looked "held" (chip/carry) but beds ignored the tool until re-picked.
+	## Boot hands-free. Save still records the hand mid-session, but each launch
+	## starts empty so kids explore / catch bugs without a leftover watering can.
 	var save := _save()
 	if shed_ui == null or save == null:
 		return
-	var tid := str(save.tool_id)
-	var plant := str(save.selected_seed) if tid == "seed" else ""
-	if tid.is_empty():
-		tool_id = ""
-		## Clear any stale ToolBar carry sprite from older builds.
-		Events.tool_changed.emit("")
-		return
-	tool_id = tid
+	tool_id = ""
 	_restoring_hand = true
 	if shed_ui.has_method("restore_tool"):
-		shed_ui.call("restore_tool", tid, plant)
-	elif shed_ui.has_method("set_tool"):
-		shed_ui.call("set_tool", tid, plant)
+		shed_ui.call("restore_tool", "", "")
+	elif shed_ui.has_method("clear_selection"):
+		shed_ui.call("clear_selection")
+	else:
+		Events.tool_changed.emit("")
 	_restoring_hand = false
+	## Drop any persisted hand so the next cold start stays hands-free.
+	if save.has_method("set_tool"):
+		save.set_tool("", "")
 
 func set_tool(id: String) -> void:
 	tool_id = id
@@ -570,7 +568,7 @@ func _on_player_arrived() -> void:
 func _open_pending_prompt() -> void:
 	if _pending.is_empty():
 		return
-	## Animals: first meet → reveal; later → SFX (Buddy stays bark-only).
+	## Animals: first meet → reveal; later → SFX. Buddy is bark-only (no video).
 	if str(_pending.get("kind", "")) == "animal":
 		var aid := str(_pending.get("id", ""))
 		_handle_animal_arrive(aid)
@@ -604,18 +602,20 @@ func _open_pending_prompt() -> void:
 func _handle_animal_arrive(animal_id: String) -> void:
 	_pending.clear()
 	var now := Time.get_ticks_msec()
-	if not _is_animal_met(animal_id):
-		_mark_animal_met(animal_id)
-		_animal_last_tap_ms[animal_id] = now
-		_show_animal_reveal(animal_id)
-		return
-	## Buddy: after first meet, bark only — never reopen the reveal tile.
 	var kind := animal_db.kind_of(animal_id) if animal_db else ""
+	## Buddy: bark only — skip reveal/video (playtest: daughter finds it annoying).
 	if animal_id == "dog" or kind == "dog":
+		if not _is_animal_met(animal_id):
+			_mark_animal_met(animal_id)
 		AnimalSfxScript.play(animal_id)
 		Events.animal_tapped.emit(animal_id)
 		print("Garden Explorer: animal:%s (bark)" % animal_id)
 		_animal_sfx_played = false
+		return
+	if not _is_animal_met(animal_id):
+		_mark_animal_met(animal_id)
+		_animal_last_tap_ms[animal_id] = now
+		_show_animal_reveal(animal_id)
 		return
 	var last := int(_animal_last_tap_ms.get(animal_id, 0))
 	_animal_last_tap_ms[animal_id] = now
@@ -644,10 +644,10 @@ func _mark_animal_met(animal_id: String) -> void:
 
 func _apply_bed_tool(bed_id: String) -> bool:
 	## Returns true if the interaction was fully handled (no action tiles).
-	if garden.is_bed_harvestable(bed_id):
-		## Confirm first — kids often want to keep pretty grown plants.
-		_arm_harvest(bed_id)
-		return true
+	## Grown plants always use the harvest confirm tile — held tool does not matter
+	## (seed / water / spade / hands-free). Fall through so _build_bed_actions builds it.
+	if garden != null and garden.is_bed_harvestable(bed_id):
+		return false
 	var tool := _shed_tool()
 	match tool:
 		"seed":
@@ -675,16 +675,14 @@ func _apply_bed_tool(bed_id: String) -> bool:
 			if garden.is_bed_empty(bed_id):
 				SpeakScript.line("No plants here. Get seeds from the shed to plant some.")
 				return true
+			## Spade only pulls non-grown plants; grown beds fall through to harvest.
 			_arm_uproot(bed_id)
 			return true
 		_:
 			return false
 
-func _arm_harvest(bed_id: String) -> void:
-	_harvest_armed_bed = bed_id
-	if action_prompt == null:
-		return
-	var pid := garden.bed_plant_id(bed_id)
+func _harvest_confirm_action(bed_id: String) -> Dictionary:
+	var pid := garden.bed_plant_id(bed_id) if garden else ""
 	var pname := seed_db.display_name(pid) if seed_db else pid
 	var tex: Texture2D = null
 	if sprites:
@@ -694,10 +692,7 @@ func _arm_harvest(bed_id: String) -> void:
 		if tex == null and sprites.has_method("harvest_icon"):
 			tex = sprites.harvest_icon(pid)
 	var line := "Tap to harvest %s." % pname
-	## Speak here (not only via ActionPrompt) so the line always fires even when
-	## the prompt path is silent / TTS-only on device.
-	SpeakScript.line(line)
-	action_prompt.call("show_actions", [{
+	return {
 		"kind": "harvest_confirm",
 		"bed_id": bed_id,
 		"plant_id": pid,
@@ -706,8 +701,13 @@ func _arm_harvest(bed_id: String) -> void:
 		"tile_size": Vector2(220, 220),
 		"icon_size": Vector2(120, 120),
 		"narration": line,
-		"silent": true,
-	}])
+	}
+
+func _arm_harvest(bed_id: String) -> void:
+	_harvest_armed_bed = bed_id
+	if action_prompt == null:
+		return
+	action_prompt.call("show_actions", [_harvest_confirm_action(bed_id)])
 
 func _arm_uproot(bed_id: String) -> void:
 	_uproot_armed_bed = bed_id
@@ -853,13 +853,14 @@ func _build_actions_for_pending() -> Array:
 func _build_bed_actions(bed_id: String, slot: int) -> Array:
 	## Tool decided at the shed. Holding a tool auto-applies on arrive
 	## (see _open_pending_prompt). Hands-free: Bugs + Examine tiles only.
+	## Grown beds always get the harvest confirm tile (any held tool).
 	if slot < 0:
 		slot = 0
 	var out: Array = []
+	if garden != null and garden.is_bed_harvestable(bed_id):
+		_harvest_armed_bed = bed_id
+		return [_harvest_confirm_action(bed_id)]
 	var tool := _shed_tool()
-	## Harvestable beds: confirm tile (handled in _apply_bed_tool).
-	if garden.is_bed_harvestable(bed_id):
-		return [] ## harvest_confirm path
 	match tool:
 		"seed", "water", "uproot":
 			return [] ## auto-applied on arrive
@@ -1162,9 +1163,11 @@ func _on_season_tick(season_id: String, _index: int) -> void:
 	_apply_season_change(season_id, true)
 
 func _apply_season_change(season_id: String, announce: bool) -> void:
+	## Season only changes shed seeds + farm tint/VO. Plants already in beds stay
+	## until the kid harvests or uses the spade — never auto-cleared here.
 	farm_map.apply_season_tint(season_id)
 	Events.season_changed.emit(season_id)
-	## Drop held seed if it is out of season.
+	## Drop held seed if it is out of season (hand only — not planted beds).
 	if shed_ui and shed_ui.has_method("selected_seed"):
 		var held := str(shed_ui.call("selected_seed"))
 		if not held.is_empty() and not seed_db.is_seed_available(held):

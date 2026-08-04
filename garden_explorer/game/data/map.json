@@ -1,9 +1,9 @@
 {
-  "version": 3,
-  "notes": "Wide farm: shed left · beds middle · full-end animal pen with player gate. Dog roams the yard (outside pen). Coop at upper end of pen.",
+  "version": 6,
+  "notes": "Layout rule: 3 beds each side of path → path centered; 6 beds on one side → path lower/left. Current: 3N+3S, path centered shed→gate. Pen = east strip; gate = one fence section.",
   "bounds_tiles": {"min_x": -10, "min_y": -4, "max_x": 16, "max_y": 10},
   "meadow_pad_tiles": 5,
-  "player_spawn_tile": {"x": 2, "y": 4},
+  "player_spawn_tile": {"x": 2, "y": 3.0},
   "shed": {
     "id": "shed",
     "tile": {"x": -7, "y": 2},
@@ -11,28 +11,33 @@
     "label": "Shed"
   },
   "beds": [
-    {"id": "bed_0", "tile": {"x": 0, "y": 0}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_1", "tile": {"x": 3, "y": 0}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_2", "tile": {"x": 6, "y": 0}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_3", "tile": {"x": 0, "y": 3}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_4", "tile": {"x": 3, "y": 3}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_5", "tile": {"x": 6, "y": 3}, "half_tiles": {"x": 1.05, "y": 0.8}}
+    {"id": "bed_0", "tile": {"x": 0, "y": 0.15}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_1", "tile": {"x": 3, "y": 0.15}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_2", "tile": {"x": 6, "y": 0.15}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_3", "tile": {"x": 0, "y": 5.85}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_4", "tile": {"x": 3, "y": 5.85}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_5", "tile": {"x": 6, "y": 5.85}, "half_tiles": {"x": 1.05, "y": 0.8}}
   ],
+  "path": {
+    "tile_y": 3.0,
+    "half_y": 0.55,
+    "from_x": -4.8,
+    "to_x": 8.5
+  },
   "slots_per_bed": 4,
   "fence": {
     "id": "fence",
-    "tile": {"x": 13.2, "y": 3.0},
-    "half_tiles": {"x": 3.4, "y": 4.4},
+    "pen_min_x": 8.5,
     "label": "Animals",
     "gate_edge": "west",
-    "coop_offset": {"x": -0.2, "y": -2.6}
+    "coop_tile": {"x": 11.5, "y": -1.0}
   },
   "animals": [
-    {"id": "chicken_a", "tile": {"x": 11.2, "y": 1.2}},
-    {"id": "chicken_b", "tile": {"x": 14.4, "y": 1.6}},
-    {"id": "rabbit", "tile": {"x": 12.0, "y": 3.2}},
-    {"id": "pig", "tile": {"x": 14.6, "y": 4.0}},
-    {"id": "cow", "tile": {"x": 12.8, "y": 5.2}},
-    {"id": "dog", "tile": {"x": 3.0, "y": 5.5}}
+    {"id": "chicken_a", "tile": {"x": 10.0, "y": -2.0}},
+    {"id": "chicken_b", "tile": {"x": 14.5, "y": -1.5}},
+    {"id": "rabbit", "tile": {"x": 11.0, "y": 1.5}},
+    {"id": "pig", "tile": {"x": 14.5, "y": 5.5}},
+    {"id": "cow", "tile": {"x": 11.5, "y": 7.5}},
+    {"id": "dog", "tile": {"x": -2.5, "y": 3.0}}
   ]
 }
