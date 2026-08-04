@@ -8,3 +8,6 @@ tools/build/
 
 # Intermediate mp4 cuts from the clip pipeline; the .ogv files are the finals.
 game/videos/*.mp4
+
+# Agent QA suite artifacts
+qa/out/

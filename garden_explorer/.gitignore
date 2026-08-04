@@ -19,3 +19,6 @@ tools/media_src/
 # Editor host-local config (do not ship)
 .cache/
 .config/
+
+# QA harness outputs (regenerable screenshots / device captures)
+qa/out/

@@ -74,6 +74,8 @@ DISPLAY=:1 godot --path . -s res://tools/capture_preview_shots.gd   # regenerate
 DISPLAY=:1 godot --path . -s res://tools/make_tile.gd              # regenerate the launcher tile
 ```
 
+**Agent QA (flight mechanics):** see [`qa/README.md`](qa/README.md) — run `./qa/run_flight_mechanics_suite.sh` for mission burn + Free Flight asserts and PNGs. Sensor / kid-motion research: [`docs/RESEARCH_MOTO_G_PLAY_2024_SENSORS_AND_KID_MOTION.md`](docs/RESEARCH_MOTO_G_PLAY_2024_SENSORS_AND_KID_MOTION.md). Shared process: [`../docs/QA_SUITE_PROCESS.md`](../docs/QA_SUITE_PROCESS.md).
+
 `tests/run_tests.gd` also force-loads every view script, so a compile error anywhere fails the run
 (headless can't render the scenes themselves).
 

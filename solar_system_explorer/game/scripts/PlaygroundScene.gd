@@ -70,6 +70,33 @@ const SPEED_STEP_MAX := 5
 const SPEED_BLEND_S := 1.2
 ## Multipliers vs SPEED for gears 1..5.
 const SPEED_STEP_MULT: Array = [0.40, 0.65, 1.0, 1.35, 1.75]
+const SPEED_MAX_JOY := SPEED * 1.75
+
+## ── Joystick latch: pull→fixed accel, push→fixed decel ─────────────
+## Onset latches a fixed rate. Settle spikes never flip the command.
+## After one quiet sample in-drive, a return spike = backoff; steady
+## quiet then clears to neutral. Quiet alone while "holding" keeps latch.
+const JOY_ACCEL_QUIET := 0.40
+const JOY_NEUTRAL_HOLD_S := 0.45   ## steady rest after return (cal + flight)
+const JOY_PEAK_SETTLE_S := 0.22    ## brief quiet after shove onset
+const JOY_RETURN_HOLD_S := 0.50    ## cal: hold still at rest after return
+const JOY_RETURN_MIN := 0.45       ## must see opposite shove before rest counts
+const JOY_EXTREME_MIN := 0.55
+const JOY_BAND_FRAC := 0.12
+const JOY_BAND_MIN := 0.22
+const JOY_EXT_CAP := 2.8
+const JOY_RATE := 12.0
+const JOY_ENGAGE_FRAC := 0.38
+const JOY_ENGAGE_MIN := 0.50
+const JOY_SETTLE_IGN_S := 0.65    ## ignore settle brake after engage
+const JOY_BACKOFF_FRAC := 0.55    ## fraction of cal return spike
+const JOY_BACKOFF_MIN := 0.70     ## hold-noise must not cancel latch
+const JOY_LAUNCH_GUARD_S := 0.55  ## ignore engage right after launch
+const JOY_BACKOFF_HOLD_S := 0.08  ## opposite must persist briefly
+const JOY_DESKTOP_SCALE := 0.55
+const JOY_TEL_S := 0.40
+const JOY_VEL_TAU_S := 0.45
+const JOY_VEL_QUIET := 0.25
 
 ## ── Every-launch tutorial + aim gate ───────────────────────────────
 const TUT_ANGLE_RAD := 0.20
@@ -111,8 +138,15 @@ const LINE_ALREADY_STOP := "You are already stopped."
 const LINE_FASTER := "Faster."
 const LINE_SLOWER := "Slower."
 const LINE_READY := "Ready — jerk to change speed."
+const LINE_TUT_SURGE_INTRO_JOY := "Speed joystick. Pull latches acceleration; push latches deceleration. Return to rest to cancel."
+const LINE_TUT_JOY_NEUTRAL := "Hold still."
+const LINE_TUT_JOY_PUSH := "Push forward."
+const LINE_TUT_JOY_PULL := "Pull toward you."
+const LINE_TUT_JOY_RETURN := "Now move back to rest, then hold still."
+const LINE_TUT_GOT_IT := "Got it."
+const LINE_JOY_READY := "Ready — pull holds acceleration, push holds deceleration. Return to rest to cancel."
 
-## Both modes: jerks only. Gears tutorial teaches ±1; cruise teaches stop/go.
+## Both jerk modes + joystick distance experiment.
 const TUT_STEPS_GEARS: Array = [
 	{"kind": "tilt", "axis": 0, "dir": 1.0, "learn": true, "arrow": "→",
 		"hint": "Tilt RIGHT", "line": LINE_TUT_RIGHT},
@@ -145,6 +179,26 @@ const TUT_STEPS_CRUISE: Array = [
 	{"kind": "surge", "dir": -1.0, "mode": "jerk", "learn": false, "arrow": "⏹",
 		"hint": "Quick PUSH — stop", "line": LINE_TUT_JERK_STOP,
 		"go": LINE_TUT_GO_PUSH},
+]
+
+const TUT_STEPS_JOY: Array = [
+	{"kind": "tilt", "axis": 0, "dir": 1.0, "learn": true, "arrow": "→",
+		"hint": "Tilt RIGHT", "line": LINE_TUT_RIGHT},
+	{"kind": "tilt", "axis": 0, "dir": -1.0, "learn": false, "arrow": "←",
+		"hint": "Tilt LEFT", "line": LINE_TUT_LEFT},
+	{"kind": "tilt", "axis": 1, "dir": 1.0, "learn": true, "arrow": "↑",
+		"hint": "Point UP", "line": LINE_TUT_UP},
+	{"kind": "tilt", "axis": 1, "dir": -1.0, "learn": false, "arrow": "↓",
+		"hint": "Point DOWN", "line": LINE_TUT_DOWN},
+	{"kind": "surge", "dir": 0.0, "mode": "joy_neutral", "learn": false, "arrow": "•",
+		"hint": "1 · Hold still", "line": LINE_TUT_JOY_NEUTRAL,
+		"go": LINE_TUT_JOY_NEUTRAL},
+	{"kind": "surge", "dir": -1.0, "mode": "joy_push", "learn": true, "arrow": "↪",
+		"hint": "2 · Push, then back to rest", "line": LINE_TUT_JOY_PUSH,
+		"go": LINE_TUT_JOY_PUSH},
+	{"kind": "surge", "dir": 1.0, "mode": "joy_pull", "learn": false, "arrow": "↩",
+		"hint": "4 · Pull, then back to rest", "line": LINE_TUT_JOY_PULL,
+		"go": LINE_TUT_JOY_PULL},
 ]
 
 enum State { SPEED_PICK, TUTORIAL, AIM_GATE, FLYING, PAUSED_TILE, ORBITING }
@@ -180,6 +234,7 @@ var _sy: float = 1.0     ## pitch sign
 var _sz: float = 1.0     ## surge sign: + = pull-toward-self is positive
 var _flip: float = 1.0   ## −1 when the sensor frame is 180° from the screen
 var _speed_gears: bool = true  ## false = cruise/stop jerks only
+var _speed_joy: bool = false   ## experimental distance-from-neutral throttle
 var _tut_steps: Array = []
 var _tut_i: int = 0
 var _tut_ref: Vector2 = Vector2.ZERO
@@ -213,6 +268,35 @@ var _surge_win_active: bool = false  ## gears: capturing a 2s window
 var _surge_win_t: float = 0.0
 var _surge_win_pos: float = 0.0   ## max +surge in window
 var _surge_win_neg: float = 0.0   ## max |−surge| in window
+## Joystick distance estimate (integrated lin-Z, meters-ish).
+var _surge_vel: float = 0.0
+var _surge_disp: float = 0.0      ## signed: pull + after _sz
+var _surge_stick: float = 0.0     ## −1..+1 after deadband / extents
+var _joy_band: float = JOY_BAND_MIN
+var _joy_push_ext: float = 1.2    ## |accel| at full push
+var _joy_pull_ext: float = 1.2
+var _joy_quiet_t: float = 0.0
+var _joy_cal_sum: float = 0.0
+var _joy_cal_sum2: float = 0.0
+var _joy_cal_t: float = 0.0
+var _joy_peak: float = 0.0        ## signed accel peak during joy throw
+var _joy_phase: String = ""       ## throw|settle during joy push/pull
+var _joy_tel_t: float = 0.0
+var _joy_drive: float = 0.0       ## +1 accel latch, −1 decel, 0 neutral
+var _joy_drive_t: float = 0.0
+var _joy_backoff: bool = false
+var _joy_seen_quiet: bool = false ## quiet once in-drive → arm backoff detect
+var _joy_quiet_hold: float = 0.0
+var _joy_engage: float = JOY_ENGAGE_MIN
+var _joy_backoff_thr: float = JOY_BACKOFF_MIN
+var _joy_launch_guard: float = 0.0
+var _joy_opp_t: float = 0.0       ## time opposite surge above backoff thr
+## QA / CI: when true, joy flight reads `_last_surge` only and skips the
+## desktop Shift+arrow shim (no accelerometer in headless suites).
+var _joy_use_surge_only: bool = false
+var _tut_push_return: float = 0.0
+var _tut_pull_return: float = 0.0
+var _joy_return_peak: float = 0.0   ## opposite spike during cal return
 var _surge_arm: float = SURGE_ARM_DEFAULT
 var _surge_jerk: float = SURGE_JERK_DEFAULT
 var _tut_surge_peak: float = 0.0
@@ -300,6 +384,9 @@ func begin(start_at: String = "earth") -> void:
 	_tut_surge_peak = 0.0
 	_tut_pull_peak = 0.0
 	_tut_push_peak = 0.0
+	_tut_push_return = 0.0
+	_tut_pull_return = 0.0
+	_joy_return_peak = 0.0
 	_tut_pull_raw = 0.0
 	_tut_push_raw = 0.0
 	_tut_jerk_peak = 0.0
@@ -311,6 +398,32 @@ func begin(start_at: String = "earth") -> void:
 	_tut_win_pos = 0.0
 	_tut_win_neg = 0.0
 	_speed_gears = true
+	_speed_joy = false
+	_surge_vel = 0.0
+	_surge_disp = 0.0
+	_surge_stick = 0.0
+	_joy_band = JOY_BAND_MIN
+	_joy_push_ext = 0.25
+	_joy_pull_ext = 0.25
+	_joy_quiet_t = 0.0
+	_joy_cal_sum = 0.0
+	_joy_cal_sum2 = 0.0
+	_joy_cal_t = 0.0
+	_joy_peak = 0.0
+	_joy_phase = ""
+	_joy_drive = 0.0
+	_joy_drive_t = 0.0
+	_joy_backoff = false
+	_joy_seen_quiet = false
+	_joy_quiet_hold = 0.0
+	_joy_engage = JOY_ENGAGE_MIN
+	_joy_backoff_thr = JOY_BACKOFF_MIN
+	_joy_launch_guard = 0.0
+	_joy_opp_t = 0.0
+	_joy_use_surge_only = false
+	_tut_push_return = 0.0
+	_tut_pull_return = 0.0
+	_joy_return_peak = 0.0
 	_tut_steps = []
 	_tile.visible = false
 	_arrival.visible = false
@@ -345,14 +458,23 @@ func _enter_speed_pick() -> void:
 
 func _on_speed_gears() -> void:
 	_speed_gears = true
+	_speed_joy = false
 	_speed_pick.set_active(false)
 	_tel_event("speed mode=gears")
 	_enter_tutorial()
 
 func _on_speed_cruise_stop() -> void:
 	_speed_gears = false
+	_speed_joy = false
 	_speed_pick.set_active(false)
 	_tel_event("speed mode=cruise_stop")
+	_enter_tutorial()
+
+func _on_speed_joystick() -> void:
+	_speed_gears = false
+	_speed_joy = true
+	_speed_pick.set_active(false)
+	_tel_event("speed mode=joystick")
 	_enter_tutorial()
 
 func set_active(on: bool) -> void:
@@ -461,7 +583,8 @@ func _steer(delta: float) -> void:
 	var surge_motion: bool = (
 		_surge_pulse_armed
 		or _jerk_cd > 0.0
-		or (absf(_last_surge) > _surge_arm and not pitching))
+		or (_speed_joy and absf(_joy_drive) > 0.5 and not pitching)
+		or (absf(_last_surge) > _surge_arm and not pitching and not _speed_joy))
 	if surge_motion:
 		_surge_pitch_cd = SURGE_PITCH_HOLD_S
 	var surge_busy: bool = surge_motion or (_surge_pitch_cd > 0.0 and not pitching)
@@ -501,7 +624,8 @@ func _steer(delta: float) -> void:
 			_band_warned = false
 
 ## Linear accel along screen depth. Filtered Z is kept raw; signed delta vs
-## the post-backoff neutral is what flight logic uses (pull = + after _sz).
+## neutral is jerk logic (pull = + after _sz). Joystick mode also integrates
+## that accel into a displacement estimate (_surge_disp).
 func _surge_sample(delta: float) -> float:
 	var raw := Input.get_accelerometer()
 	if raw.length() < 0.5:
@@ -511,6 +635,7 @@ func _surge_sample(delta: float) -> float:
 			key = Input.get_axis("ui_down", "ui_up") * 6.0
 		_surge_filt = key
 		_last_surge = _sz * (_surge_filt - _surge_neutral)
+		_surge_update_disp(delta)
 		return _last_surge
 	_gravity_filtered(delta)
 	var lin: Vector3 = raw - _g_filt
@@ -518,7 +643,31 @@ func _surge_sample(delta: float) -> float:
 	var alpha: float = 1.0 - exp(-delta / SURGE_LP_TAU_S)
 	_surge_filt = lerpf(_surge_filt, z, alpha)
 	_last_surge = _sz * (_surge_filt - _surge_neutral)
+	_surge_update_disp(delta)
 	return _last_surge
+
+## Disp telem only; stick mirrors latch drive for UI.
+func _surge_update_disp(delta: float) -> void:
+	var a: float = _last_surge
+	_surge_vel += a * delta
+	_surge_vel *= exp(-delta / JOY_VEL_TAU_S)
+	_surge_disp += _surge_vel * delta
+	var quiet: bool = absf(a) <= JOY_ACCEL_QUIET and absf(_surge_vel) <= JOY_VEL_QUIET
+	if quiet and absf(_surge_disp) <= maxf(_joy_band, 0.08):
+		_joy_quiet_t += delta
+		if _joy_quiet_t >= SURGE_QUIET_S:
+			_surge_disp = 0.0
+			_surge_vel = 0.0
+	else:
+		_joy_quiet_t = 0.0
+	if _speed_joy:
+		_surge_stick = _joy_drive
+
+func _joy_reset_disp() -> void:
+	_surge_vel = 0.0
+	_surge_disp = 0.0
+	_surge_stick = 0.0
+	_joy_quiet_t = 0.0
 
 func _recenter_surge_neutral() -> void:
 	_surge_neutral = _surge_filt
@@ -530,10 +679,11 @@ func _recenter_surge_neutral() -> void:
 	_surge_prev_filt = _surge_filt
 	_surge_post_neutral = SURGE_POST_NEUTRAL_S
 	_last_surge = 0.0
+	_joy_reset_disp()
 	_tel_event("surge neutral=%.2f" % _surge_neutral)
 	if _surge_announce_ready:
 		_surge_announce_ready = false
-		Narrator.speak(LINE_READY)
+		Narrator.speak(LINE_JOY_READY if _speed_joy else LINE_READY)
 
 func _apply_surge_thresholds(pull_peak: float, push_peak: float) -> void:
 	# Both modes: thresholds from tutorial jerks only.
@@ -580,6 +730,9 @@ func _surge_input_blocked() -> bool:
 
 func _speed_from_surge(delta: float) -> void:
 	_tick_speed_blend(delta)
+	if _speed_joy:
+		_speed_from_joy(delta)
+		return
 	var s: float = _last_surge
 	var a: float = absf(s)
 	if _surge_input_blocked():
@@ -628,6 +781,137 @@ func _speed_from_surge(delta: float) -> void:
 			_fire_surge_jerk(jd)
 		else:
 			_surge_clear_pulse(true)
+
+func _speed_from_joy(delta: float) -> void:
+	## Pull onset → ACCEL latch (fixed rate) until deliberate return.
+	## Push onset → DECEL latch until deliberate return.
+	## Holding still keeps the latch. Quiet alone never clears to READY.
+	## Return never flips to the opposite command.
+	if _joy_launch_guard > 0.0:
+		_joy_launch_guard = maxf(0.0, _joy_launch_guard - delta)
+	if _surge_post_neutral > 0.0:
+		_update_speed_hint()
+		return
+	var a: float = _last_surge
+	var quiet: bool = absf(a) <= JOY_ACCEL_QUIET
+	# Desktop: hold Shift+Up/Down; release = backoff.
+	# Suites set `_joy_use_surge_only` to exercise the phone accel path.
+	var raw := Input.get_accelerometer()
+	if raw.length() < 0.5 and not _joy_use_surge_only:
+		var key := 0.0
+		if Input.is_key_pressed(KEY_SHIFT):
+			key = Input.get_axis("ui_down", "ui_up")
+		if key > 0.2:
+			if _joy_drive <= 0.0:
+				_joy_engage_drive(1.0)
+			_joy_backoff = false
+			_joy_opp_t = 0.0
+			_joy_quiet_hold = 0.0
+		elif key < -0.2:
+			if _joy_drive >= 0.0:
+				_joy_engage_drive(-1.0)
+			_joy_backoff = false
+			_joy_opp_t = 0.0
+			_joy_quiet_hold = 0.0
+		elif absf(_joy_drive) > 0.5:
+			_joy_backoff = true
+	if absf(_joy_drive) < 0.5:
+		_joy_quiet_hold = 0.0
+		_joy_opp_t = 0.0
+		if _joy_launch_guard <= 0.0 and absf(a) >= _joy_engage:
+			_joy_engage_drive(signf(a))
+	else:
+		_joy_drive_t += delta
+		# Constant rate while latched; freeze only after backoff registered.
+		if not _joy_backoff:
+			if _joy_drive > 0.0:
+				_speed = minf(_speed + JOY_RATE * delta, SPEED_MAX_JOY)
+			else:
+				_speed = maxf(_speed - JOY_RATE * delta, SPEED_MIN)
+			# Deliberate return: strong opposite after settle window (not hold noise).
+			if _joy_drive_t >= JOY_SETTLE_IGN_S \
+					and a * _joy_drive < 0.0 and absf(a) >= _joy_backoff_thr:
+				_joy_opp_t += delta
+			else:
+				_joy_opp_t = 0.0
+			if _joy_opp_t >= JOY_BACKOFF_HOLD_S:
+				_joy_backoff = true
+				_joy_quiet_hold = 0.0
+				_tel_event("joy backoff drive=%.0f a=%.2f thr=%.2f" % [
+					_joy_drive, a, _joy_backoff_thr])
+		else:
+			# Backoff seen — freeze speed; steady quiet → READY.
+			if quiet:
+				_joy_quiet_hold += delta
+			else:
+				_joy_quiet_hold = maxf(0.0, _joy_quiet_hold - delta * 0.35)
+			if _joy_quiet_hold >= JOY_NEUTRAL_HOLD_S:
+				_tel_event("joy neutral was_drive=%.0f spd=%.1f" % [
+					_joy_drive, _speed])
+				_joy_clear_drive()
+	_surge_stick = _joy_drive
+	_update_speed_hint()
+
+func _joy_engage_drive(dir: float) -> void:
+	_joy_drive = signf(dir)
+	_joy_drive_t = 0.0
+	_joy_backoff = false
+	_joy_seen_quiet = false
+	_joy_quiet_hold = 0.0
+	_joy_opp_t = 0.0
+	_surge_stick = _joy_drive
+	_tel_event("joy engage drive=%.0f a=%.2f eng=%.2f" % [
+		_joy_drive, _last_surge, _joy_engage])
+
+func _joy_clear_drive() -> void:
+	_joy_drive = 0.0
+	_joy_drive_t = 0.0
+	_joy_backoff = false
+	_joy_seen_quiet = false
+	_joy_quiet_hold = 0.0
+	_joy_opp_t = 0.0
+	_surge_stick = 0.0
+
+func _joy_sync_step_from_speed() -> void:
+	## Gear modes only — joy uses continuous speed (no step jumps).
+	if _speed_joy:
+		return
+	if _speed <= 0.05:
+		_speed_step = SPEED_STEP_STOP
+		return
+	var best: int = SPEED_STEP_MIN
+	var best_d: float = absf(_speed - _speed_for_step(SPEED_STEP_MIN))
+	for s in range(SPEED_STEP_MIN, SPEED_STEP_MAX + 1):
+		var d: float = absf(_speed - _speed_for_step(s))
+		if d < best_d:
+			best_d = d
+			best = s
+	_speed_step = best
+
+func _apply_joy_extents(push_ext: float, pull_ext: float, band: float) -> void:
+	_joy_push_ext = clampf(absf(push_ext), 0.70, JOY_EXT_CAP)
+	_joy_pull_ext = clampf(absf(pull_ext), 0.70, JOY_EXT_CAP)
+	if _joy_pull_ext < 0.70:
+		_joy_pull_ext = _joy_push_ext
+	if _joy_push_ext < 0.70:
+		_joy_push_ext = _joy_pull_ext
+	var soft: float = minf(_joy_push_ext, _joy_pull_ext)
+	_joy_band = clampf(maxf(band * 0.85, soft * JOY_BAND_FRAC), JOY_BAND_MIN,
+		minf(0.45, soft * 0.28))
+	_joy_engage = clampf(soft * JOY_ENGAGE_FRAC, JOY_ENGAGE_MIN, soft * 0.55)
+	var ret: float = 0.0
+	if _tut_push_return > 0.05 and _tut_pull_return > 0.05:
+		ret = minf(_tut_push_return, _tut_pull_return)
+	else:
+		ret = maxf(_tut_push_return, _tut_pull_return)
+	if ret > 0.05:
+		_joy_backoff_thr = clampf(ret * JOY_BACKOFF_FRAC, JOY_BACKOFF_MIN, soft * 0.85)
+	else:
+		_joy_backoff_thr = clampf(soft * 0.55, JOY_BACKOFF_MIN, soft * 0.85)
+	_joy_clear_drive()
+	_tel_event("joy cal push=%.3f pull=%.3f retP=%.2f retL=%.2f band=%.3f eng=%.2f back=%.2f sz=%.0f" % [
+		_joy_push_ext, _joy_pull_ext, _tut_push_return, _tut_pull_return,
+		_joy_band, _joy_engage, _joy_backoff_thr, _sz])
 
 func _begin_speed_backoff() -> void:
 	_surge_pitch_cd = SURGE_PITCH_HOLD_S
@@ -791,6 +1075,9 @@ func _enter_tutorial() -> void:
 	_sz = 1.0
 	_tut_pull_peak = 0.0
 	_tut_push_peak = 0.0
+	_tut_push_return = 0.0
+	_tut_pull_return = 0.0
+	_joy_return_peak = 0.0
 	_tut_pull_raw = 0.0
 	_tut_push_raw = 0.0
 	_tut_jerk_peak = 0.0
@@ -801,7 +1088,12 @@ func _enter_tutorial() -> void:
 	_tut_surge_intro_done = false
 	_tut_win_pos = 0.0
 	_tut_win_neg = 0.0
-	_tut_steps = TUT_STEPS_GEARS if _speed_gears else TUT_STEPS_CRUISE
+	if _speed_joy:
+		_tut_steps = TUT_STEPS_JOY
+	elif _speed_gears:
+		_tut_steps = TUT_STEPS_GEARS
+	else:
+		_tut_steps = TUT_STEPS_CRUISE
 	_reticle.visible = false
 	_tut_arrow.visible = true
 	_tut_phone.visible = true
@@ -809,7 +1101,8 @@ func _enter_tutorial() -> void:
 		_speed_bar.visible = false
 	_reset_level_look()
 	_show_tut_step(0)
-	_tel_event("tutorial enter gears=%d" % (1 if _speed_gears else 0))
+	_tel_event("tutorial enter gears=%d joy=%d" % [
+		1 if _speed_gears else 0, 1 if _speed_joy else 0])
 	_speak_tut_step(0)
 
 func _show_tut_step(i: int) -> void:
@@ -833,8 +1126,11 @@ func _speak_tut_step(i: int) -> void:
 		var pose: String = str(step["line"])
 		if not _tut_surge_intro_done:
 			_tut_surge_intro_done = true
-			var intro: String = LINE_TUT_SURGE_INTRO_CRUISE if not _speed_gears \
-				else LINE_TUT_SURGE_INTRO
+			var intro: String = LINE_TUT_SURGE_INTRO
+			if _speed_joy:
+				intro = LINE_TUT_SURGE_INTRO_JOY
+			elif not _speed_gears:
+				intro = LINE_TUT_SURGE_INTRO_CRUISE
 			Narrator.speak(intro + " " + pose)
 		else:
 			Narrator.speak(pose)
@@ -967,29 +1263,46 @@ func _tut_surge_tick(delta: float, step: Dictionary) -> void:
 		var pose_s: float = TUT_SURGE_POSE_S
 		if _tut_surge_phase_t < pose_s:
 			return
-		# Lock rest baseline, speak go, start fixed 2s capture.
 		_surge_neutral = _surge_filt
 		_last_surge = 0.0
 		_tut_surge_peak = 0.0
 		_tut_win_pos = 0.0
 		_tut_win_neg = 0.0
 		_tut_onset_locked = false
-		_tut_surge_phase = "capture"
+		_joy_reset_disp()
+		_joy_cal_sum = 0.0
+		_joy_cal_sum2 = 0.0
+		_joy_cal_t = 0.0
+		_joy_peak = 0.0
+		_joy_tel_t = 0.0
 		_tut_surge_phase_t = 0.0
 		_tut_phone.set_status("green")
 		_tut_phone.set_animate(true)
-		_hint.text = "Capturing…"
-		_tel_event("tut_surge capture start=%.2f mode=%s" % [_surge_neutral, mode])
+		if mode.begins_with("joy_"):
+			_tut_surge_phase = "measure"
+			_joy_phase = "hold" if mode == "joy_neutral" else "throw"
+			_hint.text = "Measuring…"
+			_tel_event("tut_joy start mode=%s neutral=%.2f" % [mode, _surge_neutral])
+		else:
+			_tut_surge_phase = "capture"
+			_hint.text = "Capturing…"
+			_tel_event("tut_surge capture start=%.2f mode=%s" % [_surge_neutral, mode])
 		Narrator.speak(str(step["go"]))
 		return
 
 	if _tut_surge_phase == "success":
 		_tut_phone.set_status("green")
 		_tut_phone.set_animate(false)
+		if Narrator.is_playing():
+			return
 		_tut_surge_phase_t += delta
 		if _tut_surge_phase_t < TUT_SURGE_OK_S:
 			return
 		_tut_advance()
+		return
+
+	if mode.begins_with("joy_"):
+		_tut_joy_measure(delta, mode, want, learn)
 		return
 
 	# ── GREEN: fixed 2s window; lock first onset (ignore settle brake) ─
@@ -1016,6 +1329,136 @@ func _tut_surge_tick(delta: float, step: Dictionary) -> void:
 	if _tut_surge_phase_t < TUT_SURGE_WIN_S:
 		return
 	_tut_analyze_capture(want, mode, learn)
+
+func _tut_joy_measure(delta: float, mode: String, want: float, learn: bool) -> void:
+	## Cal on peak ACCEL shove (not integrated displacement — that can't
+	## see push-and-hold; stop cancels the shove).
+	_tut_phone.set_status("green")
+	_tut_phone.set_animate(mode != "joy_neutral")
+	_tut_surge_phase_t += delta
+	var a: float = _last_surge
+	var quiet: bool = absf(a) <= JOY_ACCEL_QUIET
+	_joy_tel_t += delta
+	if _joy_tel_t >= JOY_TEL_S:
+		_joy_tel_t = 0.0
+		_tel_event("tut_joy tick mode=%s phase=%s a=%.2f peak=%.2f q=%d" % [
+			mode, _joy_phase, a, _joy_peak, 1 if quiet else 0])
+
+	if mode == "joy_neutral":
+		_hint.text = "1 · Hold still"
+		_joy_cal_sum += _surge_filt * delta
+		_joy_cal_sum2 += _surge_filt * _surge_filt * delta
+		_joy_cal_t += delta
+		if not quiet:
+			_joy_cal_t = minf(_joy_cal_t, JOY_NEUTRAL_HOLD_S * 0.35)
+		if _joy_cal_t < 1.0:
+			return
+		var mean: float = _joy_cal_sum / maxf(_joy_cal_t, 0.001)
+		var mean2: float = _joy_cal_sum2 / maxf(_joy_cal_t, 0.001)
+		var var_: float = maxf(0.0, mean2 - mean * mean)
+		var std: float = sqrt(var_)
+		_surge_neutral = mean
+		_joy_band = clampf(std * 3.5, JOY_BAND_MIN, 0.45)
+		_joy_reset_disp()
+		_tel_event("tut_joy neutral mean=%.3f std=%.3f band=%.3f" % [
+			mean, std, _joy_band])
+		_tut_joy_confirm()
+		return
+
+	# ── Capture onset peak, then require return-to-rest ──────────────
+	if _joy_phase == "throw" or _joy_phase == "settle":
+		if a > _tut_win_pos:
+			_tut_win_pos = a
+		if -a > _tut_win_neg:
+			_tut_win_neg = -a
+		var cand: float = a
+		if not _tut_onset_locked:
+			if absf(cand) >= JOY_EXTREME_MIN:
+				if learn or cand * want > 0.0:
+					_tut_onset_locked = true
+					_joy_peak = cand
+					_tel_event("tut_joy onset=%.2f want=%.0f" % [cand, want])
+		elif signf(cand) == signf(_joy_peak):
+			if absf(cand) > absf(_joy_peak):
+				_joy_peak = cand
+		_hint.text = ("%s · shove  a=%.2f peak=%.2f" % [
+			"2 · Push" if want < 0.0 else "4 · Pull", a, _joy_peak])
+		if not _tut_onset_locked or absf(_joy_peak) < JOY_EXTREME_MIN:
+			_surge_release_t = 0.0
+			_joy_phase = "throw"
+			return
+		_joy_phase = "settle"
+		if quiet:
+			_surge_release_t += delta
+		else:
+			_surge_release_t = 0.0
+		if _surge_release_t < JOY_PEAK_SETTLE_S:
+			return
+		var pk: float = clampf(absf(_joy_peak), JOY_EXTREME_MIN, JOY_EXT_CAP)
+		if learn:
+			_sz = signf(_joy_peak) * want
+			_tut_push_peak = pk
+			_tel_event("learned sz=%.0f joy_push_ext=%.2f" % [_sz, _tut_push_peak])
+		elif want < 0.0:
+			_tut_push_peak = pk
+		else:
+			_tut_pull_peak = pk
+		_joy_phase = "return"
+		_joy_return_peak = 0.0
+		_surge_release_t = 0.0
+		_joy_tel_t = 0.0
+		_tut_surge_phase_t = 0.0  ## reused as time-in-return
+		_hint.text = "3 · Back to rest" if want < 0.0 else "5 · Back to rest"
+		_tel_event("tut_joy peak_locked=%.2f → return" % _joy_peak)
+		Narrator.speak(LINE_TUT_JOY_RETURN)
+		return
+
+	# ── Return to rest: REQUIRE opposite shove, then steady quiet ───
+	## Holding still after the push looks identical to rest on accel —
+	## quiet alone must not pass. Wait for a real return motion first.
+	if _joy_phase == "return":
+		# Skip leftover settle brake from the shove (~0.3s).
+		if _tut_surge_phase_t < 0.30:
+			_surge_release_t = 0.0
+			_hint.text = "3 · Move back to rest" if want < 0.0 else "5 · Move back to rest"
+			return
+		var need_ret: float = maxf(JOY_RETURN_MIN, absf(_joy_peak) * 0.35)
+		if a * _joy_peak < 0.0 and absf(a) > _joy_return_peak:
+			_joy_return_peak = absf(a)
+		if _joy_return_peak < need_ret:
+			_surge_release_t = 0.0
+			_hint.text = ("%s · move back  ret=%.2f need=%.2f" % [
+				"3" if want < 0.0 else "5", _joy_return_peak, need_ret])
+			return
+		_hint.text = "3 · Hold still at rest" if want < 0.0 else "5 · Hold still at rest"
+		var near_rest: bool = absf(_surge_filt - _surge_neutral) <= maxf(_joy_band, 0.15)
+		if near_rest and quiet:
+			_surge_release_t += delta
+		else:
+			_surge_release_t = 0.0
+		if _surge_release_t < JOY_RETURN_HOLD_S:
+			return
+		if want < 0.0 or learn:
+			_tut_push_return = maxf(_tut_push_return, _joy_return_peak)
+		else:
+			_tut_pull_return = maxf(_tut_pull_return, _joy_return_peak)
+		_tel_event("tut_joy done mode=%s peak=%.2f return=%.2f" % [
+			mode, _joy_peak, _joy_return_peak])
+		_joy_reset_disp()
+		_tut_joy_confirm()
+		return
+
+func _tut_joy_confirm() -> void:
+	_tut_surge_phase = "success"
+	_tut_surge_phase_t = 0.0
+	_tut_onset_locked = false
+	_surge_release_t = 0.0
+	_joy_phase = ""
+	_tut_phone.set_status("green")
+	_tut_phone.set_animate(false)
+	_hint.text = "Got it!"
+	_tel_event("tut_joy success")
+	Narrator.speak(LINE_TUT_GOT_IT)
 
 func _tut_analyze_capture(want: float, mode: String, learn: bool) -> void:
 	var accept_thr: float = TUT_SURGE_JERK_MIN
@@ -1099,14 +1542,16 @@ func _tut_advance() -> void:
 	if _tut_i >= _tut_steps.size():
 		_tut_phone.visible = false
 		_tut_arrow.visible = false
-		if _tut_pull_peak > 0.0 and _tut_push_peak > 0.0:
+		if _speed_joy:
+			_apply_joy_extents(_tut_push_peak, _tut_pull_peak, _joy_band)
+		elif _tut_pull_peak > 0.0 and _tut_push_peak > 0.0:
 			_apply_surge_thresholds(_tut_pull_peak, _tut_push_peak)
 		elif _tut_jerk_peak > 0.0:
 			_apply_surge_thresholds(_tut_jerk_peak, _tut_jerk_peak)
 		elif _tut_pull_peak > 0.0:
 			_apply_surge_thresholds(_tut_pull_peak, _tut_pull_peak)
-		_tel_event("tutorial done pull=%.2f push=%.2f jerkpk=%.2f sz=%.0f" % [
-			_tut_pull_peak, _tut_push_peak, _tut_jerk_peak, _sz])
+		_tel_event("tutorial done pull=%.2f push=%.2f jerkpk=%.2f sz=%.0f joy=%d" % [
+			_tut_pull_peak, _tut_push_peak, _tut_jerk_peak, _sz, 1 if _speed_joy else 0])
 		_enter_gate()
 		return
 	_show_tut_step(_tut_i)
@@ -1114,12 +1559,23 @@ func _tut_advance() -> void:
 
 func _update_speed_hint() -> void:
 	if _speed_bar != null:
-		_speed_bar.visible = _speed_gears
+		_speed_bar.visible = _speed_gears or _speed_joy
 		_speed_bar.speed = _speed
 		_speed_bar.step = _speed_step
+		_speed_bar.continuous = _speed_joy
 		_speed_bar.blending = _speed_blending
 		_speed_bar.queue_redraw()
-	if _speed_step <= SPEED_STEP_STOP:
+	if _speed_joy:
+		var st: String = "READY"
+		if absf(_joy_drive) > 0.5:
+			if _joy_backoff:
+				st = "BACKOFF"
+			elif _joy_drive > 0.0:
+				st = "ACCEL"
+			else:
+				st = "DECEL"
+		_hint.text = "spd %.0f · %s" % [_speed, st]
+	elif _speed_step <= SPEED_STEP_STOP:
 		_hint.text = "HOLDING — quick pull to speed up"
 	elif _speed_gears:
 		_hint.text = "Gear %d / %d · jerk push/pull" % [_speed_step, SPEED_STEP_MAX]
@@ -1184,7 +1640,15 @@ func _launch(neutral: Vector2) -> void:
 	_state = State.FLYING
 	_capture_grace = CAPTURE_GRACE_S
 	_apply_speed_step(SPEED_STEP_CRUISE, false)
-	_surge_need_recenter = true
+	# Joy stick needs live accel immediately; gears still wait for quiet recenter.
+	if _speed_joy:
+		_surge_need_recenter = false
+		_recenter_surge_neutral()
+		_surge_announce_ready = false
+		_joy_clear_drive()
+		_joy_launch_guard = JOY_LAUNCH_GUARD_S
+	else:
+		_surge_need_recenter = true
 	_surge_capture_cd = 0.0
 	_band_warned = false
 	_reticle.visible = false
@@ -1194,8 +1658,9 @@ func _launch(neutral: Vector2) -> void:
 	# pitch from a tutorial dive.
 	_reset_level_look()
 	_update_speed_hint()
-	_tel_event("launch neutral=(%.3f,%.3f) sx=%.0f sy=%.0f sz=%.0f gears=%d flip=%.0f" % [
-		neutral.x, neutral.y, _sx, _sy, _sz, 1 if _speed_gears else 0, _flip])
+	_tel_event("launch neutral=(%.3f,%.3f) sx=%.0f sy=%.0f sz=%.0f gears=%d joy=%d flip=%.0f" % [
+		neutral.x, neutral.y, _sx, _sy, _sz, 1 if _speed_gears else 0,
+		1 if _speed_joy else 0, _flip])
 	Narrator.speak(LINE_WELCOME)
 func _fly(delta: float) -> void:
 	var fwd := _heading()
@@ -1260,14 +1725,17 @@ func _telemetry(delta: float) -> void:
 		aim = _heading().dot((c - _ship_pos).normalized())
 	var ang := _tilt_angles(Vector3(_g_filt.x * _flip, _g_filt.y * _flip, _g_filt.z)) \
 		if _g_filt.length() > 0.5 else Vector2.ZERO
-	print("PGTEL g=(%.2f,%.2f,%.2f) acc=(%.2f,%.2f,%.2f) ang=(%.3f,%.3f) na=(%.3f,%.3f) s=(%.0f,%.0f,%.0f) cal=%d tilt=(%.2f,%.2f) yaw=%.2f pitch=%.2f y=%.1f near=%s d=%.1f x=%.2f aim=%.2f spd=%.0f step=%d blend=%d surge=%.2f peak=%.2f arm=%.2f jerk_cd=%.1f cap_cd=%.1f" % [
+	print("PGTEL g=(%.2f,%.2f,%.2f) acc=(%.2f,%.2f,%.2f) ang=(%.3f,%.3f) na=(%.3f,%.3f) s=(%.0f,%.0f,%.0f) cal=%d tilt=(%.2f,%.2f) yaw=%.2f pitch=%.2f y=%.1f near=%s d=%.1f x=%.2f aim=%.2f spd=%.0f step=%d blend=%d surge=%.2f peak=%.2f arm=%.2f jerk_cd=%.1f cap_cd=%.1f disp=%.3f vel=%.3f stick=%.2f band=%.3f pext=%.3f lext=%.3f joy=%d drive=%.0f back=%d" % [
 		g.x, g.y, g.z, acc.x, acc.y, acc.z,
 		ang.x, ang.y, _tilt_neutral.x, _tilt_neutral.y,
 		_sx, _sy, _sz,
 		1 if _calibrated else 0, _last_tilt.x, _last_tilt.y,
 		_yaw, _pitch, _ship_pos.y, near_id, near_d, near_x, aim,
 		_speed, _speed_step, 1 if _speed_blending else 0, _last_surge,
-		_surge_pulse_peak, _surge_arm, _jerk_cd, _surge_capture_cd])
+		_surge_pulse_peak, _surge_arm, _jerk_cd, _surge_capture_cd,
+		_surge_disp, _surge_vel, _surge_stick, _joy_band,
+		_joy_push_ext, _joy_pull_ext, 1 if _speed_joy else 0, _joy_drive,
+		1 if _joy_backoff else 0])
 
 func _tel_event(msg: String) -> void:
 	if TELEMETRY:
@@ -1576,6 +2044,7 @@ func _build_ui() -> void:
 	_speed_pick.visible = false
 	_speed_pick.gears_pressed.connect(_on_speed_gears)
 	_speed_pick.cruise_stop_pressed.connect(_on_speed_cruise_stop)
+	_speed_pick.joystick_pressed.connect(_on_speed_joystick)
 	add_child(_speed_pick)
 
 	# Planet picture tile shown when a world is tapped mid-flight.
@@ -1652,7 +2121,7 @@ func _build_ui() -> void:
 
 ## Launch-gate reticle: a dead-ahead crosshair circle, a dot showing the
 ## current aim, and a ring that fills while the aim is held near dead-on.
-## Vertical speed meter: STOP + five gears.
+## Vertical speed meter: STOP + five gears, or continuous fill in joy mode.
 class SpeedBar:
 	extends Control
 	var speed: float = 26.0
@@ -1662,6 +2131,7 @@ class SpeedBar:
 	var step_max: int = 5
 	var cruise_step: int = 3
 	var blending: bool = false
+	var continuous: bool = false
 
 	func _draw() -> void:
 		var w := size.x
@@ -1669,35 +2139,49 @@ class SpeedBar:
 		var track := Rect2(w * 0.30, 10.0, w * 0.40, h - 36.0)
 		draw_rect(track, Color(0.05, 0.08, 0.16, 0.75), true)
 		draw_rect(track, Color(1.0, 1.0, 1.0, 0.35), false, 2.0)
-		var t: float = float(clampi(step, 0, step_max)) / float(step_max)
+		var t: float
+		if continuous:
+			t = clampf(speed / maxf(vmax, 0.01), 0.0, 1.0)
+		else:
+			t = float(clampi(step, 0, step_max)) / float(step_max)
 		var fill_h: float = track.size.y * t
 		var fill := Rect2(track.position.x, track.end.y - fill_h,
 			track.size.x, fill_h)
-		var col := Color(0.35, 0.85, 1.0, 0.9) if step > 0 \
-			else Color(0.55, 0.55, 0.65, 0.85)
-		if step >= step_max:
-			col = Color(1.0, 0.78, 0.30, 0.95)
-		elif step == cruise_step:
-			col = Color(0.45, 0.95, 0.55, 0.92)
+		var col := Color(0.35, 0.85, 1.0, 0.9)
+		if continuous:
+			if speed <= 0.05:
+				col = Color(0.55, 0.55, 0.65, 0.85)
+			elif speed >= vmax - 0.5:
+				col = Color(1.0, 0.78, 0.30, 0.95)
+			elif absf(speed - cruise) < 1.5:
+				col = Color(0.45, 0.95, 0.55, 0.92)
+		else:
+			col = Color(0.35, 0.85, 1.0, 0.9) if step > 0 \
+				else Color(0.55, 0.55, 0.65, 0.85)
+			if step >= step_max:
+				col = Color(1.0, 0.78, 0.30, 0.95)
+			elif step == cruise_step:
+				col = Color(0.45, 0.95, 0.55, 0.92)
 		if blending:
 			col = col.lightened(0.12)
 		draw_rect(fill, col, true)
-		var labels: Array = ["STOP", "1", "2", "3", "4", "5"]
-		for g in range(0, step_max + 1):
-			var u: float = float(g) / float(step_max)
-			var y: float = track.end.y - track.size.y * u
-			var thick: float = 3.0 if g == cruise_step else 1.5
-			var tc := Color(1.0, 0.9, 0.4, 0.95) if g == cruise_step \
-				else Color(1.0, 1.0, 1.0, 0.35)
-			if g == 0:
-				tc = Color(0.75, 0.75, 0.85, 0.55)
-			draw_line(Vector2(track.position.x - 3.0, y),
-				Vector2(track.end.x + 3.0, y), tc, thick)
-			var font := ThemeDB.fallback_font
-			var fs := 11
-			var lab: String = str(labels[g]) if g < labels.size() else str(g)
-			draw_string(font, Vector2(track.end.x + 5.0, y + 4.0), lab,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.9, 0.92, 1.0, 0.85))
+		if not continuous:
+			var labels: Array = ["STOP", "1", "2", "3", "4", "5"]
+			for g in range(0, step_max + 1):
+				var u: float = float(g) / float(step_max)
+				var y: float = track.end.y - track.size.y * u
+				var thick: float = 3.0 if g == cruise_step else 1.5
+				var tc := Color(1.0, 0.9, 0.4, 0.95) if g == cruise_step \
+					else Color(1.0, 1.0, 1.0, 0.35)
+				if g == 0:
+					tc = Color(0.75, 0.75, 0.85, 0.55)
+				draw_line(Vector2(track.position.x - 3.0, y),
+					Vector2(track.end.x + 3.0, y), tc, thick)
+				var font := ThemeDB.fallback_font
+				var fs := 11
+				var lab: String = str(labels[g]) if g < labels.size() else str(g)
+				draw_string(font, Vector2(track.end.x + 5.0, y + 4.0), lab,
+					HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.9, 0.92, 1.0, 0.85))
 		var ny: float = track.end.y - track.size.y * t
 		draw_colored_polygon(PackedVector2Array([
 			Vector2(track.position.x - 10.0, ny),
@@ -1706,7 +2190,12 @@ class SpeedBar:
 		]), Color(1.0, 0.92, 0.45, 0.95))
 		var font2 := ThemeDB.fallback_font
 		var fs2 := 14
-		var label := str(labels[clampi(step, 0, mini(step_max, labels.size() - 1))])
+		var label: String
+		if continuous:
+			label = "STOP" if speed <= 0.05 else ("%.0f" % speed)
+		else:
+			var labels2: Array = ["STOP", "1", "2", "3", "4", "5"]
+			label = str(labels2[clampi(step, 0, mini(step_max, labels2.size() - 1))])
 		var tw := font2.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2).x
 		draw_string(font2, Vector2((w - tw) * 0.5, h - 4.0), label,
 			HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, Color(0.95, 0.95, 1.0, 0.95))
