@@ -76,8 +76,8 @@ cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
   -Pexport_package_name=com.dylan.garden_explorer \
-  -Pexport_version_code=37 \
-  -Pexport_version_name=1.27 \
+  -Pexport_version_code=43 \
+  -Pexport_version_name=1.33 \
   -Pexport_enabled_abis=arm64-v8a \
   -Prelease_keystore_file="$KS" \
   -Prelease_keystore_alias=ants \

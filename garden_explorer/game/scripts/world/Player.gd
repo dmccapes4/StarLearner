@@ -73,6 +73,7 @@ func place_at(world_pos: Vector2) -> void:
 	moving = false
 	_waypoints = PackedVector2Array()
 	_wp_i = 0
+	z_as_relative = false
 	z_index = IsoUtil.depth_from_y(global_position.y) + 50
 	_wire_seed_carry()
 
@@ -193,6 +194,7 @@ func _process(delta: float) -> void:
 		if _wp_i + 1 < _waypoints.size():
 			_wp_i += 1
 			target = _waypoints[_wp_i]
+			z_as_relative = false
 			z_index = IsoUtil.depth_from_y(global_position.y) + 50
 			return
 		moving = false
@@ -202,6 +204,7 @@ func _process(delta: float) -> void:
 		var farm := _farm()
 		if farm and farm.is_blocked(global_position):
 			global_position = farm.nearest_walkable(global_position)
+		z_as_relative = false
 		z_index = IsoUtil.depth_from_y(global_position.y) + 50
 		Events.player_arrived.emit()
 		return
@@ -235,6 +238,7 @@ func _process(delta: float) -> void:
 		Events.player_arrived.emit()
 		return
 	global_position = next
+	z_as_relative = false
 	z_index = IsoUtil.depth_from_y(global_position.y) + 50
 	_update_anim(to, delta)
 

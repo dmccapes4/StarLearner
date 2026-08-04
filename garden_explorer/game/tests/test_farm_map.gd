@@ -37,11 +37,28 @@ func run() -> TestAssert:
 	t.eq(beds_hit, 6, "all bed centers resolve as beds")
 
 	t.ok(farm.is_blocked(farm.shed_center), "shed is solid")
+	t.ok(farm.coop_world != Vector2.ZERO and farm.coop_poly.size() >= 3, "coop footprint set")
+	t.ok(farm.is_blocked(farm.coop_world), "coop is solid")
+	t.ok(not farm.is_blocked(farm.coop_approach_world()), "coop door approach is walkable")
+	## Path from behind the coop to the door must not cut through the body.
+	var behind_coop := farm.nearest_walkable(farm.coop_world + Vector2(0, -70))
+	var coop_path := farm.find_path(behind_coop, farm.coop_approach_world())
+	t.ok(coop_path.size() >= 2, "path to coop door exists")
+	var through_coop := false
+	for p in coop_path:
+		if farm.coop_poly.size() >= 3 and IsoUtil.point_in_polygon(p, farm.coop_poly):
+			through_coop = true
+			break
+	t.ok(not through_coop, "coop approach routes around the body")
 	t.ok(not farm.is_blocked(farm.fence_center), "animal pen is walkable via gate")
 	t.ok(farm.has_method("in_pen") and farm.in_pen(farm.fence_center), "fence center is inside pen")
 	t.ok(farm.gate_world != Vector2.ZERO, "pen gate placed")
 	t.ok(farm.is_blocked(farm.bed_centers["bed_1"]), "garden bed is solid")
 	t.ok(not farm.is_blocked(farm.spawn_world), "spawn is walkable")
+	## Perimeter fence is a hard wall — meadow / far side of rails is blocked.
+	var past_north_fence := IsoUtil.tile_to_world(Vector2(2, -5.2))
+	t.ok(farm.is_blocked(past_north_fence), "cannot walk past the far (north) fence")
+	t.ok(not farm.is_blocked(farm.shed_door_world), "shed door apron is walkable")
 
 	# Left → middle → right ordering in world X (iso: left is often higher x-y mix;
 	# shed tile x=-7 should be left of beds at x=0..6 which left of fence x=12).
@@ -58,8 +75,8 @@ func run() -> TestAssert:
 	t.ok(farm.walk_bounds.has_point(right), "right walkable")
 
 	## Path from west of shed to east of shed must not enter the shed footprint.
-	var west := IsoUtil.tile_to_world(Vector2(-10, 4))
-	var east := IsoUtil.tile_to_world(Vector2(-3, 4))
+	var west := farm.nearest_walkable(IsoUtil.tile_to_world(Vector2(-8.5, 4)))
+	var east := farm.nearest_walkable(IsoUtil.tile_to_world(Vector2(-3, 4)))
 	var path := farm.find_path(west, east)
 	t.ok(path.size() >= 2, "routed path has waypoints")
 	var through_shed := false

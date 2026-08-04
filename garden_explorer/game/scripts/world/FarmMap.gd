@@ -17,6 +17,8 @@ var sprites: FarmSprites
 var shed_poly: PackedVector2Array = PackedVector2Array()
 var fence_poly: PackedVector2Array = PackedVector2Array()
 var farm_yard_poly: PackedVector2Array = PackedVector2Array()
+## Inset from the perimeter fence — walkable yard (meadows / far side of rails are blocked).
+var walk_yard_poly: PackedVector2Array = PackedVector2Array()
 var bed_polys: Dictionary = {} ## id -> PackedVector2Array (footprint / hit)
 var bed_centers: Dictionary = {} ## id -> Vector2
 var bed_tiles: Dictionary = {} ## id -> Vector2
@@ -26,6 +28,8 @@ var animal_positions: Dictionary = {} ## id -> Vector2
 var shed_center: Vector2 = Vector2.ZERO
 var shed_door_world: Vector2 = Vector2.ZERO ## Walk-to point just outside the door (faces garden).
 var coop_world: Vector2 = Vector2.ZERO ## Chicken coop anchor (inside pen).
+var coop_poly: PackedVector2Array = PackedVector2Array() ## Solid footprint — not walkable.
+var coop_door_world: Vector2 = Vector2.ZERO ## Stand point in front of the coop door.
 var fence_center: Vector2 = Vector2.ZERO
 var spawn_world: Vector2 = Vector2.ZERO
 var dog_spawn_world: Vector2 = Vector2.ZERO
@@ -39,6 +43,8 @@ var _yard_min: Vector2 = Vector2.ZERO
 var _yard_max: Vector2 = Vector2.ZERO
 ## Dedupes fence posts where yard perimeter meets the pen divider (T-junctions).
 var _fence_post_keys: Dictionary = {}
+## Keep the gardener inside the rails (tile units inset from yard bounds).
+const YARD_WALK_INSET := 0.9
 
 func _ready() -> void:
 	## World owns the authoritative build (with sprites). Skip auto-build to
@@ -75,6 +81,10 @@ func build_from_file(path: String = MAP_PATH) -> void:
 		animal_positions["dog"] = dog_spawn_world
 	if gate_world != Vector2.ZERO:
 		gate_world = nearest_walkable(gate_world)
+	if coop_door_world != Vector2.ZERO:
+		coop_door_world = nearest_walkable(coop_door_world)
+	elif coop_world != Vector2.ZERO:
+		coop_door_world = nearest_walkable(coop_world + Vector2(0, 52))
 	_built = true
 
 func bed_ids() -> PackedStringArray:
@@ -253,6 +263,9 @@ func _clear_visuals() -> void:
 	bed_halves.clear()
 	slot_positions.clear()
 	animal_positions.clear()
+	coop_poly = PackedVector2Array()
+	coop_world = Vector2.ZERO
+	coop_door_world = Vector2.ZERO
 
 func _build_meadows() -> void:
 	## Full AABB underlay first so zoomed camera never shows void past the grass diamond.
@@ -338,7 +351,13 @@ func _build_ground() -> void:
 	var b: Dictionary = data.get("bounds_tiles", {})
 	_yard_min = Vector2(float(b.get("min_x", -10)), float(b.get("min_y", -4)))
 	_yard_max = Vector2(float(b.get("max_x", 16)), float(b.get("max_y", 10)))
-	farm_yard_poly = IsoUtil.diamond_polygon((_yard_min + _yard_max) * 0.5, (_yard_max - _yard_min) * 0.5)
+	var yard_c := (_yard_min + _yard_max) * 0.5
+	var yard_h := (_yard_max - _yard_min) * 0.5
+	farm_yard_poly = IsoUtil.diamond_polygon(yard_c, yard_h)
+	## Player stays inside the fence line — not on the far/meadow side of the rails.
+	walk_yard_poly = IsoUtil.diamond_polygon(
+		yard_c, Vector2(maxf(yard_h.x - YARD_WALK_INSET, 1.0), maxf(yard_h.y - YARD_WALK_INSET, 1.0))
+	)
 	var ground := Polygon2D.new()
 	ground.name = "Ground"
 	ground.z_index = -20
@@ -350,6 +369,7 @@ func _build_ground() -> void:
 		if gtex:
 			ground.texture = gtex
 			ground.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+
 func _path_tile_y() -> float:
 	return float(data.get("path", {}).get("tile_y", 3.0))
 
@@ -478,21 +498,8 @@ func _place_fence_rail(name: String, kind: String, tile_a: Vector2, tile_b: Vect
 	spr.z_index = IsoUtil.depth_from_y(minf(wa.y, wb.y)) + 3
 	add_child(spr)
 
-func _shed_blocks_fence_at(tile: Vector2) -> bool:
-	## West-edge posts sit behind the shed facade; skip them so tips don't draw on the roof.
-	var shed: Dictionary = data.get("shed", {})
-	if shed.is_empty():
-		return false
-	var stile := _vec2(shed.get("tile", {"x": -7, "y": 2}))
-	var shalf := _vec2(shed.get("half_tiles", {"x": 2.0, "y": 1.7}))
-	var pad := Vector2(1.35, 1.0)
-	var poly := IsoUtil.diamond_polygon(stile, shalf + pad)
-	return IsoUtil.point_in_polygon(IsoUtil.tile_to_world(tile), poly)
-
 func _try_place_post(name: String, tile: Vector2) -> bool:
 	## One post per joint. Deduped by key + proximity (corners / T-junctions).
-	if _shed_blocks_fence_at(tile):
-		return false
 	var key := "%.1f,%.1f" % [snappedf(tile.x, 0.1), snappedf(tile.y, 0.1)]
 	if _fence_post_keys.has(key):
 		return false
@@ -581,14 +588,17 @@ func _build_shed() -> void:
 	var tile := _vec2(shed.get("tile", {"x": -7, "y": 2}))
 	var half := _vec2(shed.get("half_tiles", {"x": 2.0, "y": 1.7}))
 	var base := IsoUtil.diamond_polygon(tile, half)
-	shed_poly = base
+	## Solid body matches the tall facade; shifted north so the door apron stays walkable.
+	var solid_tile := tile + Vector2(0.0, -0.45)
+	var solid_half := half + Vector2(1.15, 0.85)
+	shed_poly = IsoUtil.diamond_polygon(solid_tile, solid_half)
 	shed_center = IsoUtil.tile_to_world(tile)
 	var z := IsoUtil.depth_from_y(shed_center.y)
 
 	## Bottom of the facade sits on the south corner row of the footprint,
 	## so the door lands at the footprint's near edge, centered.
 	var south := IsoUtil.tile_to_world(tile + Vector2(half.x * 0.5, half.y * 0.5))
-	shed_door_world = south + Vector2(0, 20)
+	shed_door_world = south + Vector2(0, 28)
 
 	var tex: Texture2D = load(SHED_SPRITE) if ResourceLoader.exists(SHED_SPRITE) else null
 	if tex:
@@ -600,9 +610,11 @@ func _build_shed() -> void:
 		spr.scale = Vector2(SHED_SPRITE_SCALE, SHED_SPRITE_SCALE)
 		var h := float(tex.get_height()) * SHED_SPRITE_SCALE
 		spr.position = south + Vector2(0, 8) - Vector2(0, h * 0.5)
-		## Sort with the facade feet; stay above nearby fence posts (+55).
+		## Sort with facade feet. Bias beats nearby fence posts (+55) when those
+		## posts sit behind the shed, but stays below the player (+50) out front
+		## so the gardener is never drawn under the building.
 		spr.z_as_relative = false
-		spr.z_index = IsoUtil.depth_from_y(south.y) + 70
+		spr.z_index = IsoUtil.depth_from_y(south.y) + 20
 		add_child(spr)
 	else:
 		## Fallback: simple extruded box (headless tests without the asset).
@@ -754,6 +766,14 @@ func _build_fence() -> void:
 
 	var coop_tile := _vec2(fence.get("coop_tile", {"x": 13.0, "y": -2.2}))
 	coop_world = IsoUtil.tile_to_world(coop_tile)
+	## Solid body for the 64×80 @ 2× sprite — path must go around, never through.
+	coop_poly = IsoUtil.diamond_polygon(coop_tile, Vector2(1.25, 1.05))
+	## Approach stands on the south (door) side, outside the solid.
+	coop_door_world = IsoUtil.tile_to_world(coop_tile + Vector2(0.15, 1.25))
+	## Sort by stilts/ramp feet (south of the tile), not the roof anchor — and use the
+	## same bias family as the player (+50) / posts (+55). The old +150 kept the
+	## gardener painted under the coop even when standing in front of it.
+	var coop_feet := IsoUtil.tile_to_world(coop_tile + Vector2(0.35, 0.95))
 	if sprites:
 		var coop := sprites.chicken_coop_texture()
 		if coop:
@@ -762,14 +782,21 @@ func _build_fence() -> void:
 			spr.texture = coop
 			spr.centered = true
 			spr.position = coop_world + Vector2(0, -28)
-			## Well above fence posts (+55) even when an east-rail sprite overlaps the coop bbox.
 			spr.z_as_relative = false
-			spr.z_index = IsoUtil.depth_from_y(coop_world.y) + 150
+			spr.z_index = IsoUtil.depth_from_y(coop_feet.y) + 55
 			spr.scale = Vector2(2.0, 2.0)
 			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			add_child(spr)
 
 	_add_label("FenceLabel", fence_center + Vector2(0, -72), "ANIMALS", Color(1, 0.95, 0.8, 0.9))
+
+func coop_approach_world() -> Vector2:
+	## Always walk to the door apron — never into / through the coop body.
+	if coop_door_world != Vector2.ZERO:
+		return nearest_walkable(coop_door_world)
+	if coop_world == Vector2.ZERO:
+		return Vector2.ZERO
+	return nearest_walkable(coop_world + Vector2(0, 52))
 
 func _draw_pen_divider(prefix: String, tile_sw: Vector2, tile_nw: Vector2) -> void:
 	## West divider between garden beds and pen — one fence-section gate on the path.
@@ -837,32 +864,47 @@ func _register_animal_spawns() -> void:
 		gate_world = fence_center + Vector2(-80, 0)
 
 func _compute_bounds() -> void:
-	var corners: Array[Vector2] = [
-		IsoUtil.tile_to_world(_yard_min),
-		IsoUtil.tile_to_world(Vector2(_yard_max.x, _yard_min.y)),
-		IsoUtil.tile_to_world(_yard_max),
-		IsoUtil.tile_to_world(Vector2(_yard_min.x, _yard_max.y)),
-	]
-	var min_p: Vector2 = corners[0]
-	var max_p: Vector2 = corners[0]
-	for p in corners:
-		var pt: Vector2 = p
+	## Camera / clamp AABB follows the inset walk yard (not the meadow outside the fence).
+	var poly: PackedVector2Array = walk_yard_poly if walk_yard_poly.size() >= 3 else farm_yard_poly
+	var min_p := Vector2(INF, INF)
+	var max_p := Vector2(-INF, -INF)
+	for pt in poly:
 		min_p.x = minf(min_p.x, pt.x)
 		min_p.y = minf(min_p.y, pt.y)
 		max_p.x = maxf(max_p.x, pt.x)
 		max_p.y = maxf(max_p.y, pt.y)
-	walk_bounds = Rect2(min_p, max_p - min_p).grow(40.0)
+	walk_bounds = Rect2(min_p, max_p - min_p).grow(8.0)
 
 func is_blocked(world_pos: Vector2) -> bool:
-	## Solid: shed + garden beds. Pen is walkable (player enters via west gate).
-	## Outside the farm yard is blocked (perimeter fence — meadows are scenery).
-	if farm_yard_poly.size() >= 3 and not IsoUtil.point_in_polygon(world_pos, farm_yard_poly):
+	## Solid: shed + coop + garden beds. Pen grass is walkable (enter via west gate).
+	## Outside the inset walk yard is blocked (can't cross the perimeter fence).
+	if walk_yard_poly.size() >= 3 and not IsoUtil.point_in_polygon(world_pos, walk_yard_poly):
+		return true
+	elif farm_yard_poly.size() >= 3 and not IsoUtil.point_in_polygon(world_pos, farm_yard_poly):
 		return true
 	if shed_poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, shed_poly):
+		return true
+	if coop_poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, coop_poly):
 		return true
 	for id in bed_polys.keys():
 		var poly: PackedVector2Array = bed_polys[id]
 		if poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, poly):
+			return true
+	return false
+
+func _nav_point_blocked(world_pos: Vector2) -> bool:
+	## Block a nav cell if its center hits a solid, or if nearby samples enter
+	## the shed/coop (stops slipping through between integer tile centers).
+	if is_blocked(world_pos):
+		return true
+	for off in [
+		Vector2(18, 0), Vector2(-18, 0), Vector2(0, 12), Vector2(0, -12),
+		Vector2(14, 10), Vector2(-14, 10), Vector2(14, -10), Vector2(-14, -10),
+	]:
+		var p: Vector2 = world_pos + off
+		if shed_poly.size() >= 3 and IsoUtil.point_in_polygon(p, shed_poly):
+			return true
+		if coop_poly.size() >= 3 and IsoUtil.point_in_polygon(p, coop_poly):
 			return true
 	return false
 
@@ -1013,7 +1055,7 @@ func _rebuild_nav() -> void:
 		for y in range(min_y, max_y + 1):
 			var cell := Vector2i(x, y)
 			var w := IsoUtil.tile_to_world(Vector2(cell))
-			if is_blocked(w):
+			if _nav_point_blocked(w):
 				continue
 			_astar.add_point(next_id, w)
 			_nav_cell_to_id[cell] = next_id

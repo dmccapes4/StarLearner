@@ -385,8 +385,11 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 		_queue_interact("animal", hit_animal, actor.global_position if actor else world_pos)
 		return
 	## Chicken coop look — egg-collecting video (pen interaction).
-	if farm_map.coop_world != Vector2.ZERO and world_pos.distance_to(farm_map.coop_world) <= 60.0:
-		_queue_interact("coop", "coop", farm_map.nearest_walkable(farm_map.coop_world + Vector2(0, 40)))
+	## Always approach the door apron; never path into the coop body.
+	if farm_map.coop_world != Vector2.ZERO and world_pos.distance_to(farm_map.coop_world) <= 72.0:
+		var coop_goal: Vector2 = farm_map.coop_approach_world() if farm_map.has_method("coop_approach_world") \
+			else farm_map.nearest_walkable(farm_map.coop_world + Vector2(0, 52))
+		_queue_interact("coop", "coop", coop_goal)
 		return
 	if zone.is_empty():
 		## Tap = navigate. Do not clear an in-flight interact if somehow still set.
