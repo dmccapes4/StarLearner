@@ -81,6 +81,24 @@ func run() -> TestAssert:
 	t.ok(farm.is_blocked(past_north_fence), "cannot walk past the far (north) fence")
 	t.ok(not farm.is_blocked(farm.shed_door_world), "shed door apron is walkable")
 
+	## Doorstep: room to stand in front of the door, not on a bed's drawn soil.
+	var shed_apron := farm.shed_approach_world()
+	t.ok(not farm.is_blocked(shed_apron), "shed apron stand is walkable")
+	t.ok(not farm._point_in_bed_top(shed_apron), "shed apron is clear of bed tops")
+	t.ok(shed_apron.distance_to(farm.shed_door_base_world) < 56.0,
+		"shed apron stays on the doorstep")
+	var coop_apron := farm.coop_approach_world()
+	t.ok(not farm.is_blocked(coop_apron), "coop apron stand is walkable")
+
+	## Straight below a bed in screen space, S and E face-dots tie exactly; the
+	## nearer stand must win instead of Dictionary key order walking us sideways.
+	for bid in ["bed_0", "bed_1", "bed_2"]:
+		var c: Vector2 = farm.bed_centers[bid]
+		var below := farm.nearest_walkable(Vector2(c.x, c.y + 32.0))
+		var panes: Dictionary = farm.bed_face_panes(bid)
+		var picked := farm._pick_facing_pane(panes, c, Vector2(c.x, below.y), c)
+		t.ok(picked == "S", "%s from due south picks S (got %s)" % [bid, picked])
+
 	# Left → middle → right ordering in world X (iso: left is often higher x-y mix;
 	# shed tile x=-7 should be left of beds at x=0..6 which left of fence x=12).
 	t.ok(farm.shed_center.x < farm.bed_centers["bed_1"].x, "shed left of middle bed")

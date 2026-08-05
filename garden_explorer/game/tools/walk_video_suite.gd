@@ -216,6 +216,7 @@ const CLIPS_WATER := [
 		"note": "Water bed_3 then re-tap at t≈3.5s — must not replace success VO with soft 'not thirsty' (state/VO bug).",
 		"setup": "thirsty_beds",
 		"tool": "water",
+		## Start on path due north of bed_3 (not far east — that scores as an E face).
 		"from": "path_bed3",
 		"to": "bed3_approach",
 		"interact": "bed",
@@ -462,6 +463,8 @@ func _capture_clip(clip: Dictionary) -> void:
 			path_q["retap"] = true
 			path_q["retap_at_s"] = movie_t
 		## Keep process running so Player._process advances the walk.
+		## (VO pause/resume is covered by tests/test_player_walk.gd — Player keeps
+		## the route while Narrator.blocks_movement(), so capture must not stop VO.)
 		await process_frame
 		await process_frame
 		_aim_cam()
@@ -493,11 +496,38 @@ func _capture_clip(clip: Dictionary) -> void:
 		tick_f.close()
 	_player.stop()
 
-	## End-of-clip water / thirst asserts.
+	## End-of-clip water assert. A successful water clears thirst then starts the
+	## stage timer; if the clip outlasts seed→sprout the bed is thirsty again —
+	## that still counts as watered (stage advanced / watered_stage latched).
 	if bool(clip.get("expect_water", false)) and not bed_id_r.is_empty():
 		var still_thirsty := _garden.is_bed_thirsty(bed_id_r)
-		_check("%s_water_cleared_thirst" % cid, not still_thirsty,
-			"bed=%s thirsty=%s (expect watered)" % [bed_id_r, still_thirsty])
+		var stage := str(_garden.bed_stage(bed_id_r)) if _garden.has_method("bed_stage") else ""
+		var watered_latched := false
+		if _garden.beds.has(bed_id_r):
+			var lead: Dictionary = (_garden.beds[bed_id_r] as Array)[0]
+			watered_latched = bool(lead.get("watered_stage", false)) \
+				or int(lead.get("waters", 0)) > 0 \
+				or stage != "seed"
+		var saw_cleared := false
+		var jf := FileAccess.open(sim_path, FileAccess.READ)
+		if jf:
+			while not jf.eof_reached():
+				var line := jf.get_line().strip_edges()
+				if line.is_empty():
+					continue
+				var row = JSON.parse_string(line)
+				if typeof(row) != TYPE_DICTIONARY:
+					continue
+				for b in (row as Dictionary).get("beds", []):
+					if str(b.get("id", "")) == bed_id_r and not bool(b.get("thirsty", true)):
+						saw_cleared = true
+						break
+				if saw_cleared:
+					break
+		_check("%s_water_cleared_thirst" % cid,
+			(not still_thirsty) or watered_latched or saw_cleared,
+			"bed=%s thirsty=%s stage=%s latched=%s saw_clear=%s" % [
+				bed_id_r, still_thirsty, stage, watered_latched, saw_cleared])
 
 	var meta := {
 		"id": cid,
@@ -653,12 +683,12 @@ func _named_pos(key: String) -> Vector2:
 		"bed3_approach":
 			if _farm.has_method("bed_approach_world"):
 				return _farm.bed_approach_world(
-					"bed_3", _farm.shed_door_world, _farm.bed_centers["bed_3"])
+					"bed_3", _farm.shed_approach_world(), _farm.bed_centers["bed_3"])
 			return _farm.nearest_walkable(_farm.bed_centers["bed_3"] + Vector2(0, 40))
 		"bed0_approach":
 			if _farm.has_method("bed_approach_world"):
 				return _farm.bed_approach_world(
-					"bed_0", _farm.shed_door_world, _farm.bed_centers["bed_0"])
+					"bed_0", _farm.shed_approach_world(), _farm.bed_centers["bed_0"])
 			return _farm.nearest_walkable(_farm.bed_centers["bed_0"] + Vector2(0, 40))
 		"bed1_approach":
 			if _farm.has_method("bed_approach_world"):
@@ -888,7 +918,7 @@ func _dump_mechanics() -> void:
 		"Read `REVIEW_BED_APPROACH_AND_WATER.md` first for known spaghetti / face / VO bugs.",
 		"",
 		"Suspect bandaids for south-fence loops: `BED_SOLID_PAD`, `_nav_point_blocked`",
-		"bed samples, diagonal mid-point reject, `shed_approach_world` / `_near_bed_footprint`.",
+		"bed samples, diagonal mid-point reject, `shed_door_pane` / `bed_face_panes`.",
 		"",
 		"Files:",
 	])

@@ -38,6 +38,7 @@ var slot_positions: Dictionary = {} ## bed_id -> Array[Vector2]
 var animal_positions: Dictionary = {} ## id -> Vector2
 var shed_center: Vector2 = Vector2.ZERO
 var shed_door_world: Vector2 = Vector2.ZERO ## Walk-to point just outside the door (faces garden).
+var shed_door_base_world: Vector2 = Vector2.ZERO ## Facade base under the door — apron anchor.
 var coop_world: Vector2 = Vector2.ZERO ## Chicken coop anchor (inside pen).
 var coop_poly: PackedVector2Array = PackedVector2Array() ## Solid footprint — not walkable.
 var coop_door_world: Vector2 = Vector2.ZERO ## Stand point in front of the coop door.
@@ -114,8 +115,7 @@ func build_from_file(path: String = MAP_PATH) -> void:
 	spawn_world = nearest_walkable(IsoUtil.tile_to_world(Vector2(float(spawn.x), float(spawn.y))))
 	if shed_door_world == Vector2.ZERO:
 		shed_door_world = shed_center + Vector2(36, 40)
-	## Prefer a clear apron stand — never leave the interact goal inside a bed.
-	shed_door_world = shed_approach_world()
+	## Keep shed_door_world as the geometric door; apron is shed_approach_world().
 	if dog_spawn_world != Vector2.ZERO:
 		dog_spawn_world = nearest_dog_walkable(dog_spawn_world)
 		animal_positions["dog"] = dog_spawn_world
@@ -408,33 +408,18 @@ func slot_world(bed_id: String, slot: int) -> Vector2:
 		return bed_centers.get(bed_id, Vector2.ZERO)
 	return arr[slot]
 
-## Stand point for gardening a bed.
-## Model (keep this simple — see docs/REVIEW_BED_APPROACH_AND_WATER.md):
-##   • Each bed has four face panes (N/E/S/W) with outward normals.
-##   • Default: pick the pane the avatar already faces (vector align) — walk there.
-##   • Only special case: standing at an adjacent bed that blocks the line →
-##     go around that bed on its closest side, then to the *same* face pane of
-##     the target.
-##   • Pen → garden: choose panes as if already just inside the gate; find_path
-##     still routes through the gate automatically.
+## Approach model (small farm — keep it dumb):
+##   Solids: beds, shed, coop, fence. Gate is walkable both ways (find_path splices).
+##   Beds / shed door / coop door = panes with an outward vector.
+##   Pick the pane facing the avatar (outward · (from − center)). Opposite
+##   hemisphere is rejected. A* only walks around solids after the pane is chosen.
+##   See docs/REVIEW_BED_APPROACH_AND_WATER.md.
 func bed_approach_world(bed_id: String, from_player: Vector2, tap: Vector2) -> Vector2:
 	var panes: Dictionary = bed_face_panes(bed_id)
-	if panes.is_empty():
-		return nearest_walkable(bed_centers.get(bed_id, tap))
-	var from := from_player
 	var center: Vector2 = bed_centers.get(bed_id, tap)
-	## Pen → garden: face selection uses a garden-side origin so the path-facing
-	## pane wins; A* still walks gate → garden → pane.
-	if gate_world != Vector2.ZERO and in_pen(from) != in_pen(center):
-		from = _garden_just_inside_gate()
-	var face := ""
-	var blocker := _adjacent_blocker_at(from, bed_id)
-	if not blocker.is_empty():
-		face = _closest_face_key(blocker, from)
-	else:
-		face = _best_direct_face(bed_id, panes, from, tap)
-	if face.is_empty() or not panes.has(face):
-		face = _best_direct_face(bed_id, panes, from, tap)
+	if panes.is_empty():
+		return nearest_walkable(center)
+	var face := _pick_facing_pane(panes, center, from_player, tap)
 	var pane: Dictionary = panes[face]
 	return pane.get("stand", nearest_walkable(center)) as Vector2
 
@@ -458,7 +443,9 @@ func bed_face_panes(bed_id: String) -> Dictionary:
 		var stand_w := _stand_clear_of_bed(bed_id, ideal)
 		var outward := stand_w - center
 		if outward.length_squared() < 1.0:
-			outward = faces[key]
+			outward = IsoUtil.tile_to_world(tile + faces[key]) - center
+		if outward.length_squared() < 1.0:
+			outward = Vector2(0, 1)
 		out[key] = {
 			"face": key,
 			"stand": stand_w,
@@ -466,121 +453,68 @@ func bed_face_panes(bed_id: String) -> Dictionary:
 		}
 	return out
 
-func _garden_just_inside_gate() -> Vector2:
-	var g := nearest_walkable(gate_world)
-	## Pen is east of the west-edge gate — step west into the garden.
-	for dx in [-28.0, -52.0, -76.0, -100.0]:
-		var p := nearest_walkable(g + Vector2(dx, 0.0))
-		if not in_pen(p):
-			return p
-	return g
-
-func _adjacent_blocker_at(from: Vector2, target_id: String) -> String:
-	## Player is "at" a neighboring bed (within its stand ring) that sits between
-	## them and the target — that bed is the only thing we route around on purpose.
-	var best := ""
-	var best_d := INF
-	var tcenter: Vector2 = bed_centers.get(target_id, from)
-	for id in bed_centers.keys():
-		var bid := str(id)
-		if bid == target_id:
-			continue
-		if not _beds_are_neighbors(bid, target_id):
-			continue
-		var c: Vector2 = bed_centers[bid]
-		var d := from.distance_to(c)
-		if d > _bed_min_stand_dist(bid) * 1.35:
-			continue
-		## Blocker should lie roughly between player and target.
-		var to_t := tcenter - from
-		var to_b := c - from
-		if to_t.length_squared() < 1.0:
-			continue
-		if to_b.dot(to_t.normalized()) < 8.0:
-			continue
-		if d < best_d:
-			best_d = d
-			best = bid
-	return best
-
-func _beds_are_neighbors(a: String, b: String) -> bool:
-	## Two rows of three: horizontal neighbors in-row, vertical across the path.
-	var order := ["bed_0", "bed_1", "bed_2", "bed_3", "bed_4", "bed_5"]
-	var ia := order.find(a)
-	var ib := order.find(b)
-	if ia < 0 or ib < 0:
-		## Fallback: nearby centers.
-		var ca: Vector2 = bed_centers.get(a, Vector2.ZERO)
-		var cb: Vector2 = bed_centers.get(b, Vector2.ZERO)
-		return ca.distance_to(cb) < 220.0
-	var row_a := 0 if ia < 3 else 1
-	var row_b := 0 if ib < 3 else 1
-	var col_a := ia % 3
-	var col_b := ib % 3
-	if row_a == row_b and absi(col_a - col_b) == 1:
-		return true
-	if col_a == col_b and absi(row_a - row_b) == 1:
-		return true
-	return false
-
-func _closest_face_key(bed_id: String, from: Vector2) -> String:
-	var panes: Dictionary = bed_face_panes(bed_id)
-	var best := "S"
-	var best_d := INF
-	for key in panes.keys():
-		var stand: Vector2 = (panes[key] as Dictionary).get("stand", from)
-		var d := from.distance_squared_to(stand)
-		if d < best_d:
-			best_d = d
-			best = str(key)
-	return best
-
-func _best_direct_face(bed_id: String, panes: Dictionary, from: Vector2, tap: Vector2) -> String:
-	var center: Vector2 = bed_centers.get(bed_id, from)
+## Shared pane picker for beds (and door panes with one entry).
+## Opposite direction ⇒ opposite side: faces with outward·from_dir < 0 are skipped.
+func _pick_facing_pane(panes: Dictionary, center: Vector2, from: Vector2, tap: Vector2) -> String:
 	var from_dir := from - center
 	if from_dir.length_squared() < 1.0:
 		from_dir = Vector2(0, 1)
 	from_dir = from_dir.normalized()
 	var tap_off := tap - center
-	var tap_clear := tap_off.length_squared() >= 120.0
-	var tap_dir := tap_off.normalized() if tap_clear else from_dir
-	## Kid tapped the far lip — honor that face.
-	if tap_clear and tap_dir.dot(from_dir) < -0.15:
-		return _face_from_dir(tap_dir, panes)
-	var best := "S"
-	var best_score := -INF
-	for key in panes.keys():
-		var pane: Dictionary = panes[key]
-		var stand: Vector2 = pane.get("stand", center)
-		var outward: Vector2 = pane.get("outward", Vector2(0, 1))
-		## Pane facing the avatar (outward toward player) wins.
-		var score := outward.dot(from_dir) * 100.0
-		if tap_clear:
-			score += outward.dot(tap_dir) * 35.0
-		## Prefer almost-direct walks; heavy penalty for A* detours (wrong face).
-		var crow := from.distance_to(stand)
-		var plen := path_world_length(from, stand)
-		if crow > 1.0 and plen > crow * 2.2:
-			score -= (plen - crow) * 0.35
-		score -= crow * 0.02
-		if score > best_score:
-			best_score = score
+	## Far-lip tap only when clearly opposite (tight), not soft soil noise.
+	if tap_off.length_squared() >= 400.0:
+		var tap_dir := tap_off.normalized()
+		if tap_dir.dot(from_dir) < -0.5:
+			return _face_from_dir(tap_dir, panes)
+	var best := ""
+	var best_dot := -INF
+	var best_d2 := INF
+	for key in _face_order(panes):
+		var outward: Vector2 = (panes[key] as Dictionary).get("outward", Vector2(0, 1))
+		var d := outward.dot(from_dir)
+		if d < 0.0:
+			continue
+		var stand: Vector2 = (panes[key] as Dictionary).get("stand", center)
+		var d2 := from.distance_squared_to(stand)
+		## Iso ties are common: standing straight below a bed scores S and E
+		## identically, and key order used to decide (kid saw a walk to the side).
+		if d > best_dot + FACE_TIE_EPS or (d > best_dot - FACE_TIE_EPS and d2 < best_d2):
+			best_dot = maxf(best_dot, d)
+			best_d2 = d2
 			best = str(key)
+	if best.is_empty():
+		return _face_from_dir(from_dir, panes)
 	return best
 
-func _face_from_dir(dir: Vector2, panes: Dictionary) -> String:
-	var best := "S"
-	var best_dot := -INF
+const FACE_TIE_EPS := 0.02
+
+func _face_order(panes: Dictionary) -> Array:
+	## Stable order so a tie never depends on Dictionary insertion order.
+	var out: Array = []
+	for key in ["S", "W", "E", "N"]:
+		if panes.has(key):
+			out.append(key)
 	for key in panes.keys():
+		if not out.has(key):
+			out.append(key)
+	return out
+
+func _face_from_dir(dir: Vector2, panes: Dictionary) -> String:
+	var best := ""
+	var best_dot := -INF
+	for key in _face_order(panes):
 		var outward: Vector2 = (panes[key] as Dictionary).get("outward", Vector2(0, 1))
 		var d := outward.dot(dir)
 		if d > best_dot:
 			best_dot = d
 			best = str(key)
+	if best.is_empty():
+		for key in panes.keys():
+			return str(key)
 	return best
 
 func _stand_clear_of_bed(bed_id: String, ideal: Vector2) -> Vector2:
-	## Prefer the face stand (half + small lip). Only nudge out if blocked.
+	## Push outward along the face normal until walkable — never sideways snap.
 	var center: Vector2 = bed_centers.get(bed_id, ideal)
 	var dir := ideal - center
 	if dir.length_squared() < 1.0:
@@ -588,11 +522,11 @@ func _stand_clear_of_bed(bed_id: String, ideal: Vector2) -> Vector2:
 	dir = dir.normalized()
 	var min_d := _bed_min_stand_dist(bed_id)
 	var p := ideal if ideal.distance_to(center) >= min_d * 0.85 else center + dir * min_d
-	for _i in 12:
+	for _i in 16:
 		if not is_blocked(p) and _nav_id_at_world(p) >= 0:
 			return p
 		p += dir * 6.0
-	return nearest_walkable(center + dir * min_d, 6)
+	return p
 
 func _bed_min_stand_dist(bed_id: String) -> float:
 	var half: Vector2 = bed_halves.get(bed_id, Vector2(1.05, 0.8)) * BED_SOLID_PAD
@@ -990,8 +924,9 @@ func _build_shed() -> void:
 	var tile := _vec2(shed.get("tile", {"x": -7, "y": 2}))
 	var half := _vec2(shed.get("half_tiles", {"x": 2.0, "y": 1.7}))
 	var base := IsoUtil.diamond_polygon(tile, half)
-	## Solid body matches the tall facade; shifted north so the door apron stays walkable.
-	var solid_tile := tile + Vector2(0.0, -0.45)
+	## Solid body matches the tall facade. Shifted north (same world x) so the pad
+	## stops at the facade base instead of swallowing the doorstep in front of it.
+	var solid_tile := tile + Vector2(-1.0, -1.45)
 	var solid_half := half + Vector2(1.15, 0.85)
 	shed_poly = IsoUtil.solid_diamond(solid_tile, solid_half)
 	shed_center = IsoUtil.tile_to_world(tile)
@@ -1000,6 +935,7 @@ func _build_shed() -> void:
 	## Bottom of the facade sits on the south corner row of the footprint,
 	## so the door lands at the footprint's near edge, centered.
 	var south := IsoUtil.tile_to_world(tile + Vector2(half.x * 0.5, half.y * 0.5))
+	shed_door_base_world = south
 	## Far enough south that nearest_walkable cannot snap into a bed diamond.
 	shed_door_world = south + Vector2(0, 44)
 
@@ -1075,39 +1011,42 @@ func player_depth_y(world_pos: Vector2) -> float:
 		y = maxf(y, fence_sort + 22.0)
 	return y
 
-func shed_approach_world() -> Vector2:
-	## Walk-to stand on the dirt apron — never inside a bed diamond.
-	var door := shed_door_world if shed_door_world != Vector2.ZERO \
+func shed_door_pane() -> Dictionary:
+	## One door pane: apron on the doorstep, outward from the shed body. Anchored at
+	## the facade base so the player stands ON the step, not a bed's raised soil.
+	var base := shed_door_base_world if shed_door_base_world != Vector2.ZERO \
 		else shed_center + Vector2(36, 40)
-	var candidates: Array = [
-		door,
-		door + Vector2(0, 16),
-		door + Vector2(18, 20),
-		door + Vector2(-18, 20),
-		door + Vector2(0, 32),
-		door + Vector2(28, 28),
-		door + Vector2(-28, 28),
-	]
-	for c in candidates:
-		var w: Vector2 = nearest_walkable(c as Vector2)
-		if not _near_bed_footprint(w, 14.0):
-			return w
-	return nearest_walkable(door + Vector2(0, 48))
+	var outward := base - shed_center
+	if outward.length_squared() < 1.0:
+		outward = Vector2(0, 1)
+	outward = outward.normalized()
+	var first_walkable := Vector2.INF
+	var stand := base + outward * 18.0
+	for _i in 14:
+		if not is_blocked(stand) and _nav_id_at_world(stand) >= 0:
+			if first_walkable == Vector2.INF:
+				first_walkable = stand
+			## Beds are drawn raised: standing under a bed top reads as "in the bed".
+			if not _point_in_bed_top(stand):
+				return {"stand": stand, "outward": outward, "face": "door"}
+		stand += outward * 6.0
+	if first_walkable != Vector2.INF:
+		return {"stand": first_walkable, "outward": outward, "face": "door"}
+	return {"stand": nearest_walkable(base + outward * 24.0), "outward": outward, "face": "door"}
 
-func _near_bed_footprint(world_pos: Vector2, pad: float) -> bool:
+func _point_in_bed_top(world_pos: Vector2) -> bool:
+	## True when a bed's raised top face is drawn over this ground point.
+	return _point_in_any_bed(world_pos) \
+		or _point_in_any_bed(world_pos + Vector2(0, BED_HEIGHT))
+
+func shed_approach_world() -> Vector2:
+	return shed_door_pane().get("stand", nearest_walkable(shed_center + Vector2(0, 48))) as Vector2
+
+func _point_in_any_bed(world_pos: Vector2) -> bool:
 	for id in bed_polys.keys():
 		var poly: PackedVector2Array = bed_polys[id]
-		if poly.is_empty():
-			continue
-		if Geometry2D.is_point_in_polygon(world_pos, poly):
+		if not poly.is_empty() and Geometry2D.is_point_in_polygon(world_pos, poly):
 			return true
-		## Pad: close to bed edge still reads as "in the bed" for kids.
-		var c: Vector2 = bed_centers.get(id, world_pos)
-		var half: Vector2 = bed_halves.get(id, Vector2(1.0, 0.8))
-		if world_pos.distance_to(c) < (half.x + half.y) * 18.0 + pad:
-			## Only count when roughly on the bed's south/path side cluster.
-			if absf(world_pos.y - c.y) < 55.0 and absf(world_pos.x - c.x) < 70.0:
-				return true
 	return false
 
 func _build_beds() -> void:
@@ -1324,13 +1263,28 @@ func _build_fence() -> void:
 			spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 			add_child(spr)
 
+func coop_door_pane() -> Dictionary:
+	## One door pane facing the pen yard (south of coop body).
+	var door := coop_door_world if coop_door_world != Vector2.ZERO \
+		else (coop_world + Vector2(0, 52) if coop_world != Vector2.ZERO else Vector2.ZERO)
+	if door == Vector2.ZERO:
+		return {}
+	var outward := door - coop_world
+	if outward.length_squared() < 1.0:
+		outward = Vector2(0, 1)
+	outward = outward.normalized()
+	var stand := door + outward * 16.0
+	for _i in 10:
+		if not is_blocked(stand) and _nav_id_at_world(stand) >= 0:
+			break
+		stand += outward * 8.0
+	return {"stand": stand, "outward": outward, "face": "door"}
+
 func coop_approach_world() -> Vector2:
-	## Always walk to the door apron — never into / through the coop body.
-	if coop_door_world != Vector2.ZERO:
-		return nearest_walkable(coop_door_world)
-	if coop_world == Vector2.ZERO:
+	var pane: Dictionary = coop_door_pane()
+	if pane.is_empty():
 		return Vector2.ZERO
-	return nearest_walkable(coop_world + Vector2(0, 52))
+	return pane.get("stand", Vector2.ZERO) as Vector2
 
 func _draw_pen_divider(prefix: String, tile_sw: Vector2, tile_nw: Vector2) -> void:
 	## West divider between garden beds and pen — one fence-section gate on the path.

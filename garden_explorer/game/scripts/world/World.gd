@@ -55,6 +55,7 @@ var _grid_after_video: String = ""
 ## Pending interactable: walk once to a fixed approach, then show ActionPrompt /
 ## RevealTile on arrive. No chase / repath onto moving animals or bugs.
 var _pending: Dictionary = {}
+var _pending_stall: float = 0.0 ## Seconds the pending interact has sat un-walked.
 var _animal_sfx_played: bool = false
 ## After first animal meet: single tap = SFX; second tap within window = reveal.
 var _animal_met: Dictionary = {} ## animal_id -> true
@@ -262,11 +263,39 @@ func _process(delta: float) -> void:
 	if not _pending.is_empty() and bool(_pending.get("deferred_path", false)) \
 			and not NarratorScript.blocks_movement():
 		_pending.erase("deferred_path")
-		var goal: Vector2 = farm_map.nearest_walkable(_pending.get("approach", Vector2.ZERO))
+		var goal: Vector2 = _pending.get("approach", Vector2.ZERO)
 		## Pure navigate (e.g. pen entry via gate) — no arrive prompt.
 		if str(_pending.get("kind", "")) == "nav":
 			_pending.clear()
 		Events.player_path_requested.emit(goal)
+	_tick_pending_walk(delta)
+
+func _tick_pending_walk(delta: float) -> void:
+	## Tap -> navigate -> arrive -> face -> act. If the walk dies on the way
+	## (soft collision, dropped route), resume it instead of parking the avatar
+	## short of the pane with the action still pending.
+	if _pending.is_empty() or player == null \
+			or bool(_pending.get("deferred_path", false)) \
+			or NarratorScript.blocks_movement():
+		_pending_stall = 0.0
+		return
+	var approach: Vector2 = _pending.get("approach", Vector2.ZERO)
+	if approach == Vector2.ZERO or bool(player.get("moving")):
+		_pending_stall = 0.0
+		return
+	if player.global_position.distance_to(approach) <= Config.get_interact_arrive_eps():
+		_pending_stall = 0.0
+		return
+	_pending_stall += delta
+	if _pending_stall < 0.35:
+		return
+	_pending_stall = 0.0
+	var nudges := int(_pending.get("nudges", 0))
+	if nudges >= 3:
+		_pending.clear()
+		return
+	_pending["nudges"] = nudges + 1
+	Events.player_path_requested.emit(approach)
 
 func _spawn_bug_spawner() -> void:
 	if bug_spawner and is_instance_valid(bug_spawner):
@@ -456,8 +485,7 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 					else farm_map.nearest_walkable(farm_map.shed_center + Vector2(36, 40))
 		"bed":
 			slot = farm_map.nearest_slot(zid, world_pos)
-			## Face from tap + shortest gap/path route (not nearest rim cell,
-			## which often lands on the far side and loops the whole row).
+			## Pane facing the avatar — A* only walks around solids afterward.
 			var from_p: Vector2 = player.global_position if player else world_pos
 			if farm_map.has_method("bed_approach_world"):
 				approach = farm_map.bed_approach_world(zid, from_p, world_pos)
@@ -529,7 +557,8 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 		## leaving the tap dead. Defer it until the lock releases (_process).
 		_pending["deferred_path"] = true
 	else:
-		Events.player_path_requested.emit(farm_map.nearest_walkable(approach))
+		## Emit the pane stand itself — find_path snaps nav cells internally.
+		Events.player_path_requested.emit(approach)
 
 func _queue_bug_interact(bug: Node2D) -> void:
 	## Same-zone only. One walk to the bug's position at tap time — no chase.
@@ -594,27 +623,27 @@ func _on_player_arrived() -> void:
 	if str(_pending.get("kind", "")) == "nav":
 		_pending.clear()
 		return
-	## Animal / bug / shed / bed: open at the fixed approach from the tap.
+	## Open when feet are near the chosen pane stand (beds / doors).
 	var approach: Vector2 = _pending.get("approach", Vector2.ZERO)
 	var kind := str(_pending.get("kind", ""))
-	var eps := Config.get_interact_arrive_eps() * 2.0
-	## Arrive = near the chosen approach pane (beds included). No half-plane
-	## spaghetti — face selection lives in FarmMap.bed_approach_world.
+	var eps := Config.get_interact_arrive_eps() ## 42 — not a wide opposite-face disk
 	var close_enough := player != null and player.global_position.distance_to(approach) <= eps
-	if not close_enough and farm_map and player:
-		var rim := farm_map.nearest_walkable(approach)
-		close_enough = player.global_position.distance_to(rim) <= eps
+	## Beds: also require same hemisphere as the pane (opposite side never counts).
+	if close_enough and kind == "bed" and farm_map and player:
+		var bed_id := str(_pending.get("id", ""))
+		var center: Vector2 = farm_map.bed_centers.get(bed_id, approach)
+		var pane_dir := approach - center
+		var feet_dir := player.global_position - center
+		if pane_dir.length_squared() > 1.0 and feet_dir.length_squared() > 1.0 \
+				and pane_dir.normalized().dot(feet_dir.normalized()) < 0.0:
+			close_enough = false
 	if not close_enough:
 		var attempts := int(_pending.get("repaths", 0))
-		if attempts < 2 and farm_map:
+		if attempts < 2:
 			_pending["repaths"] = attempts + 1
-			Events.player_path_requested.emit(farm_map.nearest_walkable(approach))
+			Events.player_path_requested.emit(approach)
 			return
-		## Soft-collision abort: still apply bed tools if we landed near the pane.
-		if kind == "bed" and player and player.global_position.distance_to(approach) <= 100.0:
-			pass
-		else:
-			return
+		return
 	if kind == "bug":
 		var bug := _pending_bug_node()
 		if bug == null:

@@ -1,104 +1,64 @@
-# Code review: bed approach + watering (Garden Explorer)
+# Bed / door approach — simple pane vectors
 
-*Date: 2026-08-04 · Updated: face-pane refactor · Audience: agents + Grok Vision QA*  
-*Scope: tap bed → approach pane → walk → arrive → water/plant after shed watering-can pickup*
+*Updated 2026-08-05 · Garden Explorer*
 
-## Playtest symptoms (pre-fix)
+## Model
 
-1. After watering can from shed, first tap nearest bed: walk up, **no water**.
-2. Second tap: water UX/SFX but VO **“isn’t thirsty”**.
-3. NW / north-middle beds: long loop to the **north** face instead of path/south lip.
+Small farm. Solids you cannot walk through: **beds, shed, coop, fence**. The **gate** is walkable both ways (`find_path` splices pen ↔ garden).
 
-## Architecture decision (current)
+Everything you walk *to* for an interact is a **pane** with an outward vector:
 
-**Keep it simple.** Do not accumulate half-plane filters, south-preference scores, or opposite-face arrive spaghetti.
+| Target | Panes |
+|--------|--------|
+| Bed | N / E / S / W |
+| Shed | One door pane (apron, outward from shed body) |
+| Coop | One door pane (apron, outward from coop body) |
+| Gate | Not a face pick — path goes through `gate_world` either way |
 
-### Bed approach model (`FarmMap.bed_approach_world`)
+**Pick:** `argmax outward · (player − center)` among panes with `outward · from_dir ≥ 0`.  
+Opposite direction ⇒ opposite side (rejected). Clear far-lip tap (`dot < -0.5` and far enough) may honor the far pane. **No** A\* length, tap soft scores, or adjacent-blocker face copy.
 
-1. **Face panes** — Each bed is four objects `{face, stand, outward}` for N/E/S/W (`bed_face_panes`). Outward points away from the bed center.
-2. **Direct travel (default)** — Pick the pane whose outward best aligns with `(player − center)`. That is the side the avatar already faces. Walk there via A\*.
-3. **Only special case** — Player is standing at an **adjacent** bed that blocks the line to the target. Choose the **closest face** of that blocker, then use the **same face pane** on the target (go around on that side). Varieties: in-row neighbors and across-path pairs in the 2×3 layout.
-4. **Pen → garden** — Face selection uses a virtual origin **just inside the gate** (garden side). `find_path` still concatenates pen → gate → garden → pane. Vector math then picks the path-facing pane naturally.
-5. **Far-side tap** — If the kid clearly taps the opposite lip, honor that face; otherwise ignore center pokes.
+**Ties (iso only has diagonals):** standing straight below a bed in screen space scores
+S and E *identically* (0.447 each), so the pick used to fall out of `Dictionary` key
+order and walk the kid around to the side. Within `FACE_TIE_EPS` the nearer stand wins,
+and faces are scanned in a fixed order (`S, W, E, N`).
 
-### Arrive (`World._on_player_arrived`)
+**Walk:** `find_path` around solids only.  
+**Arrive:** near `_pending.approach` (pane stand); beds also require same hemisphere as the pane.
 
-Arrive = near the **chosen approach stand** (or its `nearest_walkable`). Soft-collision abort only if still within ~100px of that pane. No path_ty / half-plane checks.
+## Tap → navigate → arrive → face → act
 
-### Water VO
+The pending interact is not abandoned mid-route:
 
-`Speak.soft("…not thirsty…")` is skipped while `Narrator.blocks_movement()` so success line is not stomped on double-tap (same guard as seed).
+- **Narration no longer cancels the walk.** `Player._process` holds position while
+  `Narrator.blocks_movement()` and keeps `moving` + waypoints, so the route resumes
+  when VO ends. A tap taken *during* VO is held in `Player._held_goal` instead of dropped.
+- **`World._tick_pending_walk`** resumes the walk if it dies anyway (soft collision,
+  dropped route): pending interact + player idle + farther than `interact_arrive_eps`
+  ⇒ re-emit the pane stand (max 3 nudges, then drop the pending).
+- Arrival always runs `_prepare_interact_pose()` (face the target) **before** applying
+  the tool, so "avatar not facing the bed" cannot coexist with an applied action.
 
----
+Regression this fixed: the avatar walked to the bed, stopped short un-facing, and the
+water only landed on a second tap.
 
-## End-to-end flow
+## Doors have a doorstep
 
-```
-TapRouter → Events.world_tapped
-  → World._queue_interact("bed", id, tap)
-       approach = FarmMap.bed_approach_world(id, player, tap)
-         panes = bed_face_panes(id)
-         if pen→garden: from = garden_just_inside_gate()
-         if adjacent blocker: face = closest face of blocker
-         else: face = best outward · (from − center)
-       emit player_path_requested(approach)
-  → Player → FarmMap.find_path (gate splice if needed)
-  → World._on_player_arrived → near approach? → _apply_bed_tool
-```
+`shed_door_pane` anchors at the **facade base** (`shed_door_base_world`), not the
+44px-south door marker, and rejects stands that sit under a bed's *drawn* top
+(`_point_in_bed_top` = footprint shifted by `BED_HEIGHT`). The shed solid pad was
+shifted north (same world x) so it stops at the facade instead of swallowing 54px of
+yard in front of the door — previously the only walkable ground at the door was under
+`bed_3`'s raised soil, so the avatar appeared to stand in the bed.
 
----
+Bed panes keep the plain outward push: with ~29px between rows, a north-face stand
+always overlaps the next bed's raised top graphically, and feet stay outside the
+footprint (depth suite rule).
 
-## Historical spaghetti (removed / do not reintroduce)
+## Water VO
 
-| Anti-pattern | Why it hurt |
-|--------------|-------------|
-| Empty filter → fallback **all faces** + shortest A\* | North lip won from shed/SW |
-| Soft south score ±40 drowned by path length | Same |
-| Arrive accept `center+40` / any rim | Wrong face self-validated |
-| Soft “not thirsty” during success VO lock | Double-tap lie |
-| Dual `nearest_walkable` + dual thirst VO | State confusion |
+Soft “not thirsty” skipped while `Narrator.blocks_movement()` so success VO is not stomped.
 
----
+## History
 
-## Contracts for Grok Vision (water / approach clips)
-
-1. **`approach_face`:** From shed / path / south beds → stand on the pane facing the avatar (usually path/south for north beds). Not a farm-scale loop to the far north lip.
-2. **`detour_ratio`:** Bed approach &lt; ~2.2 crow; no east-then-south fence loop.
-3. **`water_applied`:** tool=water + thirsty at arrive → thirst cleared; success VO.
-4. **`no_false_not_thirsty`:** Soft tip must not replace success VO on double-tap.
-5. **`arrived_means_tool`:** `nav.arrived` near chosen pane with water+thirsty → water applied.
-
----
-
-## Files
-
-| File | Role |
-|------|------|
-| `FarmMap.gd` | `bed_face_panes`, `bed_approach_world`, blocker/neighbor helpers, `find_path` |
-| `World.gd` | `_queue_interact`, simple arrive, `_apply_bed_tool` / `_do_water_bed` VO guards |
-| `Player.gd` | Path follow + narrator freeze |
-| `GardenState.gd` | Thirst |
-| `Narrator.gd` / `Speak.gd` | VO lock |
-| `ShedUI.gd` | Watering-can tool |
-
-## QA
-
-```bash
-./qa/run_bed_approach_suite.sh
-WALK_CLIP_SET=water REVIEW=1 ./qa/run_walk_video_suite.sh
-# or: ./qa/run_water_video_suite.sh
-```
-
-Stamp `mechanics/` includes this review + sources for Grok.
-
-## Grok Vision (2026-08-04T19-23-55_water)
-
-| Clip | Verdict |
-|------|---------|
-| `water_bed0_from_shed` | PASS — south lip, thirst cleared, short corridor |
-| `water_bed1_from_south_path` | PASS — south lip, no north loop |
-| `water_bed0_from_bed3` | PASS — west aisle / path, south lip |
-| `water_bed3_from_shed` | PASS approach/water (north = path face for south-row); Buddy art flake unrelated |
-| `water_double_tap_bed3` | Water OK; suite spawn was south of bed (fixed → `path_bed3`) |
-
-Full write-up: `qa/out/walk_video/2026-08-04T19-23-55_water/REVIEW.md`
+Earlier layers of path-length face scoring, blocker overrides, triple `nearest_walkable`, and 84/100px arrive disks are documented in `REPORT_SPAGHETTI_NAVIGATION.md` (removed from production).

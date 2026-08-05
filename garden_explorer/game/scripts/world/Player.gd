@@ -6,6 +6,7 @@ var target: Vector2 = Vector2.ZERO
 var moving: bool = false
 var _waypoints: PackedVector2Array = PackedVector2Array()
 var _wp_i: int = 0
+var _held_goal: Vector2 = Vector2.INF ## Tap taken during VO — walked once unlocked.
 
 ## Walk-sheet animation (3 rows x 6 cols; row 0 down, 1 right, 2 up).
 const WALK_FRAME_SEC := 0.135
@@ -190,7 +191,10 @@ func _farm() -> FarmMap:
 func _on_path_requested(world_pos: Vector2) -> void:
 	var NarratorScript := preload("res://scripts/audio/Narrator.gd")
 	if NarratorScript.blocks_movement():
+		## Hold the goal instead of dropping it — the walk starts when VO ends.
+		_held_goal = world_pos
 		return
+	_held_goal = Vector2.INF
 	var farm := _farm()
 	if farm:
 		_waypoints = farm.find_path(global_position, world_pos)
@@ -209,6 +213,7 @@ func _on_path_requested(world_pos: Vector2) -> void:
 func stop() -> void:
 	## Suites / demos teleport with global_position — re-sort so we never keep
 	## a stale spawn z_index under a bed lip.
+	_held_goal = Vector2.INF
 	moving = false
 	_waypoints = PackedVector2Array()
 	_wp_i = 0
@@ -218,10 +223,15 @@ func stop() -> void:
 func _process(delta: float) -> void:
 	var NarratorScript := preload("res://scripts/audio/Narrator.gd")
 	if NarratorScript.blocks_movement():
-		moving = false
+		## Stand still while VO plays, but keep the route: cancelling here left the
+		## avatar parked short of the bed, unfacing, with the tap's action pending.
 		_apply_player_depth()
 		_update_anim(Vector2.ZERO, delta)
 		return
+	if _held_goal != Vector2.INF:
+		var goal := _held_goal
+		_held_goal = Vector2.INF
+		_on_path_requested(goal)
 	if not moving:
 		## Idle: keep depth fresh after teleports / camera demos.
 		_apply_player_depth()
