@@ -31,6 +31,8 @@ Mirror Garden Explorer:
 | Runner | `garden_explorer/qa/run_bed_approach_suite.sh` |
 | Script | `garden_explorer/game/tools/bed_approach_suite.gd` |
 | Depth suite | `qa/run_depth_suite.sh` → `game/tools/depth_suite.gd` |
+| Bed plants | `qa/run_bed_plants_suite.sh` → `game/tools/bed_plants_suite.gd` |
+| Season trees | `qa/run_season_trees_suite.sh` → `game/tools/season_trees_suite.gd` |
 | Local notes | `garden_explorer/qa/README.md` |
 
 ## Runner contract
@@ -38,10 +40,14 @@ Mirror Garden Explorer:
 Each `qa/run_<suite>.sh` should:
 
 - Resolve Godot (`godot` or `~/.local/bin/godot`).
-- Prefer on-screen `DISPLAY`; else `xvfb-run` or `--headless`.
+- **Prefer on-screen Godot** (`DISPLAY` + `XAUTHORITY`) — Vulkan/GPU is often
+  an order of magnitude faster than `--headless` dummy rendering, and PNGs are real.
+- Fall back to `xvfb-run`, then `--headless` only if no display is available.
 - Invoke: `godot --path <game> --fixed-fps 24 -s res://tools/<suite>.gd`
 - Print latest `report.json` summary (`passed` / `failed` / `FAIL` lines).
 - Exit non-zero if any check failed.
+
+Orchestrator: `tools/run_interactive_qa.sh` (auto-fills `:1` + gdm `XAUTHORITY` when possible).
 
 ## Suite script contract
 
@@ -80,13 +86,107 @@ Start small — one suite that catches the pain kids already notice.
 
 | Game | First suite ideas |
 |------|-------------------|
-| **Garden Explorer** | Depth · bed approach / gaps · (next) animal stand-off |
-| **Ant Explorer** | ✅ `qa/run_chamber_suite.sh` — all chambers/stars/trails/rails · (next) phone UI chrome |
-| **Solar System Explorer** | **Flight mechanics** (`qa/run_flight_mechanics_suite.sh`) · proximity / camera framing · burn→coast readability |
+| **Garden Explorer** | Depth · bed approach / gaps · bed plants · season trees · **Walk video + Grok vision** (`qa/run_walk_video_suite.sh`) |
+| **Ant Explorer** | ✅ `qa/run_chamber_suite.sh` — chambers/stars/trails/rails · ✅ **Movement video + Grok vision** (`qa/run_movement_video_suite.sh`) · (next) phone UI chrome |
+| **Solar System Explorer** | **Flight mechanics** · **Flight video + Grok vision** (`qa/run_flight_video_suite.sh`) · marker LOD · proximity |
 | **Math Explorer** | Cube counts match numerals · tab contrast · word-problem layout |
 | **Language Explorer** | Trace hitboxes · letter card contrast · bilingual label clarity |
 
 Each game keeps suites under **its own** `qa/` so a Cursor window rooted on that game can run them without hunting the monorepo.
+
+## Vision review (Grok / OpenAI) — frames + game-state sidecar
+
+When screenshots alone are ambiguous (flight canopy, depth sort, motion), add a
+**vision review** step: the agent (or a script) sends **sampled PNGs plus a
+sim/game-state sidecar** to a multimodal model and gets a structured debug report.
+
+Solar System Explorer pioneered this for Mission Flight; Garden Explorer mirrors
+it for yard walks (`walk_video` + `review_walk_videos.py`); Ant Explorer mirrors
+it for nest walks (`movement_video` + `review_movement_videos.py`).
+
+### Artifact contract (per case / trip)
+
+```
+qa/out/<suite>/<stamp>/<case_id>/
+  frames/f_0000.png …          # evenly spaced (or key poses)
+  sim.jsonl  OR state.jsonl    # one JSON object per frame (ground truth)
+  route.json / meta.json       # optional: charted path, mode, notes
+  flight.mp4                   # optional mux for humans
+  review.json                  # model output (structured)
+```
+
+Each `sim.jsonl` / `state.jsonl` line should include at least:
+
+| Field | Purpose |
+|-------|---------|
+| `frame` / `movie_t` / progress `u` | Align image ↔ state |
+| Expected visibility flags | What the game *intended* to draw |
+| Render flags (`render_icon`, `render_mesh`, …) | What the engine actually enabled |
+| Geometry cues | Bearing, depth, size, `in_fov`, mismatches |
+
+The model prompt must say: **compare image vs sidecar; do not invent objects;
+severity = blocker / major / minor / ok**.
+
+### Reference implementation
+
+| Piece | Path |
+|-------|------|
+| Capture suite (Solar) | `solar_system_explorer/game/tools/flight_video_suite.gd` |
+| Runner + mux (Solar) | `solar_system_explorer/qa/run_flight_video_suite.sh` |
+| Vision reviewer (Solar) | `solar_system_explorer/qa/review_flight_videos.py` |
+| Capture suite (Garden) | `garden_explorer/game/tools/walk_video_suite.gd` |
+| Runner + mux (Garden) | `garden_explorer/qa/run_walk_video_suite.sh` |
+| Vision reviewer (Garden) | `garden_explorer/qa/review_walk_videos.py` |
+| Capture suite (Ant) | `ant_explorer/game/tools/movement_video_suite.gd` |
+| Runner + mux (Ant) | `ant_explorer/qa/run_movement_video_suite.sh` |
+| Vision reviewer (Ant) | `ant_explorer/qa/review_movement_videos.py` |
+| Keys | `star_learning/.env` → `XAI_API_KEY` (preferred) or `OPENAI_API_KEY` |
+
+```bash
+# Solar — Mission Flight
+REVIEW=0 ./qa/run_flight_video_suite.sh
+REVIEW=1 ./qa/run_flight_video_suite.sh
+python3 qa/review_flight_videos.py qa/out/flight_video/<stamp>
+
+# Garden — yard walks / depth / seeds / Buddy
+REVIEW=0 ./qa/run_walk_video_suite.sh
+REVIEW=1 ./qa/run_walk_video_suite.sh
+python3 qa/review_walk_videos.py qa/out/walk_video/<stamp>
+
+# Ant — nest tunnels / stars / trails / reveal tour
+REVIEW=0 ./qa/run_movement_video_suite.sh
+REVIEW=1 ./qa/run_movement_video_suite.sh
+python3 qa/review_movement_videos.py qa/out/movement_video/<stamp>
+```
+
+### Rate limits (do not serialize naively)
+
+Vision calls are slow (~30–90s each). **Do not** fire every trip at once (429s)
+and **do not** wait for each to finish before starting the next.
+
+`review_flight_videos.py` defaults:
+
+| Env | Default | Meaning |
+|-----|---------|---------|
+| `REVIEW_CONCURRENCY` | `3` | Max trips in flight |
+| `REVIEW_STAGGER_S` | `2.0` | Seconds between *starting* each trip |
+| `REVIEW_MAX_RETRIES` | `5` | Backoff on 429 / 5xx (`Retry-After` honored) |
+| `REVIEW_MAX_FRAMES` | `12` | Images per trip |
+| `REVIEW_MODEL` | `grok-4.5` / `gpt-4o` | Provider default |
+
+Staggered overlap: start trip A, wait 2s, start B, wait 2s, start C — while A/B
+still run. Wall time drops sharply vs sequential; 429s stay rare.
+
+Garden’s `review_walk_videos.py` already shares the concurrency knobs; other
+games can copy either reviewer and swap the system prompt / schema fields.
+
+### Agent workflow (vision suites)
+
+1. Run the capture suite → stamped folder with frames + sidecar.
+2. Run (or let the runner invoke) the vision reviewer.
+3. Read `REVIEW.md` / per-case `review.json` **and** open failing PNGs.
+4. Fix production code; re-capture only the affected cases when possible.
+5. Treat `blocker` / `major` as suite red; `minor` is polish.
 
 ## Device capture (optional)
 
@@ -98,6 +198,19 @@ When desktop suites are green but the phone still feels wrong:
 
 Pull screenrecord + frames into `qa/out/device/<stamp>/`. Use for motion/feel, not as the only gate.
 
+## Deploy gate
+
+Interactive-world titles must be green before packaging / fogona install:
+
+```bash
+./tools/run_interactive_qa.sh          # ant + garden + solar
+./tools/require_qa_green.sh garden --apk garden_explorer/tools/build/com.dylan.garden_explorer.apk
+```
+
+`garden_explorer/tools/build_garden_apk.sh` runs the garden suites first (unless `SKIP_QA=1`).
+`tools/recover_garden_fogona.sh install-245` refuses an APK newer than the latest green report.
+Math / Language are not in this gate (no world routing/depth suites yet).
+
 ## Do / don’t
 
 **Do**
@@ -106,6 +219,7 @@ Pull screenrecord + frames into `qa/out/device/<stamp>/`. Use for motion/feel, n
 - Keep cases kid-shaped (“tap other side of middle bed → walk the gap”).
 - Gitignore `qa/out/`.
 - Link the game’s `qa/README.md` from the game README.
+- Run `./tools/run_interactive_qa.sh` as the last game-side step before deploy.
 
 **Don’t**
 

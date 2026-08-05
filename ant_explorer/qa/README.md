@@ -50,6 +50,27 @@ qa/out/chamber_suite/<timestamp>/
 | Rails | Locked tile no longer arms “reveal tour”; collected tile no longer arms video |
 | Live tap | Tap on nursery star does not path / arrive inside approach radius |
 
+## Movement video + Grok vision
+
+Flight-simulator style clips: scripted walks with per-frame `state.jsonl`, muxed
+`walk.mp4`, then multimodal review (Grok preferred) that compares render vs state
+and flags UX / unnatural motion.
+
+```bash
+./qa/run_movement_video_suite.sh              # capture + review
+REVIEW=0 ./qa/run_movement_video_suite.sh     # capture only
+python3 qa/review_movement_videos.py qa/out/movement_video/<stamp>
+```
+
+Outputs: `qa/out/movement_video/<stamp>/<clip_id>/{frames,state.jsonl,route.json,meta.json,walk.mp4,review.json}`
+plus stamp-level `REVIEW.md` / `reviews.json`.
+
+Clips: nursery→entrance, entrance→surface, nursery star approach, forager trail,
+queen→deep, locked-rail reveal tour.
+
+Treat vision `blocker` / `major` as red. Keys: `star_learning/.env` → `XAI_API_KEY`
+(or `OPENAI_API_KEY`). Same concurrency knobs as Solar (`REVIEW_CONCURRENCY`, etc.).
+
 ## Device capture (optional)
 
 ```bash

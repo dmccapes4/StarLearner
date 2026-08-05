@@ -23,6 +23,65 @@ Checks that tapping a bed picks a **natural stand face** (from tap + player) and
 Outputs: `qa/out/bed_approach/<stamp>/report.json` + start/approach PNGs.
 Agent: re-run after routing changes; any `FAIL` in the report is a regression.
 
+## Bed plants suite
+
+Confirms raised beds + crop packs render correctly: furrow geometry, seed vs four-plant packs, foot landings in plots, harvest star above grown plants.
+
+```bash
+./qa/run_bed_plants_suite.sh
+```
+
+Outputs: `qa/out/bed_plants/<stamp>/report.json` + empty / seed / sprout / growing / grown / multi-bed PNGs.
+
+### What “fail” looks like
+
+| Area | Fail signal |
+|------|-------------|
+| Seed | Four seeds, or art far off the furrow cross |
+| Grown pack | Plants SE-shifted onto the wood lip; feet not in furrow plots |
+| Star | Missing when harvestable, or covering roots / floating randomly far |
+| Multi-bed | Packs painting over path/fence; beds empty when stages were forced |
+
+## Season trees suite
+
+Walks spring → summer → fall → winter: meadow tree art, ground tint, decor, and weather (flowers / clear / leaves / rain).
+
+```bash
+./qa/run_season_trees_suite.sh
+```
+
+Outputs: `qa/out/season_trees/<stamp>/report.json` + per-season yard / trees / fx PNGs.
+
+### What “fail” looks like
+
+| Area | Fail signal |
+|------|-------------|
+| Trees | Inside the fence; missing textures; same atlas row every season |
+| Spring | No flower decals, or rain/leaves storm active |
+| Fall | No falling leaves / ground leaf scatter |
+| Winter | No rain overlay, or particles ignoring bed depth |
+
+## Walk video + vision review
+
+Captures ~7s yard-walk clips (PNG sequence → `walk.mp4`) with per-frame
+`state.jsonl` ground truth (player depth, bed stages, seed/pack flags, Buddy,
+bugs), then asks Grok (`XAI_API_KEY`) or OpenAI (`OPENAI_API_KEY`) to compare
+render vs state and flag **all clear UX / unnatural issues**.
+
+```bash
+./qa/run_walk_video_suite.sh              # capture + review
+REVIEW=0 ./qa/run_walk_video_suite.sh     # capture only
+# or review an existing stamp:
+python3 qa/review_walk_videos.py qa/out/walk_video/<stamp>
+```
+
+Clips: path past beds · south lip depth · seed plant · gate/pen · Buddy walk ·
+shed approach. Same concurrency knobs as Solar (`REVIEW_CONCURRENCY`,
+`REVIEW_STAGGER_S`, …) — see [`../../docs/QA_SUITE_PROCESS.md`](../../docs/QA_SUITE_PROCESS.md).
+
+Outputs: `qa/out/walk_video/<stamp>/<clip>/` (`walk.mp4`, `frames/`,
+`state.jsonl`, `route.json`, `review.json`) plus `reviews.json` and `REVIEW.md`.
+
 Requires Godot 4.3 on `PATH` or `~/.local/bin/godot`. Uses `xvfb-run` when no `DISPLAY` is set.
 
 ### Outputs
