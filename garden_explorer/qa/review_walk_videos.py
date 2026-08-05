@@ -37,9 +37,11 @@ isometric farm game for a young child).
 
 PRIMARY INPUT: SECOND_TICKS — one ground-truth JSON object per whole second
 (t=0,1,2,…) plus the matching PNG for that second. Each tick includes:
-  direct_checks[]  — yes/no questions with state_expect values
+  direct_checks[]  — yes/no questions with state_* values
   contracts[]      — what the engine claims must be true in the image
-  nav / player / beds / animals / anchors / biases
+  nav / path_quality / player / beds / animals / anchors / biases
+  path_quality: detour_ratio, crow_flies, looks_like_south_fence_loop,
+    east_overshoot, expect_corridor, waypoints
 
 Your job: for EACH second tick, answer every direct_check with a direct
 verdict using the image + that tick's state. Format:
@@ -48,6 +50,12 @@ verdict using the image + that tick's state. Format:
 Also flag any clear UX / unnatural issues not covered by checks.
 
 Hard rules:
+- ROUTING (critical for routing clip_set): taps to the shed from beside the
+  westernmost south bed (bed_3) must take a SHORT path (path strip or west
+  aisle). FAIL path_sensible as blocker if the gardener walks EAST around the
+  middle beds then BETWEEN the south beds and the southern fence. Prefer
+  path_quality.looks_like_south_fence_loop / detour_ratio vs max_detour_ratio
+  as state evidence, but the IMAGE is ground truth for where feet go.
 - Iso depth: south of a bed/plant → gardener IN FRONT (not under soil/wood/pack).
   If contracts say expect_player_in_front and z_index_says_in_front but the
   image shows under-paint → depth_sort_bug (blocker), not "state wrong".
@@ -56,6 +64,9 @@ Hard rules:
 - Gate/shed: player must not be buried under posts or bed wood at goals.
 - Motion: facing follows travel while moving; no teleport; no long unnatural loops.
 - Do NOT invent objects. Severity: blocker / major / minor / ok.
+- debug_hints MUST name concrete systems (FarmMap.find_path, BED_SOLID_PAD,
+  _nav_point_blocked, shed_approach_world, Player._on_path_requested,
+  World._queue_interact) when routing fails.
 
 Return ONLY valid JSON matching the schema in the user message."""
 
@@ -158,6 +169,7 @@ def build_user_payload(clip_dir: Path, max_frames: int) -> tuple[str, list[Path]
             "progress_est": t.get("progress_est"),
             "season": t.get("season"),
             "nav": t.get("nav"),
+            "path_quality": t.get("path_quality") or route.get("path_quality"),
             "anchors": t.get("anchors"),
             "player": t.get("player"),
             "camera": t.get("camera"),
@@ -229,17 +241,33 @@ def build_user_payload(clip_dir: Path, max_frames: int) -> tuple[str, list[Path]
         ],
     }
 
+    mech_readme = ""
+    mech_path = clip_dir.parent / "mechanics" / "README.md"
+    if mech_path.is_file():
+        mech_readme = mech_path.read_text(encoding="utf-8")[:2500]
+    nav_diag = ""
+    nav_path = clip_dir.parent / "nav_diagnostics.json"
+    if nav_path.is_file():
+        try:
+            nav_diag = json.dumps(json.loads(nav_path.read_text(encoding="utf-8")), indent=2)[:6000]
+        except json.JSONDecodeError:
+            nav_diag = nav_path.read_text(encoding="utf-8")[:4000]
+
     text = (
         f"CLIP: {meta.get('id')}\n"
+        f"CLIP_SET: {meta.get('clip_set', route.get('clip_set', ''))}\n"
         f"NOTE: {meta.get('note')}\n"
-        f"ROUTE: {json.dumps(route, indent=2)[:5000]}\n"
+        f"ROUTE: {json.dumps(route, indent=2)[:8000]}\n"
         f"META: {json.dumps(meta, indent=2)}\n\n"
+        f"MECHANICS_README (code dump lives in stamp/mechanics/):\n{mech_readme}\n\n"
+        f"NAV_DIAGNOSTICS (probe paths for this farm):\n{nav_diag}\n\n"
         f"SECOND_TICKS ({len(samples)} — ONE IMAGE FOLLOWS PER TICK, IN ORDER):\n"
         f"{json.dumps(samples, indent=2)}\n\n"
         f"Return JSON only, schema:\n{json.dumps(schema, indent=2)}\n"
         "For every tick, answer EVERY direct_checks[] item with a one_liner of the form "
         "'At t=Ns: state says X; image shows Y → PASS|FAIL'. "
-        "Prefer these tick answers over vague summaries."
+        "Prefer these tick answers over vague summaries. "
+        "For path_sensible, weigh path_quality + image corridor."
     )
     return text, paths, samples
 

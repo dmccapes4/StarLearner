@@ -13,9 +13,9 @@ const SLOT_OFFSETS := [
 const PLOT_SOIL_SCALE := 0.82
 const BED_HEIGHT := 28.0
 ## Collision pad beyond visual half — keep in sync with bed_approach stand-off.
-## Keep modest so aisle gaps between beds stay A*-walkable.
-## Pad past visible wood so A* tile centers cannot sit on soil / lip.
-const BED_SOLID_PAD := 1.18
+## Must stay modest: 1.18 + wide nav samples sealed the dirt path west of bed_3
+## and forced shed routes to loop east around the whole bed row.
+const BED_SOLID_PAD := 1.08
 ## Stand just outside the raised lip — next to the bed for gardening, not mid-path.
 const BED_STAND_TILES := 0.68
 ## Opposite-face taps may be longer than the near face; still prefer gap routes.
@@ -1380,12 +1380,19 @@ func is_blocked(world_pos: Vector2) -> bool:
 			return true
 	return false
 
+func _on_dirt_path_strip(world_pos: Vector2) -> bool:
+	## Intentional shed↔gate walkway — bed *samples* must not erase it.
+	var path: Dictionary = data.get("path", {})
+	var path_y := IsoUtil.tile_to_world(Vector2(0.0, float(path.get("tile_y", 3.0)))).y
+	## ~one iso tile of half-width + a little slack for tile centers.
+	return absf(world_pos.y - path_y) <= 34.0
+
 func _nav_point_blocked(world_pos: Vector2) -> bool:
 	## Block a nav cell if its center hits a solid, or if nearby samples enter
 	## the shed/coop/beds (stops slipping through between integer tile centers).
 	if is_blocked(world_pos):
 		return true
-	## Shed/coop: wider samples (tall solids). Beds: tighter so aisle gaps stay open.
+	## Shed/coop: wider samples (tall solids).
 	for off in [
 		Vector2(18, 0), Vector2(-18, 0), Vector2(0, 12), Vector2(0, -12),
 		Vector2(14, 10), Vector2(-14, 10), Vector2(14, -10), Vector2(-14, -10),
@@ -1395,10 +1402,13 @@ func _nav_point_blocked(world_pos: Vector2) -> bool:
 			return true
 		if coop_poly.size() >= 3 and IsoUtil.point_in_polygon(p, coop_poly):
 			return true
-	for off_b in [
-		Vector2(14, 0), Vector2(-14, 0), Vector2(0, 12), Vector2(0, -12),
-		Vector2(12, 10), Vector2(-12, 10), Vector2(12, -10), Vector2(-12, -10),
-	]:
+	## Dirt path: keep A* connected along the road. Cell centers still cannot
+	## sit inside bed polys (is_blocked above); skip expanded bed samples that
+	## were sealing the strip between bed_0/bed_3 and the shed.
+	if _on_dirt_path_strip(world_pos):
+		return false
+	## Beds off-path: modest samples (wide ring + pad 1.18 caused farm-scale loops).
+	for off_b in [Vector2(10, 0), Vector2(-10, 0), Vector2(0, 8), Vector2(0, -8)]:
 		var pb: Vector2 = world_pos + off_b
 		for id in bed_polys.keys():
 			var poly: PackedVector2Array = bed_polys[id]
@@ -1638,9 +1648,11 @@ func _rebuild_nav() -> void:
 			## Pen fence is impassable except through the gate opening.
 			if not crossing_allowed(wa, wb):
 				continue
-			## Diagonal shortcuts must not cut across a bed diamond.
+			## Diagonal shortcuts must not cut through a bed solid.
+			## Use is_blocked (not sample-expanded _nav_point_blocked) so midpoints
+			## on the path strip / aisles stay connected.
 			var mid: Vector2 = (wa + wb) * 0.5
-			if _nav_point_blocked(mid):
+			if is_blocked(mid):
 				continue
 			if not _astar.are_points_connected(a, b):
 				var diag := absi(d.x) + absi(d.y) == 2

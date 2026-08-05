@@ -16,12 +16,15 @@ const NarratorLib := preload("res://scripts/audio/Narrator.gd")
 ## Match project window (even dims for ffmpeg/libx264).
 const VIEW := Vector2i(1280, 600)
 const CAPTURE_FPS := 12
-const TARGET_S := 7.0
+## Override with WALK_TARGET_S=10 (routing set defaults to 10).
+const TARGET_S_DEFAULT := 7.0
 
 var _ev: Node ## /root/Events (resolved at runtime for -s scripts)
+var _target_s: float = TARGET_S_DEFAULT
+var _clip_set: String = "default"
 
 ## Kid-shaped stress clips: movement routing, depth, seeds, Buddy, gate, shed.
-const CLIPS := [
+const CLIPS_DEFAULT := [
 	{
 		"id": "walk_path_beds",
 		"note": "Dirt path past north beds — player must not sink under bed lips; route stays on path",
@@ -66,6 +69,90 @@ const CLIPS := [
 	},
 ]
 
+## Routing / detour stress — playtest: tap shed from beside western south bed
+## must NOT loop east around middle beds then between beds and south fence.
+## Uses production World shed interact when interact=shed.
+const CLIPS_ROUTING := [
+	{
+		"id": "shed_from_south_bed3",
+		"note": "USER BUG: stand south of westernmost south bed (bed_3) by shed — tap shed. Expect short NW onto path then west to apron; FAIL if east loop around bed_4/5 then south-fence corridor.",
+		"setup": "empty",
+		"from": "south_bed3_by_shed",
+		"to": "shed_door",
+		"interact": "shed",
+		"expect_corridor": "path_or_west_aisle",
+		"max_detour_ratio": 2.2,
+	},
+	{
+		"id": "shed_from_bed3_west_gap",
+		"note": "West rim of bed_3 toward shed — should stay west of bed cluster, not circle the farm.",
+		"setup": "empty",
+		"from": "bed3_west_gap",
+		"to": "shed_door",
+		"interact": "shed",
+		"expect_corridor": "west_aisle",
+		"max_detour_ratio": 2.0,
+	},
+	{
+		"id": "shed_from_path_near",
+		"note": "Path stand near shed → apron. Baseline short walk; compare detour_ratio to south-bed starts.",
+		"setup": "empty",
+		"from": "path_by_shed",
+		"to": "shed_door",
+		"interact": "shed",
+		"expect_corridor": "path",
+		"max_detour_ratio": 2.0,
+	},
+	{
+		"id": "shed_retap_midwalk",
+		"note": "Start south of bed_3 toward shed; re-emit shed interact at t≈2.5s (kid re-tap). Must not restart a longer loop.",
+		"setup": "empty",
+		"from": "south_bed3_by_shed",
+		"to": "shed_door",
+		"interact": "shed",
+		"retap_interact": "shed",
+		"retap_at_s": 2.5,
+		"expect_corridor": "path_or_west_aisle",
+		"max_detour_ratio": 2.4,
+	},
+	{
+		"id": "path_west_to_shed",
+		"note": "West path endpoint → shed via find_path only (no World interact).",
+		"setup": "empty",
+		"from": "path_west",
+		"to": "shed_door",
+		"expect_corridor": "path",
+		"max_detour_ratio": 1.8,
+	},
+	{
+		"id": "aisle_bed0_to_bed3",
+		"note": "North bed_0 south-lip → south bed_3 north-lip — short aisle, not east around bed_1/2.",
+		"setup": "empty",
+		"from": "south_of_bed0",
+		"to": "north_of_bed3",
+		"expect_corridor": "west_aisle",
+		"max_detour_ratio": 2.0,
+	},
+	{
+		"id": "south_lip_no_fence_trap",
+		"note": "South lip bed_3→bed_5: stay on lip; should not bounce into south perimeter fence trap.",
+		"setup": "grown_south",
+		"from": "south_bed3",
+		"to": "south_bed5",
+		"expect_corridor": "south_lip",
+		"max_detour_ratio": 1.8,
+	},
+	{
+		"id": "bed3_approach_from_shed",
+		"note": "Shed apron → bed_3 approach (production bed_approach_world). Short SE, not farm loop.",
+		"setup": "empty",
+		"from": "shed_door",
+		"to": "bed3_approach",
+		"expect_corridor": "path_or_west_aisle",
+		"max_detour_ratio": 2.2,
+	},
+]
+
 var _out_abs: String = ""
 var _manifest: Dictionary = {}
 var _checks: Array = []
@@ -87,15 +174,28 @@ func _qa_root() -> String:
 func _run() -> void:
 	print("======== Garden Explorer WALK VIDEO suite ========")
 	root.get_viewport().size = VIEW
+	_clip_set = str(OS.get_environment("WALK_CLIP_SET")).strip_edges()
+	if _clip_set.is_empty():
+		_clip_set = "default"
+	var ts_env := str(OS.get_environment("WALK_TARGET_S")).strip_edges()
+	if not ts_env.is_empty():
+		_target_s = maxf(4.0, float(ts_env))
+	elif _clip_set == "routing":
+		_target_s = 10.0
+	else:
+		_target_s = TARGET_S_DEFAULT
 	var stamp := Time.get_datetime_string_from_system().replace(":", "-").replace(" ", "_")
+	if _clip_set != "default":
+		stamp = "%s_%s" % [stamp, _clip_set]
 	_out_abs = _qa_root().path_join(stamp)
 	DirAccess.make_dir_recursive_absolute(_out_abs)
 	_manifest = {
 		"suite": "walk_video",
+		"clip_set": _clip_set,
 		"stamp": stamp,
 		"viewport": {"w": VIEW.x, "h": VIEW.y},
 		"capture_fps": CAPTURE_FPS,
-		"target_s": TARGET_S,
+		"target_s": _target_s,
 		"clips": [],
 		"checks": [],
 		"agent_brief": _agent_brief(),
@@ -130,7 +230,12 @@ func _run() -> void:
 	_ev = root.get_node_or_null("/root/Events")
 	_check("events_autoload", _ev != null, "/root/Events")
 
-	for clip in CLIPS:
+	_dump_mechanics()
+	_write_nav_diagnostics()
+
+	var clips: Array = CLIPS_ROUTING if _clip_set == "routing" else CLIPS_DEFAULT
+	print("clip_set=", _clip_set, " clips=", clips.size(), " target_s=", _target_s)
+	for clip in clips:
 		await _capture_clip(clip)
 
 	_manifest["checks"] = _checks
@@ -164,6 +269,7 @@ func _capture_clip(clip: Dictionary) -> void:
 	var frames_dir := clip_dir.path_join("frames")
 	DirAccess.make_dir_recursive_absolute(frames_dir)
 
+	_reset_between_clips()
 	_apply_setup(str(clip.get("setup", "empty")))
 	await _settle(6)
 
@@ -171,34 +277,62 @@ func _capture_clip(clip: Dictionary) -> void:
 	var goal: Vector2 = _named_pos(str(clip["to"]))
 	start = _farm.nearest_walkable(start)
 	goal = _farm.nearest_walkable(goal)
+	## Production shed/bed goals (may differ from named_pos if interact overrides).
+	var interact := str(clip.get("interact", ""))
+	if interact == "shed" and _farm.has_method("shed_approach_world"):
+		goal = _farm.shed_approach_world()
+	elif interact == "bed" and clip.has("bed_id") and _farm.has_method("bed_approach_world"):
+		goal = _farm.bed_approach_world(str(clip["bed_id"]), start, goal)
 	_player.place_at(start)
 	await _settle(4)
 	_aim_cam()
 	await _settle(2)
 
 	var path: PackedVector2Array = _farm.find_path(start, goal)
+	var path_q: Dictionary = _path_quality(start, goal, path, clip)
 	var route := {
 		"id": cid,
 		"note": str(clip.get("note", "")),
 		"setup": str(clip.get("setup", "")),
 		"from": str(clip["from"]),
 		"to": str(clip["to"]),
-		"start": {"x": start.x, "y": start.y},
-		"goal": {"x": goal.x, "y": goal.y},
-		"path_len": _farm.path_world_length(start, goal),
-		"waypoint_count": path.size(),
-		"expect": _expect_for_clip(cid),
+		"interact": interact,
+		"retap_interact": str(clip.get("retap_interact", "")),
+		"retap_at_s": float(clip.get("retap_at_s", -1.0)),
+		"start": {"x": snappedf(start.x, 0.1), "y": snappedf(start.y, 0.1)},
+		"goal": {"x": snappedf(goal.x, 0.1), "y": snappedf(goal.y, 0.1)},
+		"shed_door_world": {
+			"x": snappedf(_farm.shed_door_world.x, 0.1),
+			"y": snappedf(_farm.shed_door_world.y, 0.1),
+		},
+		"shed_center": {
+			"x": snappedf(_farm.shed_center.x, 0.1),
+			"y": snappedf(_farm.shed_center.y, 0.1),
+		},
+		"path_quality": path_q,
+		"waypoints": _sample_waypoints(path, 24),
+		"expect": _expect_for_clip(cid, clip),
+		"mechanics_ref": "mechanics/README.md",
 	}
 	FileAccess.open(clip_dir.path_join("route.json"), FileAccess.WRITE) \
 		.store_string(JSON.stringify(route, "\t"))
+	## Capture-time assert on insane detours (vision still reviews images).
+	var max_r := float(clip.get("max_detour_ratio", 0.0))
+	if max_r > 0.0:
+		var ratio := float(path_q.get("detour_ratio", 0.0))
+		_check("%s_detour_ratio" % cid, ratio <= max_r,
+			"detour=%.2f max=%.2f path_len=%.1f crow=%.1f south_loop=%s" % [
+				ratio, max_r, float(path_q.get("path_len", 0.0)),
+				float(path_q.get("crow_flies", 0.0)),
+				str(path_q.get("looks_like_south_fence_loop", false))])
 
-	## Start real walk so facing / anim / soft-avoid run.
-	if _ev:
-		_ev.player_path_requested.emit(goal)
-	else:
-		_player.call("_on_path_requested", goal)
+	## Start walk via production interact when requested (World → Events → Player).
+	_start_walk(interact, goal, start)
+	var retap_at := float(clip.get("retap_at_s", -1.0))
+	var retap_kind := str(clip.get("retap_interact", ""))
+	var did_retap := false
 
-	var total_frames: int = int(round(TARGET_S * float(CAPTURE_FPS)))
+	var total_frames: int = int(round(_target_s * float(CAPTURE_FPS)))
 	var sim_path := clip_dir.path_join("state.jsonl")
 	var tick_path := clip_dir.path_join("ticks.jsonl")
 	var sim_f := FileAccess.open(sim_path, FileAccess.WRITE)
@@ -206,25 +340,39 @@ func _capture_clip(clip: Dictionary) -> void:
 	_check("%s_state_file" % cid, sim_f != null, sim_path)
 	_check("%s_ticks_file" % cid, tick_f != null, tick_path)
 	var last_tick_s := -1
+	## Live path (updates after retap).
+	var live_path: PackedVector2Array = path
+	var live_goal: Vector2 = goal
 
 	for fi in total_frames:
 		var movie_t: float = float(fi) / float(CAPTURE_FPS)
+		if not did_retap and retap_at >= 0.0 and movie_t >= retap_at and not retap_kind.is_empty():
+			did_retap = true
+			_start_walk(retap_kind, live_goal, _player.global_position)
+			live_path = _farm.find_path(_player.global_position, live_goal)
+			path_q = _path_quality(_player.global_position, live_goal, live_path, clip)
+			path_q["retap"] = true
+			path_q["retap_at_s"] = movie_t
 		## Keep process running so Player._process advances the walk.
 		await process_frame
 		await process_frame
 		_aim_cam()
 
-		var snap: Dictionary = _state_snapshot(cid, fi, movie_t, start, goal, path)
+		## Refresh live waypoints from Player when available.
+		var pw = _player.get("_waypoints")
+		if pw is PackedVector2Array and (pw as PackedVector2Array).size() > 0:
+			live_path = pw as PackedVector2Array
+		var snap: Dictionary = _state_snapshot(cid, fi, movie_t, start, live_goal, live_path, clip, path_q)
 		if sim_f != null:
 			sim_f.store_line(JSON.stringify(snap))
 		## Whole-second tick for Grok: one ground-truth row per second mark.
 		var tick_s := int(floor(movie_t + 0.001))
-		if tick_f != null and tick_s != last_tick_s and tick_s <= int(TARGET_S):
+		if tick_f != null and tick_s != last_tick_s and tick_s <= int(_target_s):
 			last_tick_s = tick_s
 			var tick := snap.duplicate(true)
 			tick["tick_s"] = tick_s
 			tick["is_second_mark"] = true
-			tick["direct_checks"] = _direct_checks(snap, cid)
+			tick["direct_checks"] = _direct_checks(snap, cid, clip)
 			tick_f.store_line(JSON.stringify(tick))
 
 		var img: Image = root.get_viewport().get_texture().get_image()
@@ -241,18 +389,44 @@ func _capture_clip(clip: Dictionary) -> void:
 		"id": cid,
 		"note": str(clip.get("note", "")),
 		"setup": str(clip.get("setup", "")),
+		"clip_set": _clip_set,
 		"capture_fps": CAPTURE_FPS,
-		"target_s": TARGET_S,
+		"target_s": _target_s,
 		"frame_count": total_frames,
 		"frames_dir": "frames",
 		"state_jsonl": "state.jsonl",
 		"ticks_jsonl": "ticks.jsonl",
 		"route_json": "route.json",
+		"final_path_quality": path_q,
 	}
 	FileAccess.open(clip_dir.path_join("meta.json"), FileAccess.WRITE) \
 		.store_string(JSON.stringify(meta, "\t"))
 	(_manifest["clips"] as Array).append(meta)
 	_check("%s_frames" % cid, DirAccess.open(frames_dir) != null, "frames written")
+
+func _reset_between_clips() -> void:
+	## Clear shed/tool prompts + pending interact so the next clip can walk.
+	if _player:
+		_player.stop()
+	if _world:
+		if _world.get("_pending") != null:
+			_world.set("_pending", {})
+		if _world.has_method("_close_prompt"):
+			_world.call("_close_prompt")
+		elif _world.has_method("close_prompt"):
+			_world.call("close_prompt")
+	NarratorLib.stop()
+	var main := root.get_child(root.get_child_count() - 1)
+	for name in ["VideoPanel", "PromptPanel", "MediaPanel"]:
+		var n: Node = main.get_node_or_null(name) if main else null
+		if n == null:
+			continue
+		if n.has_method("_close"):
+			n.call("_close")
+		elif n.has_method("close"):
+			n.call("close")
+		if n.get("visible") != null:
+			n.set("visible", false)
 
 func _apply_setup(kind: String) -> void:
 	## Reset beds then apply scenario.
@@ -322,6 +496,22 @@ func _named_pos(key: String) -> Vector2:
 		"south_bed5":
 			## Stay on the lip, not jammed into the south perimeter rails.
 			return _farm.nearest_walkable(_farm.bed_centers["bed_5"] + Vector2(24, 40))
+		## Playtest: south of westernmost south bed, near shed (user tap).
+		"south_bed3_by_shed":
+			return _farm.nearest_walkable(_farm.bed_centers["bed_3"] + Vector2(-55, 36))
+		"bed3_west_gap":
+			return _farm.nearest_walkable(_farm.bed_centers["bed_3"] + Vector2(-70, 8))
+		"path_by_shed":
+			return _path_stand(_farm.shed_center.x + 70.0)
+		"south_of_bed0":
+			return _farm.nearest_walkable(_farm.bed_centers["bed_0"] + Vector2(0, 40))
+		"north_of_bed3":
+			return _farm.nearest_walkable(_farm.bed_centers["bed_3"] + Vector2(0, -40))
+		"bed3_approach":
+			if _farm.has_method("bed_approach_world"):
+				return _farm.bed_approach_world(
+					"bed_3", _farm.shed_door_world, _farm.bed_centers["bed_3"])
+			return _farm.nearest_walkable(_farm.bed_centers["bed_3"] + Vector2(0, 40))
 		"gate_out":
 			return _farm.gate_world + Vector2(-90, 24)
 		"pen_in":
@@ -339,7 +529,13 @@ func _named_pos(key: String) -> Vector2:
 		_:
 			return _farm.spawn_world
 
-func _expect_for_clip(cid: String) -> Dictionary:
+func _expect_for_clip(cid: String, clip: Dictionary = {}) -> Dictionary:
+	var base: Dictionary = {
+		"expect_corridor": str(clip.get("expect_corridor", "")),
+		"max_detour_ratio": float(clip.get("max_detour_ratio", 0.0)),
+		"no_south_fence_loop": true,
+		"ux": [] as Array,
+	}
 	match cid:
 		"walk_path_beds":
 			return {
@@ -347,11 +543,12 @@ func _expect_for_clip(cid: String) -> Dictionary:
 				"no_bed_underpaint": true,
 				"ux": ["natural walk facing", "beds stay planted/empty as setup"],
 			}
-		"walk_south_lip":
+		"walk_south_lip", "south_lip_no_fence_trap":
 			return {
 				"player_in_front_of_south_beds": true,
-				"grown_packs_visible": true,
-				"ux": ["no head-under-soil", "harvest stars above foliage if present"],
+				"grown_packs_visible": cid != "south_lip_no_fence_trap" or true,
+				"expect_corridor": "south_lip",
+				"ux": ["no head-under-soil", "no south-fence trap loop"],
 			}
 		"plant_seed_bed":
 			return {
@@ -369,15 +566,208 @@ func _expect_for_clip(cid: String) -> Dictionary:
 				"buddy_visible": true,
 				"ux": ["Buddy red collar dog", "walk facing not glued to dog", "no teleport snaps"],
 			}
-		"shed_approach":
-			return {
-				"player_in_front_of_shed": true,
-				"ux": ["feet on apron not through shed", "natural approach path"],
-			}
+		"shed_approach", "shed_from_south_bed3", "shed_from_bed3_west_gap", "shed_from_path_near", "shed_retap_midwalk", "path_west_to_shed":
+			base["player_in_front_of_shed"] = true
+			base["ux"] = [
+				"feet on apron not through shed",
+				"SHORT route — not east around middle beds then south fence",
+				"detour_ratio under max in route.path_quality",
+			]
+			return base
+		"aisle_bed0_to_bed3", "bed3_approach_from_shed":
+			base["ux"] = ["short aisle / path corridor", "no farm-scale loop"]
+			return base
 		_:
-			return {}
+			return base if not base["expect_corridor"].is_empty() else {}
 
-func _state_snapshot(cid: String, fi: int, movie_t: float, start: Vector2, goal: Vector2, path: PackedVector2Array) -> Dictionary:
+func _start_walk(interact: String, goal: Vector2, from_pos: Vector2) -> void:
+	if interact == "shed" and _world != null and _world.has_method("_queue_interact"):
+		## Same code path as tapping the shed sprite.
+		_world.call("_queue_interact", "shed", "shed", _farm.shed_center)
+		return
+	if interact == "bed" and _world != null and _world.has_method("_queue_interact"):
+		_world.call("_queue_interact", "bed", "bed_3", _farm.bed_centers.get("bed_3", goal))
+		return
+	if _ev:
+		_ev.player_path_requested.emit(goal)
+	else:
+		_player.call("_on_path_requested", goal)
+
+func _sample_waypoints(path: PackedVector2Array, max_n: int) -> Array:
+	var out: Array = []
+	if path.is_empty():
+		return out
+	var step := maxi(1, int(ceil(float(path.size()) / float(max_n))))
+	for i in range(0, path.size(), step):
+		var p: Vector2 = path[i]
+		out.append({"i": i, "x": snappedf(p.x, 0.1), "y": snappedf(p.y, 0.1)})
+	var last: Vector2 = path[path.size() - 1]
+	if out.is_empty() or Vector2(out[out.size() - 1]["x"], out[out.size() - 1]["y"]).distance_to(last) > 2.0:
+		out.append({"i": path.size() - 1, "x": snappedf(last.x, 0.1), "y": snappedf(last.y, 0.1)})
+	return out
+
+func _path_quality(start: Vector2, goal: Vector2, path: PackedVector2Array, clip: Dictionary) -> Dictionary:
+	var crow := start.distance_to(goal)
+	var plen := 0.0
+	if path.size() >= 2:
+		for i in range(1, path.size()):
+			plen += path[i - 1].distance_to(path[i])
+	else:
+		plen = crow
+	var detour := plen / maxf(crow, 1.0)
+	var min_x := start.x
+	var max_x := start.x
+	var min_y := start.y
+	var max_y := start.y
+	for p in path:
+		min_x = minf(min_x, p.x)
+		max_x = maxf(max_x, p.x)
+		min_y = minf(min_y, p.y)
+		max_y = maxf(max_y, p.y)
+	var bed3: Vector2 = _farm.bed_centers.get("bed_3", Vector2.ZERO)
+	var bed4: Vector2 = _farm.bed_centers.get("bed_4", Vector2.ZERO)
+	var bed5: Vector2 = _farm.bed_centers.get("bed_5", Vector2.ZERO)
+	var south_row_y := maxf(bed3.y, maxf(bed4.y, bed5.y))
+	## Loop signature: from a *west* start, path swings east of bed_4 AND deep
+	## south of the south row (shed/path routes). Eastbound south-lip walks are OK.
+	var went_east_of_bed4 := max_x > bed4.x + 20.0
+	var went_south_of_beds := max_y > south_row_y + 50.0
+	var expect_c := str(clip.get("expect_corridor", ""))
+	var south_fence_loop := (
+		expect_c != "south_lip"
+		and went_east_of_bed4
+		and went_south_of_beds
+		and start.x < bed4.x
+		and float(clip.get("max_detour_ratio", 0.0)) > 0.0
+		and detour > float(clip.get("max_detour_ratio", 99.0))
+	)
+	## Ideal shed approach from bed_3: max_x should stay near start/goal band.
+	var east_overshoot := max_x - maxf(start.x, goal.x)
+	return {
+		"crow_flies": snappedf(crow, 0.1),
+		"path_len": snappedf(plen, 0.1),
+		"detour_ratio": snappedf(detour, 0.01),
+		"waypoint_count": path.size(),
+		"bbox": {
+			"min_x": snappedf(min_x, 0.1), "max_x": snappedf(max_x, 0.1),
+			"min_y": snappedf(min_y, 0.1), "max_y": snappedf(max_y, 0.1),
+		},
+		"east_overshoot": snappedf(east_overshoot, 0.1),
+		"went_east_of_bed4": went_east_of_bed4,
+		"went_south_of_south_beds": went_south_of_beds,
+		"looks_like_south_fence_loop": south_fence_loop,
+		"expect_corridor": str(clip.get("expect_corridor", "")),
+		"max_detour_ratio": float(clip.get("max_detour_ratio", 0.0)),
+		"bed_solid_pad": 1.08,
+		"hint": (
+			"If looks_like_south_fence_loop or detour_ratio>>max → A* corridor blocked "
+			+ "(BED_SOLID_PAD / _nav_point_blocked / diagonal mid checks / shed_approach)."
+		),
+	}
+
+func _dump_mechanics() -> void:
+	## Full source of every script that owns walk video / tap → path → move → depth.
+	var mech := _out_abs.path_join("mechanics")
+	DirAccess.make_dir_recursive_absolute(mech)
+	var files := [
+		"res://scripts/world/FarmMap.gd",
+		"res://scripts/world/Player.gd",
+		"res://scripts/world/World.gd",
+		"res://scripts/world/PenGate.gd",
+		"res://scripts/world/RoamingAnimal.gd",
+		"res://scripts/render/IsoUtil.gd",
+		"res://tools/walk_video_suite.gd",
+		"res://data/map.json",
+	]
+	var index: Array = []
+	for path in files:
+		var res_path := str(path)
+		var body := FileAccess.get_file_as_string(res_path)
+		if body.is_empty():
+			continue
+		var base: String = res_path.get_file()
+		var out_path := mech.path_join(base)
+		var f := FileAccess.open(out_path, FileAccess.WRITE)
+		if f:
+			f.store_string(body)
+			f.close()
+			index.append({"res": res_path, "file": base, "bytes": body.length()})
+	var readme := PackedStringArray([
+		"# Walk / tap mechanics dump",
+		"",
+		"Copied at capture time for Grok Vision + agents. Flow:",
+		"",
+		"1. `World._queue_interact` / ground tap → approach point",
+		"2. `Events.player_path_requested` → `Player._on_path_requested`",
+		"3. `FarmMap.find_path` / `_rebuild_nav` / `_nav_point_blocked` / solids",
+		"4. `Player._process` soft collision + waypoint follow",
+		"5. `FarmMap.player_depth_y` + `IsoUtil.apply_depth` each frame",
+		"",
+		"Suspect bandaids for south-fence loops: `BED_SOLID_PAD`, `_nav_point_blocked`",
+		"bed samples, diagonal mid-point reject, `shed_approach_world` / `_near_bed_footprint`.",
+		"",
+		"Files:",
+	])
+	for it in index:
+		readme.append("- `%s` (%d bytes) ← `%s`" % [it["file"], it["bytes"], it["res"]])
+	FileAccess.open(mech.path_join("README.md"), FileAccess.WRITE) \
+		.store_string("\n".join(readme) + "\n")
+	_manifest["mechanics_dir"] = "mechanics"
+	_manifest["mechanics_files"] = index
+	print("mechanics dump → ", mech, " (", index.size(), " files)")
+
+func _write_nav_diagnostics() -> void:
+	## Snapshot bed centers + shed apron + a few probe paths for the stamp folder.
+	var probes: Array = []
+	var pairs := [
+		["south_bed3_by_shed", "shed_door"],
+		["bed3_west_gap", "shed_door"],
+		["path_by_shed", "shed_door"],
+		["path_west", "path_east"],
+	]
+	for pair in pairs:
+		var a: Vector2 = _farm.nearest_walkable(_named_pos(str(pair[0])))
+		var b: Vector2 = _farm.nearest_walkable(_named_pos(str(pair[1])))
+		if str(pair[1]) == "shed_door" and _farm.has_method("shed_approach_world"):
+			b = _farm.shed_approach_world()
+		var path: PackedVector2Array = _farm.find_path(a, b)
+		probes.append({
+			"from": pair[0],
+			"to": pair[1],
+			"start": {"x": snappedf(a.x, 0.1), "y": snappedf(a.y, 0.1)},
+			"goal": {"x": snappedf(b.x, 0.1), "y": snappedf(b.y, 0.1)},
+			"path_quality": _path_quality(a, b, path, {"expect_corridor": "probe"}),
+			"waypoints": _sample_waypoints(path, 16),
+		})
+	var beds: Array = []
+	for id in _farm.bed_centers.keys():
+		beds.append({
+			"id": id,
+			"center": {
+				"x": snappedf((_farm.bed_centers[id] as Vector2).x, 0.1),
+				"y": snappedf((_farm.bed_centers[id] as Vector2).y, 0.1),
+			},
+			"sort_y": snappedf(_farm.bed_sort_y(str(id)), 0.1) if _farm.has_method("bed_sort_y") else 0.0,
+		})
+	var diag := {
+		"bed_solid_pad": 1.08,
+		"shed_door_world": {
+			"x": snappedf(_farm.shed_door_world.x, 0.1),
+			"y": snappedf(_farm.shed_door_world.y, 0.1),
+		},
+		"shed_approach": (
+			{"x": snappedf(_farm.shed_approach_world().x, 0.1),
+				"y": snappedf(_farm.shed_approach_world().y, 0.1)}
+			if _farm.has_method("shed_approach_world") else {}
+		),
+		"beds": beds,
+		"probe_paths": probes,
+	}
+	FileAccess.open(_out_abs.path_join("nav_diagnostics.json"), FileAccess.WRITE) \
+		.store_string(JSON.stringify(diag, "\t"))
+	_manifest["nav_diagnostics"] = "nav_diagnostics.json"
+
+func _state_snapshot(cid: String, fi: int, movie_t: float, start: Vector2, goal: Vector2, path: PackedVector2Array, clip: Dictionary = {}, path_q: Dictionary = {}) -> Dictionary:
 	var ppos := _player.global_position
 	var depth_y := ppos.y
 	if _farm.has_method("player_depth_y"):
@@ -506,16 +896,25 @@ func _state_snapshot(cid: String, fi: int, movie_t: float, start: Vector2, goal:
 	if _seed_db:
 		season = str(_seed_db.current_season)
 
+	var pq: Dictionary = path_q if not path_q.is_empty() else _path_quality(start, goal, path, clip)
+	var path_len := float(pq.get("path_len", _farm.path_world_length(start, goal)))
 	var progress := 0.0
-	var path_len := _farm.path_world_length(start, goal)
 	if path_len > 1.0:
 		progress = clampf(1.0 - ppos.distance_to(goal) / maxf(path_len, 1.0), 0.0, 1.0)
 	var wp_i := int(_player.get("_wp_i")) if _player.get("_wp_i") != null else 0
 	var wp_n := path.size()
 	var target: Vector2 = _player.target if _player.get("target") != null else goal
+	## Remaining polyline length from feet → current target → rest of path.
+	var remain := ppos.distance_to(goal)
+	if wp_n > 0 and wp_i < wp_n:
+		remain = ppos.distance_to(target)
+		for i in range(maxi(wp_i + 1, 1), wp_n):
+			remain += path[i - 1].distance_to(path[i])
 
 	var shed_door: Vector2 = _farm.shed_door_world if _farm.shed_door_world != Vector2.ZERO \
 		else _farm.shed_center
+	if _farm.has_method("shed_approach_world"):
+		shed_door = _farm.shed_approach_world()
 	var gate: Vector2 = _farm.gate_world
 
 	var depth_mismatches: Array = []
@@ -539,35 +938,74 @@ func _state_snapshot(cid: String, fi: int, movie_t: float, start: Vector2, goal:
 			if float(a.get("dist_player", 999.0)) < 40.0:
 				contracts.append(
 					"Buddy within 40px — player facing must follow walk velocity, not snap to dog.")
+	if bool(pq.get("looks_like_south_fence_loop", false)):
+		contracts.append(
+			"ROUTE FLAG looks_like_south_fence_loop=true — image should show east-then-south detour; FAIL path_sensible.")
+	if float(pq.get("max_detour_ratio", 0.0)) > 0.0 \
+			and float(pq.get("detour_ratio", 0.0)) > float(pq.get("max_detour_ratio", 0.0)):
+		contracts.append(
+			"ROUTE FLAG detour_ratio=%.2f > max=%.2f — expect long unnatural loop in image." % [
+				float(pq.get("detour_ratio", 0.0)), float(pq.get("max_detour_ratio", 0.0))])
+
+	## Corridor hint from live position vs bed centers.
+	var corridor_now := "unknown"
+	var path_y := IsoUtil.tile_to_world(
+		Vector2(0.0, float(_farm.data.get("path", {}).get("tile_y", 3.0)))).y
+	if absf(ppos.y - path_y) < 28.0:
+		corridor_now = "path"
+	elif ppos.y > (_farm.bed_centers.get("bed_3", ppos) as Vector2).y + 30.0:
+		corridor_now = "south_of_beds"
+	elif ppos.x < (_farm.bed_centers.get("bed_3", ppos) as Vector2).x - 40.0:
+		corridor_now = "west_aisle"
 
 	return {
 		"frame": fi,
 		"movie_t": snappedf(movie_t, 0.001),
 		"clip_id": cid,
+		"clip_set": _clip_set,
 		"season": season,
 		"progress_est": snappedf(progress, 0.001),
+		"path_quality": pq,
 		"nav": {
 			"start": {"x": snappedf(start.x, 0.1), "y": snappedf(start.y, 0.1)},
 			"goal": {"x": snappedf(goal.x, 0.1), "y": snappedf(goal.y, 0.1)},
 			"target": {"x": snappedf(target.x, 0.1), "y": snappedf(target.y, 0.1)},
 			"path_len": snappedf(path_len, 0.1),
+			"crow_flies": pq.get("crow_flies"),
+			"detour_ratio": pq.get("detour_ratio"),
+			"remain_est": snappedf(remain, 0.1),
 			"waypoint_i": wp_i,
 			"waypoint_count": wp_n,
+			"waypoints_sample": _sample_waypoints(path, 12),
 			"dist_to_goal": snappedf(ppos.distance_to(goal), 0.1),
 			"blocked_at_feet": blocked,
+			"corridor_now": corridor_now,
 			"nearest_walkable_delta": {
 				"x": snappedf(nw.x - ppos.x, 0.1),
 				"y": snappedf(nw.y - ppos.y, 0.1),
 			},
 			"arrived": (not _player.moving) and ppos.distance_to(goal) < 18.0,
+			"looks_like_south_fence_loop": pq.get("looks_like_south_fence_loop"),
 		},
 		"anchors": {
 			"shed_door": {"x": snappedf(shed_door.x, 0.1), "y": snappedf(shed_door.y, 0.1)},
+			"shed_center": {
+				"x": snappedf(_farm.shed_center.x, 0.1),
+				"y": snappedf(_farm.shed_center.y, 0.1),
+			},
 			"gate": {"x": snappedf(gate.x, 0.1), "y": snappedf(gate.y, 0.1)},
 			"dist_shed_door": snappedf(ppos.distance_to(shed_door), 0.1),
 			"dist_gate": snappedf(ppos.distance_to(gate), 0.1),
 			"nearest_bed": nearest_bed,
 			"nearest_bed_dist": snappedf(nearest_bed_dist, 0.1),
+			"bed_3": {
+				"x": snappedf((_farm.bed_centers.get("bed_3", Vector2.ZERO) as Vector2).x, 0.1),
+				"y": snappedf((_farm.bed_centers.get("bed_3", Vector2.ZERO) as Vector2).y, 0.1),
+			},
+			"bed_4": {
+				"x": snappedf((_farm.bed_centers.get("bed_4", Vector2.ZERO) as Vector2).x, 0.1),
+				"y": snappedf((_farm.bed_centers.get("bed_4", Vector2.ZERO) as Vector2).y, 0.1),
+			},
 		},
 		"player": {
 			"x": snappedf(ppos.x, 0.1),
@@ -588,7 +1026,7 @@ func _state_snapshot(cid: String, fi: int, movie_t: float, start: Vector2, goal:
 		"bugs": bugs,
 		"depth_mismatches_z": depth_mismatches,
 		"contracts": contracts,
-		"expect": _expect_for_clip(cid),
+		"expect": _expect_for_clip(cid, clip),
 		"biases": {
 			"BUILDING": IsoUtil.BIAS_BUILDING,
 			"SEED": IsoUtil.BIAS_SEED,
@@ -611,18 +1049,37 @@ func _facing_label(row: int, face_left: bool) -> String:
 		_:
 			return "unknown"
 
-func _direct_checks(snap: Dictionary, cid: String) -> Array:
+func _direct_checks(snap: Dictionary, cid: String, clip: Dictionary = {}) -> Array:
 	## Yes/no questions the model must answer for this second-mark frame.
 	var out: Array = []
+	var nav: Dictionary = snap.get("nav", {})
+	var pq: Dictionary = snap.get("path_quality", {})
 	out.append({
 		"id": "arrived",
 		"ask": "Has the player arrived (nav.arrived)?",
-		"state": snap.get("nav", {}).get("arrived"),
+		"state": nav.get("arrived"),
 	})
 	out.append({
 		"id": "moving",
 		"ask": "Is the player still moving?",
 		"state": snap.get("player", {}).get("moving"),
+	})
+	out.append({
+		"id": "path_sensible",
+		"ask": (
+			"Is the walk taking a short sensible corridor (path / west aisle) "
+			+ "rather than a long east-then-south fence loop around the beds?"
+		),
+		"state_detour_ratio": pq.get("detour_ratio"),
+		"state_max_detour": pq.get("max_detour_ratio"),
+		"state_south_fence_loop_flag": pq.get("looks_like_south_fence_loop"),
+		"state_corridor_now": nav.get("corridor_now"),
+		"state_expect_corridor": clip.get("expect_corridor", pq.get("expect_corridor")),
+		"state_east_overshoot": pq.get("east_overshoot"),
+		"note": (
+			"FAIL if image shows gardener circling east past middle beds then "
+			+ "between south beds and south fence when going to the shed."
+		),
 	})
 	for b in snap.get("beds", []):
 		if b.get("expect_player_in_front"):
@@ -648,22 +1105,20 @@ func _direct_checks(snap: Dictionary, cid: String) -> Array:
 				"state_texture": a.get("texture_path"),
 				"state_expect": "dog_idle or dog_walk in texture_path",
 			})
-	match cid:
-		"shed_approach":
-			out.append({
-				"id": "on_shed_apron",
-				"ask": "Are the player's feet on the shed door apron (clear of beds, in front of facade)?",
-				"state_dist_shed_door": snap.get("anchors", {}).get("dist_shed_door"),
-				"state_blocked": snap.get("nav", {}).get("blocked_at_feet"),
-			})
-		"gate_to_pen":
-			out.append({
-				"id": "gate_clear",
-				"ask": "Is the player clearly visible crossing the gate (not buried under a post)?",
-				"state_dist_gate": snap.get("anchors", {}).get("dist_gate"),
-			})
-		_:
-			pass
+	if cid.begins_with("shed") or cid == "path_west_to_shed" or cid == "shed_approach":
+		out.append({
+			"id": "on_shed_apron",
+			"ask": "If arrived (or nearly): are feet on the shed door apron (clear of beds, in front of facade)?",
+			"state_dist_shed_door": snap.get("anchors", {}).get("dist_shed_door"),
+			"state_blocked": nav.get("blocked_at_feet"),
+			"state_arrived": nav.get("arrived"),
+		})
+	if cid == "gate_to_pen":
+		out.append({
+			"id": "gate_clear",
+			"ask": "Is the player clearly visible crossing the gate (not buried under a post)?",
+			"state_dist_gate": snap.get("anchors", {}).get("dist_gate"),
+		})
 	return out
 
 func _aim_cam() -> void:
@@ -709,7 +1164,8 @@ func _finish_fail(msg: String) -> void:
 	quit(1)
 
 func _agent_brief() -> String:
-	return ("Walk video QA. Each clip has frames/ + state.jsonl + route.json. "
-		+ "Review with qa/review_walk_videos.py (Grok) — compare render to state "
-		+ "(depth, seeds, Buddy, gate, shed). Flag all clear UX / unnatural issues. "
-		+ "FAIL in report.json means capture broke.")
+	return ("Walk video QA (clip_set=%s). Each clip: frames/ + state.jsonl + ticks.jsonl "
+		+ "+ route.json (path_quality, waypoints). Stamp also has mechanics/ (full "
+		+ "FarmMap/Player/World/IsoUtil/walk suite sources) and nav_diagnostics.json. "
+		+ "Routing set stresses shed taps from bed_3 — FAIL long east+south fence loops. "
+		+ "Review: qa/review_walk_videos.py.") % _clip_set

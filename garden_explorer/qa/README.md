@@ -75,9 +75,28 @@ REVIEW=0 ./qa/run_walk_video_suite.sh     # capture only
 python3 qa/review_walk_videos.py qa/out/walk_video/<stamp>
 ```
 
-Clips: path past beds · south lip depth · seed plant · gate/pen · Buddy walk ·
-shed approach. Same concurrency knobs as Solar (`REVIEW_CONCURRENCY`,
-`REVIEW_STAGGER_S`, …) — see [`../../docs/QA_SUITE_PROCESS.md`](../../docs/QA_SUITE_PROCESS.md).
+Clips (default): path past beds · south lip depth · seed plant · gate/pen ·
+Buddy walk · shed approach.
+
+### Routing clip set (shed detours / bandaid nav)
+
+Playtest: tap shed from south of westernmost south bed must not loop east
+around the middle beds then between beds and the southern fence.
+
+```bash
+./qa/run_route_video_suite.sh            # WALK_CLIP_SET=routing, 10s clips + review
+# or:
+WALK_CLIP_SET=routing WALK_TARGET_S=10 REVIEW=1 ./qa/run_walk_video_suite.sh
+```
+
+Each stamp also writes:
+- `mechanics/` — full `FarmMap` / `Player` / `World` / `IsoUtil` / suite sources
+- `nav_diagnostics.json` — probe path_quality (detour_ratio, south-fence-loop flag)
+- per-clip `route.json` with waypoints + path_quality
+- richer `ticks.jsonl` (`path_quality`, `corridor_now`, `path_sensible` checks)
+
+Same concurrency knobs as Solar (`REVIEW_CONCURRENCY`, `REVIEW_STAGGER_S`, …)
+— see [`../../docs/QA_SUITE_PROCESS.md`](../../docs/QA_SUITE_PROCESS.md).
 
 Outputs: `qa/out/walk_video/<stamp>/<clip>/` (`walk.mp4`, `frames/`,
 `state.jsonl`, `route.json`, `review.json`) plus `reviews.json` and `REVIEW.md`.
