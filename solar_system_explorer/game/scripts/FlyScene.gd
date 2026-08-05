@@ -49,20 +49,23 @@ const APPROACH_PROX_NEAR_X := 5.0
 const SIM_SHELL_R := 400.0
 const SIM_DISC_MIN_PX := 1.25   ## true angular radius (px) where dot → disc
 const SIM_DEST_DISC_MIN_PX := 0.55  ## destination becomes a disc sooner (loom)
-const SIM_DOT_PX := 2.6         ## screen size of a sub-threshold body dot
+const SIM_DOT_PX := 2.6         ## screen size of a sub-threshold dest/star speck
+## Charted peer flybys (Jupiter on Earth→Saturn): chunky pixel AR pin — corners
+## and all — never a tiny speck and never a fake 3D planet disc.
+const SIM_MARKER_PX := 28.0
 const SIM_MIN_ALPHA := 0.03     ## below this flux-alpha nothing is rendered
-## Close flybys (Jupiter on Earth→Saturn) may loom, but never fill the glass.
+## Close flybys may be charted, but peer discs stay pure-AU sized — never a
+## playground loom. Cap is a safety rail only (true AU size is almost always tiny).
 const SIM_PEER_MAX_PX := 96.0
-## Destination during cruise may grow, but must NOT fill the canopy — that reads
-## as "we hit the planet" even when the charted park is still ~4×hero clear.
-## Orbit cut may go full local (parking view). Presentation only; path is truth.
-const SIM_DEST_CRUISE_MAX_PX := 56.0
-## Local blend when dist/hero is small: destination park + real peer flybys.
-## Far peers stay pure AU so they don't fake playground collisions.
-const SIM_LOCAL_NEAR_X := 6.0   ## dist/hero fully in the local regime
-const SIM_LOCAL_FAR_X := 36.0   ## dist/hero fully in the decompressed regime
-## Peers start blending toward local size inside this hero-multiple.
-const SIM_PEER_LOCAL_X := 10.0
+## Destination during cruise: AR pin until late local loom — never a mid-hop
+## glass-filling disc (Saturn was mistaken for colliding Jupiter). Orbit cut
+## may go full local. Cap is a safety rail on the late loom only.
+const SIM_DEST_CRUISE_MAX_PX := 40.0
+## Local blend is DESTINATION-ONLY and LATE. Peers never blend.
+const SIM_LOCAL_NEAR_X := 5.0   ## dist/hero fully local (dest, late cruise/orbit)
+const SIM_LOCAL_FAR_X := 12.0   ## start blending toward local (was 36 — too early)
+## Path fraction before dest may leave pure-AU / pin and start local loom.
+const SIM_DEST_LOCAL_U := 0.78
 
 ## Burn-phase narration (baked VO; see dump_vo_lines.gd). The lines describe
 ## the ship, not passing geometry, so they can never go stale mid-flight.
@@ -428,6 +431,13 @@ func _spot_weight(body_id: String) -> float:
 		best = maxf(best, OrbitMath.encounter_spotlight(_play_u, _encounter_play_u(e)))
 	return best
 
+## True when this body is a plot-time charted mid-cruise pass-by.
+func _is_charted_encounter(body_id: String) -> bool:
+	for e in _encounters:
+		if str(e.get("id", "")) == body_id:
+			return true
+	return false
+
 ## True when a world-space direction lands inside the canopy camera FOV.
 func _dir_in_canopy_fov(dir: Vector3) -> bool:
 	if _cam == null or dir.length() < 0.001:
@@ -440,6 +450,15 @@ func _dir_in_canopy_fov(dir: Vector3) -> bool:
 	var half_w: float = atan(tan(half_h) * aspect)
 	# Tighter than the full frustum — cockpit oval hides the FOV rim.
 	return bearing <= rad_to_deg(maxf(half_w, half_h)) * 0.82
+
+## Wider cone for charted AR pins so a high-angle right-side pass (Jupiter
+## ~60–90° on Earth→Saturn) stays labeled until it truly goes aft.
+func _dir_in_charted_marker_fov(dir: Vector3) -> bool:
+	if _cam == null or dir.length() < 0.001:
+		return false
+	var fwd: Vector3 = -_cam.global_transform.basis.z
+	var bearing: float = rad_to_deg(acos(clampf(fwd.dot(dir.normalized()), -1.0, 1.0)))
+	return bearing <= 95.0  # keep abeam pins; drop once clearly aft
 
 func _apply_phase_event(phase: int) -> void:
 	if phase == _burn_phase:
@@ -872,8 +891,8 @@ func _update_markers() -> void:
 ## reference point — objects enter ITS field of view; nothing is faked.
 ##
 ## Peers NEVER use the hero-local blend (that reintroduced mini-playground
-## Jupiter). Only the destination blends toward local scale near park so the
-## world looms into orbit without a pin stuck until the hard cut.
+## Jupiter on Earth→Saturn — false loom then "bounce"). Only the destination
+## blends toward local scale near park so the world looms into orbit.
 func _update_sim_view() -> void:
 	var cam_pos: Vector3 = _cam.global_position
 	var ship_real: Vector3 = OrbitMath.real_pos_au(cam_pos, _cfg)
@@ -893,17 +912,20 @@ func _update_sim_view() -> void:
 		dir = dir.normalized()
 		var is_star: bool = bool(data.get("is_star", false))
 		var is_dest: bool = id == _dest_id
-		# Peers outside the canopy oval stay hidden (mesh under the frame
-		# confused QA with render_mesh=true on an empty glass).
-		var on_glass: bool = is_dest or is_star or _dir_in_canopy_fov(dir)
+		var charted_peer: bool = (not is_dest and not is_star
+			and _is_charted_encounter(id))
+		# Dest/star/peers: tight canopy oval. Charted AR pins: wider cone so a
+		# high-angle right-side pass stays labeled (not culled at ~58°).
+		var on_glass: bool = is_dest or is_star or _dir_in_canopy_fov(dir) \
+			or (charted_peer and _dir_in_charted_marker_fov(dir))
 		if not on_glass:
 			icon.visible = false
 			mesh.visible = false
 			continue
-		# Charted pass-by on the glass: keep a normal pin even if AU size is
-		# sub-pixel. No size faking, no pull — out of FOV means no cue.
-		var charted_on_glass: bool = (not is_dest and not is_star
-			and _spot_weight(id) > 0.0)
+		# Charted pass-by on the glass: chunky pixel AR marker (PlanetSkins
+		# marker tex) for the whole time it's on canopy — not only the short
+		# spotlight window. Size is PRESENTATION (readable pin), not AU disc.
+		var charted_on_glass: bool = charted_peer
 		var body_real: Vector3 = OrbitMath.real_pos_au(body_sim, _cfg)
 		var radius_km: float = float(data.get("real_radius_km", 1000.0))
 		var hero: float = maxf(float(data.get("hero_r", 1.0)), 0.001)
@@ -911,24 +933,19 @@ func _update_sim_view() -> void:
 		var d_far_au: float = maxf(ship_real.distance_to(body_real), 1.0e-6)
 		var d_ship_au: float = d_far_au
 		var x_hero: float = dist_sim / hero
-		# Destination always blends local near park. Peers blend only on real
-		# close approaches during cruise (Jupiter ~1.5×hero) — never in orbit,
-		# where a neighbor at ~orbit radius would fake a collision disc.
-		var use_local: bool = is_dest or (
-			not is_star and not _orbiting and x_hero < SIM_PEER_LOCAL_X)
+		# Destination-only local blend — and only late cruise / orbit.
+		# Mid-hop Saturn loom looked like a colliding Jupiter (Grok).
+		var use_local: bool = is_dest and (
+			_orbiting or (_play_u >= SIM_DEST_LOCAL_U and x_hero < SIM_LOCAL_FAR_X))
 		if use_local:
 			var d_local_au: float = maxf(
 				x_hero * radius_km / OrbitMath.KM_PER_AU, 1.0e-9)
 			var local_w: float = 1.0
-			if is_dest and _orbiting:
+			if _orbiting:
 				local_w = 1.0
-			elif is_dest:
+			else:
 				local_w = 1.0 - smoothstep(
 					SIM_LOCAL_NEAR_X, SIM_LOCAL_FAR_X, x_hero)
-			else:
-				# Peer flyby: fully local inside ENCOUNTER band, fade out by 10×.
-				local_w = 1.0 - smoothstep(
-					OrbitMath.ENCOUNTER_HERO_X * 0.5, SIM_PEER_LOCAL_X, x_hero)
 			d_ship_au = exp(lerpf(log(d_far_au), log(d_local_au), local_w))
 		var theta: float = OrbitMath.apparent_radius_rad(radius_km, d_ship_au)
 		var alpha: float = 1.0
@@ -936,23 +953,20 @@ func _update_sim_view() -> void:
 			var d_sun_au: float = maxf(body_real.length(), 0.05)
 			alpha = OrbitMath.brightness_alpha(
 				OrbitMath.apparent_brightness(radius_km, d_sun_au, d_ship_au))
-			# Close flybys must stay visible even if AU flux is tiny.
-			if use_local and not is_dest:
-				alpha = maxf(alpha, 0.55)
 		root.position = cam_pos + dir * SIM_SHELL_R
 		var radius_px: float = theta * px_per_rad
 		if not is_dest and not is_star and radius_px > SIM_PEER_MAX_PX:
 			radius_px = SIM_PEER_MAX_PX
 			theta = radius_px / maxf(px_per_rad, 1.0)
 		elif is_dest and not _orbiting and radius_px > SIM_DEST_CRUISE_MAX_PX:
-			# Chart parks outside the planet — never paint a glass-filling hit.
 			radius_px = SIM_DEST_CRUISE_MAX_PX
 			theta = radius_px / maxf(px_per_rad, 1.0)
 		var disc_min: float = SIM_DEST_DISC_MIN_PX if is_dest else SIM_DISC_MIN_PX
-		# Tiny meshes read as empty sky — prefer a normal pin under ~5px.
-		var prefer_pin: bool = (not is_dest) and radius_px < 5.0
-		# Sub-pixel peers stay hidden unless a charted pass is on the glass
-		# (then a normal pixel pin is enough — no fake loom).
+		# Tiny true size → pin. Charted peers always pin. Dest stays pin until
+		# late local loom (same AR language as Jupiter flyby markers).
+		var dest_as_pin: bool = is_dest and not use_local and radius_px < 5.0
+		var prefer_pin: bool = charted_peer or dest_as_pin \
+			or ((not is_dest) and radius_px < 5.0)
 		var dot_ok: bool = is_dest or is_star or charted_on_glass or radius_px >= 0.8
 		if radius_px >= disc_min and not prefer_pin:
 			icon.visible = false
@@ -962,9 +976,12 @@ func _update_sim_view() -> void:
 			icon.visible = true
 			mesh.visible = false
 			var a: float = 1.0 if is_star else maxf(
-				alpha, 0.45 if (is_dest or charted_on_glass) else 0.12)
+				alpha, 0.85 if (charted_on_glass or dest_as_pin) \
+					else (0.45 if is_dest else 0.12))
 			icon.modulate = Color(1, 1, 1, a)
-			icon.pixel_size = (SIM_DOT_PX * SIM_SHELL_R / px_per_rad) / float(ICON_TEX_PX)
+			var pin_px: float = SIM_MARKER_PX if (charted_peer or dest_as_pin) \
+				else SIM_DOT_PX
+			icon.pixel_size = (pin_px * SIM_SHELL_R / px_per_rad) / float(ICON_TEX_PX)
 		else:
 			icon.visible = false
 			mesh.visible = false
@@ -987,17 +1004,21 @@ func debug_visibility_snapshot(path_u: float, movie_t: float) -> Dictionary:
 		var dir: Vector3 = rel.normalized() if dist > 0.001 else Vector3.FORWARD
 		var bearing: float = rad_to_deg(acos(clampf(fwd.dot(dir), -1.0, 1.0)))
 		var ang_px: float = debug_sim_angular_radius_px(id)
+		var honesty: Dictionary = {} if markers else debug_angular_honesty(id)
 		var icon: Sprite3D = info["icon"]
 		var mesh: MeshInstance3D = info["sphere"]
-		# Match render: canopy oval, not the full camera frustum.
-		var in_fov: bool = _dir_in_canopy_fov(dir)
 		var is_dest: bool = id == _dest_id
+		var charted_peer: bool = (not is_dest) and _is_charted_encounter(id)
+		# Match render FOV: charted pins use the wider abeam cone.
+		var in_fov: bool = _dir_in_canopy_fov(dir) \
+			or (charted_peer and not markers and _dir_in_charted_marker_fov(dir))
 		var spot: float = 0.0 if is_dest else _spot_weight(id)
-		var charted_on_glass: bool = spot > 0.0 and in_fov
+		var charted_on_glass: bool = charted_peer and in_fov
 		var hero: float = maxf(float(data.get("hero_r", 1.0)), 0.001)
 		var x_hero: float = dist / hero
 		var expect_mesh := false
 		var expect_vis := false
+		var render_as := "hidden"
 		if markers:
 			# MARKERS: pins are intentional sky labels; "loom" = dest/peer mesh.
 			# Origin never mesh-looms (park departure would look like a hit).
@@ -1018,9 +1039,14 @@ func debug_visibility_snapshot(path_u: float, movie_t: float) -> Dictionary:
 				ang_px = maxf(ang_px, 8.0)
 		else:
 			expect_vis = in_fov and (ang_px >= 0.8 or is_dest or charted_on_glass)
-			expect_mesh = expect_vis and ang_px >= (
+			# Charted peers never expect mesh loom in SIM_VIEW — AR pin only.
+			expect_mesh = (not charted_peer) and expect_vis and ang_px >= (
 				SIM_DEST_DISC_MIN_PX if is_dest else SIM_DISC_MIN_PX)
-		bodies.append({
+		if icon != null and icon.visible:
+			render_as = "marker"
+		elif mesh != null and mesh.visible:
+			render_as = "mesh"
+		var body_row := {
 			"id": id,
 			"name": str(data.get("name", id)),
 			"is_dest": is_dest,
@@ -1031,13 +1057,24 @@ func debug_visibility_snapshot(path_u: float, movie_t: float) -> Dictionary:
 			"ang_radius_px": ang_px,
 			"in_fov": in_fov,
 			"spotlight": spot,
+			"charted_peer": charted_peer,
 			"charted_on_glass": charted_on_glass,
 			"expect_visible": expect_vis,
 			"expect_mesh": expect_mesh,
+			"render_as": render_as,
 			"render_icon": icon != null and icon.visible,
 			"render_mesh": mesh != null and mesh.visible,
+			"marker_screen_px": (SIM_MARKER_PX if (charted_on_glass and not markers) else 0.0),
 			"mismatch": false,
-		})
+		}
+		if not honesty.is_empty():
+			body_row["true_au_ang_px"] = honesty.get("true_au_ang_px", 0.0)
+			body_row["peer_local_blend_w"] = honesty.get("peer_local_blend_w", 0.0)
+			body_row["use_local"] = honesty.get("use_local", false)
+			body_row["inflation_x"] = honesty.get("inflation_x", 1.0)
+			body_row["d_au"] = honesty.get("d_au", 0.0)
+			body_row["d_blend_au"] = honesty.get("d_blend_au", 0.0)
+		bodies.append(body_row)
 	# Flag sim-vs-render mismatches for the reviewer.
 	for b in bodies:
 		var got_mesh: bool = bool(b["render_mesh"])
@@ -1070,12 +1107,27 @@ func VIEWPORT_H() -> int:
 	return _viewport.size.y if _viewport != null else 600
 
 ## QA / probe: apparent angular radius in viewport pixels (SIM_VIEW math).
+## Returns the *rendered* size (may include peer local blend). For honesty
+## audits use debug_angular_honesty() which also reports pure-AU size.
 func debug_sim_angular_radius_px(body_id: String) -> float:
+	return float(debug_angular_honesty(body_id).get("rendered_ang_px", 0.0))
+
+## True AU size vs what SIM_VIEW actually paints (local-blend inflation).
+func debug_angular_honesty(body_id: String) -> Dictionary:
+	var out := {
+		"true_au_ang_px": 0.0,
+		"rendered_ang_px": 0.0,
+		"peer_local_blend_w": 0.0,
+		"use_local": false,
+		"inflation_x": 1.0,
+		"d_au": 0.0,
+		"d_blend_au": 0.0,
+	}
 	if _cam == null or _cfg == null:
-		return 0.0
+		return out
 	var data := SolarData.flyer_body_by_id(body_id, _cfg)
 	if data.is_empty():
-		return 0.0
+		return out
 	var cam_pos: Vector3 = _cam.global_position
 	var ship_real: Vector3 = OrbitMath.real_pos_au(cam_pos, _cfg)
 	var body_sim: Vector3 = OrbitMath.body_pos(data, _clock)
@@ -1087,30 +1139,35 @@ func debug_sim_angular_radius_px(body_id: String) -> float:
 	var d_ship_au: float = d_far_au
 	var is_dest: bool = body_id == _dest_id
 	var x_hero: float = dist_sim / hero
-	var use_local: bool = is_dest or (
-		not bool(data.get("is_star", false))
-		and not _orbiting
-		and x_hero < SIM_PEER_LOCAL_X)
+	var local_w: float = 0.0
+	# Destination-only local blend — late cruise / orbit (match _update_sim_view).
+	var use_local: bool = is_dest and (
+		_orbiting or (_play_u >= SIM_DEST_LOCAL_U and x_hero < SIM_LOCAL_FAR_X))
 	if use_local:
 		var d_local_au: float = maxf(
 			x_hero * radius_km / OrbitMath.KM_PER_AU, 1.0e-9)
-		var local_w: float = 1.0
-		if is_dest and _orbiting:
+		local_w = 1.0
+		if _orbiting:
 			local_w = 1.0
-		elif is_dest:
-			local_w = 1.0 - smoothstep(SIM_LOCAL_NEAR_X, SIM_LOCAL_FAR_X, x_hero)
 		else:
-			local_w = 1.0 - smoothstep(
-				OrbitMath.ENCOUNTER_HERO_X * 0.5, SIM_PEER_LOCAL_X, x_hero)
+			local_w = 1.0 - smoothstep(SIM_LOCAL_NEAR_X, SIM_LOCAL_FAR_X, x_hero)
 		d_ship_au = exp(lerpf(log(d_far_au), log(d_local_au), local_w))
-	var theta: float = OrbitMath.apparent_radius_rad(radius_km, d_ship_au)
 	var px_per_rad: float = float(_viewport.size.y) / deg_to_rad(_cam.fov)
-	var radius_px: float = theta * px_per_rad
+	var true_px: float = OrbitMath.apparent_radius_rad(radius_km, d_far_au) * px_per_rad
+	var rend_px: float = OrbitMath.apparent_radius_rad(radius_km, d_ship_au) * px_per_rad
 	if not is_dest and not bool(data.get("is_star", false)):
-		radius_px = minf(radius_px, SIM_PEER_MAX_PX)
+		rend_px = minf(rend_px, SIM_PEER_MAX_PX)
 	elif is_dest and not _orbiting:
-		radius_px = minf(radius_px, SIM_DEST_CRUISE_MAX_PX)
-	return radius_px
+		rend_px = minf(rend_px, SIM_DEST_CRUISE_MAX_PX)
+	out["true_au_ang_px"] = true_px
+	out["rendered_ang_px"] = rend_px
+	out["peer_local_blend_w"] = 0.0
+	out["use_local"] = use_local
+	out["inflation_x"] = rend_px / maxf(true_px, 1.0e-9)
+	out["d_au"] = d_far_au
+	out["d_blend_au"] = d_ship_au
+	out["dist_hero_x"] = x_hero
+	return out
 
 func _update_hud() -> void:
 	var dest := SolarData.flyer_body_by_id(_dest_id, _cfg)

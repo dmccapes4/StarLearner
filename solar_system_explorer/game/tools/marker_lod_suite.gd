@@ -134,8 +134,16 @@ func _probe_saturn_cruise_peers(fly: FlyScene, cfg: SolarFlyerConfig) -> void:
 			var hero: float = float(info["data"].get("hero_r", 1.0))
 			var handoff: float = OrbitMath.flyby_handoff_dist(
 				hero, float(info["tier"]), cfg)
-			# Outside handoff: must be AR pin (the Earth→Saturn loom bug).
-			if dist > handoff:
+			var to_cam: Vector3 = root.global_position - fly._cam.global_position
+			var ahead: bool = true
+			if to_cam.length() > 0.01:
+				ahead = (-fly._cam.global_transform.basis.z).dot(to_cam.normalized()) > 0.05
+			# Outside handoff: must be AR pin when ahead (aft peers are culled).
+			if not ahead:
+				_check("saturn_cruise_%s_u%.2f_aft_ok" % [peer_id, u],
+					not icon.visible and not mesh.visible,
+					"aft peer hidden dist=%.1f" % dist)
+			elif dist > handoff:
 				_check("saturn_cruise_%s_u%.2f_pin" % [peer_id, u],
 					icon.visible and not mesh.visible,
 					"icon=%s mesh=%s dist=%.1f handoff=%.1f" % [
@@ -186,13 +194,16 @@ func _probe_body(fly: FlyScene, cfg: SolarFlyerConfig, b: Dictionary) -> void:
 		"has baked marker")
 	await _shot("%s_far" % id, "FAR %s — AR pin only (chunky pixels, no 3D planet)" % id)
 
-	# HANDOFF — just inside handoff; probe as destination so Sun also swaps.
-	var d_hand: float = handoff * 0.92
+	# HANDOFF — just inside the DEST handoff gate (probe as destination so Sun
+	# also swaps). Mesh scale must ≈ marker_world at onset (FLYBY_HOLD plateau).
+	var handoff_dest: float = OrbitMath.flyby_handoff_dist(hero, tier, cfg, true)
+	var d_hand: float = handoff_dest * 0.97
 	_place_cam(fly, body_pos, d_hand)
 	fly._flying = true
 	fly._orbiting = false
 	fly._dest_id = id
-	fly._play_u = 0.5
+	fly._play_u = 0.50  # before APPROACH_GROW_U so tier isn't inflated
+	fly._origin_id = "mars" if id != "mars" else "earth"
 	fly._update_markers()
 	await process_frame
 	var hand_mesh: bool = mesh.visible
@@ -202,23 +213,26 @@ func _probe_body(fly: FlyScene, cfg: SolarFlyerConfig, b: Dictionary) -> void:
 	if hand_mesh:
 		var ms: float = mesh.scale.x
 		var marker_w: float = OrbitMath.marker_world_size(d_hand, tier, cfg)
-		# Mesh should be near marker size at onset (not a huge nearby planet).
+		# Onset ≈ pin (±60%). Gas giants / Sun can have pin world-size already
+		# >0.55·hero at dest handoff — matching the pin is still correct.
 		scale_ok = ms <= maxf(marker_w * 1.6, 0.12) + 0.05 and ms > 0.02 \
-			and ms < hero * 0.55 + 0.05
-		detail += " mesh_s=%.2f marker_w=%.2f hero=%.2f" % [ms, marker_w, hero]
+			and ms <= hero + 0.05 \
+			and absf(ms - marker_w) <= maxf(marker_w * 0.25, 0.15) + 0.05
+		detail += " mesh_s=%.2f marker_w=%.2f hero=%.2f d=%.1f hand=%.1f" % [
+			ms, marker_w, hero, d_hand, handoff_dest]
 	_check("%s_handoff_mesh" % id, hand_mesh and not hand_icon,
 		detail)
 	_check("%s_handoff_size_match" % id, scale_ok, detail)
 	await _shot("%s_handoff" % id,
 		"HANDOFF %s — 3D replaces pin near marker size" % id)
 
-	# NEAR — closer; mesh grows (clearance-capped)
-	var d_near: float = maxf(handoff * 0.35, hero * 3.0)
+	# NEAR — inside hold band; mesh may grow toward hero (clearance-capped)
+	var d_near: float = maxf(hero * OrbitMath.FLYBY_NEAR_X * 0.9, hero * 2.2)
 	_place_cam(fly, body_pos, d_near)
 	fly._flying = true
 	fly._orbiting = false
 	fly._dest_id = id
-	fly._play_u = 0.5
+	fly._play_u = 0.85
 	fly._update_markers()
 	await process_frame
 	_check("%s_near_mesh" % id, mesh.visible and not icon.visible,

@@ -839,6 +839,15 @@ func _test_nav_modes() -> void:
 		"peer stays pin at 7×hero")
 	_ok(OrbitMath.flyby_mesh_scale(7.0 * 5.0, 5.0, 2.0, 1.0, cfg, true) > 0.0,
 		"dest mesh at 7×hero (Mars mid-cruise)")
+	# Dest onset: mesh appears at pin size (HOLD plateau), not near-hero.
+	var s_onset := OrbitMath.flyby_mesh_scale(
+		dest_hand * 0.97, 5.0, 2.0, 1.0, cfg, true)
+	_ok(s_onset > 0.0 and s_onset <= 2.0 * 1.15 + 0.05,
+		"dest handoff onset ≈ marker (got %.2f, marker=2.0)" % s_onset)
+	var s_hold := OrbitMath.flyby_mesh_scale(
+		5.0 * OrbitMath.FLYBY_HOLD_X * 1.05, 5.0, 2.0, 1.0, cfg, true)
+	_ok(s_hold > 0.0 and s_hold <= 2.0 * 1.15 + 0.05,
+		"still pin-sized outside HOLD band (got %.2f)" % s_hold)
 	# Encounter spotlight: peak at path_u, zero outside the window.
 	_ok(OrbitMath.encounter_spotlight(0.58, 0.58) > 0.99, "spotlight peaks on cue")
 	_ok(OrbitMath.encounter_spotlight(0.58 + OrbitMath.ENCOUNTER_SPOT_HALF_U + 0.01, 0.58) == 0.0,

@@ -295,8 +295,9 @@ static func marker_world_size(dist: float, tier: float, cfg: SolarFlyerConfig) -
 ## ~200–300 wu for gas giants — larger than the whole compressed system —
 ## so peers would stay 3D for an entire Earth→Saturn hop. Cap handoff at
 ## FLYBY_HANDOFF_MAX_X·hero so mesh only appears on a true close pass.
-## Destination uses a wider gate so mid-cruise closing reads as a loom
-## (Earth→Mars hits ~7×hero while still ahead — peers stay at 4×).
+## Destination uses a wider gate so the pin→mesh swap can happen earlier,
+## but mesh SCALE stays ≈ marker until FLYBY_HOLD_X (Grok 2026-08: onset
+## was popping to near-hero because ease started at the wide dest gate).
 ##
 ## Handoff distance: min(hero/(icon_scale·tier·EARLY), hero·MAX_X)
 const FLYBY_HANDOFF_EARLY := 0.92   ## mesh slightly before sizes match
@@ -306,6 +307,8 @@ const FLYBY_HANDOFF_MAX_X := 4.0
 const FLYBY_HANDOFF_MAX_X_DEST := 14.0
 ## Legacy name kept for clearance tests / probes (approx old far gate).
 const FLYBY_FAR_X := 14.0
+## Hold mesh at pin size until this ×hero, then ease to hero.
+const FLYBY_HOLD_X := 5.0
 const FLYBY_NEAR_X := 2.5
 ## The camera must NEVER enter the mesh: a course that passes right through a
 ## world (worlds are points — nothing is dodged) would put the camera inside
@@ -332,6 +335,7 @@ static func flyby_mesh_scale(dist: float, hero: float, marker_world: float,
 		for_dest: bool = false) -> float:
 	var d: float = maxf(dist, 0.001)
 	var h: float = maxf(hero, 0.001)
+	var mw: float = maxf(marker_world, 0.05)
 	var handoff: float
 	if cfg != null:
 		handoff = flyby_handoff_dist(h, tier, cfg, for_dest)
@@ -340,17 +344,17 @@ static func flyby_mesh_scale(dist: float, hero: float, marker_world: float,
 		handoff = h * (FLYBY_HANDOFF_MAX_X_DEST if for_dest else FLYBY_FAR_X)
 	if d > handoff:
 		return 0.0
-	# At handoff onset stay ≈ marker size; grow to hero only on the inner
-	# approach (proximity-capped handoffs are much shorter than pure
-	# apparent-size math, so keep the ease band tight).
-	var near: float = minf(h * FLYBY_NEAR_X, handoff * 0.35)
-	var u: float = 1.0
-	if handoff > near + 0.001:
-		u = clampf((handoff - d) / (handoff - near), 0.0, 1.0)
-	# Soft onset: first ~15% of the band barely grows past the pin.
-	var ease: float = smoothstep(0.0, 1.0, u)
-	ease = ease * ease
-	var s: float = lerpf(minf(marker_world, h), h, ease)
+	# Plateau at pin size from handoff → hold. Grow to hero only inside hold.
+	# Wide dest gates used to ease from handoff and look like a planet spawn.
+	var hold: float = minf(h * FLYBY_HOLD_X, handoff * 0.85)
+	var near: float = minf(h * FLYBY_NEAR_X, hold * 0.55)
+	var s: float = mw
+	if d < hold:
+		var span: float = maxf(hold - near, 0.001)
+		var u: float = clampf((hold - d) / span, 0.0, 1.0)
+		var ease: float = smoothstep(0.0, 1.0, u)
+		ease = ease * ease
+		s = lerpf(mw, h, ease)
 	return minf(s, d * FLYBY_CLEARANCE)
 
 ## ── Presentation pacing (Mode 1) ────────────────────────────────────
