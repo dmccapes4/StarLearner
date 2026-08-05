@@ -92,9 +92,16 @@ func _playground(dir: String) -> void:
 	root.add_child(pg)
 	pg.set_active(true)
 	pg.begin("earth")
-	# Tutorial + aim gate auto-skip when no accelerometer is present.
-	for i in 90:
+	# Speed pick → gears; tutorial + aim gate auto-skip with no accelerometer.
+	await process_frame
+	await process_frame
+	pg._on_speed_gears()
+	for i in 120:
 		await process_frame
+	if pg._state != PlaygroundScene.State.FLYING and pg.has_method("_launch"):
+		pg._launch(Vector2.ZERO)
+		for i in 12:
+			await process_frame
 	await _shot(dir + "/playground_flying.png")
 	_check(pg._state == PlaygroundScene.State.FLYING, "playground starts flying")
 	# Tap the nearest on-screen body → pause tile.

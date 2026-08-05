@@ -23,7 +23,7 @@ func _run() -> void:
 	for i in 5:
 		await process_frame
 	await RenderingServer.frame_post_draw
-	var img := get_root().get_texture().get_image()
+	var img := root.get_viewport().get_texture().get_image()
 	var path := ProjectSettings.globalize_path(dir + "/flight_chooser.png")
 	img.save_png(path)
 	print("wrote ", path)

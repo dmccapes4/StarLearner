@@ -210,20 +210,28 @@ static func nearest_major_asteroid(ship_pos: Vector3, t: float,
 			best = str(b["id"])
 	return best
 
-## Marker recognition tier — NOT planetary scale. Wider steps so a six-year-
-## old can tell giants from Earth-class and Earth-class from the little ones
-## at a glance. Jupiter ≈ 2.2× Earth; the Sun outranks everything.
+## Marker recognition tier — matches ScrollView draw_radius ratios so the
+## AR pin for Jupiter reads ~2× Earth the same way the strip does.
+## Earth draw_radius = 54 → tier 1.0; Sun 150 → ~2.78; Mercury 34 → ~0.63.
+const MARKER_TIER_EARTH_DRAW := 54.0
+
 static func icon_tier_for(b: Dictionary) -> float:
+	var dr: float = float(b.get("draw_radius", 0.0))
+	if dr > 0.0:
+		return maxf(dr / MARKER_TIER_EARTH_DRAW, 0.22)
+	# Major asteroids / fallbacks without draw_radius on the strip.
 	if bool(b.get("is_star", false)):
-		return 3.0   # bright yellow ball — clearly the biggest marker
+		return 150.0 / MARKER_TIER_EARTH_DRAW
 	var rk: float = float(b.get("real_radius_km", 0.0))
 	if rk >= 50000.0:
-		return 2.2   # giant: Jupiter, Saturn
+		return 112.0 / MARKER_TIER_EARTH_DRAW
 	if rk >= 20000.0:
-		return 1.55  # large: Uranus, Neptune
+		return 70.0 / MARKER_TIER_EARTH_DRAW
 	if rk >= 5000.0:
-		return 1.0   # medium: Venus, Earth — the legible baseline
-	return 0.65      # small: Mercury, Mars, Pluto, asteroids
+		return 1.0
+	if rk >= 400.0:
+		return 16.0 / MARKER_TIER_EARTH_DRAW  # Ceres-class
+	return 12.0 / MARKER_TIER_EARTH_DRAW
 
 static func _flyer_theta0(id: String) -> float:
 	match id:

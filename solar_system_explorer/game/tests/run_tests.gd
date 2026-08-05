@@ -34,6 +34,8 @@ func _run() -> void:
 	_test_ux_cruise()
 	_test_nav_modes()
 	_test_narration_vo()
+	_test_realism_budget()
+	_test_astrogator_panel()
 	_test_scripts_compile()
 	print("======== TOTAL: %d passed, %d failed ========" % [_pass, _fail])
 	quit(1 if _fail > 0 else 0)
@@ -257,15 +259,23 @@ func _test_orbit_math() -> void:
 
 	# Recognition tiers: Earth-class is the 1.0 legible baseline; Jupiter
 	# reads exactly DOUBLE Earth; monotonic vs real radius.
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["jupiter"]), 2.2), "Jupiter icon tier 2.2")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["saturn"]), 2.2), "Saturn icon tier 2.2")
+	# Tiers track ScrollView draw_radius / 54 (Earth).
 	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["earth"]), 1.0), "Earth icon tier 1.0")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["jupiter"]), 112.0 / 54.0),
+		"Jupiter icon tier = draw_radius ratio")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["saturn"]), 94.0 / 54.0),
+		"Saturn icon tier = draw_radius ratio")
 	_ok(SolarData.icon_tier_for(by_id["jupiter"])
 		>= SolarData.icon_tier_for(by_id["earth"]) * 2.0,
 		"Jupiter marker reads at least double Earth")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["mercury"]), 0.65), "Mercury icon tier 0.65")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["neptune"]), 1.55), "Neptune icon tier 1.55")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["sun"]), 3.0), "Sun icon tier 3.0")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["mercury"]), 34.0 / 54.0),
+		"Mercury icon tier = draw_radius ratio")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["neptune"]), 68.0 / 54.0),
+		"Neptune icon tier = draw_radius ratio")
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["sun"]), 150.0 / 54.0),
+		"Sun icon tier = draw_radius ratio")
+	_ok(PlanetSkins.has_pixel_marker("earth") and PlanetSkins.has_pixel_marker("jupiter"),
+		"baked pixel AR markers exist for Earth and Jupiter")
 	var prev_tier := -1.0
 	var order_r := ["pluto", "mercury", "mars", "venus", "earth", "neptune",
 		"uranus", "saturn", "jupiter"]
@@ -709,8 +719,14 @@ func _test_ux_cruise() -> void:
 			"Earth→Uranus sun-flyby claim backed by geometry")
 	else:
 		_ok(narr.find("away from the Sun") >= 0, "outward hop says away from the Sun")
-	var along := OrbitMath.bodies_along_hop(earth, uranus, cfg)
+	var along := OrbitMath.bodies_along_hop(earth, uranus, cfg, true)
 	_ok(along.size() >= 2, "Earth→Uranus crosses inner/outer worlds")
+	_ok(narr.find("Vesta") < 0 and narr.find("Ceres") < 0,
+		"Earth→Uranus narration skips asteroids")
+	# Pass-by claims only for forward mid-cruise encounters (not radial rings).
+	for e in route_u.get("encounters", []):
+		_ok(float(e.get("path_u", 0.0)) >= OrbitMath.ENCOUNTER_U_MIN,
+			"Uranus encounter %s not a departure ghost" % e.get("id", "?"))
 
 	# Narration honesty: outward hops never claim a Sun flyby (the transfer
 	# arc's radius never drops below the inner endpoint's orbit).
@@ -719,7 +735,12 @@ func _test_ux_cruise() -> void:
 	var narr_j := OrbitMath.trip_narration(earth, jup, route_j, cfg)
 	_ok(narr_j.find("close to the Sun") < 0 and narr_j.find("around the Sun") < 0,
 		"Earth→Jupiter never claims a Sun flyby")
-	_ok(narr_j.find("Mars") >= 0, "Earth→Jupiter mentions crossing Mars's orbit")
+	# Origin falling aft at depart is never a "pass by Earth".
+	for e in route_j.get("encounters", []):
+		_ok(str(e.get("id", "")) != "earth",
+			"Earth→Jupiter does not chart a pass-by of origin Earth")
+	_ok(narr_j.find("pass close by Earth") < 0,
+		"Earth→Jupiter narration skips aft departure Earth")
 	var mercury := SolarData.flyer_body_by_id("mercury", cfg)
 	var route_m := OrbitMath.plot_route(OrbitMath.body_pos(earth, 0.0), mercury, 0.0, cfg)
 	var narr_m := OrbitMath.trip_narration(earth, mercury, route_m, cfg)
@@ -787,12 +808,48 @@ func _test_nav_modes() -> void:
 	_ok(OrbitMath.flight_play_rate(0.95, 40.0) < OrbitMath.flight_play_rate(0.5, 40.0),
 		"pacing eases near arrival")
 
-	# Fly-by: far away no mesh; inside the window it grows toward hero.
+	# Fly-by (legacy cfg-less path): far away no mesh; inside the window grows.
 	_ok(OrbitMath.flyby_mesh_scale(200.0, 5.0, 2.0) == 0.0, "no fly-by mesh at distance")
 	var mid := OrbitMath.flyby_mesh_scale(9.0 * 5.0, 5.0, 2.0)
 	_ok(mid > 0.0 and mid <= 5.0, "fly-by mesh appears inside the window")
-	_ok(absf(OrbitMath.flyby_mesh_scale(4.0 * 5.0, 5.0, 2.0) - 5.0) < 0.01,
-		"fly-by mesh reaches full hero size on a close pass")
+	var close_d := OrbitMath.FLYBY_NEAR_X * 5.0
+	var close_s := OrbitMath.flyby_mesh_scale(close_d, 5.0, 2.0)
+	_ok(close_s > 0.0 and close_s <= close_d * OrbitMath.FLYBY_CLEARANCE + 0.01,
+		"fly-by mesh on close pass (got %.2f at d=%.1f)" % [close_s, close_d])
+	# Handoff capped so compressed-system cruise keeps giants as pins.
+	var handoff := OrbitMath.flyby_handoff_dist(5.0, 1.0, cfg)
+	_ok(handoff <= 5.0 * OrbitMath.FLYBY_HANDOFF_MAX_X + 0.01,
+		"handoff capped at MAX_X·hero (got %.1f)" % handoff)
+	var jup := SolarData.flyer_body_by_id("jupiter", cfg)
+	var j_hand := OrbitMath.flyby_handoff_dist(
+		float(jup.get("hero_r", 12.0)), SolarData.icon_tier_for(jup), cfg)
+	_ok(j_hand <= float(jup.get("hero_r", 12.0)) * OrbitMath.FLYBY_HANDOFF_MAX_X + 0.01,
+		"Jupiter handoff capped (%.1f) — not system-wide loom" % j_hand)
+	_ok(OrbitMath.flyby_mesh_scale(handoff * 1.05, 5.0, 2.0, 1.0, cfg) == 0.0,
+		"no mesh just outside handoff")
+	_ok(OrbitMath.flyby_mesh_scale(handoff * 0.95, 5.0, 2.0, 1.0, cfg) > 0.0,
+		"mesh appears inside handoff")
+	# Destination handoff is wider so mid-cruise closing can loom as mesh.
+	var dest_hand := OrbitMath.flyby_handoff_dist(5.0, 1.0, cfg, true)
+	_ok(dest_hand > handoff + 0.01,
+		"dest handoff wider than peer (%.1f > %.1f)" % [dest_hand, handoff])
+	_ok(dest_hand <= 5.0 * OrbitMath.FLYBY_HANDOFF_MAX_X_DEST + 0.01,
+		"dest handoff still capped")
+	_ok(OrbitMath.flyby_mesh_scale(7.0 * 5.0, 5.0, 2.0, 1.0, cfg, false) == 0.0,
+		"peer stays pin at 7×hero")
+	_ok(OrbitMath.flyby_mesh_scale(7.0 * 5.0, 5.0, 2.0, 1.0, cfg, true) > 0.0,
+		"dest mesh at 7×hero (Mars mid-cruise)")
+	# Encounter spotlight: peak at path_u, zero outside the window.
+	_ok(OrbitMath.encounter_spotlight(0.58, 0.58) > 0.99, "spotlight peaks on cue")
+	_ok(OrbitMath.encounter_spotlight(0.58 + OrbitMath.ENCOUNTER_SPOT_HALF_U + 0.01, 0.58) == 0.0,
+		"spotlight off outside window")
+	_ok(OrbitMath.encounter_spotlight_for("jupiter", 0.58, [
+		{"id": "jupiter", "path_u": 0.58},
+		{"id": "venus", "path_u": 0.10},
+	]) > 0.99, "spotlight_for picks matching encounter")
+	_ok(OrbitMath.encounter_spotlight_for("mars", 0.58, [
+		{"id": "jupiter", "path_u": 0.58},
+	]) == 0.0, "spotlight_for ignores other bodies")
 	# Camera clearance: a course straight through a world never puts the
 	# camera inside the mesh — the radius is capped below the camera distance.
 	for d in [0.5, 2.0, 6.0, 12.0]:
@@ -976,9 +1033,58 @@ func _test_scripts_compile() -> void:
 		"res://scripts/PlanetSkins.gd", "res://scripts/VoStream.gd",
 		"res://scripts/NarratorVoice.gd", "res://scripts/NavModes.gd",
 		"res://scripts/OrbitCinematic.gd", "res://scripts/PlaygroundScene.gd",
-		"res://scripts/FlightChooser.gd",
+		"res://scripts/FlightChooser.gd", "res://scripts/RealismBudget.gd",
+		"res://scripts/AstrogatorPanel.gd",
+		"res://scripts/CourseModeChooser.gd",
+		"res://scripts/PropulsionChooser.gd",
 	]:
 		_ok(load(path) != null, "compiles: %s" % path)
+
+func _test_realism_budget() -> void:
+	## Phase A — STRATEGY_REAL_ROCKET_SCIENCE.md discovery math.
+	for c in RealismBudget.phase_a_checks():
+		_ok(bool(c.get("ok", false)), "%s — %s" % [c.get("name"), c.get("detail")])
+	var earth := {"id": "earth", "a_au": 1.0, "period_yr": 1.0}
+	var mars := {"id": "mars", "a_au": 1.52, "period_yr": 1.88}
+	var b: Dictionary = RealismBudget.hop_budget(earth, mars, 0.0)
+	_ok(bool(b.get("ok", false)), "earth→mars hop_budget ok")
+	_ok(float(b.get("synodic_yr", 0.0)) > 2.0 and float(b.get("synodic_yr", 0.0)) < 2.3,
+		"earth→mars synodic from hop_budget")
+	_ok(b.has("fuels") and (b["fuels"] as Dictionary).has("orion"),
+		"hop_budget includes orion fuel fraction")
+
+func _test_astrogator_panel() -> void:
+	## Phase B — route stamp helpers + kid copy (no scene tree required).
+	_ok(AstrogatorPanel.is_propulsion_id("chemical"), "chemical propulsion id")
+	_ok(AstrogatorPanel.is_propulsion_id("orion"), "orion propulsion id")
+	_ok(not AstrogatorPanel.is_propulsion_id("warp"), "reject unknown propulsion")
+	var earth := {"id": "earth", "a_au": 1.0, "period_yr": 1.0}
+	var jup := {"id": "jupiter", "a_au": 5.2, "period_yr": 11.86}
+	var bud: Dictionary = RealismBudget.hop_budget(earth, jup, 0.0)
+	var ledger := AstrogatorPanel.ledger_lines(bud, "chemical")
+	_ok(ledger.contains("Coast"), "ledger has coast line")
+	_ok(ledger.contains("Most of this rocket is fuel"),
+		"chemical Jupiter mostly-fuel copy")
+	var f_orion := AstrogatorPanel.fuel_frac_for(bud, "orion")
+	var f_chem := AstrogatorPanel.fuel_frac_for(bud, "chemical")
+	_ok(f_orion < f_chem * 0.5, "orion far cheaper than chemical on Jupiter")
+	var cal := AstrogatorPanel.calendar_label(100.0, 200.0)
+	_ok(cal.contains("Coast calendar"), "calendar label format")
+	var narr := AstrogatorPanel.launch_narration(bud, "orion")
+	_ok(narr.contains("Astrogator"), "launch narration mentions Astrogator")
+	_ok(narr.contains("nuclear pulse"), "launch narration names pulse ship")
+	var earth_b := SolarData.flyer_body_by_id("earth", SolarFlyerConfig.load_default())
+	var jup_b := SolarData.flyer_body_by_id("jupiter", SolarFlyerConfig.load_default())
+	var brief := AstrogatorPanel.mission_briefing(
+		earth_b, jup_b, bud, "chemical", SolarFlyerConfig.load_default())
+	_ok(brief.contains("Chemical rockets") or brief.contains("chemical"),
+		"mission briefing explains chemical engines")
+	_ok(brief.contains("percent") or brief.contains("fuel"),
+		"mission briefing mentions fuel weight")
+	_ok(brief.contains("gravity kick") or brief.contains("engines do"),
+		"mission briefing is honest about gravity assists")
+	_ok(AstrogatorPanel.engine_explain("ntp").contains("reactor"),
+		"NTP engine explain mentions reactor")
 
 func _by_id(bodies: Array, id: String) -> Dictionary:
 	for b in bodies:

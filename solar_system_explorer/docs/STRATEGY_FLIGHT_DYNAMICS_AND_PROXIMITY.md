@@ -159,46 +159,35 @@ headless sweep over sampled `u`, all six harness trips.
 
 ## 3. En-route planets — icons, proximity blooms, and collision-free courses
 
-### 3.1 Recognizable icons instead of anonymous dots
+### 3.1 Pixel AR marker icons (not photoreal discs)
 
-Every non-destination body renders as a small **billboard icon** — a pre-baked sprite of that
-world's actual skin (Mars rust-red, Earth blue-green, Saturn *with its ring silhouette*), not a
-white dot. Bake once at load: render each `PlanetSkins` material to a 64 px `SubViewport`
-texture (or draw the 2D disc the orrery already knows how to draw); zero per-frame cost, ~10
-sprites total.
+Far bodies render as **chunky 2D AR pins** — intentionally pixelated billboards with corner
+brackets, not SubViewport samples of the 3D skin (those read as nearby planets). Baked once by
+`tools/gen_marker_icons.py` into `game/images/markers/<id>.png` (64×64); `PlanetSkins.make_icon_texture`
+loads those first.
 
-**Sizing is a size-class cartoon, deliberately not to scale** (per the brief — "Jupiter is maybe
-twice the size of Earth"):
+**Relative marker size** tracks the ScrollView strip (`draw_radius / 54`, Earth = 1.0), so Jupiter
+reads clearly larger than Earth / Mercury the same way kids saw on the selection flyover.
+Icons keep **constant screen size** (`pixel_size` × camera distance) so they stay findable map
+pins until handoff.
 
-| Tier | Bodies | Icon scale |
-|---|---|---:|
-| small | Mercury, Mars, Pluto, major asteroids | 1.0 |
-| medium | Venus, Earth | 1.3 |
-| large | Uranus, Neptune | 1.7 |
-| giant | Saturn, Jupiter | 2.0 |
+QA: `./qa/run_marker_lod_suite.sh` (every flyer body — far pin / handoff swap / near mesh).
 
-Icons hold **constant screen size** (scale `pixel_size` with camera distance) so they read as
-map markers floating in the world — always findable, never dominating. Ordering is preserved
-(the size-tier monotonicity vs `real_radius_km` becomes a unit test), ratios are squished to a
-2:1 span exactly as requested.
+### 3.2 Apparent-size handoff (pin → 3D)
 
-### 3.2 Proximity-triggered rendering (icon → world, continuously)
-
-Replace the global `mesh_in/mesh_out` hysteresis with a **per-body proximity trigger** that
-scales with how big the world is:
+Handoff is driven by **apparent size**, not a fixed world-radius threshold:
 
 ```
-render_in_i = clamp(14 · hero_r_i, 40, 140)      # Jupiter blooms from farther than Mars
+handoff_dist = OrbitMath.flyby_handoff_dist(hero_r, icon_tier, cfg)
+# mesh replaces pin slightly early (FLYBY_HANDOFF_EARLY ≈ 0.92)
+# first mesh scale ≈ marker world width at that distance
 ```
 
-- Beyond `render_in`: icon only.
-- Crossing `render_in`: crossfade icon → mesh over a 20% band. **The mesh's first frame is
-  scale-matched to the icon's current angular size** (solve `apparent` so the sphere subtends
-  what the sprite subtended), then grows by the existing `apparent_size` curve as distance
-  closes. No pop, ever — the world literally *starts as the icon and grows*.
-- The destination keeps its priority path (bloom to full hero at arrival).
-- A flyby world "may hardly be in view" — fine and expected; the console ping (§2) plus the
-  narrated flyby (§3.4) carry the moment even if it slides past the canopy edge.
+- Beyond handoff: pixel AR pin only.
+- At / just inside handoff: pin hides, 3D mesh appears at ~marker angular size, then grows with
+  the flyby apparent-size curve (clearance-capped).
+- Destination always eligible for mesh; Sun stays pin unless it *is* the destination.
+- A flyby world "may hardly be in view" — fine; console ping (§2) + narrated flyby (§3.4) carry it.
 
 ### 3.3 Collision avoidance without moving planets — the method, reasoned out
 

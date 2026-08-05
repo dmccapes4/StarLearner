@@ -4,8 +4,9 @@ extends Node
 ##   Title boot: 3s orrery cinematic ("Welcome to Solar System Explorer!")
 ##      ─▶ Title (two tiles, gold-outline narration)
 ##      ─▶ Spaceship ─▶ FlightChooser (two tiles)
-##           ─▶ Mission Flight ─▶ Astronaut briefing (simulated courses) ─▶ ScrollView ─▶ PlotBoard
-##                ─▶ FlyScene ─▶ optional Video ─▶ ScrollView again
+##           ─▶ Mission Flight ─▶ Astronaut briefing ─▶ ScrollView
+##                ─▶ CourseModeChooser (Quick Course / Rocket Science)
+##                     ─▶ [Rocket] PropulsionChooser ─▶ PlotBoard ─▶ FlyScene
 ##           ─▶ Free Flight ─▶ Astronaut briefing (tilt + surge) ─▶ Playground
 ##      ─▶ Solar System ─▶ Orrery tour ─▶ back to Title
 ##
@@ -23,10 +24,14 @@ const VideoPanel := preload("res://scripts/VideoPanel.gd")
 const AstronautIntro := preload("res://scripts/AstronautIntro.gd")
 const PlaygroundScene := preload("res://scripts/PlaygroundScene.gd")
 const FlightChooser := preload("res://scripts/FlightChooser.gd")
+const CourseModeChooser := preload("res://scripts/CourseModeChooser.gd")
+const PropulsionChooser := preload("res://scripts/PropulsionChooser.gd")
 const NavModes := preload("res://scripts/NavModes.gd")
 
 var _title: TitleView
 var _chooser: FlightChooser
+var _course_mode: CourseModeChooser
+var _propulsion: PropulsionChooser
 var _orrery: OrreryView
 var _scroll: ScrollView
 var _board: PlotBoard
@@ -35,6 +40,7 @@ var _playground: PlaygroundScene
 var _video: VideoPanel
 var _astro: AstronautIntro
 var _ship_at: String = "earth"
+var _pending_dest: String = ""
 var _last_route: Dictionary = {}
 var _in_playground: bool = false
 
@@ -44,6 +50,8 @@ func _ready() -> void:
 
 	_title = TitleView.new()
 	_chooser = FlightChooser.new()
+	_course_mode = CourseModeChooser.new()
+	_propulsion = PropulsionChooser.new()
 	_orrery = OrreryView.new()
 	_scroll = ScrollView.new()
 	_board = PlotBoard.new()
@@ -53,6 +61,8 @@ func _ready() -> void:
 	_astro = AstronautIntro.new()
 	add_child(_title)
 	add_child(_chooser)
+	add_child(_course_mode)
+	add_child(_propulsion)
 	add_child(_orrery)
 	add_child(_scroll)
 	add_child(_board)
@@ -66,6 +76,11 @@ func _ready() -> void:
 	_chooser.mission_pressed.connect(_on_mission_flight)
 	_chooser.free_flight_pressed.connect(_on_free_flight)
 	_chooser.go_home.connect(_show_title)
+	_course_mode.kid_pressed.connect(_on_course_kid)
+	_course_mode.rocket_pressed.connect(_on_course_rocket)
+	_course_mode.go_home.connect(_on_course_mode_back)
+	_propulsion.propulsion_picked.connect(_on_propulsion_picked)
+	_propulsion.go_home.connect(_on_propulsion_back)
 	_orrery.tour_finished.connect(_show_title)
 	_orrery.go_home.connect(_show_title)
 	_scroll.go_home.connect(_show_title)
@@ -137,14 +152,88 @@ func _on_body_selected(id: String) -> void:
 	if id == _ship_at:
 		_video.play_body(id)
 		return
+	# Choose Quick Course vs Rocket Science (and engines) BEFORE charting.
+	_pending_dest = id
+	var body := SolarData.flyer_body_by_id(id)
+	var name := str(body.get("name", id)) if not body.is_empty() else id
+	_scroll.set_active(false)
+	_scroll.visible = false
+	_course_mode.begin_for(name)
+
+func _on_course_mode_back() -> void:
+	_pending_dest = ""
+	_course_mode.set_active(false)
+	_show_scroll()
+
+func _on_course_kid() -> void:
+	_course_mode.set_active(false)
+	_start_plot(AstrogatorPanel.PACE_KID, AstrogatorPanel.PROP_CHEMICAL)
+
+func _on_course_rocket() -> void:
+	_course_mode.set_active(false)
+	var body := SolarData.flyer_body_by_id(_pending_dest)
+	var name := str(body.get("name", _pending_dest)) if not body.is_empty() \
+		else _pending_dest
+	_propulsion.begin_for(name)
+
+func _on_propulsion_back() -> void:
+	_propulsion.set_active(false)
+	var body := SolarData.flyer_body_by_id(_pending_dest)
+	var name := str(body.get("name", _pending_dest)) if not body.is_empty() \
+		else _pending_dest
+	_course_mode.begin_for(name)
+
+func _on_propulsion_picked(propulsion_id: String) -> void:
+	_propulsion.set_active(false)
+	await _speak_rocket_briefing(propulsion_id)
+	if _pending_dest.is_empty():
+		return
+	_start_plot(AstrogatorPanel.PACE_ASTROGATOR, propulsion_id)
+
+## Engine science + window + fuel weight + gravity-assist honesty, before chart.
+func _speak_rocket_briefing(propulsion_id: String) -> void:
+	var cfg := SolarFlyerConfig.load_default()
+	var origin := SolarData.flyer_body_by_id(_ship_at, cfg)
+	var dest := SolarData.flyer_body_by_id(_pending_dest, cfg)
+	if origin.is_empty() or dest.is_empty():
+		return
+	var phase := AstrogatorPanel.phase_now_rad(origin, dest, 0.0)
+	var budget: Dictionary = RealismBudget.hop_budget(origin, dest, phase)
+	var text := AstrogatorPanel.mission_briefing(
+		origin, dest, budget, propulsion_id, cfg)
+	var dur := Narrator.speak(text)
+	var t := 0.0
+	var target: float = maxf(dur, 4.0)
+	while t < target:
+		if Narrator.is_playing():
+			while Narrator.is_playing() and t < 45.0:
+				await get_tree().create_timer(0.05).timeout
+				t += 0.05
+			await get_tree().create_timer(0.4).timeout
+			return
+		await get_tree().create_timer(0.05).timeout
+		t += 0.05
+
+func _start_plot(pace_mode: String, propulsion_id: String) -> void:
+	if _pending_dest.is_empty():
+		_show_scroll()
+		return
+	var dest := _pending_dest
+	_pending_dest = ""
 	_board.set_ship_at(_ship_at)
+	_board.set_mission_mode(pace_mode, propulsion_id)
 	_set_view(_board)
-	_board.begin_plot(id)
+	_board.begin_plot(dest)
 
 func _on_course_committed(dest_id: String, route: Dictionary, t0: float) -> void:
 	_last_route = route
 	_board.set_active(false)
-	_fly.render_mode = NavModes.mode()
+	# Rocket Science = cockpit SIM_VIEW (true angular size). Quick Course keeps
+	# the title-screen MARKERS / Real-view toggle.
+	if str(route.get("pace_mode", "")) == AstrogatorPanel.PACE_ASTROGATOR:
+		_fly.render_mode = NavModes.MODE_SIM_VIEW
+	else:
+		_fly.render_mode = NavModes.mode()
 	_fly.set_active(true)
 	_fly.begin_flight(dest_id, route, t0)
 
@@ -195,6 +284,11 @@ func _set_view(active: Control) -> void:
 		v.visible = on
 		if v.has_method("set_active"):
 			v.set_active(on)
+	# Chooser overlays are managed separately (not in the exclusive list).
+	if active != _course_mode:
+		_course_mode.set_active(false)
+	if active != _propulsion:
+		_propulsion.set_active(false)
 	if active != _fly:
 		_fly.set_active(false)
 
@@ -203,5 +297,8 @@ func _hide_all_views() -> void:
 		v.visible = false
 		if v.has_method("set_active"):
 			v.set_active(false)
+	_course_mode.set_active(false)
+	_propulsion.set_active(false)
 	_fly.set_active(false)
+	_playground.set_active(false)
 

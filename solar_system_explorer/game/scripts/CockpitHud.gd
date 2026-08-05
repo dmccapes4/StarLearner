@@ -25,10 +25,13 @@ var _boost: Button
 var _home: Button
 var _console: Control
 var _callout: Label
+var _calendar: Label
 var _arrival: Control
 var _using_asset: bool = false
 var _dest_color: Color = Color(0.5, 0.7, 1.0)
 var _bar_w: float = 280.0
+var _boost_gold_tween: Tween
+var _boost_normal_sb: StyleBoxFlat
 ## Console map state (fed each frame from FlyScene).
 var _map_ship: Vector2 = Vector2.ZERO
 var _map_dest: Vector2 = Vector2.ZERO
@@ -98,6 +101,51 @@ func clear_callout() -> void:
 		_callout_tween.kill()
 		_callout_tween = null
 	_callout.text = ""
+
+## Astrogator coast wipe — real months/days ticking while path advances.
+func show_calendar(text: String) -> void:
+	if _calendar == null:
+		return
+	_calendar.text = text
+	_calendar.visible = not text.is_empty()
+
+func hide_calendar() -> void:
+	if _calendar == null:
+		return
+	_calendar.text = ""
+	_calendar.visible = false
+
+func calendar_visible() -> bool:
+	return _calendar != null and _calendar.visible
+
+## Gold outline on BOOST for a few seconds (Rocket Science coast skip invite).
+func pulse_boost_gold(seconds: float = 5.0) -> void:
+	if _boost == null:
+		return
+	clear_boost_gold()
+	var gold := StyleBoxFlat.new()
+	gold.bg_color = Color(0.98, 0.78, 0.22, 0.98)
+	gold.set_corner_radius_all(18)
+	gold.set_border_width_all(5)
+	gold.border_color = Color(1.0, 0.92, 0.35, 1.0)
+	gold.shadow_color = Color(1.0, 0.85, 0.2, 0.65)
+	gold.shadow_size = 16
+	_boost.add_theme_stylebox_override("normal", gold)
+	_boost.add_theme_stylebox_override("hover", gold)
+	_boost.add_theme_stylebox_override("pressed", gold)
+	_boost_gold_tween = create_tween()
+	_boost_gold_tween.tween_interval(maxf(seconds, 0.5))
+	_boost_gold_tween.tween_callback(clear_boost_gold)
+
+func clear_boost_gold() -> void:
+	if _boost_gold_tween != null:
+		_boost_gold_tween.kill()
+		_boost_gold_tween = null
+	if _boost == null or _boost_normal_sb == null:
+		return
+	_boost.add_theme_stylebox_override("normal", _boost_normal_sb)
+	_boost.add_theme_stylebox_override("hover", _boost_normal_sb)
+	_boost.add_theme_stylebox_override("pressed", _boost_normal_sb)
 
 func show_arrival_choices(place_name: String) -> void:
 	_boost.visible = false
@@ -245,6 +293,17 @@ func _build() -> void:
 	_callout.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_callout)
 
+	_calendar = Label.new()
+	_calendar.name = "AstroCalendar"
+	_calendar.position = Vector2(300, 168)
+	_calendar.size = Vector2(680, 40)
+	_calendar.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_calendar.add_theme_font_size_override("font_size", 22)
+	_calendar.add_theme_color_override("font_color", Color(0.55, 0.92, 1.0))
+	_calendar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_calendar.visible = false
+	add_child(_calendar)
+
 	_console = _make_console()
 	add_child(_console)
 
@@ -255,11 +314,14 @@ func _build() -> void:
 	_boost.position = Vector2(1050, 500)
 	_boost.focus_mode = Control.FOCUS_NONE
 	_boost.add_theme_font_size_override("font_size", 28)
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.95, 0.55, 0.25, 0.95)
-	sb.set_corner_radius_all(18)
-	_boost.add_theme_stylebox_override("normal", sb)
-	_boost.add_theme_stylebox_override("pressed", sb)
+	_boost_normal_sb = StyleBoxFlat.new()
+	_boost_normal_sb.bg_color = Color(0.95, 0.55, 0.25, 0.95)
+	_boost_normal_sb.set_corner_radius_all(18)
+	_boost_normal_sb.set_border_width_all(3)
+	_boost_normal_sb.border_color = Color(1, 1, 1, 0.55)
+	_boost.add_theme_stylebox_override("normal", _boost_normal_sb)
+	_boost.add_theme_stylebox_override("hover", _boost_normal_sb)
+	_boost.add_theme_stylebox_override("pressed", _boost_normal_sb)
 	_boost.pressed.connect(func() -> void: boost_pressed.emit())
 	add_child(_boost)
 

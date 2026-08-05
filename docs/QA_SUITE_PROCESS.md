@@ -171,7 +171,10 @@ and **do not** wait for each to finish before starting the next.
 | `REVIEW_CONCURRENCY` | `3` | Max trips in flight |
 | `REVIEW_STAGGER_S` | `2.0` | Seconds between *starting* each trip |
 | `REVIEW_MAX_RETRIES` | `5` | Backoff on 429 / 5xx (`Retry-After` honored) |
-| `REVIEW_MAX_FRAMES` | `12` | Images per trip |
+| `REVIEW_MAX_FRAMES` | `13` | Images per trip (Solar flight ≈ 1 Hz) |
+| `REVIEW_SECOND_TICKS` | `1` | Prefer integer `movie_t` second samples |
+| `REVIEW_CODE_CONTEXT` | `1` | Attach major script excerpts (Solar flight) |
+| `FLIGHT_TRIPS` | *(all)* | Comma trip ids for targeted capture |
 | `REVIEW_MODEL` | `grok-4.5` / `gpt-4o` | Provider default |
 
 Staggered overlap: start trip A, wait 2s, start B, wait 2s, start C — while A/B

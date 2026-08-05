@@ -17,6 +17,8 @@ const NarratorScript := preload("res://scripts/Narrator.gd")
 const PlaygroundScript := preload("res://scripts/PlaygroundScene.gd")
 const FlightChooserScript := preload("res://scripts/FlightChooser.gd")
 const SpeedModeChooser := preload("res://scripts/SpeedModeChooser.gd")
+const CourseModeChooser := preload("res://scripts/CourseModeChooser.gd")
+const PropulsionChooser := preload("res://scripts/PropulsionChooser.gd")
 
 const OUT_PATH := "res://data/solar_vo_manifest.json"
 
@@ -32,6 +34,11 @@ func _run() -> void:
 	_add(FlightChooserScript.LINE_MISSION)
 	_add(FlightChooserScript.LINE_FREE)
 	_add(FlightChooserScript.NARRATION)
+	_add(CourseModeChooser.LINE_KID)
+	_add(CourseModeChooser.LINE_ROCKET)
+	_add(PropulsionChooser.LINE_CHEM)
+	_add(PropulsionChooser.LINE_NTP)
+	_add(PropulsionChooser.LINE_ORION)
 	_add(OrreryView.CLOSING)
 	_add(OrreryView.BOOT_LINE)
 	_add(AstronautIntro.BRIEFING_MISSION)
@@ -41,8 +48,16 @@ func _run() -> void:
 	_add(FlySceneScript.LINE_LAUNCH)
 	_add(FlySceneScript.LINE_CRUISE)
 	_add(FlySceneScript.LINE_BRAKE)
+	_add(FlySceneScript.LINE_COAST_BOOST)
+	_add(FlySceneScript.LINE_COAST_SKIP)
 	# Engines-arming beat while the entry cinematic is already baked in.
 	_add(PlotBoardScript.LINE_ENGINES)
+	# Rocket Science Hohmann window wait (orrery time-lapse).
+	_add(PlotBoardScript.LINE_WINDOW)
+	# Rocket Science engine explainers (also embedded in mission_briefing).
+	_add(AstrogatorPanel.engine_explain("chemical"))
+	_add(AstrogatorPanel.engine_explain("ntp"))
+	_add(AstrogatorPanel.engine_explain("orion"))
 
 	# Free-flight playground beats (incl. first-play tutorial + launch gate).
 	_add(PlaygroundScript.LINE_WELCOME)
@@ -54,6 +69,12 @@ func _run() -> void:
 	_add(PlaygroundScript.LINE_TUT_DOWN)
 	_add(PlaygroundScript.LINE_TUT_SURGE_INTRO)
 	_add(PlaygroundScript.LINE_TUT_SURGE_INTRO_CRUISE)
+	_add(PlaygroundScript.LINE_TUT_SURGE_INTRO_JOY)
+	_add(PlaygroundScript.LINE_TUT_JOY_NEUTRAL)
+	_add(PlaygroundScript.LINE_TUT_JOY_PUSH)
+	_add(PlaygroundScript.LINE_TUT_JOY_PULL)
+	_add(PlaygroundScript.LINE_TUT_JOY_RETURN)
+	_add(PlaygroundScript.LINE_TUT_GOT_IT)
 	_add(PlaygroundScript.LINE_TUT_JERK_STOP)
 	_add(PlaygroundScript.LINE_TUT_JERK_GO)
 	_add(PlaygroundScript.LINE_TUT_GO_PULL)
@@ -61,6 +82,8 @@ func _run() -> void:
 	_add(PlaygroundScript.LINE_AIM)
 	_add(SpeedModeChooser.LINE_GEARS)
 	_add(SpeedModeChooser.LINE_CRUISE)
+	_add(SpeedModeChooser.LINE_JOY)
+	_add(PlaygroundScript.LINE_JOY_READY)
 	_add(PlaygroundScript.LINE_STOP)
 	_add(PlaygroundScript.LINE_RESUME)
 	_add(PlaygroundScript.LINE_MIN)
@@ -97,6 +120,11 @@ func _run() -> void:
 				float(dest.get("a_au", 0.0)) - float(origin.get("a_au", 0.0)))
 			_add(OrbitMath.arrival_narration(str(dest.get("name", "")), travel_au,
 				bool(dest.get("is_star", false))))
+			# Rocket Science pre-chart briefings (engine + window + fuel + assists).
+			var phase := AstrogatorPanel.phase_now_rad(origin, dest, 0.0)
+			var bud: Dictionary = RealismBudget.hop_budget(origin, dest, phase)
+			for prop in AstrogatorPanel.PROP_ORDER:
+				_add(AstrogatorPanel.mission_briefing(origin, dest, bud, prop, cfg))
 	# Main.gd fallback when the route lacks travel_au: distance from Earth.
 	for dest in dests:
 		var fallback_au: float = absf(float(dest.get("a_au", 1.0)) - 1.0)

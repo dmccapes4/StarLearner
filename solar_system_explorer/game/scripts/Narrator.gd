@@ -26,6 +26,9 @@ const _NarratorVoice := preload("res://scripts/NarratorVoice.gd")
 const WARMUP_MS := 3500
 
 static var _voice: Node = null
+## Wall-clock busy mark so choosers can wait even when TTS has no is_busy API
+## (or when baked VO hasn't been queued yet).
+static var _busy_until_ms: int = 0
 
 static func warmup_remaining_ms() -> int:
 	return maxi(0, WARMUP_MS - int(Time.get_ticks_msec()))
@@ -88,32 +91,41 @@ static func speak(text: String) -> float:
 			break
 		streams.append(stream)
 		baked_s += stream.get_length()
+	var dur := 0.0
 	if not streams.is_empty():
 		stop()
 		var voice: Node = _ensure_voice()
 		if voice != null:
 			voice.play_queue(streams)
 			# Small gap per queued clip + trailing pause.
-			return baked_s + 0.15 * float(streams.size()) + 0.5
+			dur = baked_s + 0.15 * float(streams.size()) + 0.5
+			_mark_busy(dur)
+			return dur
 	# Fallback: live OS TTS (only when a sentence has no baked clip).
+	dur = estimate_seconds(text)
 	if _tts_available():
 		DisplayServer.tts_stop()
 		# volume is 0–100 (int). Passing 1.0 was ~1% — barely audible next to video.
 		DisplayServer.tts_speak(text, "", 100, 1.0, 0.95)
-	return estimate_seconds(text)
+	_mark_busy(dur)
+	return dur
 
 static func stop() -> void:
+	_busy_until_ms = 0
 	if _voice != null and is_instance_valid(_voice):
 		_voice.stop_all()
 	if _tts_available():
 		DisplayServer.tts_stop()
 
-## True while baked VO (or queued clips) are still playing — voice listen
-## must ignore the mic during this or it hears itself and re-fires commands.
+## True while baked VO is busy OR the estimated speak window is still open
+## (covers TTS fallback, which has no utterance callback).
 static func is_playing() -> bool:
-	if _voice != null and is_instance_valid(_voice):
-		return bool(_voice.call("is_busy"))
-	return false
+	if _voice != null and is_instance_valid(_voice) and bool(_voice.call("is_busy")):
+		return true
+	return Time.get_ticks_msec() < _busy_until_ms
+
+static func _mark_busy(dur_s: float) -> void:
+	_busy_until_ms = Time.get_ticks_msec() + int(maxi(ceil(dur_s * 1000.0), 400))
 
 static func _ensure_voice() -> Node:
 	if _voice != null and is_instance_valid(_voice):
@@ -123,7 +135,8 @@ static func _ensure_voice() -> Node:
 		return null
 	_voice = _NarratorVoice.new()
 	_voice.name = "NarratorVoice"
-	(loop as SceneTree).root.add_child.call_deferred(_voice)
+	# Add immediately so the first play_queue is not dropped on a deferred node.
+	(loop as SceneTree).root.add_child(_voice)
 	return _voice
 
 ## ~2.6 words/sec spoken, with a floor and a little trailing pause.

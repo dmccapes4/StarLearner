@@ -6,16 +6,23 @@ extends Control
 signal go_home()
 signal course_committed(dest_id: String, route: Dictionary, t0: float)
 
-enum Phase { IDLE, CHART, LEAD, PREVIEW, ARMING, READY }
+enum Phase { IDLE, WINDOW, CHART, LEAD, PREVIEW, ARMING, READY }
 
 const AUTO_GO_DELAY := 1.6
 const ARMING_S := 3.2
+## Wall seconds for the orrery wait-to-window time-lapse (Rocket Science).
+const WINDOW_WALL_S := 5.5
+const WINDOW_MIN_YR := 0.02
 const LINE_ENGINES := "Engines getting ready!"
+const LINE_WINDOW := ("Planets have to line up just right. Watch the orrery — "
+	+ "we're waiting for the next Hohmann launch window…")
 
 var _cfg: SolarFlyerConfig
 var _bodies: OrreryBodies
 var _hint: Label
 var _go_btn: Button
+var _astro: AstrogatorPanel
+var _window_callout: Label
 var _phase: Phase = Phase.IDLE
 var _ship_id: String = "earth"
 var _dest_id: String = ""
@@ -28,6 +35,17 @@ var _lead_s: float = 2.0
 var _preview_s: float = 2.5
 var _arming_t: float = -1.0
 var _arming_said: int = -1
+## Session-persistent Astrogator choices (survive re-plots).
+var _pace_mode: String = AstrogatorPanel.PACE_KID
+var _propulsion_id: String = AstrogatorPanel.PROP_CHEMICAL
+## Window wait choreography (Rocket Science only).
+var _window_t0: float = 0.0
+var _window_t1: float = 0.0
+var _window_wait_yr: float = 0.0
+var _window_elapsed: float = 0.0
+var _window_wall: float = WINDOW_WALL_S
+var _pending_plot_id: String = ""
+var _pending_from_belt: bool = false
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -50,6 +68,23 @@ func _ready() -> void:
 	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_hint)
 
+	_astro = AstrogatorPanel.new()
+	_astro.position = Vector2(24, 330)
+	_astro.size = Vector2(420, 200)
+	_astro.set_locked(true)  ## pace/engines chosen before chart
+	add_child(_astro)
+
+	_window_callout = Label.new()
+	_window_callout.visible = false
+	_window_callout.text = ""
+	_window_callout.add_theme_font_size_override("font_size", 22)
+	_window_callout.add_theme_color_override("font_color", Color(1.0, 0.92, 0.45))
+	_window_callout.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_window_callout.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	_window_callout.position = Vector2(0, 52)
+	_window_callout.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_window_callout)
+
 	_go_btn = _make_go()
 	add_child(_go_btn)
 	add_child(_make_home())
@@ -71,6 +106,7 @@ func begin() -> void:
 	_route = {}
 	_auto_go_left = -1.0
 	_go_btn.visible = false
+	_astro.hide_panel()
 	_hint.text = "Tap a planet to plot a course"
 
 ## Start the top-down intercept lesson for a destination chosen on the strip.
@@ -84,6 +120,7 @@ func begin_plot(dest_id: String) -> void:
 	_bodies.running = true
 	_bodies.visible = true
 	_go_btn.visible = false
+	_astro.hide_panel()
 	_plot_to(dest_id)
 
 func set_active(on: bool) -> void:
@@ -92,6 +129,9 @@ func set_active(on: bool) -> void:
 	if not on:
 		Narrator.stop()
 		_auto_go_left = -1.0
+		_astro.hide_panel()
+		_window_callout.visible = false
+		_bodies.window_guide = false
 		visible = false
 	else:
 		visible = true
@@ -100,10 +140,32 @@ func set_ship_at(id: String) -> void:
 	_ship_id = id
 	_bodies.ship_id = id
 
+## Called by Main after CourseModeChooser / PropulsionChooser — before begin_plot.
+func set_mission_mode(pace_mode: String, propulsion_id: String) -> void:
+	_pace_mode = pace_mode if pace_mode == AstrogatorPanel.PACE_ASTROGATOR \
+		else AstrogatorPanel.PACE_KID
+	_propulsion_id = propulsion_id if AstrogatorPanel.is_propulsion_id(propulsion_id) \
+		else AstrogatorPanel.PROP_CHEMICAL
+	_astro.set_session(_pace_mode, _propulsion_id)
+
 func _process(delta: float) -> void:
 	if not _active:
 		return
 	match _phase:
+		Phase.WINDOW:
+			_window_elapsed += delta
+			var u: float = clampf(_window_elapsed / maxf(_window_wall, 0.1), 0.0, 1.0)
+			# Smoothstep so early years tick fast, then settle on the window.
+			var su: float = u * u * (3.0 - 2.0 * u)
+			_bodies.t = lerpf(_window_t0, _window_t1, su)
+			var left_yr: float = _window_wait_yr * (1.0 - su)
+			_window_callout.visible = true
+			_window_callout.text = ("Launch window — planets lining up… %.1f years left"
+				% maxf(left_yr, 0.0))
+			_hint.text = "Waiting for the Hohmann launch window…"
+			if u >= 1.0:
+				_bodies.t = _window_t1
+				_finish_window_chart()
 		Phase.CHART:
 			# Ship course and destination orbit lead grow together — the
 			# "aim ahead" lesson reads while the path is still drawing.
@@ -133,6 +195,7 @@ func _process(delta: float) -> void:
 				_arming_t = 0.0
 				_arming_said = -1
 				_go_btn.visible = false
+				_show_astrogator()
 				_hint.text = "Engines getting ready…"
 				Narrator.speak(LINE_ENGINES)
 				_bodies.eta_lit = _eta_pips_for_duration(float(_route.get("duration", 20.0)))
@@ -145,6 +208,7 @@ func _process(delta: float) -> void:
 			if _arming_t >= ARMING_S:
 				_phase = Phase.READY
 				_go_btn.visible = true
+				_show_astrogator()
 				_hint.text = "Ready — tap GO to fly!"
 				_auto_go_left = AUTO_GO_DELAY
 		Phase.READY:
@@ -185,6 +249,8 @@ func _on_gui_input(event: InputEvent) -> void:
 		return
 	if _go_btn.visible and Rect2(_go_btn.position, _go_btn.size).has_point(pos):
 		return
+	if _astro.visible and Rect2(_astro.position, _astro.size).has_point(pos):
+		return
 	var id := _bodies.hit_test(pos)
 	if id.is_empty() or id == _ship_id:
 		return
@@ -194,21 +260,86 @@ func _plot_to(id: String) -> void:
 	var origin := SolarData.flyer_body_by_id(_ship_id, _cfg)
 	if origin.is_empty():
 		return
-	_t0 = _bodies.t if _bodies.t > 0.0 else 0.0
+	var t_now: float = _bodies.t if _bodies.t > 0.0 else 0.0
 	# The belt ring is not a place — a belt tap resolves to the nearest major
 	# asteroid right now (STRATEGY §5.3), skipping the one we're parked at.
 	var from_belt := false
 	if id == "asteroid_belt":
 		from_belt = true
 		id = SolarData.nearest_major_asteroid(
-			OrbitMath.body_pos(origin, _t0), _t0, _cfg, _ship_id)
+			OrbitMath.body_pos(origin, t_now), t_now, _cfg, _ship_id)
 		if id.is_empty():
 			return
 	var target := SolarData.flyer_body_by_id(id, _cfg)
 	if target.is_empty():
 		return
-	# Prefer leaving the Sun along the destination's current radial so the
-	# departure doesn't look like it pops out of nowhere at +X.
+	var phase_now := AstrogatorPanel.phase_now_rad(origin, target, t_now)
+	var budget_now: Dictionary = RealismBudget.hop_budget(origin, target, phase_now)
+	var wait_yr: float = 0.0
+	if bool(budget_now.get("ok", false)):
+		wait_yr = float(budget_now.get("window_wait_yr", 0.0))
+	var t_depart: float = t_now + wait_yr * _cfg.game_year_seconds
+	_auto_go_left = -1.0
+	_go_btn.visible = false
+	_astro.hide_panel()
+	_window_callout.visible = false
+	# Rocket Science: animate the orrery to the Hohmann window, then chart there.
+	if _pace_mode == AstrogatorPanel.PACE_ASTROGATOR and wait_yr >= WINDOW_MIN_YR:
+		_pending_plot_id = id
+		_pending_from_belt = from_belt
+		_window_t0 = t_now
+		_window_t1 = t_depart
+		_window_wait_yr = wait_yr
+		_window_elapsed = 0.0
+		_window_wall = clampf(2.8 + wait_yr * 0.35, 3.5, WINDOW_WALL_S)
+		_bodies.clear_route()
+		_bodies.ship_id = _ship_id
+		_bodies.dest_id = id
+		_bodies.highlight_id = id
+		_bodies.window_guide = true
+		_bodies.t = t_now
+		_phase = Phase.WINDOW
+		_dest_id = id
+		_hint.text = "Waiting for the Hohmann launch window…"
+		_window_callout.visible = true
+		_window_callout.text = ("Launch window — planets lining up… %.1f years left"
+			% wait_yr)
+		Narrator.speak(LINE_WINDOW)
+		return
+	_chart_at(id, t_depart if _pace_mode == AstrogatorPanel.PACE_ASTROGATOR else t_now,
+		from_belt, wait_yr if _pace_mode == AstrogatorPanel.PACE_ASTROGATOR else 0.0)
+
+## QA / skip helper — jump the orrery to t_depart and chart immediately.
+func finish_window_now() -> void:
+	if _phase != Phase.WINDOW:
+		return
+	_bodies.t = _window_t1
+	_finish_window_chart()
+
+func _finish_window_chart() -> void:
+	var id := _pending_plot_id
+	var from_belt := _pending_from_belt
+	var wait_yr := _window_wait_yr
+	var t_depart := _window_t1
+	_pending_plot_id = ""
+	_pending_from_belt = false
+	_bodies.window_guide = false
+	_window_callout.visible = false
+	_window_callout.text = ""
+	if id.is_empty():
+		_phase = Phase.IDLE
+		return
+	_chart_at(id, t_depart, from_belt, wait_yr)
+
+func _chart_at(id: String, t_depart: float, from_belt: bool, window_wait_yr: float) -> void:
+	var origin := SolarData.flyer_body_by_id(_ship_id, _cfg)
+	var target := SolarData.flyer_body_by_id(id, _cfg)
+	if origin.is_empty() or target.is_empty():
+		return
+	_t0 = t_depart
+	_bodies.t = t_depart
+	_bodies.window_guide = false
+	# Prefer leaving the Sun along the destination's radial at the departure epoch.
 	var prefer := OrbitMath.body_pos(target, _t0)
 	if prefer.length() < 0.001:
 		prefer = Vector3.RIGHT
@@ -220,9 +351,23 @@ func _plot_to(id: String) -> void:
 	_route["travel_au"] = absf(float(target.get("a_au", 0.0)) - float(origin.get("a_au", 0.0)))
 	_route["origin_id"] = _ship_id
 	_route["dest_name"] = str(target.get("name", id))
+	var phase_depart := AstrogatorPanel.phase_now_rad(origin, target, _t0)
+	var budget: Dictionary = RealismBudget.hop_budget(origin, target, phase_depart)
+	# Keep the wait we actually animated (ledger "next window" at depart ≈ 0).
+	if not budget.is_empty():
+		budget = budget.duplicate(true)
+		budget["window_wait_yr"] = window_wait_yr
+		budget["window_wait_applied_yr"] = window_wait_yr
+	_route["realism"] = budget
+	_route["pace_mode"] = _pace_mode
+	_route["propulsion_id"] = _propulsion_id
+	_route["t_depart"] = _t0
+	_route["window_wait_yr"] = window_wait_yr
 	_dest_id = id
 	_auto_go_left = -1.0
 	_go_btn.visible = false
+	_astro.hide_panel()
+	_window_callout.visible = false
 	_bodies.ship_id = _ship_id
 	_bodies.set_route(id, _route, _t0)
 	var beats := plot_beat_seconds(float(_route.get("duration", 20.0)))
@@ -231,16 +376,32 @@ func _plot_to(id: String) -> void:
 	_preview_s = float(beats["preview"])
 	_phase = Phase.CHART
 	_hint.text = "Plotting a course to %s…" % str(target["name"])
+	# Rocket Science engine/window/fuel briefing already ran before chart.
 	var narr := OrbitMath.trip_narration(origin, target, _route, _cfg)
 	if from_belt:
 		narr = OrbitMath.belt_intro_sentence(target) + " " + narr
 	Narrator.speak(narr)
+
+func _show_astrogator() -> void:
+	## Read-only ledger for Rocket Science; hidden for Quick Course.
+	if _pace_mode != AstrogatorPanel.PACE_ASTROGATOR:
+		_astro.hide_panel()
+		return
+	_astro.set_session(_pace_mode, _propulsion_id)
+	var budget: Dictionary = _route.get("realism", {})
+	if budget.is_empty():
+		budget = {"ok": false, "error": "no budget"}
+	_astro.show_for_route(budget)
 
 func _commit() -> void:
 	if _dest_id.is_empty() or _route.is_empty():
 		return
 	_auto_go_left = -1.0
 	_go_btn.visible = false
+	_astro.stamp_route(_route)
+	_pace_mode = str(_route.get("pace_mode", AstrogatorPanel.PACE_KID))
+	_propulsion_id = str(_route.get("propulsion_id", AstrogatorPanel.PROP_CHEMICAL))
+	_astro.hide_panel()
 	course_committed.emit(_dest_id, _route, _t0)
 
 func _make_go() -> Button:

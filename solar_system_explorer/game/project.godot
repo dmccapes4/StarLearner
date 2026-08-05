@@ -13,6 +13,7 @@ config/icon="res://icon.svg"
 config/quit_on_go_back=false
 
 [autoload]
+IdleGuard="*res://scripts/IdleGuard.gd"
 
 AndroidBack="*res://scripts/AndroidBack.gd"
 

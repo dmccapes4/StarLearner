@@ -54,8 +54,8 @@ full 3D flyer loop (plot → burn → orbit).
 
 | File | What it is |
 |------|------------|
-| [`docs/demo/solar_system_explorer_playthrough.mp4`](docs/demo/solar_system_explorer_playthrough.mp4) | In-engine walkthrough: hub → orrery peek → Spaceship → Jupiter (belt) → Sun |
-| [`docs/demo/solar_system_explorer_explainer.mp4`](docs/demo/solar_system_explorer_explainer.mp4) | Short narrated overview (astronaut art → hub → plot → belt → orbit) |
+| [`docs/demo/solar_system_explorer_playthrough.mp4`](docs/demo/solar_system_explorer_playthrough.mp4) | In-engine walkthrough: hub → orrery peek → Spaceship chooser → Mission (Jupiter + belt) → Free Flight playground |
+| [`docs/demo/solar_system_explorer_explainer.mp4`](docs/demo/solar_system_explorer_explainer.mp4) | Short narrated overview (astronaut → hub → Mission/Free → plot → belt → playground → orbit) |
 
 ```bash
 ./tools/make_demo_videos.sh          # needs DISPLAY (or xvfb); regenerates both MP4s
@@ -88,6 +88,8 @@ reveal (`belt_fade_near`/`belt_fade_far`/`belt_cull_dist`). `ScaleTune` asserts 
 happy-medium contracts in tests (including that every Earth-departure hop sweeps clean of
 conflicts and lands inside the duration band). Full design:
 [`docs/STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY.md`](docs/STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY.md).
+Uber-realistic propulsion discovery (nuclear pulse, NTP, windows, fuel mass):
+[`docs/STRATEGY_REAL_ROCKET_SCIENCE.md`](docs/STRATEGY_REAL_ROCKET_SCIENCE.md).
 To tweak on the phone without rebuilding the APK, push a JSON overlay:
 
 ```bash

@@ -1869,7 +1869,7 @@ func _update_markers() -> void:
 		var fade: float = clampf(hero * 3.0 / marker, 0.0, 1.0)
 		icon.visible = fade < 0.95
 		icon.modulate = Color(1, 1, 1, 1.0 - fade)
-		icon.pixel_size = marker / 48.0
+		icon.pixel_size = marker / float(PlanetSkins.MARKER_CANVAS_PX)
 
 func _build_viewport() -> void:
 	_host = SubViewportContainer.new()
@@ -1960,7 +1960,7 @@ func _build_world() -> void:
 		var icon := Sprite3D.new()
 		icon.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		icon.shaded = false
-		icon.texture = PlanetSkins.make_icon_texture(b, 48)
+		icon.texture = PlanetSkins.make_icon_texture(b, PlanetSkins.MARKER_CANVAS_PX)
 		root.add_child(icon)
 		_bodies[str(b["id"])] = {
 			"root": root, "mesh": mesh, "icon": icon, "data": b,

@@ -18,6 +18,11 @@ export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
 
 mkdir -p "$ROOT/tools/build"
 
+if [[ "${SKIP_QA:-0}" != "1" ]]; then
+  echo "=== interactive QA (solar) ==="
+  bash "$ROOT/../tools/run_interactive_qa.sh" solar
+fi
+
 echo "=== export .pck ==="
 "$GODOT" --headless --path "$GAME" --export-pack "Android" /tmp/solar.pck
 
@@ -45,8 +50,8 @@ cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
   -Pexport_package_name=com.dylan.solar_system_explorer \
-  -Pexport_version_code=1 \
-  -Pexport_version_name=0.1 \
+  -Pexport_version_code=17 \
+  -Pexport_version_name=0.13 \
   -Pexport_enabled_abis=arm64-v8a \
   -Prelease_keystore_file="$KS" \
   -Prelease_keystore_alias=ants \

@@ -6,6 +6,9 @@ extends RefCounted
 
 const DIR := "res://images/planets"
 const CINE_DIR := "res://images/cinematic"
+## Chunky pixel AR pins for Mission Flight markers (tools/gen_marker_icons.py).
+const MARKER_DIR := "res://images/markers"
+const MARKER_CANVAS_PX := 64
 
 static func texture_for(body_id: String) -> Texture2D:
 	var cine := "%s/%s.png" % [CINE_DIR, body_id]
@@ -52,47 +55,81 @@ static func make_disc_texture(body_id: String, fallback: Color, diameter: int) -
 			img.set_pixel(x, y, Color(col.r * shade, col.g * shade, col.b * shade, 1.0))
 	return ImageTexture.create_from_image(img)
 
-## Recognizable navigation MARKER for the 3D flyer: a FLAT colored disc
-## (no limb-darkening — markers are identifiers, not tiny planet renders),
-## plus a ring silhouette for ringed worlds so Saturn still reads as Saturn.
-## Baked once at load; billboarded unshaded in-flight.
-static func make_icon_texture(b: Dictionary, size: int = 48) -> Texture2D:
-	var s: int = maxi(size, 16)
+## Recognizable navigation MARKER: chunky pixel AR pin (not a tiny planet
+## render). Prefers baked `images/markers/<id>.png`; falls back to a
+## quantized procedural disc so headless never shows a photoreal skin.
+static func make_icon_texture(b: Dictionary, size: int = MARKER_CANVAS_PX) -> Texture2D:
+	var id := str(b.get("id", ""))
+	var baked := marker_texture_for(id)
+	if baked != null:
+		return baked
+	return _fallback_pixel_marker(b, maxi(size, 16))
+
+
+static func marker_texture_for(body_id: String) -> Texture2D:
+	var path := "%s/%s.png" % [MARKER_DIR, body_id]
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null
+
+
+static func marker_path_for(body_id: String) -> String:
+	return "%s/%s.png" % [MARKER_DIR, body_id]
+
+
+## True when the flyer will use a baked pixel AR marker (not a skin sample).
+static func has_pixel_marker(body_id: String) -> bool:
+	return ResourceLoader.exists(marker_path_for(body_id))
+
+
+static func _fallback_pixel_marker(b: Dictionary, s: int) -> Texture2D:
 	var id := str(b.get("id", ""))
 	var col: Color = b.get("color", Color(0.7, 0.7, 0.7))
 	if bool(b.get("is_star", false)):
 		return _sun_marker_texture(s)
 	var has_ring := bool(b.get("ring", false))
-	# Keep the disc large even with rings — a tiny ringed disc made giants
-	# look Earth-sized next to unringed markers.
-	var disc_d: int = int(s * (0.72 if has_ring else 0.92))
+	var disc_d: int = int(s * (0.55 if has_ring else 0.62))
+	disc_d = maxi(disc_d - (disc_d % 2), 8)
 	var disc_img := _flat_marker_disc(id, col, disc_d)
-
 	var img := Image.create(s, s, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
+	_draw_ar_brackets(img, s)
 	var off := Vector2i((s - disc_d) / 2, (s - disc_d) / 2)
 	var cx := s * 0.5
 	var cy := s * 0.5
 	var ring_col := Color(0.86, 0.78, 0.55, 0.95)
 	if has_ring:
-		_icon_ring(img, cx, cy, s, ring_col, false)  # back half behind the disc
+		_icon_ring(img, cx, cy, s, ring_col, false)
 	img.blend_rect(disc_img, Rect2i(0, 0, disc_d, disc_d), off)
 	if has_ring:
-		_icon_ring(img, cx, cy, s, ring_col, true)   # front half over the disc
+		_icon_ring(img, cx, cy, s, ring_col, true)
 	return ImageTexture.create_from_image(img)
 
-## Flat circular marker face: skin colours sampled as a disc (no sphere
-## shading). Soft 1-px edge so it still reads as a clean pin, not a ball.
-static func _flat_marker_disc(body_id: String, fallback: Color, diameter: int) -> Image:
+
+static func _draw_ar_brackets(img: Image, s: int) -> void:
+	var c := Color(0.70, 1.0, 0.86, 0.85)
+	var pad := 2
+	var L: int = maxi(s / 6, 4)
+	var t := 2
+	# TL / TR / BL / BR
+	for rect in [
+		Rect2i(pad, pad, L, t), Rect2i(pad, pad, t, L),
+		Rect2i(s - pad - L, pad, L, t), Rect2i(s - pad - t, pad, t, L),
+		Rect2i(pad, s - pad - t, L, t), Rect2i(pad, s - pad - L, t, L),
+		Rect2i(s - pad - L, s - pad - t, L, t), Rect2i(s - pad - t, s - pad - L, t, L),
+	]:
+		for y in range(rect.position.y, rect.position.y + rect.size.y):
+			for x in range(rect.position.x, rect.position.x + rect.size.x):
+				if x >= 0 and y >= 0 and x < s and y < s:
+					img.set_pixel(x, y, c)
+
+## Flat circular marker face for fallback only: solid quantized colour —
+## never sample photoreal skins (those read as nearby planets).
+static func _flat_marker_disc(_body_id: String, fallback: Color, diameter: int) -> Image:
 	var d: int = maxi(diameter, 8)
 	var img := Image.create(d, d, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	var skin_tex := texture_for(body_id)
-	var skin: Image = null
-	if skin_tex != null:
-		skin = skin_tex.get_image()
-		if skin != null and skin.is_compressed():
-			skin.decompress()
+	var col := _quantize_color(fallback, 6)
 	var r: float = d * 0.5
 	var cx := r
 	var cy := r
@@ -101,21 +138,19 @@ static func _flat_marker_disc(body_id: String, fallback: Color, diameter: int) -
 			var dx: float = (x + 0.5) - cx
 			var dy: float = (y + 0.5) - cy
 			var dist: float = sqrt(dx * dx + dy * dy)
-			if dist > r:
+			if dist > r - 0.01:
 				continue
-			var col: Color
-			if skin != null:
-				var u: float = 0.5 + atan2(dx, r) / TAU
-				var v: float = 0.5 + dy / (r * 2.0)
-				col = skin.get_pixel(
-					clampi(int(u * float(skin.get_width())), 0, skin.get_width() - 1),
-					clampi(int(v * float(skin.get_height())), 0, skin.get_height() - 1))
-			else:
-				col = fallback
-			# Soft edge only — no limb darkening.
-			var edge: float = clampf((r - dist) * 2.0, 0.0, 1.0)
-			img.set_pixel(x, y, Color(col.r, col.g, col.b, edge))
+			img.set_pixel(x, y, Color(col.r, col.g, col.b, 1.0))
 	return img
+
+
+static func _quantize_color(c: Color, steps: int) -> Color:
+	var n: float = float(maxi(steps, 2) - 1)
+	return Color(
+		roundf(c.r * n) / n,
+		roundf(c.g * n) / n,
+		roundf(c.b * n) / n,
+		c.a)
 
 ## The Sun's marker is a flat bright yellow disc with a soft glow halo —
 ## unmistakable and bigger than every other marker (tier 3.0).

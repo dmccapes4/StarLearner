@@ -36,6 +36,10 @@ var course_draw_u: float = 0.0     ## 0..1 charting the course line
 var ff_u: float = 0.0              ## 0..1 target drifts toward intercept
 var ship_preview_u: float = -1.0   ## -1 idle; 0..1 ship runs the line
 var eta_lit: int = 0               ## how many ETA pips are filled
+## Rocket Science window wait: draw origin→dest alignment chord while years tick.
+var window_guide: bool = false
+## Planet ids whose orbits sit between origin and dest (Mars/Jupiter on Earth→Saturn).
+var crossing_ids: PackedStringArray = PackedStringArray()
 
 var _orbiting: Array = []
 var _belt: Dictionary = {}
@@ -56,8 +60,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if running:
 		# In PLOT with an active route, freeze the live clock at t0 so the
-		# lead/ghost stay readable; otherwise advance normally.
-		if mode != Mode.PLOT or route.is_empty():
+		# lead/ghost stay readable. Window-guide waits are driven by PlotBoard
+		# (years time-lapse) — don't also tick wall-clock here.
+		if mode != Mode.PLOT or (route.is_empty() and not window_guide):
 			t += delta
 		queue_redraw()
 
@@ -82,6 +87,8 @@ func clear_route() -> void:
 	ff_u = 0.0
 	ship_preview_u = -1.0
 	eta_lit = 0
+	window_guide = false
+	crossing_ids = PackedStringArray()
 	board_scale = BOARD_SCALE_DEFAULT
 	queue_redraw()
 
@@ -95,6 +102,15 @@ func set_route(dest: String, r: Dictionary, freeze_t: float) -> void:
 	ship_preview_u = -1.0
 	eta_lit = 0
 	highlight_id = dest
+	crossing_ids = PackedStringArray()
+	# Only worlds the ship actually passes near (ephemeris), not every radial ring.
+	var enc: Array = r.get("encounters", [])
+	if enc.is_empty() and r.has("curve"):
+		enc = OrbitMath.course_encounters(
+			r["curve"], freeze_t, float(r.get("t_arr", 0.0)), cfg,
+			ship_id, dest, OrbitMath.ENCOUNTER_HERO_X)
+	for e in enc:
+		crossing_ids.append(str(e.get("id", "")))
 	_refit_board_scale()
 	queue_redraw()
 
@@ -221,36 +237,80 @@ func _draw_plot() -> void:
 
 	_draw_belt_plot(c)
 
+	if window_guide and not dest_id.is_empty() and route.is_empty():
+		_draw_window_guide(c)
+
 	if not route.is_empty():
 		_draw_course_overlay(c)
 		_draw_target_lead(c)
+		_draw_orbit_crossing_markers()
 
 	for b in _flyer:
 		if bool(b.get("is_star", false)) or bool(b.get("belt", false)):
 			continue
 		var pos := _body_screen(b, _body_time(b))
+		var id := str(b["id"])
+		var is_origin := id == ship_id
+		var is_dest := id == dest_id
+		var is_cross := crossing_ids.has(id)
+		# Crossing worlds (Jupiter on Earth→Saturn) stay chunky so they don't
+		# vanish when the board zooms out for an outer hop.
 		var pr: float = clampf(float(b["hero_r"]) * 1.7, 6.0, 24.0)
-		var is_origin := str(b["id"]) == ship_id
-		var is_dest := str(b["id"]) == dest_id
+		if is_cross:
+			pr = maxf(pr, 11.0)
 		if is_origin or is_dest:
 			draw_arc(pos, pr + 12.0, 0.0, TAU, 40, Color(1, 1, 1, 0.95), 3.5)
+		elif is_cross:
+			draw_arc(pos, pr + 10.0, 0.0, TAU, 36, Color(1.0, 0.86, 0.35, 0.95), 3.0)
 		draw_circle(pos, pr, b["color"])
 		# Always label worlds on the top-down board so kids can tell them apart.
-		_label(str(b["name"]), pos + Vector2(0, -pr - 14), 18 if is_dest or is_origin else 15)
-		if is_origin:
+		var name_fs: int = 18 if is_dest or is_origin or is_cross else 15
+		_label(str(b["name"]), pos + Vector2(0, -pr - 14), name_fs)
+		if is_origin and ship_preview_u < 0.0:
 			_label("you are here", pos + Vector2(0, pr + 20), 16)
+		elif is_cross:
+			_label("pass by", pos + Vector2(0, pr + 18), 14)
 
 	_draw_ship_marker()
 	_draw_eta_pips()
 
+## Trip progress 0..1 during chart (ff_u) or ship preview; drives every planet.
+func _trip_u() -> float:
+	if route.is_empty():
+		return 0.0
+	if ship_preview_u >= 0.0:
+		return clampf(ship_preview_u, 0.0, 1.0)
+	return clampf(ff_u, 0.0, 1.0)
+
 func _body_time(b: Dictionary) -> float:
-	## Destination uses fast-forward blend during the lead preview; others freeze at t0 once routed.
-	if not route.is_empty() and str(b["id"]) == dest_id:
-		var t_arr: float = float(route.get("t_arr", 0.0))
-		return t0 + t_arr * clampf(ff_u, 0.0, 1.0)
-	if not route.is_empty():
+	## Once a course is plotted, the whole system advances with the trip clock
+	## (chart lead + ship preview). Origin stays parked at t0 until the ship
+	## leaves the pad so "you are here" doesn't walk away from the craft.
+	if route.is_empty():
+		return t
+	var t_arr: float = float(route.get("t_arr", 0.0))
+	var id := str(b.get("id", ""))
+	if id == ship_id and ship_preview_u < 0.0:
 		return t0
-	return t
+	return t0 + t_arr * _trip_u()
+
+## Dashed chord from ship world → destination while we wait for the Hohmann phase.
+func _draw_window_guide(_c: Vector2) -> void:
+	var origin := SolarData.flyer_body_by_id(ship_id, cfg)
+	var target := SolarData.flyer_body_by_id(dest_id, cfg)
+	if origin.is_empty() or target.is_empty():
+		return
+	var a := _body_screen(origin, t)
+	var b := _body_screen(target, t)
+	var n: int = 18
+	for i in n:
+		if i % 2 == 1:
+			continue
+		var u0: float = float(i) / float(n)
+		var u1: float = float(i + 1) / float(n)
+		draw_line(a.lerp(b, u0), a.lerp(b, u1), Color(1.0, 0.86, 0.35, 0.85), 2.5)
+	draw_arc(b, 22.0, 0.0, TAU, 36, Color(1.0, 0.9, 0.4, 0.9), 2.5)
+	_label("WINDOW", b + Vector2(0, -34), 16)
 
 func _body_screen(b: Dictionary, at_t: float) -> Vector2:
 	return _to_screen(OrbitMath.body_pos(b, at_t))
@@ -326,6 +386,37 @@ func _draw_target_lead(_c: Vector2) -> void:
 	if pts.size() >= 2:
 		draw_polyline(pts, Color(1.0, 0.75, 0.15, 0.55), 7.0, true)
 		draw_polyline(pts, Color(1.0, 0.9, 0.4, 0.95), 3.5, true)
+
+## Pins on the course at each real closest-approach (pass-by), not mere orbit rings.
+func _draw_orbit_crossing_markers() -> void:
+	if route.is_empty() or not route.has("curve"):
+		return
+	var enc: Array = route.get("encounters", [])
+	if enc.is_empty():
+		return
+	var curve: Curve3D = route["curve"]
+	var path_len: float = maxf(curve.get_baked_length(), 0.001)
+	var drawn_u: float = clampf(course_draw_u, 0.0, 1.0)
+	var clen: float = path_len
+	for e in enc:
+		var hit_u: float = float(e.get("path_u", -1.0))
+		if hit_u < 0.0 or hit_u > drawn_u + 0.001:
+			continue
+		# Ship path uses burn_progress; pin at the same progress point.
+		var s: float = OrbitMath.burn_progress(hit_u, clen, cfg) * clen
+		var world: Vector3 = curve.sample_baked(s)
+		var p := _to_screen(world)
+		var col: Color = e.get("color", Color(1.0, 0.86, 0.35))
+		var pin := PackedVector2Array([
+			p + Vector2(0, -11), p + Vector2(11, 0),
+			p + Vector2(0, 11), p + Vector2(-11, 0),
+		])
+		draw_colored_polygon(pin, Color(col.r, col.g, col.b, 0.92))
+		var outline := PackedVector2Array()
+		outline.append_array(pin)
+		outline.append(pin[0])
+		draw_polyline(outline, Color(1, 1, 1, 0.95), 2.0, true)
+		_label("pass %s" % str(e.get("name", "?")), p + Vector2(0, -22), 14)
 
 func _draw_ship_marker() -> void:
 	var p := _ship_screen_pos()

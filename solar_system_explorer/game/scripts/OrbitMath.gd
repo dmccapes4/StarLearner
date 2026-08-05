@@ -286,11 +286,27 @@ static func marker_world_size(dist: float, tier: float, cfg: SolarFlyerConfig) -
 	return maxf(cfg.icon_scale * maxf(dist, 0.001) * tier, 0.05)
 
 ## ── Fly-by rendering (Mode 1) ───────────────────────────────────────
-## A close pass swaps the constant-size marker for the real 3D mesh so a
-## near world reads BIGGER than distant markers. Starts at the marker's
-## world size (seamless swap) and grows to full hero as the ship passes.
-const FLYBY_FAR_X := 14.0    ## dist/hero where the mesh starts appearing
-const FLYBY_NEAR_X := 5.0    ## dist/hero where the mesh is full hero size
+## Swap the AR marker for the real 3D mesh when the hero sphere's apparent
+## size reaches the marker's screen size (or slightly before). That way the
+## pin never "becomes" a nearby planet — the mesh replaces it at equal size
+## and then grows as you close in.
+##
+## Pure apparent-size math (hero / (icon_scale·tier)) yields handoffs of
+## ~200–300 wu for gas giants — larger than the whole compressed system —
+## so peers would stay 3D for an entire Earth→Saturn hop. Cap handoff at
+## FLYBY_HANDOFF_MAX_X·hero so mesh only appears on a true close pass.
+## Destination uses a wider gate so mid-cruise closing reads as a loom
+## (Earth→Mars hits ~7×hero while still ahead — peers stay at 4×).
+##
+## Handoff distance: min(hero/(icon_scale·tier·EARLY), hero·MAX_X)
+const FLYBY_HANDOFF_EARLY := 0.92   ## mesh slightly before sizes match
+## Hard ceiling in hero-radii — keeps cruise peers as AR pins.
+const FLYBY_HANDOFF_MAX_X := 4.0
+## Destination may hand off earlier so the target grows before park.
+const FLYBY_HANDOFF_MAX_X_DEST := 14.0
+## Legacy name kept for clearance tests / probes (approx old far gate).
+const FLYBY_FAR_X := 14.0
+const FLYBY_NEAR_X := 2.5
 ## The camera must NEVER enter the mesh: a course that passes right through a
 ## world (worlds are points — nothing is dodged) would put the camera inside
 ## a back-face-culled sphere, so the planet grows huge then just VANISHES.
@@ -299,13 +315,43 @@ const FLYBY_NEAR_X := 5.0    ## dist/hero where the mesh is full hero size
 ## a full-screen wall and never a clip-through.
 const FLYBY_CLEARANCE := 0.30   ## max mesh radius as a fraction of camera dist
 
-static func flyby_mesh_scale(dist: float, hero: float, marker_world: float) -> float:
-	var x: float = dist / maxf(hero, 0.001)
-	if x >= FLYBY_FAR_X:
+## Distance at which hero angular size ≈ marker angular size (× early factor),
+## capped so compressed-system cruise never treats every giant as "nearby".
+static func flyby_handoff_dist(hero: float, tier: float, cfg: SolarFlyerConfig,
+		for_dest: bool = false) -> float:
+	var h: float = maxf(hero, 0.001)
+	var ang: float = maxf(cfg.icon_scale, 1.0e-6) * maxf(tier, 0.05) * FLYBY_HANDOFF_EARLY
+	var by_apparent: float = h / ang
+	var max_x: float = FLYBY_HANDOFF_MAX_X_DEST if for_dest else FLYBY_HANDOFF_MAX_X
+	var by_proximity: float = h * max_x
+	return minf(by_apparent, by_proximity)
+
+
+static func flyby_mesh_scale(dist: float, hero: float, marker_world: float,
+		tier: float = 1.0, cfg: SolarFlyerConfig = null,
+		for_dest: bool = false) -> float:
+	var d: float = maxf(dist, 0.001)
+	var h: float = maxf(hero, 0.001)
+	var handoff: float
+	if cfg != null:
+		handoff = flyby_handoff_dist(h, tier, cfg, for_dest)
+	else:
+		# Tests / probes without cfg: approximate with legacy x=14 gate.
+		handoff = h * (FLYBY_HANDOFF_MAX_X_DEST if for_dest else FLYBY_FAR_X)
+	if d > handoff:
 		return 0.0
-	var u: float = clampf((FLYBY_FAR_X - x) / (FLYBY_FAR_X - FLYBY_NEAR_X), 0.0, 1.0)
-	var s: float = lerpf(minf(marker_world, hero), hero, smoothstep(0.0, 1.0, u))
-	return minf(s, dist * FLYBY_CLEARANCE)
+	# At handoff onset stay ≈ marker size; grow to hero only on the inner
+	# approach (proximity-capped handoffs are much shorter than pure
+	# apparent-size math, so keep the ease band tight).
+	var near: float = minf(h * FLYBY_NEAR_X, handoff * 0.35)
+	var u: float = 1.0
+	if handoff > near + 0.001:
+		u = clampf((handoff - d) / (handoff - near), 0.0, 1.0)
+	# Soft onset: first ~15% of the band barely grows past the pin.
+	var ease: float = smoothstep(0.0, 1.0, u)
+	ease = ease * ease
+	var s: float = lerpf(minf(marker_world, h), h, ease)
+	return minf(s, d * FLYBY_CLEARANCE)
 
 ## ── Presentation pacing (Mode 1) ────────────────────────────────────
 ## Playback rate over path fraction u: wall time is bounded so an outer hop
@@ -421,7 +467,11 @@ static func orbit_standoff(hero_r: float) -> float:
 	return maxf(hero_r * 4.2, 9.0)
 
 ## Worlds whose orbits sit between origin and destination (radial hop).
-static func bodies_along_hop(origin: Dictionary, dest: Dictionary, cfg: SolarFlyerConfig) -> Array:
+## Radial-only — does NOT mean the ship flies near the planet. Prefer
+## course_encounters() for narration / markers / flyby visibility.
+## When planets_only, skip major asteroids — kids hear Jupiter/Saturn, not Vesta.
+static func bodies_along_hop(origin: Dictionary, dest: Dictionary, cfg: SolarFlyerConfig,
+		planets_only: bool = false) -> Array:
 	var r0: float = float(origin.get("orbit_r", 0.0))
 	var r1: float = float(dest.get("orbit_r", 0.0))
 	var lo: float = minf(r0, r1)
@@ -433,23 +483,194 @@ static func bodies_along_hop(origin: Dictionary, dest: Dictionary, cfg: SolarFly
 			continue
 		if bool(b.get("is_star", false)) or bool(b.get("belt", false)):
 			continue
+		if planets_only and bool(b.get("major_asteroid", false)):
+			continue
 		var r: float = float(b.get("orbit_r", 0.0))
 		if r > lo + 0.5 and r < hi - 0.5:
 			out.append(b)
 	out.sort_custom(func(a, c): return float(a["orbit_r"]) < float(c["orbit_r"]))
 	return out
 
+## Closest-approach "pass by" threshold in units of the body's hero radius.
+## Earth→Saturn hits Jupiter at ~1.5×hero; Mars stays ~14× (orbit cross only).
+const ENCOUNTER_HERO_X := 7.0
+## Skip departure/arrival geometry: "pass by Earth" at path_u≈0 is just leave.
+## Closest approach itself is usually abeam — require the body entered the
+## forward canopy cone sometime *before* closest approach (kid can see it).
+const ENCOUNTER_U_MIN := 0.08
+const ENCOUNTER_U_MAX := 0.92
+## Cockpit spotlight window around a charted pass (path fraction).
+const ENCOUNTER_SPOT_HALF_U := 0.09
+## cos(≈60°): ahead enough to read on glass near the pass (Jupiter≈0.57 peaks).
+const ENCOUNTER_CANOPY_DOT := 0.50
+
+## 0..1 weight for how close playback is to a charted encounter's path_u.
+static func encounter_spotlight(play_u: float, enc_u: float,
+		half_window: float = ENCOUNTER_SPOT_HALF_U) -> float:
+	var half: float = maxf(half_window, 0.001)
+	var d: float = absf(play_u - enc_u)
+	if d >= half:
+		return 0.0
+	return 1.0 - smoothstep(0.0, half, d)
+
+## Best spotlight weight for a body among stamped route encounters.
+static func encounter_spotlight_for(body_id: String, play_u: float,
+		encounters: Array) -> float:
+	var best: float = 0.0
+	for e in encounters:
+		if str(e.get("id", "")) != body_id:
+			continue
+		best = maxf(best, encounter_spotlight(play_u, float(e.get("path_u", -1.0))))
+	return best
+
+## Path tangent at baked arc length s (forward of travel).
+static func _path_tangent(curve: Curve3D, s: float, clen: float) -> Vector3:
+	var step: float = maxf(clen * 0.002, 0.05)
+	var s1: float = minf(s + step, clen)
+	var p: Vector3 = curve.sample_baked(s)
+	var tangent: Vector3 = curve.sample_baked(s1) - p
+	if tangent.length() < 0.001:
+		var s0: float = maxf(s - step, 0.0)
+		tangent = p - curve.sample_baked(s0)
+	return tangent
+
+## True if the body is still ahead in the canopy while near closest approach.
+## Far-ahead samples don't count — those are never a readable pass-by.
+## `min_dot` defaults to ENCOUNTER_CANOPY_DOT; distant passes pass a stricter value.
+static func _encounter_on_canopy(curve: Curve3D, clen: float, body: Dictionary,
+		t0: float, t_arr: float, min_u: float, min_d: float,
+		cfg: SolarFlyerConfig, min_dot: float = ENCOUNTER_CANOPY_DOT) -> bool:
+	# Only the last stretch into closest approach (not a distant foresight).
+	var u0: float = maxf(min_u - 0.06, 0.0)
+	var u1: float = min_u
+	var steps: int = 16
+	var near: float = maxf(min_d * 1.30, min_d + 0.25)
+	for i in steps + 1:
+		var u: float = lerpf(u0, u1, float(i) / float(steps))
+		var s: float = burn_progress(u, clen, cfg) * clen
+		var p: Vector3 = curve.sample_baked(s)
+		var bp: Vector3 = body_pos(body, t0 + t_arr * u)
+		var to_body: Vector3 = bp - p
+		var d: float = to_body.length()
+		if d > near or d < 0.001:
+			continue
+		var tangent: Vector3 = _path_tangent(curve, s, clen)
+		if tangent.length() < 0.001:
+			continue
+		if tangent.normalized().dot(to_body.normalized()) >= min_dot:
+			return true
+	return false
+
+## Close loom (≤2.5×hero) may skim the glass edge; farther passes must be
+## more nose-on or kids never see them under the cockpit oval.
+const ENCOUNTER_LOOM_X := 2.5
+const ENCOUNTER_DISTANT_DOT := 0.70  ## cos≈45°
+
+## Nearest major planet to a sim position (for origin exclusion when unknown).
+static func nearest_planet_id(pos: Vector3, t: float, cfg: SolarFlyerConfig,
+		exclude_id: String = "") -> String:
+	var best_id := ""
+	var best_d: float = INF
+	for b in SolarData.flyer_bodies(cfg):
+		var id := str(b.get("id", ""))
+		if id.is_empty() or id == exclude_id:
+			continue
+		if bool(b.get("is_star", false)) or bool(b.get("belt", false)):
+			continue
+		if bool(b.get("major_asteroid", false)):
+			continue
+		var d: float = pos.distance_to(body_pos(b, t))
+		if d < best_d:
+			best_d = d
+			best_id = id
+	return best_id
+
+## Planets the ship actually passes near along a course (ephemeris + path).
+## Mid-cruise only — not the origin falling aft at depart / dest at park.
+## Returns [{id, name, min_dist, min_x, path_u, color}, ...] sorted by closeness.
+static func course_encounters(curve: Curve3D, t0: float, t_arr: float,
+		cfg: SolarFlyerConfig, origin_id: String, dest_id: String,
+		max_hero_x: float = ENCOUNTER_HERO_X) -> Array:
+	if curve == null:
+		return []
+	var clen: float = maxf(curve.get_baked_length(), 0.001)
+	var samples: int = 120
+	var origin := origin_id
+	if origin.is_empty():
+		origin = nearest_planet_id(curve.sample_baked(0.0), t0, cfg, dest_id)
+	var best: Dictionary = {}  # id -> encounter dict
+	for b in SolarData.flyer_bodies(cfg):
+		var id := str(b.get("id", ""))
+		if id.is_empty() or id == origin or id == dest_id:
+			continue
+		if bool(b.get("is_star", false)) or bool(b.get("belt", false)):
+			continue
+		if bool(b.get("major_asteroid", false)):
+			continue
+		var hero: float = maxf(float(b.get("hero_r", 1.0)), 0.001)
+		var min_d: float = INF
+		var min_u: float = 0.0
+		for i in samples + 1:
+			var u: float = float(i) / float(samples)
+			var s: float = burn_progress(u, clen, cfg) * clen
+			var p: Vector3 = curve.sample_baked(s)
+			var bp: Vector3 = body_pos(b, t0 + t_arr * u)
+			var d: float = p.distance_to(bp)
+			if d < min_d:
+				min_d = d
+				min_u = u
+		var min_x: float = min_d / hero
+		if min_x > max_hero_x:
+			continue
+		if min_u < ENCOUNTER_U_MIN or min_u > ENCOUNTER_U_MAX:
+			continue
+		# Skip passes that never enter the forward canopy (no pin, no VO claim).
+		# Tight loom (Jupiter ~1.5×hero) may skim the glass edge; farther
+		# passes must be more nose-on or they hide under the cockpit oval.
+		var need_dot: float = ENCOUNTER_CANOPY_DOT if min_x <= ENCOUNTER_LOOM_X \
+			else ENCOUNTER_DISTANT_DOT
+		if not _encounter_on_canopy(
+				curve, clen, b, t0, t_arr, min_u, min_d, cfg, need_dot):
+			continue
+		best[id] = {
+			"id": id,
+			"name": str(b.get("name", id)),
+			"min_dist": min_d,
+			"min_x": min_x,
+			"path_u": min_u,
+			"color": b.get("color", Color(1, 1, 1)),
+			"hero_r": hero,
+		}
+	var out: Array = best.values()
+	out.sort_custom(func(a, c): return float(a["min_x"]) < float(c["min_x"]))
+	return out
+
+## Provisional encounters for a hop (used by pre-chart briefing VO).
+static func preview_encounters(origin: Dictionary, dest: Dictionary,
+		cfg: SolarFlyerConfig, t0: float = 0.0) -> Array:
+	if origin.is_empty() or dest.is_empty():
+		return []
+	var prefer := body_pos(dest, t0)
+	if prefer.length() < 0.001:
+		prefer = Vector3.RIGHT
+	var ship := park_pos(origin, t0, cfg, prefer)
+	var depart := 0.0
+	if not bool(origin.get("is_star", false)):
+		depart = orbit_standoff(float(origin.get("hero_r", 2.0)))
+	var route := plot_route(ship, dest, t0, cfg, depart)
+	return route.get("encounters", [])
+
 ## Kid-readable course line spoken when a hop is plotted.
 ## Every claim is derived from the actual course geometry — never a guess:
 ##   · sun proximity comes from the sampled curve's min_sun_dist,
 ##   · direction comes from origin vs destination orbit radii,
-##   · "cross the orbit of X" is literally true for any radial hop.
+##   · "pass close by X" only when course_encounters finds a real approach.
 static func trip_narration(origin: Dictionary, dest: Dictionary, route: Dictionary,
 		cfg: SolarFlyerConfig) -> String:
 	# Destination is the Sun itself — a special, honest "approach but don't land" hop.
 	if bool(dest.get("is_star", false)):
 		var line := _trip_open_sentence("the Sun", "to_sun")
-		var cross := _trip_cross_sentence(origin, dest, cfg)
+		var cross := _trip_pass_sentence(route)
 		if not cross.is_empty():
 			line += " " + cross
 		line += " " + _trip_aim_sentence("sun")
@@ -470,7 +691,7 @@ static func trip_narration(origin: Dictionary, dest: Dictionary, route: Dictiona
 		line = _trip_open_sentence(dest_name, "inward")
 	else:
 		line = _trip_open_sentence(dest_name, "plain")
-	var cross := _trip_cross_sentence(origin, dest, cfg)
+	var cross := _trip_pass_sentence(route)
 	if not cross.is_empty():
 		line += " " + cross
 	line += " " + _trip_aim_sentence(dest_name)
@@ -502,18 +723,43 @@ static func _trip_open_sentence(dest_name: String, kind: String) -> String:
 			return "We're heading in toward the Sun, to %s." % dest_name
 	return "Plotting a course to %s." % dest_name
 
-static func _trip_cross_sentence(origin: Dictionary, dest: Dictionary,
-		cfg: SolarFlyerConfig) -> String:
+## Honest pass-by line from stamped route encounters (not radial orbit rings).
+static func _trip_pass_sentence(route: Dictionary) -> String:
+	var enc: Array = route.get("encounters", [])
+	if enc.is_empty():
+		return ""
 	var names: Array = []
-	for b in bodies_along_hop(origin, dest, cfg):
-		names.append(str(b["name"]))
+	for e in enc:
+		var n := str(e.get("name", ""))
+		if not n.is_empty() and names.find(n) < 0:
+			names.append(n)
 		if names.size() >= 2:
 			break
+	if names.is_empty():
+		return ""
+	if names.size() == 1:
+		return "We'll pass close by %s on the way." % names[0]
+	return "We'll pass close by %s and %s on the way." % [names[0], names[1]]
+
+## Legacy radial wording kept for VO bake of old clips; runtime uses _trip_pass_sentence.
+static func _trip_cross_sentence(origin: Dictionary, dest: Dictionary,
+		cfg: SolarFlyerConfig) -> String:
+	var along: Array = bodies_along_hop(origin, dest, cfg, true)
+	if along.is_empty():
+		return ""
+	var names: Array = []
+	var outward: bool = float(dest.get("orbit_r", 0.0)) > float(origin.get("orbit_r", 0.0))
+	if along.size() == 1:
+		names.append(str(along[0]["name"]))
+	elif outward and along.size() >= 2:
+		names.append(str(along[along.size() - 2]["name"]))
+		names.append(str(along[along.size() - 1]["name"]))
+	else:
+		names.append(str(along[0]["name"]))
+		names.append(str(along[mini(1, along.size() - 1)]["name"]))
 	if names.size() == 1:
 		return "We'll cross the orbit of %s on the way." % names[0]
-	if names.size() >= 2:
-		return "We'll cross the orbits of %s and %s on the way." % [names[0], names[1]]
-	return ""
+	return "We'll cross the orbits of %s and %s on the way." % [names[0], names[1]]
 
 ## Spoken when a tap on the belt ring resolves to a named asteroid — the
 ## lesson (what the belt IS) plus the invitation (which rock, and why).
@@ -542,9 +788,29 @@ static func trip_narration_sentences_all(origin: Dictionary, dest: Dictionary,
 	var dest_name := str(dest.get("name", "our destination"))
 	for kind in ["flyby", "outward", "inward", "plain"]:
 		out.append(_trip_open_sentence(dest_name, kind))
+	# Bake both legacy radial lines and encounter pass-by lines for every peer.
 	var cross := _trip_cross_sentence(origin, dest, cfg)
 	if not cross.is_empty():
 		out.append(cross)
+	var peers: Array = bodies_along_hop(origin, dest, cfg, true)
+	for b in peers:
+		out.append("We'll pass close by %s on the way." % str(b.get("name", "?")))
+	# Runtime _trip_pass_sentence can name the two closest real encounters
+	# in either order — bake every major-planet pair once globally via dump.
+	for i in peers.size():
+		for j in range(i + 1, peers.size()):
+			var n0 := str(peers[i].get("name", "?"))
+			var n1 := str(peers[j].get("name", "?"))
+			out.append("We'll pass close by %s and %s on the way." % [n0, n1])
+			out.append("We'll pass close by %s and %s on the way." % [n1, n0])
+	# Stamp live routes (park + body_pos depart variants) so VO matches tests.
+	for depart in [0.0, orbit_standoff(float(origin.get("hero_r", 2.0)))]:
+		if bool(origin.get("is_star", false)) and depart > 0.0:
+			continue
+		var route := plot_route(body_pos(origin, 0.0), dest, 0.0, cfg, depart)
+		var pass_live := _trip_pass_sentence(route)
+		if not pass_live.is_empty():
+			out.append(pass_live)
 	out.append(_trip_aim_sentence(dest_name))
 	out.append(_trip_lap_sentence(dest_name))
 	return out
@@ -624,12 +890,17 @@ static func plot_route(ship_pos: Vector3, target: Dictionary, t0: float,
 		_hop_entry(planet_arr, ship_pos, dest_stand, star),
 		cfg.course_samples, depart_standoff)
 	var sim := simulate_route(curve, target, t0, t_fly, cfg)
+	var dest_id := str(target.get("id", ""))
+	var origin_id := nearest_planet_id(ship_pos, t0, cfg, dest_id)
+	var encounters: Array = course_encounters(
+		curve, t0, t_fly, cfg, origin_id, dest_id, ENCOUNTER_HERO_X)
 	return {
 		"arrival_pos": planet_arr,
 		"t_arr": t_fly,
 		"curve": curve,
 		"path_len": curve.get_baked_length(),
 		"duration": t_fly,
+		"encounters": encounters,
 		"min_sun_dist": float(sim["min_sun_dist"]),
 		"timeline": sim["timeline"],
 	}

@@ -6,8 +6,8 @@ extends SceneTree
 ##     --write-movie /tmp/solar_playthrough.avi \
 ##     -s res://tools/record_playthrough_demo.gd
 ##
-## Beats: title hub → Solar System peek → hub → Spaceship → astronaut → scroll
-## → plot Jupiter (belt) → fly → orbit → chart again → plot Sun → fly → arrive.
+## Beats: boot → title hub → Solar System peek → Spaceship chooser →
+## Mission Flight (Jupiter + belt) → Free Flight playground (gears → fly).
 
 const FPS := 24.0
 const MainScript := preload("res://scripts/Main.gd")
@@ -19,11 +19,11 @@ func _run() -> void:
 	root.get_viewport().size = Vector2i(1280, 600)
 	var main: Node = MainScript.new()
 	root.add_child(main)
-	await process_frame
-	await process_frame
+	# Boot orrery welcome (~3s) then title hub.
+	await _sec(5.0)
 
 	print("DEMO: title hub")
-	await _sec(3.0)
+	await _sec(2.5)
 
 	# Brief Solar System (orrery) peek, then back to the hub.
 	if main.has_method("_on_explainer"):
@@ -34,11 +34,17 @@ func _run() -> void:
 		main._show_title()
 	await _sec(1.5)
 
-	# Spaceship tile → flight sim (astronaut briefing + strip).
+	# Spaceship → FlightChooser (Mission vs Free Flight).
 	if main.has_method("_on_flight"):
 		main._on_flight()
-	print("DEMO: astronaut + scroll")
-	await _sec(8.0)
+	print("DEMO: flight chooser")
+	await _sec(3.5)
+
+	# Mission Flight → astronaut briefing → strip.
+	if main.has_method("_on_mission_flight"):
+		main._on_mission_flight()
+	print("DEMO: mission astronaut + scroll")
+	await _sec(10.0)
 
 	# Plot Earth → Jupiter (crosses the asteroid belt).
 	print("DEMO: plot Jupiter")
@@ -51,22 +57,33 @@ func _run() -> void:
 	print("DEMO: fly Jupiter (belt)")
 	await _sec(42.0)
 
-	# Chart new course from arrival UI if present, else force scroll.
-	var fly = main.get("_fly")
-	if fly != null and fly.has_signal("chart_course"):
-		fly.emit_signal("chart_course", "jupiter")
+	# Free Flight playground — back to hub path via Spaceship → Free Flight.
+	if main.has_method("_show_title"):
+		main._show_title()
+	await _sec(1.2)
+	if main.has_method("_on_flight"):
+		main._on_flight()
 	await _sec(2.0)
-	print("DEMO: plot Sun")
-	if main.has_method("_on_body_selected"):
-		main._on_body_selected("sun")
+	if main.has_method("_on_free_flight"):
+		main._on_free_flight()
+	print("DEMO: free flight briefing")
 	await _sec(10.0)
-	board = main.get("_board")
-	if board != null and board.has_method("_commit"):
-		board._commit()
-	print("DEMO: fly Sun")
-	await _sec(28.0)
 
-	await _sec(3.0)
+	var pg = main.get("_playground")
+	if pg != null:
+		# Speed pick → gears; no-sensor path auto-skips tutorial + aim gate.
+		if pg.has_method("_on_speed_gears"):
+			pg._on_speed_gears()
+		print("DEMO: playground tutorial → fly")
+		await _sec(8.0)
+		# Ensure flying if gate already skipped; otherwise force launch.
+		if pg.get("_state") != null and int(pg._state) != 3:  # State.FLYING
+			if pg.has_method("_launch"):
+				pg._launch(Vector2.ZERO)
+		print("DEMO: playground flying")
+		await _sec(14.0)
+
+	await _sec(2.0)
 	print("DEMO: done")
 	quit(0)
 
