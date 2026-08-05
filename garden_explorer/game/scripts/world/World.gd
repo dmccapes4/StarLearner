@@ -598,27 +598,21 @@ func _on_player_arrived() -> void:
 	var approach: Vector2 = _pending.get("approach", Vector2.ZERO)
 	var kind := str(_pending.get("kind", ""))
 	var eps := Config.get_interact_arrive_eps() * 2.0
+	## Arrive = near the chosen approach pane (beds included). No half-plane
+	## spaghetti — face selection lives in FarmMap.bed_approach_world.
 	var close_enough := player != null and player.global_position.distance_to(approach) <= eps
-	if not close_enough and kind == "bed" and farm_map:
-		## Kids tap soil; approach is the walkable rim — also accept near bed center.
-		var bed_id := str(_pending.get("id", ""))
-		var center: Vector2 = farm_map.bed_centers.get(bed_id, approach)
-		var rim := farm_map.nearest_walkable(center)
-		close_enough = player.global_position.distance_to(rim) <= eps \
-			or player.global_position.distance_to(center) <= eps + 40.0
+	if not close_enough and farm_map and player:
+		var rim := farm_map.nearest_walkable(approach)
+		close_enough = player.global_position.distance_to(rim) <= eps
 	if not close_enough:
 		var attempts := int(_pending.get("repaths", 0))
 		if attempts < 2 and farm_map:
 			_pending["repaths"] = attempts + 1
 			Events.player_path_requested.emit(farm_map.nearest_walkable(approach))
 			return
-		## Soft-collision abort left us short — still try bed tools when nearby
-		## so watering / planting is not lost after a walk.
-		if kind == "bed" and farm_map and player:
-			var bed_id2 := str(_pending.get("id", ""))
-			var center2: Vector2 = farm_map.bed_centers.get(bed_id2, approach)
-			if player.global_position.distance_to(center2) > 120.0:
-				return
+		## Soft-collision abort: still apply bed tools if we landed near the pane.
+		if kind == "bed" and player and player.global_position.distance_to(approach) <= 100.0:
+			pass
 		else:
 			return
 	if kind == "bug":
@@ -737,7 +731,10 @@ func _apply_bed_tool(bed_id: String) -> bool:
 			if garden.is_bed_thirsty(bed_id):
 				_do_water_bed(bed_id)
 			else:
-				SpeakScript.soft("This bed is not thirsty right now.")
+				## Mirror seed double-tap guard: soft tip must not replace
+				## "You watered the bed." while that line still holds the lock.
+				if not NarratorScript.blocks_movement():
+					SpeakScript.soft("This bed is not thirsty right now.")
 			return true
 		"uproot":
 			if garden.is_bed_empty(bed_id):
@@ -1075,8 +1072,9 @@ func _do_water_bed(bed_id: String) -> void:
 		SpeakScript.line("You watered the bed.")
 		print("Garden Explorer: watered bed %s → %s" % [bed_id, result.stage])
 	elif bool(result.get("not_thirsty", false)):
-		SpeakScript.soft("This bed is not thirsty right now.")
-	else:
+		if not NarratorScript.blocks_movement():
+			SpeakScript.soft("This bed is not thirsty right now.")
+	elif not NarratorScript.blocks_movement():
 		SpeakScript.soft("Nothing to water yet. Get seeds from the shed and plant them.")
 
 func _do_uproot_bed(bed_id: String) -> void:

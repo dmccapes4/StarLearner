@@ -408,121 +408,176 @@ func slot_world(bed_id: String, slot: int) -> Vector2:
 		return bed_centers.get(bed_id, Vector2.ZERO)
 	return arr[slot]
 
-## Stand point for gardening a bed: face from tap + shortest sensible path.
-## Kids expect to walk through the gap / path, not loop around the whole row.
+## Stand point for gardening a bed.
+## Model (keep this simple — see docs/REVIEW_BED_APPROACH_AND_WATER.md):
+##   • Each bed has four face panes (N/E/S/W) with outward normals.
+##   • Default: pick the pane the avatar already faces (vector align) — walk there.
+##   • Only special case: standing at an adjacent bed that blocks the line →
+##     go around that bed on its closest side, then to the *same* face pane of
+##     the target.
+##   • Pen → garden: choose panes as if already just inside the gate; find_path
+##     still routes through the gate automatically.
 func bed_approach_world(bed_id: String, from_player: Vector2, tap: Vector2) -> Vector2:
+	var panes: Dictionary = bed_face_panes(bed_id)
+	if panes.is_empty():
+		return nearest_walkable(bed_centers.get(bed_id, tap))
+	var from := from_player
 	var center: Vector2 = bed_centers.get(bed_id, tap)
-	var cands := _bed_approach_candidates(bed_id, tap)
-	if cands.is_empty():
-		return _stand_clear_of_bed(bed_id, nearest_walkable(center))
-	var from_dir := from_player - center
+	## Pen → garden: face selection uses a garden-side origin so the path-facing
+	## pane wins; A* still walks gate → garden → pane.
+	if gate_world != Vector2.ZERO and in_pen(from) != in_pen(center):
+		from = _garden_just_inside_gate()
+	var face := ""
+	var blocker := _adjacent_blocker_at(from, bed_id)
+	if not blocker.is_empty():
+		face = _closest_face_key(blocker, from)
+	else:
+		face = _best_direct_face(bed_id, panes, from, tap)
+	if face.is_empty() or not panes.has(face):
+		face = _best_direct_face(bed_id, panes, from, tap)
+	var pane: Dictionary = panes[face]
+	return pane.get("stand", nearest_walkable(center)) as Vector2
+
+## Four cardinal approach panes. Each: stand (world) + outward (unit, away from bed).
+func bed_face_panes(bed_id: String) -> Dictionary:
+	var out: Dictionary = {}
+	if not bed_tiles.has(bed_id):
+		return out
+	var tile: Vector2 = bed_tiles[bed_id]
+	var half: Vector2 = bed_halves.get(bed_id, Vector2(1.05, 0.8)) * BED_SOLID_PAD
+	var stand := BED_STAND_TILES
+	var center: Vector2 = bed_centers.get(bed_id, IsoUtil.tile_to_world(tile))
+	var faces := {
+		"N": Vector2(0.0, -(half.y + stand)),
+		"S": Vector2(0.0, +(half.y + stand)),
+		"E": Vector2(+(half.x + stand), 0.0),
+		"W": Vector2(-(half.x + stand), 0.0),
+	}
+	for key in faces.keys():
+		var ideal := IsoUtil.tile_to_world(tile + faces[key])
+		var stand_w := _stand_clear_of_bed(bed_id, ideal)
+		var outward := stand_w - center
+		if outward.length_squared() < 1.0:
+			outward = faces[key]
+		out[key] = {
+			"face": key,
+			"stand": stand_w,
+			"outward": outward.normalized(),
+		}
+	return out
+
+func _garden_just_inside_gate() -> Vector2:
+	var g := nearest_walkable(gate_world)
+	## Pen is east of the west-edge gate — step west into the garden.
+	for dx in [-28.0, -52.0, -76.0, -100.0]:
+		var p := nearest_walkable(g + Vector2(dx, 0.0))
+		if not in_pen(p):
+			return p
+	return g
+
+func _adjacent_blocker_at(from: Vector2, target_id: String) -> String:
+	## Player is "at" a neighboring bed (within its stand ring) that sits between
+	## them and the target — that bed is the only thing we route around on purpose.
+	var best := ""
+	var best_d := INF
+	var tcenter: Vector2 = bed_centers.get(target_id, from)
+	for id in bed_centers.keys():
+		var bid := str(id)
+		if bid == target_id:
+			continue
+		if not _beds_are_neighbors(bid, target_id):
+			continue
+		var c: Vector2 = bed_centers[bid]
+		var d := from.distance_to(c)
+		if d > _bed_min_stand_dist(bid) * 1.35:
+			continue
+		## Blocker should lie roughly between player and target.
+		var to_t := tcenter - from
+		var to_b := c - from
+		if to_t.length_squared() < 1.0:
+			continue
+		if to_b.dot(to_t.normalized()) < 8.0:
+			continue
+		if d < best_d:
+			best_d = d
+			best = bid
+	return best
+
+func _beds_are_neighbors(a: String, b: String) -> bool:
+	## Two rows of three: horizontal neighbors in-row, vertical across the path.
+	var order := ["bed_0", "bed_1", "bed_2", "bed_3", "bed_4", "bed_5"]
+	var ia := order.find(a)
+	var ib := order.find(b)
+	if ia < 0 or ib < 0:
+		## Fallback: nearby centers.
+		var ca: Vector2 = bed_centers.get(a, Vector2.ZERO)
+		var cb: Vector2 = bed_centers.get(b, Vector2.ZERO)
+		return ca.distance_to(cb) < 220.0
+	var row_a := 0 if ia < 3 else 1
+	var row_b := 0 if ib < 3 else 1
+	var col_a := ia % 3
+	var col_b := ib % 3
+	if row_a == row_b and absi(col_a - col_b) == 1:
+		return true
+	if col_a == col_b and absi(row_a - row_b) == 1:
+		return true
+	return false
+
+func _closest_face_key(bed_id: String, from: Vector2) -> String:
+	var panes: Dictionary = bed_face_panes(bed_id)
+	var best := "S"
+	var best_d := INF
+	for key in panes.keys():
+		var stand: Vector2 = (panes[key] as Dictionary).get("stand", from)
+		var d := from.distance_squared_to(stand)
+		if d < best_d:
+			best_d = d
+			best = str(key)
+	return best
+
+func _best_direct_face(bed_id: String, panes: Dictionary, from: Vector2, tap: Vector2) -> String:
+	var center: Vector2 = bed_centers.get(bed_id, from)
+	var from_dir := from - center
 	if from_dir.length_squared() < 1.0:
 		from_dir = Vector2(0, 1)
 	from_dir = from_dir.normalized()
 	var tap_off := tap - center
-	var tap_clear := tap_off.length_squared() >= 120.0 ## clear side tap vs center poke
-	var tap_dir := from_dir if not tap_clear else tap_off.normalized()
-	## Opposite-side tap: don't discard the far face just because near is shorter.
-	var opposite_tap := tap_clear and tap_dir.dot(from_dir) < -0.15
-	## North beds sit above the dirt path — prefer the path-facing (south) rim so
-	## the gardener isn't painted under the raised wood. South beds → north rim.
-	var path_ty := float((data.get("path", {}) as Dictionary).get("tile_y", 3.0))
-	var bed_ty := float((bed_tiles.get(bed_id, Vector2.ZERO) as Vector2).y)
-	var prefer_path_south := bed_ty < path_ty
-	var lateral := absf(from_dir.x) >= absf(from_dir.y) - 0.05
-	var lengths: Array = []
-	for c in cands:
-		lengths.append(path_world_length(from_player, c))
-	## Pass 1: geometric filters (face / path side). Length gates use only survivors
-	## so a short wrong-face stand can't veto the correct lip.
-	var viable: Array = [] ## indices
-	for i in cands.size():
-		var ap0: Vector2 = cands[i]
-		var ap_dir0 := ap0 - center
-		if ap_dir0.length_squared() < 1.0:
-			continue
-		ap_dir0 = ap_dir0.normalized()
-		var player_align0 := ap_dir0.dot(from_dir)
-		var tap_align0 := ap_dir0.dot(tap_dir)
-		if opposite_tap and tap_align0 < 0.2:
-			continue
-		if not opposite_tap and not lateral and player_align0 < 0.08:
-			continue
-		if not opposite_tap and lateral:
-			if prefer_path_south and ap0.y < center.y + 10.0:
-				continue
-			if not prefer_path_south and ap0.y > center.y - 10.0:
-				continue
-		viable.append(i)
-	if viable.is_empty():
-		for j in cands.size():
-			viable.append(j)
-	var min_len := INF
-	for vi in viable:
-		min_len = minf(min_len, float(lengths[vi]))
-	var best: Vector2 = cands[viable[0]]
-	var best_score := INF
-	for i in viable:
-		var ap: Vector2 = cands[i]
-		var plen: float = float(lengths[i])
-		if plen > BED_GAP_PATH_MAX and plen > min_len * 1.6:
-			continue
-		if not opposite_tap and min_len < INF and plen > min_len * 1.45 and plen - min_len > 80.0:
-			continue
-		var ap_dir := (ap - center).normalized()
-		var player_align := ap_dir.dot(from_dir)
-		var tap_align := ap_dir.dot(tap_dir)
-		var tap_d: float = ap.distance_to(tap)
-		var score := plen + tap_d * 0.15 - player_align * 55.0 \
-			- tap_align * (140.0 if opposite_tap else (70.0 if tap_clear else 35.0))
-		if not opposite_tap:
-			if prefer_path_south:
-				score -= (ap.y - center.y) * 2.6
-				score += absf(ap.x - center.x) * 0.2
-				var sort_y := _bed_sort_y(bed_tiles[bed_id], bed_halves[bed_id])
-				if ap.y >= sort_y + 2.0:
-					score -= 40.0
-				else:
-					score += 80.0
-			else:
-				score += (ap.y - center.y) * 2.6
-				score += absf(ap.x - center.x) * 0.2
-		if score < best_score:
+	var tap_clear := tap_off.length_squared() >= 120.0
+	var tap_dir := tap_off.normalized() if tap_clear else from_dir
+	## Kid tapped the far lip — honor that face.
+	if tap_clear and tap_dir.dot(from_dir) < -0.15:
+		return _face_from_dir(tap_dir, panes)
+	var best := "S"
+	var best_score := -INF
+	for key in panes.keys():
+		var pane: Dictionary = panes[key]
+		var stand: Vector2 = pane.get("stand", center)
+		var outward: Vector2 = pane.get("outward", Vector2(0, 1))
+		## Pane facing the avatar (outward toward player) wins.
+		var score := outward.dot(from_dir) * 100.0
+		if tap_clear:
+			score += outward.dot(tap_dir) * 35.0
+		## Prefer almost-direct walks; heavy penalty for A* detours (wrong face).
+		var crow := from.distance_to(stand)
+		var plen := path_world_length(from, stand)
+		if crow > 1.0 and plen > crow * 2.2:
+			score -= (plen - crow) * 0.35
+		score -= crow * 0.02
+		if score > best_score:
 			best_score = score
-			best = ap
-	return _stand_clear_of_bed(bed_id, best)
+			best = str(key)
+	return best
 
-func _bed_approach_candidates(bed_id: String, tap: Vector2) -> Array:
-	var tile: Vector2 = bed_tiles.get(bed_id, Vector2.ZERO)
-	var half: Vector2 = bed_halves.get(bed_id, Vector2(1.05, 0.8)) * BED_SOLID_PAD
-	var stand := BED_STAND_TILES
-	## Faces + corner gaps (walk between beds, not around the whole row).
-	var offsets := [
-		Vector2(0.0, -(half.y + stand)), ## north
-		Vector2(0.0, +(half.y + stand)), ## south
-		Vector2(+(half.x + stand), 0.0), ## east
-		Vector2(-(half.x + stand), 0.0), ## west
-		Vector2(+(half.x + stand * 0.85), +(half.y + stand * 0.85)),
-		Vector2(-(half.x + stand * 0.85), +(half.y + stand * 0.85)),
-		Vector2(+(half.x + stand * 0.85), -(half.y + stand * 0.85)),
-		Vector2(-(half.x + stand * 0.85), -(half.y + stand * 0.85)),
-	]
-	var out: Array = []
-	var seen: Dictionary = {}
-	for o in offsets:
-		var ideal := IsoUtil.tile_to_world(tile + o)
-		_push_unique_approach(out, seen, _stand_clear_of_bed(bed_id, ideal))
-	## Camera-front apron: just south of the near tip (clears the raised NW corner).
-	var center: Vector2 = bed_centers.get(bed_id, Vector2.ZERO)
-	var near_tip := IsoUtil.tile_to_world(tile + Vector2(0.0, half.y))
-	_push_unique_approach(out, seen, _stand_clear_of_bed(bed_id, near_tip + Vector2(0.0, 18.0)))
-	## Tap-biased rim: walk to the side of the bed the kid actually touched.
-	## Skip for center taps — world +Y is not iso-south and parks mid-aisle.
-	var dir := tap - center
-	if dir.length_squared() >= 120.0:
-		dir = dir.normalized()
-		_push_unique_approach(out, seen, _stand_clear_of_bed(bed_id, center + dir * 56.0))
-	return out
+func _face_from_dir(dir: Vector2, panes: Dictionary) -> String:
+	var best := "S"
+	var best_dot := -INF
+	for key in panes.keys():
+		var outward: Vector2 = (panes[key] as Dictionary).get("outward", Vector2(0, 1))
+		var d := outward.dot(dir)
+		if d > best_dot:
+			best_dot = d
+			best = str(key)
+	return best
 
 func _stand_clear_of_bed(bed_id: String, ideal: Vector2) -> Vector2:
 	## Prefer the face stand (half + small lip). Only nudge out if blocked.
@@ -545,15 +600,6 @@ func _bed_min_stand_dist(bed_id: String) -> float:
 	var face_s := IsoUtil.tile_to_world(Vector2(0.0, half.y + BED_STAND_TILES)) \
 		- IsoUtil.tile_to_world(Vector2.ZERO)
 	return maxf(face_s.length(), 40.0)
-
-func _push_unique_approach(out: Array, seen: Dictionary, w: Vector2) -> void:
-	if is_blocked(w):
-		return
-	var key := "%d,%d" % [int(round(w.x / 8.0)), int(round(w.y / 8.0))]
-	if seen.has(key):
-		return
-	seen[key] = true
-	out.append(w)
 
 func path_world_length(from_world: Vector2, to_world: Vector2) -> float:
 	var pts := find_path(from_world, to_world)

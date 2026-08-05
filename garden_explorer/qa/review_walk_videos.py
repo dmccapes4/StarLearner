@@ -56,6 +56,14 @@ Hard rules:
   middle beds then BETWEEN the south beds and the southern fence. Prefer
   path_quality.looks_like_south_fence_loop / detour_ratio vs max_detour_ratio
   as state evidence, but the IMAGE is ground truth for where feet go.
+- WATER / BED APPROACH (critical for water clip_set): beds have four face panes
+  (N/E/S/W). Avatar should walk to the pane facing them (vector outward). From
+  shed/path/south, north beds (bed_0/1/2) stand on PATH/SOUTH lip — FAIL as
+  blocker if they loop to the far NORTH face. Only intentional detour: around an
+  adjacent blocking bed on its closest side, then same face pane on the target.
+  Read mechanics/REVIEW_BED_APPROACH_AND_WATER.md when present.
+- WATER STATE: thirsty + water tool + arrived near approach → thirst clears.
+  FAIL if water UX fires but primary tip is "not thirsty" right after success.
 - Iso depth: south of a bed/plant → gardener IN FRONT (not under soil/wood/pack).
   If contracts say expect_player_in_front and z_index_says_in_front but the
   image shows under-paint → depth_sort_bug (blocker), not "state wrong".
@@ -64,9 +72,9 @@ Hard rules:
 - Gate/shed: player must not be buried under posts or bed wood at goals.
 - Motion: facing follows travel while moving; no teleport; no long unnatural loops.
 - Do NOT invent objects. Severity: blocker / major / minor / ok.
-- debug_hints MUST name concrete systems (FarmMap.find_path, BED_SOLID_PAD,
-  _nav_point_blocked, shed_approach_world, Player._on_path_requested,
-  World._queue_interact) when routing fails.
+- debug_hints MUST name concrete systems (FarmMap.bed_approach_world,
+  bed_face_panes, find_path, World._queue_interact, World._on_player_arrived,
+  _apply_bed_tool, Player._on_path_requested) when approach/water fails.
 
 Return ONLY valid JSON matching the schema in the user message."""
 
@@ -245,6 +253,10 @@ def build_user_payload(clip_dir: Path, max_frames: int) -> tuple[str, list[Path]
     mech_path = clip_dir.parent / "mechanics" / "README.md"
     if mech_path.is_file():
         mech_readme = mech_path.read_text(encoding="utf-8")[:2500]
+    code_review = ""
+    review_path = clip_dir.parent / "mechanics" / "REVIEW_BED_APPROACH_AND_WATER.md"
+    if review_path.is_file():
+        code_review = review_path.read_text(encoding="utf-8")[:5000]
     nav_diag = ""
     nav_path = clip_dir.parent / "nav_diagnostics.json"
     if nav_path.is_file():
@@ -259,6 +271,7 @@ def build_user_payload(clip_dir: Path, max_frames: int) -> tuple[str, list[Path]
         f"NOTE: {meta.get('note')}\n"
         f"ROUTE: {json.dumps(route, indent=2)[:8000]}\n"
         f"META: {json.dumps(meta, indent=2)}\n\n"
+        f"CODE_REVIEW (authoritative approach model — obey this):\n{code_review}\n\n"
         f"MECHANICS_README (code dump lives in stamp/mechanics/):\n{mech_readme}\n\n"
         f"NAV_DIAGNOSTICS (probe paths for this farm):\n{nav_diag}\n\n"
         f"SECOND_TICKS ({len(samples)} — ONE IMAGE FOLLOWS PER TICK, IN ORDER):\n"
@@ -267,7 +280,7 @@ def build_user_payload(clip_dir: Path, max_frames: int) -> tuple[str, list[Path]
         "For every tick, answer EVERY direct_checks[] item with a one_liner of the form "
         "'At t=Ns: state says X; image shows Y → PASS|FAIL'. "
         "Prefer these tick answers over vague summaries. "
-        "For path_sensible, weigh path_quality + image corridor."
+        "For path_sensible / approach_face, weigh path_quality + image corridor."
     )
     return text, paths, samples
 

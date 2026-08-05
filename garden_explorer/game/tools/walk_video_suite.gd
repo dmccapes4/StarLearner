@@ -153,6 +153,83 @@ const CLIPS_ROUTING := [
 	},
 ]
 
+## Watering can + bed approach — shed pickup then tap beds (face + arrive + thirst VO).
+const CLIPS_WATER := [
+	{
+		"id": "water_bed3_from_shed",
+		"note": "USER: watering can from shed → nearest south bed (bed_3). Path-facing pane = NORTH for south-row beds.",
+		"setup": "thirsty_beds",
+		"tool": "water",
+		"from": "shed_door",
+		"to": "bed3_approach",
+		"interact": "bed",
+		"bed_id": "bed_3",
+		"expect_corridor": "path_or_west_aisle",
+		"expect_face": "north",
+		"max_detour_ratio": 2.2,
+		"expect_water": true,
+	},
+	{
+		"id": "water_bed0_from_shed",
+		"note": "USER BUG: from shed apron tap NW bed_0 — must stand on PATH/SOUTH lip, not walk around to north face.",
+		"setup": "thirsty_beds",
+		"tool": "water",
+		"from": "shed_door",
+		"to": "bed0_approach",
+		"interact": "bed",
+		"bed_id": "bed_0",
+		"expect_corridor": "path",
+		"expect_face": "south",
+		"max_detour_ratio": 2.2,
+		"expect_water": true,
+	},
+	{
+		"id": "water_bed1_from_south_path",
+		"note": "USER BUG: from path/south of bed_1 tap north-middle — south lip stand, not opposite north side.",
+		"setup": "thirsty_beds",
+		"tool": "water",
+		"from": "path_bed1",
+		"to": "bed1_approach",
+		"interact": "bed",
+		"bed_id": "bed_1",
+		"expect_corridor": "path",
+		"expect_face": "south",
+		"max_detour_ratio": 2.0,
+		"expect_water": true,
+	},
+	{
+		"id": "water_bed0_from_bed3",
+		"note": "From south of bed_3 (shed side) tap bed_0 — short path corridor / south face, not farm loop to north.",
+		"setup": "thirsty_beds",
+		"tool": "water",
+		"from": "south_bed3_by_shed",
+		"to": "bed0_approach",
+		"interact": "bed",
+		"bed_id": "bed_0",
+		"expect_corridor": "path_or_west_aisle",
+		"expect_face": "south",
+		"max_detour_ratio": 2.4,
+		"expect_water": true,
+	},
+	{
+		"id": "water_double_tap_bed3",
+		"note": "Water bed_3 then re-tap at t≈3.5s — must not replace success VO with soft 'not thirsty' (state/VO bug).",
+		"setup": "thirsty_beds",
+		"tool": "water",
+		"from": "path_bed3",
+		"to": "bed3_approach",
+		"interact": "bed",
+		"bed_id": "bed_3",
+		"retap_interact": "bed",
+		"retap_at_s": 3.5,
+		"expect_corridor": "path",
+		"expect_face": "north",
+		"max_detour_ratio": 2.5,
+		"expect_water": true,
+		"expect_no_false_not_thirsty_vo": true,
+	},
+]
+
 var _out_abs: String = ""
 var _manifest: Dictionary = {}
 var _checks: Array = []
@@ -180,7 +257,7 @@ func _run() -> void:
 	var ts_env := str(OS.get_environment("WALK_TARGET_S")).strip_edges()
 	if not ts_env.is_empty():
 		_target_s = maxf(4.0, float(ts_env))
-	elif _clip_set == "routing":
+	elif _clip_set == "routing" or _clip_set == "water":
 		_target_s = 10.0
 	else:
 		_target_s = TARGET_S_DEFAULT
@@ -233,7 +310,12 @@ func _run() -> void:
 	_dump_mechanics()
 	_write_nav_diagnostics()
 
-	var clips: Array = CLIPS_ROUTING if _clip_set == "routing" else CLIPS_DEFAULT
+	var clips: Array = CLIPS_DEFAULT
+	match _clip_set:
+		"routing":
+			clips = CLIPS_ROUTING
+		"water":
+			clips = CLIPS_WATER
 	print("clip_set=", _clip_set, " clips=", clips.size(), " target_s=", _target_s)
 	for clip in clips:
 		await _capture_clip(clip)
@@ -271,6 +353,7 @@ func _capture_clip(clip: Dictionary) -> void:
 
 	_reset_between_clips()
 	_apply_setup(str(clip.get("setup", "empty")))
+	_apply_tool(str(clip.get("tool", "")))
 	await _settle(6)
 
 	var start: Vector2 = _named_pos(str(clip["from"]))
@@ -282,7 +365,7 @@ func _capture_clip(clip: Dictionary) -> void:
 	if interact == "shed" and _farm.has_method("shed_approach_world"):
 		goal = _farm.shed_approach_world()
 	elif interact == "bed" and clip.has("bed_id") and _farm.has_method("bed_approach_world"):
-		goal = _farm.bed_approach_world(str(clip["bed_id"]), start, goal)
+		goal = _farm.bed_approach_world(str(clip["bed_id"]), start, _farm.bed_centers.get(str(clip["bed_id"]), goal))
 	_player.place_at(start)
 	await _settle(4)
 	_aim_cam()
@@ -290,10 +373,20 @@ func _capture_clip(clip: Dictionary) -> void:
 
 	var path: PackedVector2Array = _farm.find_path(start, goal)
 	var path_q: Dictionary = _path_quality(start, goal, path, clip)
+	var bed_id_r := str(clip.get("bed_id", ""))
+	var approach_face := ""
+	if not bed_id_r.is_empty() and _farm.bed_centers.has(bed_id_r):
+		var bc: Vector2 = _farm.bed_centers[bed_id_r]
+		approach_face = "south" if goal.y >= bc.y + 6.0 else ("north" if goal.y <= bc.y - 6.0 else "side")
+		path_q["approach_face"] = approach_face
+		path_q["expect_face"] = str(clip.get("expect_face", ""))
+		path_q["goal_vs_center_y"] = snappedf(goal.y - bc.y, 0.1)
 	var route := {
 		"id": cid,
 		"note": str(clip.get("note", "")),
 		"setup": str(clip.get("setup", "")),
+		"tool": str(clip.get("tool", "")),
+		"bed_id": bed_id_r,
 		"from": str(clip["from"]),
 		"to": str(clip["to"]),
 		"interact": interact,
@@ -301,6 +394,7 @@ func _capture_clip(clip: Dictionary) -> void:
 		"retap_at_s": float(clip.get("retap_at_s", -1.0)),
 		"start": {"x": snappedf(start.x, 0.1), "y": snappedf(start.y, 0.1)},
 		"goal": {"x": snappedf(goal.x, 0.1), "y": snappedf(goal.y, 0.1)},
+		"approach_face": approach_face,
 		"shed_door_world": {
 			"x": snappedf(_farm.shed_door_world.x, 0.1),
 			"y": snappedf(_farm.shed_door_world.y, 0.1),
@@ -313,21 +407,35 @@ func _capture_clip(clip: Dictionary) -> void:
 		"waypoints": _sample_waypoints(path, 24),
 		"expect": _expect_for_clip(cid, clip),
 		"mechanics_ref": "mechanics/README.md",
+		"code_review_ref": "mechanics/REVIEW_BED_APPROACH_AND_WATER.md",
 	}
 	FileAccess.open(clip_dir.path_join("route.json"), FileAccess.WRITE) \
 		.store_string(JSON.stringify(route, "\t"))
 	## Capture-time assert on insane detours (vision still reviews images).
+	## Skip ratio when crow is tiny — short hops inflate detour_ratio harmlessly.
 	var max_r := float(clip.get("max_detour_ratio", 0.0))
-	if max_r > 0.0:
+	var crow_r := float(path_q.get("crow_flies", 0.0))
+	if max_r > 0.0 and crow_r >= 40.0:
 		var ratio := float(path_q.get("detour_ratio", 0.0))
 		_check("%s_detour_ratio" % cid, ratio <= max_r,
 			"detour=%.2f max=%.2f path_len=%.1f crow=%.1f south_loop=%s" % [
 				ratio, max_r, float(path_q.get("path_len", 0.0)),
-				float(path_q.get("crow_flies", 0.0)),
-				str(path_q.get("looks_like_south_fence_loop", false))])
+				crow_r, str(path_q.get("looks_like_south_fence_loop", false))])
+	## Capture-time assert: chosen face matches expect (south for N-row, north for S-row path lip).
+	var expect_face := str(clip.get("expect_face", ""))
+	if expect_face == "south" or expect_face.begins_with("south"):
+		_check("%s_approach_face" % cid,
+			approach_face == "south" or approach_face == "side",
+			"approach_face=%s expect=%s goal_dy=%s" % [
+				approach_face, expect_face, str(path_q.get("goal_vs_center_y", "?"))])
+	elif expect_face == "north":
+		_check("%s_approach_face" % cid,
+			approach_face == "north" or approach_face == "side",
+			"approach_face=%s expect=%s goal_dy=%s" % [
+				approach_face, expect_face, str(path_q.get("goal_vs_center_y", "?"))])
 
 	## Start walk via production interact when requested (World → Events → Player).
-	_start_walk(interact, goal, start)
+	_start_walk(interact, goal, start, clip)
 	var retap_at := float(clip.get("retap_at_s", -1.0))
 	var retap_kind := str(clip.get("retap_interact", ""))
 	var did_retap := false
@@ -348,7 +456,7 @@ func _capture_clip(clip: Dictionary) -> void:
 		var movie_t: float = float(fi) / float(CAPTURE_FPS)
 		if not did_retap and retap_at >= 0.0 and movie_t >= retap_at and not retap_kind.is_empty():
 			did_retap = true
-			_start_walk(retap_kind, live_goal, _player.global_position)
+			_start_walk(retap_kind, live_goal, _player.global_position, clip)
 			live_path = _farm.find_path(_player.global_position, live_goal)
 			path_q = _path_quality(_player.global_position, live_goal, live_path, clip)
 			path_q["retap"] = true
@@ -385,10 +493,18 @@ func _capture_clip(clip: Dictionary) -> void:
 		tick_f.close()
 	_player.stop()
 
+	## End-of-clip water / thirst asserts.
+	if bool(clip.get("expect_water", false)) and not bed_id_r.is_empty():
+		var still_thirsty := _garden.is_bed_thirsty(bed_id_r)
+		_check("%s_water_cleared_thirst" % cid, not still_thirsty,
+			"bed=%s thirsty=%s (expect watered)" % [bed_id_r, still_thirsty])
+
 	var meta := {
 		"id": cid,
 		"note": str(clip.get("note", "")),
 		"setup": str(clip.get("setup", "")),
+		"tool": str(clip.get("tool", "")),
+		"bed_id": bed_id_r,
 		"clip_set": _clip_set,
 		"capture_fps": CAPTURE_FPS,
 		"target_s": _target_s,
@@ -398,6 +514,7 @@ func _capture_clip(clip: Dictionary) -> void:
 		"ticks_jsonl": "ticks.jsonl",
 		"route_json": "route.json",
 		"final_path_quality": path_q,
+		"final_thirsty": _garden.is_bed_thirsty(bed_id_r) if not bed_id_r.is_empty() else null,
 	}
 	FileAccess.open(clip_dir.path_join("meta.json"), FileAccess.WRITE) \
 		.store_string(JSON.stringify(meta, "\t"))
@@ -439,10 +556,25 @@ func _apply_setup(kind: String) -> void:
 			for bid in ["bed_3", "bed_4", "bed_5"]:
 				_garden.plant_bed(bid, "carrot" if bid != "bed_5" else "lettuce")
 				_force_stage(bid, GardenState.STAGE_GROWN)
+		"thirsty_beds":
+			## Fresh plant_bed starts thirsty=true — watering can targets.
+			for bid in ["bed_0", "bed_1", "bed_3"]:
+				_garden.plant_bed(bid, "carrot")
 		_:
 			pass
 	if _plant_layer:
 		_plant_layer.rebuild_all()
+
+func _apply_tool(tool_id: String) -> void:
+	if tool_id.is_empty() or _world == null:
+		return
+	## Mirror shed watering-can pickup so _shed_tool() == water.
+	if _world.shed_ui and _world.shed_ui.has_method("set_tool"):
+		_world.shed_ui.call("set_tool", tool_id)
+	elif _world.has_method("set_tool"):
+		_world.call("set_tool", tool_id)
+	if _world.get("tool_id") != null:
+		_world.tool_id = tool_id
 
 func _force_stage(bed_id: String, target: String) -> void:
 	if _garden == null or _seed_db == null:
@@ -471,10 +603,19 @@ func _force_stage(bed_id: String, target: String) -> void:
 			_garden.bed_changed.emit(bed_id)
 
 func _path_stand(x: float) -> Vector2:
-	## Dirt strip slightly south of the path tile — keeps goals off bed diamonds.
+	## Dirt strip on the path tile — keep stands on the corridor, not kicked onto
+	## a bed's south lip by nearest_walkable.
 	var path_y := IsoUtil.tile_to_world(
 		Vector2(0.0, float(_farm.data.get("path", {}).get("tile_y", 3.0)))).y
-	return _farm.nearest_walkable(Vector2(x, path_y + 10.0))
+	var ideal := Vector2(x, path_y + 6.0)
+	var w := _farm.nearest_walkable(ideal)
+	if absf(w.y - path_y) <= 28.0:
+		return w
+	for dy in [0.0, -8.0, 8.0, -16.0, 16.0, -24.0, 24.0]:
+		var p := _farm.nearest_walkable(Vector2(x, path_y + dy))
+		if absf(p.y - path_y) <= 28.0:
+			return p
+	return w
 
 func _named_pos(key: String) -> Vector2:
 	match key:
@@ -484,6 +625,8 @@ func _named_pos(key: String) -> Vector2:
 			return _path_stand(_farm.bed_centers["bed_1"].x)
 		"path_bed2":
 			return _path_stand(_farm.bed_centers["bed_2"].x)
+		"path_bed3":
+			return _path_stand(_farm.bed_centers["bed_3"].x)
 		## Longer path endpoints so ~7s clips stay in motion.
 		"path_west":
 			return _path_stand(_farm.bed_centers["bed_0"].x - 90.0)
@@ -512,6 +655,16 @@ func _named_pos(key: String) -> Vector2:
 				return _farm.bed_approach_world(
 					"bed_3", _farm.shed_door_world, _farm.bed_centers["bed_3"])
 			return _farm.nearest_walkable(_farm.bed_centers["bed_3"] + Vector2(0, 40))
+		"bed0_approach":
+			if _farm.has_method("bed_approach_world"):
+				return _farm.bed_approach_world(
+					"bed_0", _farm.shed_door_world, _farm.bed_centers["bed_0"])
+			return _farm.nearest_walkable(_farm.bed_centers["bed_0"] + Vector2(0, 40))
+		"bed1_approach":
+			if _farm.has_method("bed_approach_world"):
+				return _farm.bed_approach_world(
+					"bed_1", _path_stand(_farm.bed_centers["bed_1"].x), _farm.bed_centers["bed_1"])
+			return _farm.nearest_walkable(_farm.bed_centers["bed_1"] + Vector2(0, 40))
 		"gate_out":
 			return _farm.gate_world + Vector2(-90, 24)
 		"pen_in":
@@ -577,16 +730,27 @@ func _expect_for_clip(cid: String, clip: Dictionary = {}) -> Dictionary:
 		"aisle_bed0_to_bed3", "bed3_approach_from_shed":
 			base["ux"] = ["short aisle / path corridor", "no farm-scale loop"]
 			return base
+		"water_bed3_from_shed", "water_bed0_from_shed", "water_bed1_from_south_path", \
+		"water_bed0_from_bed3", "water_double_tap_bed3":
+			base["expect_face"] = str(clip.get("expect_face", "south"))
+			base["expect_water"] = bool(clip.get("expect_water", true))
+			base["ux"] = [
+				"stand on PATH/SOUTH lip of north beds (not north face)",
+				"short corridor — no farm loop",
+				"water applies on arrive when thirsty; success VO not replaced by not-thirsty",
+			]
+			return base
 		_:
 			return base if not base["expect_corridor"].is_empty() else {}
 
-func _start_walk(interact: String, goal: Vector2, from_pos: Vector2) -> void:
+func _start_walk(interact: String, goal: Vector2, from_pos: Vector2, clip: Dictionary = {}) -> void:
 	if interact == "shed" and _world != null and _world.has_method("_queue_interact"):
 		## Same code path as tapping the shed sprite.
 		_world.call("_queue_interact", "shed", "shed", _farm.shed_center)
 		return
 	if interact == "bed" and _world != null and _world.has_method("_queue_interact"):
-		_world.call("_queue_interact", "bed", "bed_3", _farm.bed_centers.get("bed_3", goal))
+		var bed_id := str(clip.get("bed_id", "bed_3"))
+		_world.call("_queue_interact", "bed", bed_id, _farm.bed_centers.get(bed_id, goal))
 		return
 	if _ev:
 		_ev.player_path_requested.emit(goal)
@@ -675,6 +839,10 @@ func _dump_mechanics() -> void:
 		"res://scripts/world/World.gd",
 		"res://scripts/world/PenGate.gd",
 		"res://scripts/world/RoamingAnimal.gd",
+		"res://scripts/sim/GardenState.gd",
+		"res://scripts/audio/Narrator.gd",
+		"res://scripts/audio/Speak.gd",
+		"res://scripts/ui/ShedUI.gd",
 		"res://scripts/render/IsoUtil.gd",
 		"res://tools/walk_video_suite.gd",
 		"res://data/map.json",
@@ -692,6 +860,19 @@ func _dump_mechanics() -> void:
 			f.store_string(body)
 			f.close()
 			index.append({"res": res_path, "file": base, "bytes": body.length()})
+	## Code review for Grok Vision (bed approach + water state bugs).
+	var game_dir := ProjectSettings.globalize_path("res://").rstrip("/")
+	var review_src := game_dir.get_base_dir().path_join("docs/REVIEW_BED_APPROACH_AND_WATER.md")
+	if FileAccess.file_exists(review_src):
+		var rev := FileAccess.get_file_as_string(review_src)
+		if not rev.is_empty():
+			FileAccess.open(mech.path_join("REVIEW_BED_APPROACH_AND_WATER.md"), FileAccess.WRITE) \
+				.store_string(rev)
+			index.append({
+				"res": "docs/REVIEW_BED_APPROACH_AND_WATER.md",
+				"file": "REVIEW_BED_APPROACH_AND_WATER.md",
+				"bytes": rev.length(),
+			})
 	var readme := PackedStringArray([
 		"# Walk / tap mechanics dump",
 		"",
@@ -702,6 +883,9 @@ func _dump_mechanics() -> void:
 		"3. `FarmMap.find_path` / `_rebuild_nav` / `_nav_point_blocked` / solids",
 		"4. `Player._process` soft collision + waypoint follow",
 		"5. `FarmMap.player_depth_y` + `IsoUtil.apply_depth` each frame",
+		"6. Bed water: `FarmMap.bed_approach_world` → arrive → `_apply_bed_tool` / `_do_water_bed`",
+		"",
+		"Read `REVIEW_BED_APPROACH_AND_WATER.md` first for known spaghetti / face / VO bugs.",
 		"",
 		"Suspect bandaids for south-fence loops: `BED_SOLID_PAD`, `_nav_point_blocked`",
 		"bed samples, diagonal mid-point reject, `shed_approach_world` / `_near_bed_footprint`.",
@@ -1119,6 +1303,63 @@ func _direct_checks(snap: Dictionary, cid: String, clip: Dictionary = {}) -> Arr
 			"ask": "Is the player clearly visible crossing the gate (not buried under a post)?",
 			"state_dist_gate": snap.get("anchors", {}).get("dist_gate"),
 		})
+	## Water / bed approach contracts (clip_set=water).
+	if _clip_set == "water" or cid.begins_with("water_"):
+		var bid := str(clip.get("bed_id", ""))
+		var expect_face := str(clip.get("expect_face", "south"))
+		var goal_y := float(nav.get("goal", {}).get("y", 0.0))
+		var center_y := 0.0
+		for b in snap.get("beds", []):
+			if str(b.get("id", "")) == bid:
+				center_y = float(b.get("sort_y", b.get("y", 0.0)))
+				## Prefer bed center y from anchors/beds if present.
+				if b.has("center_y"):
+					center_y = float(b.get("center_y"))
+				out.append({
+					"id": "thirst_%s" % bid,
+					"ask": "Is the bed thirsty (droplet/icon) matching state.thirsty?",
+					"state_thirsty": b.get("thirsty"),
+					"state_empty": b.get("empty"),
+				})
+				break
+		if _farm and _farm.bed_centers.has(bid):
+			center_y = (_farm.bed_centers[bid] as Vector2).y
+		out.append({
+			"id": "approach_face",
+			"ask": (
+				"Does the gardener stand on the PATH/SOUTH lip of the bed "
+				+ "(south of bed center), not the far north side?"
+			),
+			"state_expect_face": expect_face,
+			"state_approach_face": pq.get("approach_face"),
+			"state_goal_y": goal_y,
+			"state_center_y": center_y,
+			"state_player_y": snap.get("player", {}).get("y"),
+			"state_arrived": nav.get("arrived"),
+			"note": (
+				"FAIL as blocker if arrived standing north of a north-row bed when "
+				+ "expect_face is south / south_or_west."
+			),
+		})
+		out.append({
+			"id": "water_applied",
+			"ask": (
+				"If arrived with water tool and bed was thirsty: did watering apply "
+				+ "(thirst cleared / water UX)? No silent fail."
+			),
+			"state_expect_water": bool(clip.get("expect_water", false)),
+			"state_tool": str(clip.get("tool", "")),
+			"state_arrived": nav.get("arrived"),
+		})
+		if bool(clip.get("expect_no_false_not_thirsty_vo", false)):
+			out.append({
+				"id": "no_false_not_thirsty_vo",
+				"ask": (
+					"After a successful water, does UX wrongly frame the bed as "
+					+ "'not thirsty' as the primary tip (double-tap VO bug)?"
+				),
+				"state_expect": "success water VO wins; soft not-thirsty must not replace it",
+			})
 	return out
 
 func _aim_cam() -> void:
@@ -1166,6 +1407,8 @@ func _finish_fail(msg: String) -> void:
 func _agent_brief() -> String:
 	return ("Walk video QA (clip_set=%s). Each clip: frames/ + state.jsonl + ticks.jsonl "
 		+ "+ route.json (path_quality, waypoints). Stamp also has mechanics/ (full "
-		+ "FarmMap/Player/World/IsoUtil/walk suite sources) and nav_diagnostics.json. "
-		+ "Routing set stresses shed taps from bed_3 — FAIL long east+south fence loops. "
+		+ "FarmMap/Player/World/GardenState/Narrator/Speak/ShedUI + "
+		+ "REVIEW_BED_APPROACH_AND_WATER.md) and nav_diagnostics.json. "
+		+ "Routing set: shed taps from bed_3 — FAIL east+south fence loops. "
+		+ "Water set: watering-can → bed approach face + thirst/VO. "
 		+ "Review: qa/review_walk_videos.py.") % _clip_set
