@@ -1,10 +1,10 @@
 # Research: Moto G Play (2024) sensors × six-year-old Free Flight motion
 
-**Purpose.** Ground Free Flight accel / decel tuning (gear jerks, Cruise & Stop, joystick latch) in what the Ant Phone hardware can sense and what a ~6-year-old can reliably produce.
+**Purpose.** Ground Free Flight speed tuning (gear jerks via lift/lower, Cruise & Stop) in what the Ant Phone hardware can sense and what a ~6-year-old can reliably produce.
 
 **Device under test.** Motorola Moto G Play (2024) — package target for Solar System Explorer playtests.
 
-**Related code.** `game/scripts/PlaygroundScene.gd` (tilt, surge, joy latch); QA: `qa/run_flight_mechanics_suite.sh`.
+**Related code.** `game/scripts/PlaygroundScene.gd` (tilt + lift/lower gear jerks); QA: `qa/run_flight_mechanics_suite.sh`.
 
 ---
 
@@ -31,7 +31,7 @@ Source: [Motorola Moto G Play (2024) — GSMArena](https://www.gsmarena.com/moto
 
 | Sensor | Present? | How Free Flight uses it |
 |--------|----------|-------------------------|
-| Accelerometer | Yes | Gravity / tilt steering; linear surge for pull/push jerks and joy latch |
+| Accelerometer | Yes | Gravity / tilt steering; linear residual along up for lift/lower gear jerks |
 | Gyroscope | **Not on official list** | Do **not** depend on `Input.get_gyroscope()` for production feel |
 | Magnetometer (e-compass) | Yes | Not used for flight |
 | Barometer | Yes | Not used for flight |
@@ -72,12 +72,12 @@ phone accel (m/s², includes g)
         │      TILT_DEAD_RAD ≈ 0.035 rad (~2°)
         │      TILT_FULL_RAD ≈ 0.30 rad (~17°)
         │
-        └─► residual along surge axis  →  jerk / joy latch
-               quiet eps ≈ 0.18 (normalized surge units in game space)
-               engage / backoff thresholds calibrated per child
+        └─► residual along **up** (−ĝ)  →  lift/lower gear jerks
+               (not raw device Y — landscape grip breaks that)
+               tutorial verifies the motion; thresholds from capture peaks
 ```
 
-Important physics fact for kids (and adults): **holding the phone at a fixed offset is not a sustained accelerometer “position.”** Once the shove stops, linear accel returns toward zero (plus gravity). That is why soft-hold throttle failed and why joystick mode **latches** a fixed accel/decel rate on onset, then clears only on a deliberate opposite return — not on quiet alone.
+Important physics fact for kids (and adults): **holding the phone at a fixed height is not a sustained accelerometer “position.”** Once the lift/lower stops, linear accel returns toward zero (plus gravity). Soft-hold throttle and constant-accel “joystick” modes failed playtest; Free Flight uses **discrete gear jerks** with a **2 s** cooldown after each shift. Lift/lower is preferred over push/pull because depth (Z) jerks couple into pitch tip on a landscape steering grip.
 
 Constants of record (see suite asserts):
 
@@ -85,9 +85,7 @@ Constants of record (see suite asserts):
 |------|-------|--------------------|
 | `TILT_FULL_RAD` | 0.30 rad | Full turn / pitch at ~17° — reachable without extreme wrist bend |
 | `TILT_DEAD_RAD` | 0.035 rad | Hand tremor / resting wobble ignored |
-| `JOY_RATE` | 12 u/s | Continuous speed ramp while latched |
-| `JOY_BACKOFF_MIN` | 0.70 | Opposite spike must be strong — hold noise must not cancel |
-| `JOY_SETTLE_IGN_S` | 0.65 s | Ignore “return” right after engage (onset settle) |
+| `SURGE_JERK_CD_S` | 2.0 s | Cool-off after a gear change (no double-fire) |
 | `SURGE_JERK_*` | cal-derived | Gear / cruise jerks need a clear peak, then rest |
 
 ---
@@ -115,18 +113,18 @@ Source: [Wrist-worn accelerometry in children and adolescents (Frontiers in Pedi
 **Implication**
 
 - Do not set engage thresholds near adult “hard flick” peaks.
-- Expect **noisier polarity** (tremor while “holding still”) → high backoff floor (`JOY_BACKOFF_MIN = 0.70`) and required opposite return during cal.
-- Expect weaker / shorter jerks than an adult tester → cal clamps (`SURGE_ARM_MIN` / `SURGE_JERK_MIN`) matter more than fixed defaults.
+- Expect weaker / shorter jerks than an adult tester → gear/cruise cal clamps (`SURGE_ARM_MIN` / `SURGE_JERK_MIN`) matter.
+- Prefer **lift/lower** (residual along −ĝ) over push/pull (Z) — depth jerks couple into pitch tip on landscape grip.
 
 ### Practical kid-gesture model (for this game)
 
 | Gesture | What the sensor sees | What the game should do |
 |---------|----------------------|-------------------------|
-| Rest / hold still | Near-gravity; surge ≈ 0 after baseline | Stay latched (joy) or wait for recenter (gears) |
-| Quick pull | Short +surge spike, then settle | +1 gear / cruise / ACCEL latch |
-| Quick push | Short −surge spike, then settle | −1 gear / stop / DECEL latch |
+| Rest / hold still | Near-gravity; surge ≈ 0 after baseline | Wait for next jerk (2s CD after last gear) |
+| Quick lift | Short +up residual spike, then settle | +1 gear / cruise |
+| Quick lower | Short −up residual spike, then settle | −1 gear / stop |
 | Hold after shove | Spike gone; quiet | **Must not** reverse command |
-| Deliberate return | Opposite spike ≥ backoff thr | Clear latch → READY |
+| Tip climb/dive | Gravity angles change | Steer; suppress weak lift while tip is large |
 | Gentle tilt ~10–17° | Stable gravity rotation | Steer; deadzone eats fidget |
 
 ---
@@ -134,11 +132,12 @@ Source: [Wrist-worn accelerometry in children and adolescents (Frontiers in Pedi
 ## 5. Recommendations locked into production + QA
 
 1. **No gyro dependency** for Free Flight on Moto G Play 2024.
-2. **Onset + return-to-rest** is the kid-correct control language for throttle.
-3. **Quiet alone never clears** a joy latch (asserted in `flight_mechanics` suite).
-4. **Backoff threshold floor 0.70** so hold tremor cannot cancel ACCEL/DECEL.
+2. **Discrete gear jerks** (lift/lower), not continuous accel — asserted in `flight_mechanics` suite.
+3. **2 s cooldown** after each gear change (`SURGE_JERK_CD_S`).
+4. **Project surge onto −ĝ** so landscape grip still reads vertical lift.
 5. **Tilt full ~17°** stays the steering budget; do not raise without playtest — larger angles fight small hands and landscape grip.
 6. **Device verification (optional, next playtest):** on the Ant Phone, capture one `dumpsys sensorservice` (or a Sensor Box screenshot) for accel `maxRange` / `resolution` / vendor string and paste into an appendix here.
+   Also add Android linear-acceleration note: [Motion sensors | Android Developers](https://developer.android.com/develop/sensors-and-location/sensors/sensors_motion).
 
 ---
 

@@ -1,27 +1,24 @@
 class_name SpeedModeChooser
 extends Control
-## Free Flight start: gears, cruise/stop, or experimental joystick distance.
+## Free Flight start: gears or cruise/stop (lift / lower phone).
 
 signal gears_pressed()
 signal cruise_stop_pressed()
-signal joystick_pressed()
 
-const LINE_GEARS := "Speed Control has five gears — a quick pull goes one gear faster, a quick push one gear slower."
-const LINE_CRUISE := "Cruise and Stop keeps it simple — a quick pull to cruise, a quick push to stop."
-const LINE_JOY := "Joystick test: hold still, push and hold, back to rest, pull and hold, back to rest."
-const NARRATION := LINE_GEARS + " " + LINE_CRUISE + " " + LINE_JOY
+const LINE_GEARS := ("Speed Control has five gears — lift the phone to go one gear "
+	+ "faster, lower it to go one gear slower.")
+const LINE_CRUISE := ("Cruise and Stop keeps it simple — lift the phone to cruise, "
+	+ "lower it to stop.")
+const NARRATION := LINE_GEARS + " " + LINE_CRUISE
 
 const GEARS_TEX := "res://images/tile_speed_gears.png"
 const CRUISE_TEX := "res://images/tile_cruise_stop.png"
-const JOY_TEX := "res://images/tile_free_flight.png"
 const GOLD := Color(1.0, 0.86, 0.28, 1.0)
 
 var _gears_btn: Button
 var _cruise_btn: Button
-var _joy_btn: Button
 var _gears_tint: Color = Color(0.12, 0.38, 0.48)
 var _cruise_tint: Color = Color(0.42, 0.22, 0.14)
-var _joy_tint: Color = Color(0.22, 0.36, 0.18)
 var _narr_gen: int = 0
 
 func _ready() -> void:
@@ -41,7 +38,7 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_theme_constant_override("separation", 12)
-	box.custom_minimum_size = Vector2(1180, 540)
+	box.custom_minimum_size = Vector2(900, 540)
 	center_wrap.add_child(box)
 
 	var title := Label.new()
@@ -53,12 +50,12 @@ func _ready() -> void:
 
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 22)
+	row.add_theme_constant_override("separation", 28)
 	box.add_child(row)
 
 	var gears_col := _make_tile(
 		"Speed Control",
-		"Five gears — jerk ±1",
+		"Five gears — lift / lower",
 		GEARS_TEX,
 		_gears_tint,
 		func() -> void:
@@ -70,7 +67,7 @@ func _ready() -> void:
 
 	var cruise_col := _make_tile(
 		"Cruise & Stop",
-		"Jerk pull cruise / push stop",
+		"Lift cruise / lower stop",
 		CRUISE_TEX,
 		_cruise_tint,
 		func() -> void:
@@ -79,18 +76,6 @@ func _ready() -> void:
 			cruise_stop_pressed.emit())
 	_cruise_btn = cruise_col.get_node("TileButton") as Button
 	row.add_child(cruise_col)
-
-	var joy_col := _make_tile(
-		"Joystick (test)",
-		"Distance from rest → accel",
-		JOY_TEX,
-		_joy_tint,
-		func() -> void:
-			_narr_gen += 1
-			Narrator.stop()
-			joystick_pressed.emit())
-	_joy_btn = joy_col.get_node("TileButton") as Button
-	row.add_child(joy_col)
 
 func set_active(on: bool) -> void:
 	visible = on
@@ -102,7 +87,6 @@ func set_active(on: bool) -> void:
 		Narrator.stop()
 		_set_outline(_gears_btn, _gears_tint, false)
 		_set_outline(_cruise_btn, _cruise_tint, false)
-		_set_outline(_joy_btn, _joy_tint, false)
 
 func _narrate(gen: int) -> void:
 	await get_tree().create_timer(0.25).timeout
@@ -110,7 +94,6 @@ func _narrate(gen: int) -> void:
 		return
 	_set_outline(_gears_btn, _gears_tint, true)
 	_set_outline(_cruise_btn, _cruise_tint, false)
-	_set_outline(_joy_btn, _joy_tint, false)
 	Narrator.speak(LINE_GEARS)
 	await _await_vo(gen)
 	if gen != _narr_gen or not visible:
@@ -121,16 +104,10 @@ func _narrate(gen: int) -> void:
 	await _await_vo(gen)
 	if gen != _narr_gen or not visible:
 		return
-	_set_outline(_cruise_btn, _cruise_tint, false)
-	_set_outline(_joy_btn, _joy_tint, true)
-	Narrator.speak(LINE_JOY)
-	await _await_vo(gen)
-	if gen != _narr_gen or not visible:
-		return
 	await get_tree().create_timer(0.35).timeout
 	if gen != _narr_gen:
 		return
-	_set_outline(_joy_btn, _joy_tint, false)
+	_set_outline(_cruise_btn, _cruise_tint, false)
 
 func _await_vo(gen: int) -> void:
 	await get_tree().process_frame
