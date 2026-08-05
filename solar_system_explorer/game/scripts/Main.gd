@@ -26,6 +26,7 @@ const PlaygroundScene := preload("res://scripts/PlaygroundScene.gd")
 const FlightChooser := preload("res://scripts/FlightChooser.gd")
 const CourseModeChooser := preload("res://scripts/CourseModeChooser.gd")
 const PropulsionChooser := preload("res://scripts/PropulsionChooser.gd")
+const BriefingSlideshow := preload("res://scripts/BriefingSlideshow.gd")
 const NavModes := preload("res://scripts/NavModes.gd")
 
 var _title: TitleView
@@ -39,6 +40,7 @@ var _fly: FlyScene
 var _playground: PlaygroundScene
 var _video: VideoPanel
 var _astro: AstronautIntro
+var _briefing: BriefingSlideshow
 var _ship_at: String = "earth"
 var _pending_dest: String = ""
 var _last_route: Dictionary = {}
@@ -59,6 +61,7 @@ func _ready() -> void:
 	_playground = PlaygroundScene.new()
 	_video = VideoPanel.new()
 	_astro = AstronautIntro.new()
+	_briefing = BriefingSlideshow.new()
 	add_child(_title)
 	add_child(_chooser)
 	add_child(_course_mode)
@@ -70,6 +73,7 @@ func _ready() -> void:
 	add_child(_playground)
 	add_child(_video)
 	add_child(_astro)
+	add_child(_briefing)
 
 	_title.flight_pressed.connect(_on_flight)
 	_title.explainer_pressed.connect(_on_explainer)
@@ -191,6 +195,7 @@ func _on_propulsion_picked(propulsion_id: String) -> void:
 	_start_plot(AstrogatorPanel.PACE_ASTROGATOR, propulsion_id)
 
 ## Engine science + window + fuel weight + gravity-assist honesty, before chart.
+## Stills + light motion play in sync with each narration beat.
 func _speak_rocket_briefing(propulsion_id: String) -> void:
 	var cfg := SolarFlyerConfig.load_default()
 	var origin := SolarData.flyer_body_by_id(_ship_at, cfg)
@@ -199,20 +204,11 @@ func _speak_rocket_briefing(propulsion_id: String) -> void:
 		return
 	var phase := AstrogatorPanel.phase_now_rad(origin, dest, 0.0)
 	var budget: Dictionary = RealismBudget.hop_budget(origin, dest, phase)
-	var text := AstrogatorPanel.mission_briefing(
+	var parts: Array = AstrogatorPanel.mission_briefing_parts(
 		origin, dest, budget, propulsion_id, cfg)
-	var dur := Narrator.speak(text)
-	var t := 0.0
-	var target: float = maxf(dur, 4.0)
-	while t < target:
-		if Narrator.is_playing():
-			while Narrator.is_playing() and t < 45.0:
-				await get_tree().create_timer(0.05).timeout
-				t += 0.05
-			await get_tree().create_timer(0.4).timeout
-			return
-		await get_tree().create_timer(0.05).timeout
-		t += 0.05
+	if parts.is_empty():
+		return
+	await _briefing.play(parts)
 
 func _start_plot(pace_mode: String, propulsion_id: String) -> void:
 	if _pending_dest.is_empty():

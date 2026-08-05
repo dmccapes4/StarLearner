@@ -52,7 +52,12 @@ const SIM_DEST_DISC_MIN_PX := 0.55  ## destination becomes a disc sooner (loom)
 const SIM_DOT_PX := 2.6         ## screen size of a sub-threshold dest/star speck
 ## Charted peer flybys (Jupiter on Earth→Saturn): chunky pixel AR pin — corners
 ## and all — never a tiny speck and never a fake 3D planet disc.
-const SIM_MARKER_PX := 28.0
+## Keep modest: a huge pin dead-ahead still reads as a "loom".
+const SIM_MARKER_PX := 22.0
+## Only show charted flyby pins when well off the nose (abeam / canopy edge).
+## Nose-on pins felt like the planet floating in front of the ship.
+const ENCOUNTER_MARKER_BEARING_MIN_DEG := 32.0
+const ENCOUNTER_MARKER_BEARING_MAX_DEG := 98.0
 const SIM_MIN_ALPHA := 0.03     ## below this flux-alpha nothing is rendered
 ## Close flybys may be charted, but peer discs stay pure-AU sized — never a
 ## playground loom. Cap is a safety rail only (true AU size is almost always tiny).
@@ -75,10 +80,15 @@ const LINE_LAUNCH := "Engines on — hold tight, we're speeding up!"
 const LINE_CRUISE := "Cruising speed!"
 const LINE_BRAKE := "Getting close — time to start slowing down!"
 const LINE_COAST_BOOST := "We're coasting for real months now. Tap the glowing BOOST button if you want to skip ahead on the calendar!"
+const LINE_COAST_BOOST_YEARS := "We're coasting for real years now — calendar skip starting so we don't wait forever!"
 const LINE_COAST_SKIP := "Calendar skip — jumping ahead through the coast!"
-## Astrogator coast wipe (only after kid taps BOOST): compress real months
-## into a few wall seconds while burn/brake stay cinematic.
+## Astrogator coast wipe: compress real months/years into a few wall seconds
+## while burn/brake stay cinematic. Long coasts auto-start the skip.
 const ASTRO_COAST_WALL_S := 2.8
+const ASTRO_COAST_WALL_MAX_S := 7.0
+## Coasts longer than this auto calendar-skip after a short beat (Saturn→Neptune ~44 yr).
+const COAST_AUTO_SKIP_DAYS := 365.0
+const COAST_AUTO_SKIP_DELAY_S := 1.35
 const BOOST_GOLD_S := 5.0
 
 ## Which nav rendering runs (NavModes.MODE_MARKERS / MODE_SIM_VIEW) — set by
@@ -137,10 +147,11 @@ var _pace_mode: String = AstrogatorPanel.PACE_KID
 var _propulsion_id: String = AstrogatorPanel.PROP_CHEMICAL
 var _realism: Dictionary = {}
 var _astro_coast: bool = false          ## Rocket Science trip (skip available)
-var _coast_skip_active: bool = false    ## Kid opted in via BOOST
+var _coast_skip_active: bool = false    ## Kid opted in via BOOST (or auto long-coast)
 var _coast_path_u0: float = 0.0
 var _coast_path_u1: float = 1.0
 var _coast_days_total: float = 0.0
+var _coast_auto_t: float = -1.0         ## countdown to auto-skip; <0 = off
 var _astro_launch_said: bool = false
 
 func _ready() -> void:
@@ -200,6 +211,7 @@ func begin_flight(dest_id: String, route: Dictionary, t0: float) -> void:
 	_astro_coast = (_pace_mode == AstrogatorPanel.PACE_ASTROGATOR) \
 		and bool(_realism.get("ok", false))
 	_coast_skip_active = false
+	_coast_auto_t = -1.0
 	_coast_days_total = float(_realism.get("coast_days", 0.0))
 	_astro_launch_said = false
 	# The navigation simulation already ran at plot time — load its timeline.
@@ -307,11 +319,17 @@ func _process(delta: float) -> void:
 
 	# Path-uniform playback of the sim (no live re-derivation). Pacing is
 	# wall-time bounded (OrbitMath.flight_play_rate) so Uranus never drags.
-	# Rocket Science: coast calendar skip only after the kid taps BOOST.
+	# Rocket Science: coast calendar skip after BOOST (or auto on long coasts).
+	if _coast_auto_t >= 0.0 and not _coast_skip_active \
+			and _burn_phase == OrbitMath.PHASE_COAST:
+		_coast_auto_t += delta
+		if _coast_auto_t >= COAST_AUTO_SKIP_DELAY_S:
+			_start_coast_skip()
 	var rate: float = OrbitMath.flight_play_rate(_play_u, _duration)
 	if is_astrogator_coast_active():
 		var span: float = maxf(_coast_path_u1 - _coast_path_u0, 0.05)
-		rate = maxf(rate, span * _duration / ASTRO_COAST_WALL_S)
+		var coast_wall: float = _coast_wall_seconds()
+		rate = maxf(rate, span * _duration / coast_wall)
 	_play_u = minf(1.0, _play_u + delta * rate / _duration)
 	_progress_u = _play_u
 	_place_ship_at_path(_play_u)
@@ -453,12 +471,40 @@ func _dir_in_canopy_fov(dir: Vector3) -> bool:
 
 ## Wider cone for charted AR pins so a high-angle right-side pass (Jupiter
 ## ~60–90° on Earth→Saturn) stays labeled until it truly goes aft.
+## Nose-on pins are suppressed separately (ENCOUNTER_MARKER_BEARING_MIN_DEG).
 func _dir_in_charted_marker_fov(dir: Vector3) -> bool:
 	if _cam == null or dir.length() < 0.001:
 		return false
 	var fwd: Vector3 = -_cam.global_transform.basis.z
 	var bearing: float = rad_to_deg(acos(clampf(fwd.dot(dir.normalized()), -1.0, 1.0)))
-	return bearing <= 95.0  # keep abeam pins; drop once clearly aft
+	return bearing >= ENCOUNTER_MARKER_BEARING_MIN_DEG \
+		and bearing <= ENCOUNTER_MARKER_BEARING_MAX_DEG
+
+## Charted flyby pin: near the charted pass, abeam (not nose, not aft).
+## Spotlight keeps departure/arrival from lighting a false early pin.
+func _charted_marker_visible(body_id: String, dir: Vector3) -> bool:
+	if _orbiting or not _flying:
+		return false
+	if not _is_charted_encounter(body_id):
+		return false
+	if _spot_weight(body_id) <= 0.0:
+		return false
+	return _dir_in_charted_marker_fov(dir)
+
+func _coast_wall_seconds() -> float:
+	# Outer multi-year coasts get a slightly longer wipe so the calendar reads.
+	var coast_yr: float = maxf(_coast_days_total, 1.0) / 365.25
+	return clampf(ASTRO_COAST_WALL_S + coast_yr * 0.06,
+		ASTRO_COAST_WALL_S, ASTRO_COAST_WALL_MAX_S)
+
+func _start_coast_skip() -> void:
+	if _coast_skip_active or not _astro_coast:
+		return
+	_coast_skip_active = true
+	_coast_auto_t = -1.0
+	_hud.clear_boost_gold()
+	Narrator.speak(LINE_COAST_SKIP)
+	_update_astro_calendar()
 
 func _apply_phase_event(phase: int) -> void:
 	if phase == _burn_phase:
@@ -469,13 +515,22 @@ func _apply_phase_event(phase: int) -> void:
 		OrbitMath.PHASE_COAST:
 			if _astro_coast:
 				_coast_skip_active = false
+				_coast_auto_t = -1.0
 				_hud.hide_calendar()
-				_hud.pulse_boost_gold(BOOST_GOLD_S)
-				Narrator.speak(LINE_COAST_BOOST)
+				# Multi-year coasts (Saturn→Neptune ~44 yr): auto calendar-skip
+				# after a short beat — BOOST invite alone felt like a stuck wait.
+				if _coast_days_total >= COAST_AUTO_SKIP_DAYS:
+					_hud.pulse_boost_gold(COAST_AUTO_SKIP_DELAY_S + 0.4)
+					Narrator.speak(LINE_COAST_BOOST_YEARS)
+					_coast_auto_t = 0.0
+				else:
+					_hud.pulse_boost_gold(BOOST_GOLD_S)
+					Narrator.speak(LINE_COAST_BOOST)
 			else:
 				Narrator.speak(LINE_CRUISE)
 		OrbitMath.PHASE_BRAKE:
 			_coast_skip_active = false
+			_coast_auto_t = -1.0
 			_hud.clear_boost_gold()
 			_hud.hide_calendar()
 			Narrator.speak(LINE_BRAKE)
@@ -495,6 +550,10 @@ func _update_astro_calendar() -> void:
 	_hud.show_calendar(AstrogatorPanel.calendar_label(days, _coast_days_total))
 
 func _spin_bodies(delta: float) -> void:
+	# Freeze axial spin during calendar coast wipe — years racing on the HUD
+	# with planets whirling reads as "broken time," not science.
+	if is_astrogator_coast_active():
+		return
 	for id in _body_nodes:
 		var info: Dictionary = _body_nodes[id]
 		var sph: Node3D = info["sphere"]
@@ -867,7 +926,10 @@ func _update_markers() -> void:
 		# Origin never mesh-looms: park departure sits ~1×hero and would look
 		# like a bounce off the launch world (meshes are not course truth).
 		var is_origin: bool = (not _origin_id.is_empty()) and id == _origin_id
-		var allow_mesh: bool = _flying and not is_origin and (
+		# Charted peers never mesh-loom in MARKERS either — a 1.5×hero sphere
+		# next to the ship reads as a collision bounce (meshes ≠ course truth).
+		var charted_peer: bool = (not is_dest) and _is_charted_encounter(id)
+		var allow_mesh: bool = _flying and not is_origin and not charted_peer and (
 			is_dest or not bool(info["data"].get("is_star", false)))
 		var flyby: float = 0.0
 		if allow_mesh:
@@ -914,18 +976,29 @@ func _update_sim_view() -> void:
 		var is_dest: bool = id == _dest_id
 		var charted_peer: bool = (not is_dest and not is_star
 			and _is_charted_encounter(id))
-		# Dest/star/peers: tight canopy oval. Charted AR pins: wider cone so a
-		# high-angle right-side pass stays labeled (not culled at ~58°).
-		var on_glass: bool = is_dest or is_star or _dir_in_canopy_fov(dir) \
-			or (charted_peer and _dir_in_charted_marker_fov(dir))
+		# Charted flybys (Jupiter on Earth→Saturn): pin ONLY when abeam /
+		# canopy-edge. Do NOT use the general canopy FOV — that lets a nose-on
+		# bearing (~4°) draw a dead-ahead pin that then slides aft ("bounce").
+		# True geometry may sweep through the nose; presentation stays off
+		# glass until the pass is already at the rim (partial / high-angle).
+		if charted_peer:
+			if not _charted_marker_visible(id, dir):
+				icon.visible = false
+				mesh.visible = false
+				continue
+			root.position = cam_pos + dir * SIM_SHELL_R
+			icon.visible = true
+			mesh.visible = false
+			icon.modulate = Color(1, 1, 1, 0.95)
+			icon.pixel_size = (SIM_MARKER_PX * SIM_SHELL_R / px_per_rad) \
+				/ float(ICON_TEX_PX)
+			continue
+		# Dest/star/ordinary peers: tight canopy oval.
+		var on_glass: bool = is_dest or is_star or _dir_in_canopy_fov(dir)
 		if not on_glass:
 			icon.visible = false
 			mesh.visible = false
 			continue
-		# Charted pass-by on the glass: chunky pixel AR marker (PlanetSkins
-		# marker tex) for the whole time it's on canopy — not only the short
-		# spotlight window. Size is PRESENTATION (readable pin), not AU disc.
-		var charted_on_glass: bool = charted_peer
 		var body_real: Vector3 = OrbitMath.real_pos_au(body_sim, _cfg)
 		var radius_km: float = float(data.get("real_radius_km", 1000.0))
 		var hero: float = maxf(float(data.get("hero_r", 1.0)), 0.001)
@@ -962,25 +1035,21 @@ func _update_sim_view() -> void:
 			radius_px = SIM_DEST_CRUISE_MAX_PX
 			theta = radius_px / maxf(px_per_rad, 1.0)
 		var disc_min: float = SIM_DEST_DISC_MIN_PX if is_dest else SIM_DISC_MIN_PX
-		# Tiny true size → pin. Charted peers always pin. Dest stays pin until
-		# late local loom (same AR language as Jupiter flyby markers).
+		# Tiny true size → pin. Dest stays pin until late local loom.
 		var dest_as_pin: bool = is_dest and not use_local and radius_px < 5.0
-		var prefer_pin: bool = charted_peer or dest_as_pin \
-			or ((not is_dest) and radius_px < 5.0)
-		var dot_ok: bool = is_dest or is_star or charted_on_glass or radius_px >= 0.8
+		var prefer_pin: bool = dest_as_pin or ((not is_dest) and radius_px < 5.0)
+		var dot_ok: bool = is_dest or is_star or radius_px >= 0.8
 		if radius_px >= disc_min and not prefer_pin:
 			icon.visible = false
 			mesh.visible = true
 			mesh.scale = Vector3.ONE * (SIM_SHELL_R * tan(theta))
-		elif dot_ok and (is_dest or is_star or charted_on_glass or alpha >= SIM_MIN_ALPHA):
+		elif dot_ok and (is_dest or is_star or alpha >= SIM_MIN_ALPHA):
 			icon.visible = true
 			mesh.visible = false
 			var a: float = 1.0 if is_star else maxf(
-				alpha, 0.85 if (charted_on_glass or dest_as_pin) \
-					else (0.45 if is_dest else 0.12))
+				alpha, 0.85 if dest_as_pin else (0.45 if is_dest else 0.12))
 			icon.modulate = Color(1, 1, 1, a)
-			var pin_px: float = SIM_MARKER_PX if (charted_peer or dest_as_pin) \
-				else SIM_DOT_PX
+			var pin_px: float = SIM_MARKER_PX if dest_as_pin else SIM_DOT_PX
 			icon.pixel_size = (pin_px * SIM_SHELL_R / px_per_rad) / float(ICON_TEX_PX)
 		else:
 			icon.visible = false
@@ -1009,9 +1078,12 @@ func debug_visibility_snapshot(path_u: float, movie_t: float) -> Dictionary:
 		var mesh: MeshInstance3D = info["sphere"]
 		var is_dest: bool = id == _dest_id
 		var charted_peer: bool = (not is_dest) and _is_charted_encounter(id)
-		# Match render FOV: charted pins use the wider abeam cone.
-		var in_fov: bool = _dir_in_canopy_fov(dir) \
-			or (charted_peer and not markers and _dir_in_charted_marker_fov(dir))
+		# Charted SIM_VIEW pins: abeam cone only (never nose-on canopy FOV).
+		var in_fov: bool
+		if charted_peer and not markers:
+			in_fov = _charted_marker_visible(id, dir)
+		else:
+			in_fov = _dir_in_canopy_fov(dir)
 		var spot: float = 0.0 if is_dest else _spot_weight(id)
 		var charted_on_glass: bool = charted_peer and in_fov
 		var hero: float = maxf(float(data.get("hero_r", 1.0)), 0.001)
@@ -1025,7 +1097,8 @@ func debug_visibility_snapshot(path_u: float, movie_t: float) -> Dictionary:
 			var is_origin: bool = (not _origin_id.is_empty()) and id == _origin_id
 			var max_x: float = OrbitMath.FLYBY_HANDOFF_MAX_X_DEST if is_dest \
 				else OrbitMath.FLYBY_HANDOFF_MAX_X
-			expect_mesh = in_fov and _flying and not is_origin and x_hero <= max_x and (
+			expect_mesh = in_fov and _flying and not is_origin and not charted_peer \
+				and x_hero <= max_x and (
 				is_dest or not bool(data.get("is_star", false)))
 			if _orbiting and is_dest:
 				expect_mesh = true
@@ -1254,12 +1327,9 @@ func _update_console() -> void:
 func _on_boost() -> void:
 	if not _flying:
 		return
-	# Rocket Science coast: BOOST opts into calendar skip (not auto).
+	# Rocket Science coast: BOOST opts into calendar skip (or confirms early).
 	if _astro_coast and _burn_phase == OrbitMath.PHASE_COAST and not _coast_skip_active:
-		_coast_skip_active = true
-		_hud.clear_boost_gold()
-		Narrator.speak(LINE_COAST_SKIP)
-		_update_astro_calendar()
+		_start_coast_skip()
 		boost_pressed.emit()
 		return
 	# Otherwise BOOST nudges PATH progress (what the kid sees).

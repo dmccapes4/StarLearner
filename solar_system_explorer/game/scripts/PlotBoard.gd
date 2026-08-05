@@ -10,12 +10,21 @@ enum Phase { IDLE, WINDOW, CHART, LEAD, PREVIEW, ARMING, READY }
 
 const AUTO_GO_DELAY := 1.6
 const ARMING_S := 3.2
-## Wall seconds for the orrery wait-to-window time-lapse (Rocket Science).
-const WINDOW_WALL_S := 5.5
+## Wall seconds for the orrery *alignment* beat (last few years only).
+const WINDOW_ALIGN_WALL_S := 5.5
+## Years of true alignment shown on the orrery. Longer waits (Saturn→Neptune
+## ~36 yr) calendar-skip the bulk so planets don't whip around.
+const WINDOW_ALIGN_YR := 2.0
+const WINDOW_SKIP_WALL_MIN_S := 1.8
+const WINDOW_SKIP_WALL_MAX_S := 3.2
 const WINDOW_MIN_YR := 0.02
 const LINE_ENGINES := "Engines getting ready!"
 const LINE_WINDOW := ("Planets have to line up just right. Watch the orrery — "
 	+ "we're waiting for the next Hohmann launch window…")
+const LINE_WINDOW_SKIP := ("That's a long wait — skipping ahead on the calendar "
+	+ "to the years when the planets line up…")
+
+enum WindowSub { SKIP, ALIGN }
 
 var _cfg: SolarFlyerConfig
 var _bodies: OrreryBodies
@@ -43,7 +52,10 @@ var _window_t0: float = 0.0
 var _window_t1: float = 0.0
 var _window_wait_yr: float = 0.0
 var _window_elapsed: float = 0.0
-var _window_wall: float = WINDOW_WALL_S
+var _window_wall: float = WINDOW_ALIGN_WALL_S
+var _window_sub: int = WindowSub.ALIGN
+var _window_skip_yr: float = 0.0
+var _window_align_yr: float = WINDOW_ALIGN_YR
 var _pending_plot_id: String = ""
 var _pending_from_belt: bool = false
 
@@ -153,19 +165,7 @@ func _process(delta: float) -> void:
 		return
 	match _phase:
 		Phase.WINDOW:
-			_window_elapsed += delta
-			var u: float = clampf(_window_elapsed / maxf(_window_wall, 0.1), 0.0, 1.0)
-			# Smoothstep so early years tick fast, then settle on the window.
-			var su: float = u * u * (3.0 - 2.0 * u)
-			_bodies.t = lerpf(_window_t0, _window_t1, su)
-			var left_yr: float = _window_wait_yr * (1.0 - su)
-			_window_callout.visible = true
-			_window_callout.text = ("Launch window — planets lining up… %.1f years left"
-				% maxf(left_yr, 0.0))
-			_hint.text = "Waiting for the Hohmann launch window…"
-			if u >= 1.0:
-				_bodies.t = _window_t1
-				_finish_window_chart()
+			_process_window(delta)
 		Phase.CHART:
 			# Ship course and destination orbit lead grow together — the
 			# "aim ahead" lesson reads while the path is still drawing.
@@ -218,6 +218,43 @@ func _process(delta: float) -> void:
 					_commit()
 		_:
 			pass
+
+func _process_window(delta: float) -> void:
+	_window_elapsed += delta
+	var u: float = clampf(_window_elapsed / maxf(_window_wall, 0.1), 0.0, 1.0)
+	var su: float = u * u * (3.0 - 2.0 * u)
+	_window_callout.visible = true
+	if _window_sub == WindowSub.SKIP:
+		# Calendar-only beat: orrery stays put so outer-planet waits (~36 yr)
+		# don't look like a blender. Years tick down in the callout.
+		var left_yr: float = lerpf(_window_wait_yr, _window_align_yr, su)
+		_window_callout.text = ("Calendar skip — %.0f years until the launch window…"
+			% maxf(left_yr, 0.0))
+		_hint.text = "Skipping ahead to the launch window…"
+		if u >= 1.0:
+			_begin_window_align()
+		return
+	# ALIGN: last few years of true geometry on the orrery.
+	_bodies.t = lerpf(_window_t0, _window_t1, su)
+	var left_align: float = _window_align_yr * (1.0 - su)
+	_window_callout.text = ("Launch window — planets lining up… %.1f years left"
+		% maxf(left_align, 0.0))
+	_hint.text = "Waiting for the Hohmann launch window…"
+	if u >= 1.0:
+		_bodies.t = _window_t1
+		_finish_window_chart()
+
+func _begin_window_align() -> void:
+	var gys: float = maxf(_cfg.game_year_seconds, 0.001)
+	_window_t0 = _window_t1 - _window_align_yr * gys
+	_bodies.t = _window_t0
+	_window_sub = WindowSub.ALIGN
+	_window_elapsed = 0.0
+	_window_wall = WINDOW_ALIGN_WALL_S
+	_window_callout.text = ("Launch window — planets lining up… %.1f years left"
+		% _window_align_yr)
+	_hint.text = "Waiting for the Hohmann launch window…"
+	Narrator.speak(LINE_WINDOW)
 
 func _eta_pips_for_duration(dur: float) -> int:
 	var u: float = inverse_lerp(_cfg.hop_min_s, _cfg.hop_max_s, dur)
@@ -283,7 +320,9 @@ func _plot_to(id: String) -> void:
 	_go_btn.visible = false
 	_astro.hide_panel()
 	_window_callout.visible = false
-	# Rocket Science: animate the orrery to the Hohmann window, then chart there.
+	# Rocket Science: wait for the Hohmann window, then chart there.
+	# Long waits (Saturn→Neptune ~36 yr) calendar-skip first, then show only
+	# the last ~2 years of alignment on the orrery — never whip all decades.
 	if _pace_mode == AstrogatorPanel.PACE_ASTROGATOR and wait_yr >= WINDOW_MIN_YR:
 		_pending_plot_id = id
 		_pending_from_belt = from_belt
@@ -291,7 +330,8 @@ func _plot_to(id: String) -> void:
 		_window_t1 = t_depart
 		_window_wait_yr = wait_yr
 		_window_elapsed = 0.0
-		_window_wall = clampf(2.8 + wait_yr * 0.35, 3.5, WINDOW_WALL_S)
+		_window_align_yr = minf(wait_yr, WINDOW_ALIGN_YR)
+		_window_skip_yr = maxf(wait_yr - _window_align_yr, 0.0)
 		_bodies.clear_route()
 		_bodies.ship_id = _ship_id
 		_bodies.dest_id = id
@@ -300,11 +340,23 @@ func _plot_to(id: String) -> void:
 		_bodies.t = t_now
 		_phase = Phase.WINDOW
 		_dest_id = id
-		_hint.text = "Waiting for the Hohmann launch window…"
 		_window_callout.visible = true
-		_window_callout.text = ("Launch window — planets lining up… %.1f years left"
-			% wait_yr)
-		Narrator.speak(LINE_WINDOW)
+		if _window_skip_yr > 0.15:
+			_window_sub = WindowSub.SKIP
+			_window_wall = clampf(
+				1.6 + _window_skip_yr * 0.035,
+				WINDOW_SKIP_WALL_MIN_S, WINDOW_SKIP_WALL_MAX_S)
+			_hint.text = "Skipping ahead to the launch window…"
+			_window_callout.text = ("Calendar skip — %.0f years until the launch window…"
+				% wait_yr)
+			Narrator.speak(LINE_WINDOW_SKIP)
+		else:
+			_window_sub = WindowSub.ALIGN
+			_window_wall = clampf(2.8 + wait_yr * 0.5, 3.5, WINDOW_ALIGN_WALL_S)
+			_hint.text = "Waiting for the Hohmann launch window…"
+			_window_callout.text = ("Launch window — planets lining up… %.1f years left"
+				% wait_yr)
+			Narrator.speak(LINE_WINDOW)
 		return
 	_chart_at(id, t_depart if _pace_mode == AstrogatorPanel.PACE_ASTROGATOR else t_now,
 		from_belt, wait_yr if _pace_mode == AstrogatorPanel.PACE_ASTROGATOR else 0.0)
@@ -313,6 +365,7 @@ func _plot_to(id: String) -> void:
 func finish_window_now() -> void:
 	if _phase != Phase.WINDOW:
 		return
+	_window_sub = WindowSub.ALIGN
 	_bodies.t = _window_t1
 	_finish_window_chart()
 

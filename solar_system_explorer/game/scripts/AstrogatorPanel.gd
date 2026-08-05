@@ -157,29 +157,57 @@ static func engine_explain(prop_id: String) -> String:
 				+ "rocket has to be fuel.")
 	return "We'll fly with our rocket engines."
 
-## Full pre-chart Rocket Science briefing: engine + window + fuel + gravity honesty.
-static func mission_briefing(origin: Dictionary, dest: Dictionary,
-		budget_in: Dictionary, prop_id: String, cfg: SolarFlyerConfig) -> String:
+## Slideshow + VO beats for the pre-chart Rocket Science briefing.
+## Each entry: { "slide": String, "text": String }.
+static func mission_briefing_parts(origin: Dictionary, dest: Dictionary,
+		budget_in: Dictionary, prop_id: String, cfg: SolarFlyerConfig) -> Array:
 	var dest_name := str(dest.get("name", "our destination"))
-	var parts: PackedStringArray = PackedStringArray()
-	parts.append(engine_explain(prop_id))
+	var parts: Array = []
+	var eng_slide := "engine_chemical"
+	match prop_id:
+		PROP_NTP:
+			eng_slide = "engine_ntp"
+		PROP_ORION:
+			eng_slide = "engine_orion"
+		_:
+			eng_slide = "engine_chemical"
+	parts.append({"slide": eng_slide, "text": engine_explain(prop_id)})
 	if bool(budget_in.get("ok", false)):
 		var wait := format_duration_yr(float(budget_in.get("window_wait_yr", 0.0)))
 		var coast := format_duration_yr(float(budget_in.get("coast_yr", 0.0)))
-		parts.append("The next good launch window toward %s is in %s." % [dest_name, wait])
-		# format_duration_yr already includes "about" for month-scale values.
-		parts.append("Once we leave, the coast alone takes %s." % coast)
+		parts.append({
+			"slide": "window",
+			"text": "The next good launch window toward %s is in %s." % [dest_name, wait],
+		})
+		parts.append({
+			"slide": "coast",
+			"text": "Once we leave, the coast alone takes %s." % coast,
+		})
 		var frac := fuel_frac_for(budget_in, prop_id)
 		var pct: int = clampi(int(round(frac * 100.0)), 1, 99)
 		var ship_pct: int = 100 - pct
-		parts.append(("For this trip, about %d percent of the rocket's starting weight "
-			+ "must be fuel, and about %d percent can be the ship and crew.") % [
-				pct, ship_pct])
+		parts.append({
+			"slide": "fuel",
+			"text": ("For this trip, about %d percent of the rocket's starting weight "
+				+ "must be fuel, and about %d percent can be the ship and crew.") % [
+					pct, ship_pct],
+		})
 	var t_depart := 0.0
 	if bool(budget_in.get("ok", false)):
 		t_depart = float(budget_in.get("window_wait_yr", 0.0)) * cfg.game_year_seconds
-	parts.append(gravity_assist_line(origin, dest, cfg, t_depart))
-	return " ".join(parts)
+	parts.append({
+		"slide": "assists",
+		"text": gravity_assist_line(origin, dest, cfg, t_depart),
+	})
+	return parts
+
+## Full pre-chart Rocket Science briefing: engine + window + fuel + gravity honesty.
+static func mission_briefing(origin: Dictionary, dest: Dictionary,
+		budget_in: Dictionary, prop_id: String, cfg: SolarFlyerConfig) -> String:
+	var texts: PackedStringArray = PackedStringArray()
+	for p in mission_briefing_parts(origin, dest, budget_in, prop_id, cfg):
+		texts.append(str(p.get("text", "")))
+	return " ".join(texts)
 
 ## Honest: only name planets the ship actually passes near (not radial rings).
 static func gravity_assist_line(origin: Dictionary, dest: Dictionary,

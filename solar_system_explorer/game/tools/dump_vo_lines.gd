@@ -49,11 +49,13 @@ func _run() -> void:
 	_add(FlySceneScript.LINE_CRUISE)
 	_add(FlySceneScript.LINE_BRAKE)
 	_add(FlySceneScript.LINE_COAST_BOOST)
+	_add(FlySceneScript.LINE_COAST_BOOST_YEARS)
 	_add(FlySceneScript.LINE_COAST_SKIP)
 	# Engines-arming beat while the entry cinematic is already baked in.
 	_add(PlotBoardScript.LINE_ENGINES)
-	# Rocket Science Hohmann window wait (orrery time-lapse).
+	# Rocket Science Hohmann window wait (orrery time-lapse / calendar skip).
 	_add(PlotBoardScript.LINE_WINDOW)
+	_add(PlotBoardScript.LINE_WINDOW_SKIP)
 	# Rocket Science engine explainers (also embedded in mission_briefing).
 	_add(AstrogatorPanel.engine_explain("chemical"))
 	_add(AstrogatorPanel.engine_explain("ntp"))
