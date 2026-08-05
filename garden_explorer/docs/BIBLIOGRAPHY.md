@@ -78,8 +78,35 @@ cd garden_explorer/tools
 
 ---
 
+## First-harvest videos (Commons + narration)
+
+*Built 2026-08-05 via `tools/find_harvest_footage.py` → `tools/build_harvest_videos.py`.
+Real Wikimedia Commons footage or photographs of the crop being harvested / ripe on the
+plant, with warm ElevenLabs VO from `harvest_scripts`. Same pattern as animal/bug clips.*
+
+Hand picks live in `tools/harvest_picks.json`; full candidate scan in
+`tools/harvest_candidates.json`. Rebuild:
+
+```bash
+./tools/build_harvest_videos.py            # all plants
+./tools/build_harvest_videos.py melon      # one plant
+```
+
+Notable Commons sources (see picks file for the full set):
+
+| Plant | Commons source |
+|-------|----------------|
+| melon | Westland greenhouse fruit harvest (Open Beelden 14138) |
+| strawberry | Aardbeien.ogv — strawberry picking in the field |
+| potato / wheat | USDA FPAC harvest reels |
+| corn | Aerial corn harvest, Northern Illinois |
+| carrot / radish / lettuce / onion / … | Commons harvest photographs (Ken-Burns) |
+
+---
+
 ## Sources (search session)
 
 Live Google SERP via Bright Data `user-Bright Data` / `search_engine_batch`, 2026-07-25, queries
 covering kids gardening education, plant seed-to-harvest guides, germination time-lapses, farm
-animals, and harvest storage. URLs above are taken only from those results.
+animals, and harvest storage. URLs above are taken only from those results. Harvest Commons
+search session 2026-08-05 via `tools/find_harvest_footage.py`.

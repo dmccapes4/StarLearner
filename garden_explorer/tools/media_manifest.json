@@ -24,7 +24,7 @@
       "title": "Pigs on the farm",
       "portrait": "game/assets/portraits/animal_pig.png",
       "commons_title": "File:Pigs eating AppletonFarms Massachusetts 2024-10.webm",
-      "script": "Pigs are some of the smartest animals on a farm. They use their strong snouts to sniff and dig for food. Pigs roll in the mud to stay cool \u2014 it works like nature's sunscreen. A happy pig wags its curly tail, just like a puppy!"
+      "script": "Pigs are some of the smartest animals on a farm. They use their strong snouts to sniff and dig for food. Pigs roll in the mud to stay cool — it works like nature's sunscreen. A happy pig wags its curly tail, just like a puppy!"
     },
     {
       "id": "animal_cow",
@@ -32,7 +32,7 @@
       "title": "Cows on the farm",
       "portrait": "game/assets/portraits/animal_cow.png",
       "commons_title": "File:Cow grazing in the farm.webm",
-      "script": "Cows are gentle giants that spend the whole day munching grass. A cow has a special tummy with four parts to help digest her food. Cows give us milk, which becomes cheese, butter, and ice cream. Every cow has her own pattern of spots \u2014 no two are the same!"
+      "script": "Cows are gentle giants that spend the whole day munching grass. A cow has a special tummy with four parts to help digest her food. Cows give us milk, which becomes cheese, butter, and ice cream. Every cow has her own pattern of spots — no two are the same!"
     },
     {
       "id": "animal_dog",
@@ -48,7 +48,7 @@
       "title": "Collecting eggs",
       "portrait": "game/assets/portraits/animal_chicken_b.png",
       "commons_title": "",
-      "script": "This is the chicken coop, where the hens sleep and lay their eggs. Every morning, farmers gently lift the eggs out of the nesting boxes. The hens keep their eggs warm and cozy in the soft straw. Fresh eggs get washed and kept cool \u2014 ready for breakfast!"
+      "script": "This is the chicken coop, where the hens sleep and lay their eggs. Every morning, farmers gently lift the eggs out of the nesting boxes. The hens keep their eggs warm and cozy in the soft straw. Fresh eggs get washed and kept cool — ready for breakfast!"
     },
     {
       "id": "bug_ladybug",
@@ -64,7 +64,7 @@
       "title": "Rolly pollies",
       "portrait": "game/assets/portraits/bug_rolly_polly.png",
       "commons_title": "File:Pill woodlouse (Armadillidium vulgare).webm",
-      "script": "Rolly pollies curl into a tiny ball when they feel shy. They are not insects at all \u2014 they are cousins of crabs! They eat old leaves and turn them into fresh soil for the garden. Rolly pollies love damp, cozy places under rocks and logs."
+      "script": "Rolly pollies curl into a tiny ball when they feel shy. They are not insects at all — they are cousins of crabs! They eat old leaves and turn them into fresh soil for the garden. Rolly pollies love damp, cozy places under rocks and logs."
     },
     {
       "id": "bug_earthworm",
@@ -88,7 +88,7 @@
       "title": "Butterflies",
       "portrait": "game/assets/portraits/bug_butterfly.png",
       "commons_title": "File:Butterfly resting on flower.webm",
-      "script": "A butterfly starts life as a very hungry caterpillar. Inside its chrysalis it changes completely \u2014 that big change is called metamorphosis. Butterflies taste with their feet when they land on flowers! They sip sweet nectar and help flowers make seeds."
+      "script": "A butterfly starts life as a very hungry caterpillar. Inside its chrysalis it changes completely — that big change is called metamorphosis. Butterflies taste with their feet when they land on flowers! They sip sweet nectar and help flowers make seeds."
     },
     {
       "id": "bug_ant",
@@ -96,7 +96,7 @@
       "title": "Ants",
       "portrait": "game/assets/portraits/bug_ant.png",
       "commons_title": "File:Ants on dandelion.webm",
-      "script": "Ants are tiny but mighty \u2014 an ant can carry things fifty times heavier than itself! They live in big families and talk by touching antennas. Their tunnels help air and water reach plant roots. Watch an ant line closely \u2014 they follow smell trails their friends left behind."
+      "script": "Ants are tiny but mighty — an ant can carry things fifty times heavier than itself! They live in big families and talk by touching antennas. Their tunnels help air and water reach plant roots. Watch an ant line closely — they follow smell trails their friends left behind."
     },
     {
       "id": "bug_aphid",
@@ -104,7 +104,7 @@
       "title": "Aphids",
       "portrait": "game/assets/portraits/bug_aphid.png",
       "commons_title": "",
-      "script": "Aphids are tiny green bugs that sip juice from plant stems. Too many aphids can make a plant droopy and sad. That is why gardeners love ladybugs \u2014 they gobble aphids up! Ants sometimes look after aphids like little cows, for their sweet honeydew."
+      "script": "Aphids are tiny green bugs that sip juice from plant stems. Too many aphids can make a plant droopy and sad. That is why gardeners love ladybugs — they gobble aphids up! Ants sometimes look after aphids like little cows, for their sweet honeydew."
     },
     {
       "id": "bug_caterpillar",
@@ -120,7 +120,7 @@
       "title": "Garden spiders",
       "portrait": "game/assets/portraits/bug_spider.png",
       "commons_title": "File:Garden spider in the UK.webm",
-      "script": "Garden spiders are quiet helpers. They spin sticky silk webs to catch flies and moths that bother our plants. Spider silk is stronger than steel of the same size! Most garden spiders are gentle and shy \u2014 they would rather hide than say hello."
+      "script": "Garden spiders are quiet helpers. They spin sticky silk webs to catch flies and moths that bother our plants. Spider silk is stronger than steel of the same size! Most garden spiders are gentle and shy — they would rather hide than say hello."
     },
     {
       "id": "bug_grasshopper",
@@ -144,7 +144,7 @@
       "title": "What is a seed?",
       "portrait": "game/assets/tiles/concepts/01_seeds.png",
       "commons_title": "",
-      "script": "A seed is a tiny plant waiting to wake up. Inside every seed is a baby plant and a snack of food to help it start growing. Seeds come in all shapes and sizes \u2014 some tiny like a dot, some big like a bean. When a seed gets soil, water, and warmth, it wakes up and starts to grow!"
+      "script": "A seed is a tiny plant waiting to wake up. Inside every seed is a baby plant and a snack of food to help it start growing. Seeds come in all shapes and sizes — some tiny like a dot, some big like a bean. When a seed gets soil, water, and warmth, it wakes up and starts to grow!"
     },
     {
       "id": "02_soil",
@@ -160,7 +160,7 @@
       "title": "How to plant a seed",
       "portrait": "game/assets/tiles/concepts/03_planting.png",
       "commons_title": "File:Garden cress timelapse.webm",
-      "script": "Planting a seed is easy and fun! First, poke a little hole in the soil with your finger. Drop the seed in, and tuck it in with a blanket of soil. Give it a gentle drink of water, and say good night, little seed \u2014 see you when you sprout!"
+      "script": "Planting a seed is easy and fun! First, poke a little hole in the soil with your finger. Drop the seed in, and tuck it in with a blanket of soil. Give it a gentle drink of water, and say good night, little seed — see you when you sprout!"
     },
     {
       "id": "04_watering",
@@ -168,7 +168,7 @@
       "title": "Watering plants",
       "portrait": "game/assets/tiles/concepts/04_watering.png",
       "commons_title": "",
-      "script": "Plants get thirsty, just like you! Their roots drink water from the soil and send it all the way up to the leaves. A gentle sprinkle is best \u2014 too much water can make roots soggy. The best time to water the garden is in the cool morning, before the sun gets hot."
+      "script": "Plants get thirsty, just like you! Their roots drink water from the soil and send it all the way up to the leaves. A gentle sprinkle is best — too much water can make roots soggy. The best time to water the garden is in the cool morning, before the sun gets hot."
     },
     {
       "id": "05_sprouting",
@@ -184,7 +184,7 @@
       "title": "Sunlight and growing",
       "portrait": "game/assets/tiles/concepts/06_sunlight.png",
       "commons_title": "File:Heliotropism in Helianthus annuus.webm",
-      "script": "Sunlight is plant food power! Leaves catch sunshine and use it to make sugar \u2014 that is how plants make their own lunch. This special trick is called photosynthesis. That is why plants lean toward the light, and why gardens love sunny days!"
+      "script": "Sunlight is plant food power! Leaves catch sunshine and use it to make sugar — that is how plants make their own lunch. This special trick is called photosynthesis. That is why plants lean toward the light, and why gardens love sunny days!"
     },
     {
       "id": "07_growing",
@@ -240,17 +240,41 @@
       "title": "Praying mantis",
       "portrait": "game/assets/portraits/bug_praying_mantis.png",
       "commons_title": "File:Praying mantis (Mantis religiosa) in Quebec.webm",
-      "script": "The praying mantis folds its front legs like it is saying please. It can turn its head almost all the way around \u2014 no other insect can do that! A mantis stays still as a statue, then catches garden pests quick as a flash. Gardeners love the mantis because it protects their plants."
+      "script": "The praying mantis folds its front legs like it is saying please. It can turn its head almost all the way around — no other insect can do that! A mantis stays still as a statue, then catches garden pests quick as a flash. Gardeners love the mantis because it protects their plants."
     }
   ],
   "harvest_scripts": {
-    "carrot": "Crunchy carrots grow under the ground. Farmers hold the green leafy tops and pull gently until the carrot pops out. Carrots are full of vitamin A, which helps your eyes see well. Rabbits agree \u2014 carrots are delicious!",
+    "carrot": "Crunchy carrots grow under the ground. Farmers hold the green leafy tops and pull gently until the carrot pops out. Carrots are full of vitamin A, which helps your eyes see well. Rabbits agree — carrots are delicious!",
     "tomato": "Tomatoes turn from green to bright red as they ripen in the sun. Farmers twist them gently off the vine so the plant keeps growing more. Tomatoes are full of vitamins that keep your heart strong. We eat them in salads, sauces, and soups!",
     "lettuce": "Lettuce grows in leafy green bundles. Farmers cut the whole head close to the soil with a small knife. Lettuce is mostly water, so it is extra crunchy and fresh. It is the start of almost every salad!",
     "strawberry": "Strawberries are ready when they turn ruby red all over. Farmers pinch the stem so the soft berry does not get squished. Strawberries have more vitamin C than oranges! They are the only fruit with seeds on the outside.",
     "pumpkin": "Pumpkins grow on long vines that crawl across the ground. Farmers cut the thick stem and leave a little handle on top. Pumpkins can grow bigger than you! We eat them in pies and soups, and carve them for fun.",
     "corn": "Corn grows taller than a grown-up! Each ear is wrapped in a leafy husk with silky threads on top. Farmers snap the ear down and twist to pick it. Every silk thread is connected to one kernel of corn!",
-    "pea": "Peas grow in little green pods that hang from climbing vines. Farmers pick the pods when they feel plump and full. Pop one open \u2014 the peas sit in a row like beads! Peas give you energy to run and play.",
-    "radish": "Radishes are one of the fastest vegetables to grow \u2014 about one month! Farmers pull them up by their leaves, just like carrots. They are crunchy with a tiny spicy zing. Radishes come in red, pink, purple, and even white!"
+    "pea": "Peas grow in little green pods that hang from climbing vines. Farmers pick the pods when they feel plump and full. Pop one open — the peas sit in a row like beads! Peas give you energy to run and play.",
+    "radish": "Radishes are one of the fastest vegetables to grow — about one month! Farmers pull them up by their leaves, just like carrots. They are crunchy with a tiny spicy zing. Radishes come in red, pink, purple, and even white!",
+    "melon": "Melons grow on vines that sprawl across the warm soil. Farmers know a melon is ready when it smells sweet and the stem slips off easily. Inside is juicy fruit that cools you down on a hot day. Melons are mostly water — and kids love them!",
+    "spinach": "Spinach has soft dark-green leaves packed with iron. Farmers cut the outer leaves so the plant keeps growing in the middle. Spinach helps your muscles stay strong. Popeye was right — spinach is a power food!",
+    "onion": "Onions grow underground in layers, like a tiny ball. Farmers wait until the green tops flop over, then dig them up carefully. Onions make soups and sauces taste amazing. They can also make your eyes water!",
+    "cabbage": "A cabbage is a big round ball of tightly packed leaves. Farmers cut the thick stem at the bottom and lift the whole head. Cabbage stays fresh a long time. We eat it in salads, soups, and even sauerkraut!",
+    "cucumber": "Cucumbers hang from vines like little green boats. Farmers snip them off while they are still firm and crunchy. Cucumbers are cool and refreshing — almost all water. They are perfect for a summer snack!",
+    "bean": "Beans grow in long pods on climbing vines or bushy plants. Farmers pick the pods when they are bright green and snap easily. Inside are soft beans that help you grow strong. Some beans we dry and keep for winter!",
+    "bell_pepper": "Bell peppers start green and can turn yellow, orange, or red in the sun. Farmers clip the stem so the plant keeps making more. Peppers are crunchy and sweet, and full of vitamin C. They look like little colorful bells!",
+    "zucchini": "Zucchini is a summer squash that grows fast on a bushy plant. Farmers pick them when they are still small and tender. Leave one too long and it becomes a giant! Zucchini is delicious grilled, baked, or in bread.",
+    "eggplant": "Eggplants are shiny purple fruits that hang from a sturdy plant. Farmers cut them with a little stem still attached. Inside the purple skin is soft pale flesh. Eggplant soaks up flavors in stews and sauces!",
+    "potato": "Potatoes grow underground on the roots of the plant. Farmers dig carefully so they do not poke the tubers. One plant can hide a whole handful of potatoes! They become mashed potatoes, fries, and baked potatoes.",
+    "broccoli": "Broccoli is a tight cluster of tiny green flower buds. Farmers cut the thick stem before the buds open into yellow flowers. Broccoli is packed with vitamins. Those little green trees on your plate are flower buds!",
+    "cauliflower": "Cauliflower grows a big white head protected by green leaves. Farmers fold the leaves over the head to keep it pale, then cut it when it is firm. Cauliflower can be mashed, roasted, or eaten raw with dip!",
+    "grape": "Grapes grow in bunches on woody vines. Farmers snip whole clusters when the berries are sweet and plump. Some grapes become juice, and some become raisins. Grapes come in green, red, and purple!",
+    "raspberry": "Raspberries grow on canes with soft thorns. Farmers pick the berries when they slip off the core easily and leave a little hollow. Raspberries are fragile and sweet. They stain your fingers bright pink!",
+    "turnip": "Turnips are round roots that grow under leafy green tops. Farmers pull them up by the greens when the roots feel firm. Both the root and the leaves can be eaten! Turnips have a mild, earthy taste.",
+    "celery": "Celery grows tall crisp stalks from a bunch in the soil. Farmers cut the whole plant at the base. The crunchy stalks are mostly water and make a great snack. Celery leaves are tasty in soups too!",
+    "garlic": "Garlic grows as a bulb of little cloves under the ground. Farmers dig the bulbs when the tops turn brown and dry them in the sun. One clove planted in fall becomes a whole new bulb! Garlic makes almost every savory dish better.",
+    "leek": "Leeks look like giant green onions with long white stems. Farmers mound soil around them so the stems stay white and sweet, then dig them carefully. Leeks are mild and delicious in soups and pies!",
+    "kale": "Kale has curly or flat dark-green leaves full of vitamins. Farmers pick the outer leaves so the plant keeps growing. Kale is tough when raw but soft when cooked. It is one of the strongest greens in the garden!",
+    "artichoke": "An artichoke is a big flower bud that never opens. Farmers cut the bud with a short stem before it blooms into a purple thistle. We eat the soft base of each leaf and the heart in the middle!",
+    "wheat": "Wheat grows in golden fields that wave in the wind. Farmers harvest the tall stalks with a big machine called a combine. The tiny grains inside become flour for bread. Almost every loaf starts as a wheat plant!",
+    "chili": "Chili peppers grow upright on bushy plants and can be mild or fiery hot. Farmers pick them when they turn bright red, orange, or yellow. Capsaicin is the chemical that makes chilies spicy. Handle them carefully — and wash your hands!",
+    "blueberry": "Blueberries grow on woody bushes in clusters of little blue orbs. Farmers roll them gently into their hands when they are deep blue and sweet. Blueberries are packed with antioxidants. They are perfect in muffins, pancakes, and by the handful!",
+    "oats": "Oats grow in soft grassy fields with dangling grain heads. Farmers cut and dry the stalks, then separate the oat grains. Those grains become oatmeal for breakfast! Oats give you long-lasting energy to play."
   }
 }

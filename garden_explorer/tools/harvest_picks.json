@@ -1,0 +1,63 @@
+{
+  "_comment": "Hand-curated Commons File: titles. Prefer real harvest / ripe-on-plant. Empty = auto from candidates.",
+  "melon": {
+    "kind": "video",
+    "title": "File:Drukte bij de fruitoogst in het Westland Weeknummer 42-33 - Open Beelden - 14138.ogv"
+  },
+  "strawberry": {
+    "kind": "video",
+    "title": "File:Aardbeien.ogv"
+  },
+  "potato": {
+    "kind": "video",
+    "title": "File:Harvest (20181008-FPAC-KLS-0002).webm"
+  },
+  "wheat": {
+    "kind": "video",
+    "title": "File:Harvest (20180715-FPAC-KLS-0001).webm"
+  },
+  "corn": {
+    "kind": "video",
+    "title": "File:Aerial view of corn harvesting in Northern Illinois USA.webm"
+  },
+  "lettuce": {
+    "kind": "photo",
+    "title": "File:Lettuce Harvest (34781274543).jpg"
+  },
+  "grape": {
+    "kind": "photo",
+    "title": "File:Grape harvest in Chateaux Luna vineyard 2.jpg"
+  },
+  "tomato": {
+    "kind": "video",
+    "title": "File:A farmer explaining a good tomato harvest.webm"
+  },
+  "raspberry": {
+    "kind": "photo",
+    "title": "File:Raspberry plant.jpg"
+  },
+  "pumpkin": {
+    "kind": "photo",
+    "title": "File:Pie Pumpkin Harvest near Princeville, Illinois USA.jpg"
+  },
+  "onion": {
+    "kind": "photo",
+    "title": "File:Onion harvest in Bavaria 1.jpg"
+  },
+  "spinach": {
+    "kind": "photo",
+    "title": "File:Harvesting spinach - geograph.org.uk - 3012198.jpg"
+  },
+  "turnip": {
+    "kind": "photo",
+    "title": "File:Turnip Harvest (34313320884).jpg"
+  },
+  "carrot": {
+    "kind": "photo",
+    "title": "File:Carrot Harvest (2079531862).jpg"
+  },
+  "radish": {
+    "kind": "photo",
+    "title": "File:PH-02- Radish Ground Harvest (KSC-20201214-PH-KLS01 0017).jpg"
+  }
+}

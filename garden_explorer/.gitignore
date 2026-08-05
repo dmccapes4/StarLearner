@@ -3,6 +3,12 @@ game/assets/tiles/mana_seed_crops/
 game/assets/characters/mana_farmer/
 game/assets/characters/gardener_walk.png
 game/assets/audio/animals/_dl/
+## Built edu clips (rebuild with tools/build_edu_videos.py / build_harvest_videos.py)
+game/stars/*.ogv
+game/assets/plants/*_harvest.ogv
+game/assets/plants/*_harvest.ogv.import
+tools/media_src/footage/
+tools/media_src/vo_cache/
 
 # Godot / Android local artifacts
 game/.godot/

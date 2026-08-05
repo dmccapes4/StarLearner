@@ -110,7 +110,13 @@ func _plant_slides(plant_id: String, kind: String) -> Array:
 			out.append({"text": "Look — a real %s sprout!" % pname, "image": pp})
 	if arr.is_empty():
 		if kind == "harvest":
-			## Reusable educational harvest structure until real footage lands.
+			## Prefer a real harvest photo lead-in when video footage is missing.
+			var hp := _photo_path("harvests", plant_id)
+			if not hp.is_empty():
+				out.append({
+					"text": "This is a real %s ready to harvest." % pname,
+					"image": hp,
+				})
 			var blurb0 := str(plant.get("blurb", ""))
 			if not blurb0.is_empty():
 				out.append({"text": blurb0, "image": ""})
@@ -194,7 +200,7 @@ func _show_slide(i: int) -> void:
 		kind_guess = "seed"
 		if _media_id.contains(":sprout"):
 			kind_guess = "sprout"
-		elif _media_id.contains(":grown"):
+		elif _media_id.contains(":grown") or _media_id.contains(":harvest"):
 			kind_guess = "grown"
 	if _tex.texture == null and sprites != null and not pid.is_empty():
 		_tex.texture = sprites.plant_stage_texture(pid, kind_guess)

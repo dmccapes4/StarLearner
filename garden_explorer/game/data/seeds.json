@@ -26,6 +26,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "lettuce_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -88,6 +92,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "pea_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -150,6 +158,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "radish_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -212,6 +224,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "carrot_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -274,6 +290,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "spinach_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -336,6 +356,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "onion_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -398,6 +422,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "cabbage_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -460,6 +488,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "strawberry_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -522,6 +554,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "tomato_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -584,6 +620,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "corn_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -646,6 +686,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "cucumber_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -708,6 +752,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "bean_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -770,6 +818,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "bell_pepper_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -832,6 +884,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "zucchini_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -894,6 +950,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "melon_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -956,6 +1016,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "eggplant_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1018,6 +1082,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "pumpkin_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1080,6 +1148,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "potato_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1142,6 +1214,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "broccoli_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1204,6 +1280,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "cauliflower_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1266,6 +1346,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "grape_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1328,6 +1412,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "raspberry_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1390,6 +1478,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "turnip_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1452,6 +1544,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "celery_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1514,6 +1610,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "garlic_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1576,6 +1676,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "leek_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1638,6 +1742,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "kale_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1700,6 +1808,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "artichoke_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1762,6 +1874,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "wheat_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1824,6 +1940,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "chili_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1886,6 +2006,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "blueberry_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
@@ -1948,6 +2072,10 @@
         },
         "grown": {
           "type": "slides"
+        },
+        "harvest": {
+          "file": "oats_harvest.ogv",
+          "type": "video"
         }
       },
       "slides": {
