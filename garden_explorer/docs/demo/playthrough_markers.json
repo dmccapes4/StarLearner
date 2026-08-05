@@ -1,0 +1,76 @@
+{
+	"duration_s": 142.31,
+	"markers": [
+		{
+			"id": "intro",
+			"note": "title / start",
+			"t": 0.8
+		},
+		{
+			"id": "plant_seed",
+			"note": "seed on bed_0",
+			"t": 11.1
+		},
+		{
+			"id": "plant_sprout",
+			"note": "sprout pack",
+			"t": 18.47
+		},
+		{
+			"id": "plant_growing",
+			"note": "growing pack",
+			"t": 20.74
+		},
+		{
+			"id": "plant_grown",
+			"note": "grown pack + harvest star",
+			"t": 23.01
+		},
+		{
+			"id": "garden_full",
+			"note": "six beds planted",
+			"t": 30.11
+		},
+		{
+			"id": "season_summer",
+			"note": "season tour",
+			"t": 35.46
+		},
+		{
+			"id": "season_fall",
+			"note": "season tour",
+			"t": 51.56
+		},
+		{
+			"id": "season_winter",
+			"note": "season tour",
+			"t": 67.46
+		},
+		{
+			"id": "harvest",
+			"note": "harvest bed_0",
+			"t": 83.26
+		},
+		{
+			"id": "animals",
+			"note": "pen animals",
+			"t": 99.41
+		},
+		{
+			"id": "bugs",
+			"note": "bug catch",
+			"t": 111.41
+		},
+		{
+			"id": "library",
+			"note": "star menu",
+			"t": 125.71
+		},
+		{
+			"id": "end",
+			"note": "playthrough complete",
+			"t": 140.96
+		}
+	],
+	"suite": "playthrough"
+}

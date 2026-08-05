@@ -11,11 +11,19 @@ const DEPTH_OFFSET: int = 2000
 const BIAS_MEADOW := -30
 const BIAS_GROUND := -20
 const BIAS_PATH := -15
-const BIAS_RAIL := 3
+## Perimeter rails sit just under posts and above bed decks (was 3 — beds won).
+const BIAS_RAIL := 52
+const BIAS_TREE := 42 ## Outside-yard trees — behind near fence when farther north.
 const BIAS_POST := 55
-const BIAS_BUILDING := 55
-## Same band as buildings; +1 so lip standers win ties against bed stack offsets.
+const BIAS_BUILDING := 50 ## Beds/shed — below near-side fence posts.
+## Seeds sit on bed soil (building+2) / furrows (building+3) — must clear both.
+const BIAS_SEED := 54 ## Same band as sprout/grown packs so seeds aren't under soil.
+const BIAS_WEATHER_LAND := 53 ## Rain splash / resting leaves on ground or bed tops.
+## Plants above weather landings, but *below* the player at the same sort-Y so
+## a gardener on the south lip is never painted under the crop pack / bed lip.
+const BIAS_PLANT := 54
 const BIAS_PLAYER := 56
+const BIAS_WEATHER_FALL := 70 ## Mid-air rain/leaves — above props while falling.
 const BIAS_ANIMAL := 55
 const BIAS_GATE := 55 ## In-line with fence posts (near post above, far post behind).
 const BIAS_UI := 500

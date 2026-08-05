@@ -43,6 +43,12 @@ func bind_player(p: Node2D) -> void:
 func _process(delta: float) -> void:
 	if player == null or not is_instance_valid(player):
 		return
+	## While the gardener crosses the mouth, keep the leaf under their depth band.
+	var sort_y := position.y
+	if player.global_position.distance_to(global_position) < 48.0 \
+			and player.global_position.y >= position.y - 8.0:
+		sort_y = minf(sort_y, player.global_position.y - 12.0)
+	IsoUtil.apply_depth(self, sort_y, IsoUtil.BIAS_GATE)
 	var d := global_position.distance_to(player.global_position)
 	if not is_open and d <= OPEN_DIST and _dir == 0:
 		_begin_open()

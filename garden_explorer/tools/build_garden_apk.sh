@@ -15,6 +15,13 @@ export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
 
 mkdir -p "$ROOT/tools/build"
 
+# Interactive-world gate: depth + bed approach must be green before packaging.
+# SKIP_QA=1 bypasses (emergency only).
+if [[ "${SKIP_QA:-0}" != "1" ]]; then
+  echo "=== interactive QA (garden) ==="
+  bash "$ROOT/../tools/run_interactive_qa.sh" garden
+fi
+
 echo "=== export .pck ==="
 "$GODOT" --headless --path "$GAME" --export-pack "Android" /tmp/garden.pck
 
@@ -76,8 +83,8 @@ cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
   -Pexport_package_name=com.dylan.garden_explorer \
-  -Pexport_version_code=56 \
-  -Pexport_version_name=1.46 \
+  -Pexport_version_code=58 \
+  -Pexport_version_name=1.48 \
   -Pexport_enabled_abis=arm64-v8a \
   -Prelease_keystore_file="$KS" \
   -Prelease_keystore_alias=ants \

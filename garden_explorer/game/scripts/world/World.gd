@@ -429,14 +429,17 @@ func _coop_tap_hit(world_pos: Vector2) -> bool:
 		or world_pos.distance_to(farm_map.coop_world) <= 40.0
 
 func _nearest_roaming_animal(world_pos: Vector2, radius: float) -> String:
+	## Buddy uses a tight bubble so path/bed taps near him aren't stolen
+	## (stolen taps walk-to-dog and face_toward him — the "face the dog" glitch).
 	var best := ""
-	var best_d := radius
+	var best_d := INF
 	for id in roaming_animals.keys():
 		var actor: Node2D = roaming_animals[id]
 		if actor == null or not is_instance_valid(actor):
 			continue
+		var r := minf(radius, 20.0) if str(id).begins_with("dog") else radius
 		var d := world_pos.distance_to(actor.global_position)
-		if d <= best_d:
+		if d <= r and d < best_d:
 			best_d = d
 			best = str(id)
 	return best
@@ -446,8 +449,11 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 	var slot := -1
 	match kind:
 		"shed":
-			approach = farm_map.shed_door_world if farm_map.shed_door_world != Vector2.ZERO \
-				else farm_map.nearest_walkable(farm_map.shed_center + Vector2(36, 20))
+			if farm_map.has_method("shed_approach_world"):
+				approach = farm_map.shed_approach_world()
+			else:
+				approach = farm_map.shed_door_world if farm_map.shed_door_world != Vector2.ZERO \
+					else farm_map.nearest_walkable(farm_map.shed_center + Vector2(36, 40))
 		"bed":
 			slot = farm_map.nearest_slot(zid, world_pos)
 			## Face from tap + shortest gap/path route (not nearest rim cell,
@@ -576,7 +582,10 @@ func _prepare_interact_pose() -> void:
 			look = bug.global_position if bug else Vector2.ZERO
 	if look != Vector2.ZERO and player.has_method("face_toward"):
 		player.call("face_toward", look)
-	IsoUtil.apply_depth(player, player.global_position.y, IsoUtil.BIAS_PLAYER)
+	if player.has_method("_apply_player_depth"):
+		player.call("_apply_player_depth")
+	else:
+		IsoUtil.apply_depth(player, player.global_position.y, IsoUtil.BIAS_PLAYER)
 
 func _on_player_arrived() -> void:
 	if _pending.is_empty():
@@ -716,7 +725,10 @@ func _apply_bed_tool(bed_id: String) -> bool:
 			if garden.is_bed_empty(bed_id):
 				_do_plant_bed(bed_id, held)
 			else:
-				SpeakScript.line("This bed already has plants. Go to the shed and get the spade to uproot them.")
+				## Skip while plant-success VO is playing — a double-tap on the
+				## same (now occupied) bed used to replace "You planted …".
+				if not NarratorScript.blocks_movement():
+					SpeakScript.line("This bed already has plants. Go to the shed and get the spade to uproot them.")
 			return true
 		"water":
 			if garden.is_bed_empty(bed_id):

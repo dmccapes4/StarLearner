@@ -101,6 +101,22 @@ Optional **small upgrades** (worth doing if we keep polishing):
 
 ---
 
+## 4b. Seasonal weather + meadow trees
+
+- **Ground decals** (fall leaves, spring flowers) live on `FarmMap/SeasonDecor` at a low absolute
+  z so they sit under props.
+- **Falling weather** (winter rain, fall leaf drift) is world-space `FarmMap/SeasonWeather`
+  (`Node2D`). Landings are a precomputed yard/bed-top loop — rain splashes, leaves rest 1–2s.
+  Depth: `BIAS_WEATHER_FALL` in air, `BIAS_WEATHER_LAND` on ground (above `BIAS_SEED`, under
+  `BIAS_PLANT`). FX atlases: `tools/gen_weather_fx.py`.
+- **Near-side fence** uses `BIAS_RAIL`/`BIAS_POST` plus a south-side sort-Y boost so bed decks
+  cannot paint over rails/posts.
+- **Meadow trees** sit outside `farm_yard_poly`, depth-sorted with `BIAS_TREE`, and swap atlas rows
+  per season (`game/assets/trees/seasonal_trees.png`, regen via `tools/gen_seasonal_trees.py`).
+  Horizontal canopy / side branches (Sprout Lands large-tree silhouette).
+
+---
+
 ## 5. When to reconsider a redesign
 
 Reopen this decision if any of the following become true:
@@ -118,10 +134,12 @@ movement should stay **simple, explicit, and convention-driven**.
 ## 6. Related code (quick map)
 
 - `game/scripts/render/IsoUtil.gd` — tile/world/depth primitives  
-- `game/scripts/world/FarmMap.gd` — solids, nav, fence, shed/coop footprints, walk yard inset  
+- `game/scripts/world/FarmMap.gd` — solids, nav, fence, shed/coop footprints, walk yard inset, seasons  
+- `game/scripts/world/SeasonWeather.gd` — screen-space rain / falling leaves overlay  
 - `game/scripts/world/Player.gd` — tap-to-walk along A\* waypoints, soft collision  
 - `game/scripts/world/World.gd` — tap → interact goals (shed/coop approach points)  
 - `game/data/map.json` — layout (beds, path, pen, coop tile)
+- `game/assets/trees/` — seasonal meadow tree atlas + particle textures
 
 ---
 

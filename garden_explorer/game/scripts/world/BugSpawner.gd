@@ -79,7 +79,7 @@ func force_spawn(bid: String, near: Vector2) -> Node2D:
 	var actor: Node2D = RoamingBugScript.new()
 	actor.name = "Bug_%s_%d" % [bid, Time.get_ticks_msec()]
 	add_child(actor)
-	actor.setup(bid, tex, spot, 22.0, farm_map)
+	actor.setup(bid, tex, spot, 28.0, farm_map)
 	_active[actor.get_instance_id()] = actor
 	actor.despawned.connect(func(_id: String) -> void:
 		_active.erase(actor.get_instance_id()))
@@ -102,7 +102,7 @@ func _spawn_one() -> void:
 	var actor: Node2D = RoamingBugScript.new()
 	actor.name = "Bug_%s_%d" % [bid, Time.get_ticks_msec()]
 	add_child(actor)
-	actor.setup(bid, tex, spot, 22.0, farm_map)
+	actor.setup(bid, tex, spot, 28.0, farm_map)
 	_active[actor.get_instance_id()] = actor
 	actor.despawned.connect(func(_id: String) -> void:
 		_active.erase(actor.get_instance_id()))

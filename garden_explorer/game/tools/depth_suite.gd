@@ -85,6 +85,8 @@ func _run() -> void:
 	var points: Array = _stress_points(farm)
 	for p in points:
 		await _capture_pose(player, farm, gate, str(p["id"]), str(p["note"]), p["pos"] as Vector2, bool(p.get("open_gate", false)))
+		if str(p["id"]) == "04_south_of_bed4":
+			_assert_south_of_bed_depth(player, farm, "bed_4")
 
 	## Walk-past simulation: short path along dirt, frames while moving.
 	await _walk_capture(world, player, farm, "walk_path_beds",
@@ -124,7 +126,8 @@ func _stress_points(farm: FarmMap) -> Array:
 		{"id": "03_path_south_bed4", "note": "On path beside south bed_4 — must NOT walk ON TOP of bed (player over soil). Bed lip may cover feet (behind).",
 			"pos": Vector2(farm.bed_centers["bed_4"].x, path_y)},
 		{"id": "04_south_of_bed4", "note": "South of bed_4 (in front) — player draws in FRONT of bed walls/top",
-			"pos": farm.bed_centers["bed_4"] + Vector2(0, 55)},
+			## Just past the wood lip — not down by the yard fence (fence correctly occludes).
+			"pos": farm.bed_centers["bed_4"] + Vector2(0, 42)},
 		{"id": "05_north_of_bed1", "note": "North of bed_1 (behind) — bed should occlude player feet/body",
 			"pos": farm.bed_centers["bed_1"] + Vector2(0, -48)},
 		{"id": "06_aisle_beds_01", "note": "Aisle between bed_0 and bed_1",
@@ -140,7 +143,9 @@ func _stress_points(farm: FarmMap) -> Array:
 		{"id": "11_coop_behind", "note": "Behind coop — path routes around; sprite occludes correctly",
 			"pos": farm.nearest_walkable(farm.coop_world + Vector2(0, -70))},
 		{"id": "12_shed_door", "note": "Shed door apron — in front of facade",
-			"pos": farm.shed_door_world if farm.shed_door_world != Vector2.ZERO else farm.nearest_walkable(farm.shed_center + Vector2(40, 24))},
+			"pos": farm.shed_approach_world() if farm.has_method("shed_approach_world") \
+				else (farm.shed_door_world if farm.shed_door_world != Vector2.ZERO \
+					else farm.nearest_walkable(farm.shed_center + Vector2(40, 24)))},
 		{"id": "13_pen_inside", "note": "Inside pen near gate — fence posts vs player",
 			"pos": gw + Vector2(50, 20), "open_gate": true},
 	]
@@ -153,6 +158,7 @@ func _capture_pose(player: Node2D, farm: FarmMap, gate: Node2D, id: String, note
 	## Nudge gate open/closed by proximity.
 	if gate != null and open_gate:
 		player.global_position = farm.gate_world + Vector2(-15, 6)
+	_refresh_player_depth(player, farm)
 	await _settle(8)
 	_aim_cam(player)
 	await _settle(4)
@@ -179,7 +185,7 @@ func _walk_capture(world: Node, player: Node2D, farm: FarmMap, prefix: String, a
 		var t := float(f)
 		var p: Vector2 = a.lerp(b, t)
 		player.global_position = farm.nearest_walkable(p)
-		IsoUtil.apply_depth(player, player.global_position.y, IsoUtil.BIAS_PLAYER)
+		_refresh_player_depth(player, farm)
 		await _settle(5)
 		_aim_cam(player)
 		await _settle(3)
@@ -192,6 +198,35 @@ func _walk_capture(world: Node, player: Node2D, farm: FarmMap, prefix: String, a
 			"player": {"x": player.global_position.x, "y": player.global_position.y},
 		})
 		print(" shot ", file)
+
+func _refresh_player_depth(player: Node2D, farm: FarmMap) -> void:
+	if player.has_method("stop"):
+		player.call("stop")
+		return
+	if player.has_method("_apply_player_depth"):
+		player.call("_apply_player_depth")
+		return
+	var feet_y := player.global_position.y
+	if farm and farm.has_method("player_depth_y"):
+		feet_y = farm.player_depth_y(player.global_position)
+	IsoUtil.apply_depth(player, feet_y, IsoUtil.BIAS_PLAYER)
+
+func _assert_south_of_bed_depth(player: Node2D, farm: FarmMap, bed_id: String) -> void:
+	## Standing south of a bed must sort above the bed deck + plants.
+	var bed_node := farm.get_node_or_null(bed_id) as CanvasItem
+	var bed_z := bed_node.z_index if bed_node else -9999
+	var plant_z := -9999
+	var world := player.get_parent()
+	if world:
+		var layer: Node = world.get_node_or_null("PlantLayer")
+		if layer:
+			var pn: Node = layer.get_node_or_null("BedPlants_%s" % bed_id)
+			if pn is CanvasItem:
+				plant_z = (pn as CanvasItem).z_index
+	var need := maxi(bed_z + 3, plant_z)
+	_check("south_of_%s_in_front" % bed_id, player.z_index > need,
+		"player.z=%d need>%d (bed=%d plant=%d y=%.1f)" % [
+			player.z_index, need, bed_z, plant_z, player.global_position.y])
 
 func _aim_cam(player: Node2D) -> void:
 	var cam := player.get_parent().get_node_or_null("CameraFollow") as Camera2D

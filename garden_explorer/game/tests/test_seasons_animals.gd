@@ -45,6 +45,41 @@ func run() -> TestAssert:
 	var ground := farm.get_node_or_null("Ground") as Polygon2D
 	t.ok(ground != null, "ground exists")
 	t.ok(ground.modulate != Color(1, 1, 1, 1), "winter tint applied")
+	var decor := farm.get_node_or_null("SeasonDecor")
+	t.ok(decor != null, "season decor present")
+	## World-space weather is a FarmMap child (mapped landings + splash/rest).
+	var overlay := farm.get_node_or_null("SeasonWeather")
+	t.ok(overlay != null, "winter rain overlay")
+	t.ok(overlay.get("mode") == 1, "winter mode is rain") ## SeasonWeather.Mode.RAIN
+	var winter_pen := 0
+	if overlay and overlay.get("_landings") is Array:
+		for land in overlay._landings:
+			if farm.in_pen((land as Dictionary).get("pos", Vector2.ZERO)):
+				winter_pen += 1
+	t.ok(winter_pen >= 8, "winter rain landings include pen (%d)" % winter_pen)
+	farm.apply_season_tint("fall")
+	overlay = farm.get_node_or_null("SeasonWeather")
+	t.ok(overlay != null, "fall has falling leaves")
+	t.ok(overlay.get("mode") == 2, "fall mode is leaves")
+	var fall_pen := 0
+	if overlay and overlay.get("_landings") is Array:
+		for land2 in overlay._landings:
+			if farm.in_pen((land2 as Dictionary).get("pos", Vector2.ZERO)):
+				fall_pen += 1
+	t.ok(fall_pen >= 8, "fall leaf landings include pen (%d)" % fall_pen)
+	var fall_decor := farm.get_node_or_null("SeasonDecor")
+	t.ok(fall_decor != null and fall_decor.get_child_count() >= 40,
+		"fall ground leaves cover yard+pen (%d)" % (fall_decor.get_child_count() if fall_decor else -1))
+	## With sprites, meadow trees sit outside the yard and swap by season.
+	var art := FarmSprites.new()
+	art.bootstrap()
+	var farm2 := FarmMap.new()
+	farm2.set_sprites(art)
+	farm2.build_from_file()
+	t.ok(farm2._meadow_trees.size() >= 4, "meadow trees placed outside yard")
+	farm2.apply_season_tint("winter")
+	var first: Sprite2D = farm2._meadow_trees[0] if farm2._meadow_trees.size() > 0 else null
+	t.ok(first != null and first.texture != null, "winter tree texture set")
 
 	## Season change must NOT clear plants already in beds — only harvest / spade do.
 	var garden := GardenState.new()

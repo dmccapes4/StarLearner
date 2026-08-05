@@ -298,7 +298,7 @@ func _motion_activity() -> bool:
 		_last_accel = a
 		_accel_ready = true
 		return false
-	var moved := a.distance_to(_last_accel) >= MOTION_EPS
+	var moved: bool = a.distance_to(_last_accel) >= MOTION_EPS
 	_last_accel = a
 	return moved
 

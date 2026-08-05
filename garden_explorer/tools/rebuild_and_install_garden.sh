@@ -18,8 +18,17 @@ PKG="$("$BT" dump badging "$APK" | awk -F"'" '/^package: /{print $2; exit}')"
 echo "embedded package: $PKG"
 test "$PKG" = "$WANT" || { echo "ERROR: expected $WANT, got $PKG"; exit 1; }
 echo "=== install ==="
-"${ADB[@]}" devices -l
-"${ADB[@]}" install -r "$APK"
+## Fogona USB often drops mid streamed-install — wait for a device, then push.
+for _i in $(seq 1 30); do
+	"${ADB[@]}" devices -l
+	if "${ADB[@]}" get-state 2>/dev/null | grep -q device; then
+		break
+	fi
+	echo "(waiting for adb device… ${_i}/30)"
+	sleep 1
+done
+"${ADB[@]}" get-state | grep -q device || { echo "ERROR: no adb device"; exit 1; }
+"${ADB[@]}" install --no-streaming -r -g "$APK"
 echo "=== remove legacy package ==="
 "${ADB[@]}" uninstall com.dylan.antexplorer.garden || true
 echo "=== on-device packages ==="

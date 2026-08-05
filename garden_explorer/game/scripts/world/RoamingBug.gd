@@ -3,11 +3,13 @@ extends Node2D
 ## A small tappable bug that wanders near its spawn for a while, then despawns.
 ## Pauses during interaction; removed (caught) after the interaction ends.
 ## Stays off garden-bed solids so it isn't painted under the raised wood.
+## 2-frame sheets animate mildly while crawling.
 
 signal despawned(bug_id: String)
 
 const WANDER_RADIUS := 42.0
 const LIFETIME_SEC := 60.0
+const ANIM_FRAME_SEC := 0.22
 
 var bug_id: String = ""
 var farm_map: FarmMap
@@ -18,6 +20,9 @@ var _speed: float = 16.0
 var _pause_left: float = 0.4
 var _life_left: float = LIFETIME_SEC
 var _interacting: bool = false
+var _anim_t: float = 0.0
+var _frame: int = 0
+var _nframes: int = 1
 
 func setup(id: String, tex: Texture2D, spawn: Vector2, px_size: float = 14.0, map: FarmMap = null) -> void:
 	bug_id = id
@@ -29,9 +34,21 @@ func setup(id: String, tex: Texture2D, spawn: Vector2, px_size: float = 14.0, ma
 	_spr.centered = true
 	_spr.texture = tex
 	_spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_nframes = 1
 	if tex:
-		var sc := px_size / maxf(float(maxi(tex.get_width(), tex.get_height())), 1.0)
-		_spr.scale = Vector2(sc, sc)
+		var w := tex.get_width()
+		var h := tex.get_height()
+		## 2-frame horizontal sheets are twice as wide as tall (e.g. 64×32).
+		if h > 0 and w >= h * 2:
+			_nframes = 2
+			_spr.hframes = 2
+			_spr.vframes = 1
+			_spr.frame = 0
+			var sc := px_size / maxf(float(h), 1.0)
+			_spr.scale = Vector2(sc, sc)
+		else:
+			var sc2 := px_size / maxf(float(maxi(w, h)), 1.0)
+			_spr.scale = Vector2(sc2, sc2)
 	add_child(_spr)
 	IsoUtil.apply_depth(self, position.y, IsoUtil.BIAS_ANIMAL)
 	_pick_target()
@@ -77,6 +94,12 @@ func _process(delta: float) -> void:
 	position = next
 	if _spr:
 		_spr.flip_h = to.x < 0.0
+		if _nframes > 1:
+			_anim_t += delta
+			if _anim_t >= ANIM_FRAME_SEC:
+				_anim_t = fmod(_anim_t, ANIM_FRAME_SEC)
+				_frame = (_frame + 1) % _nframes
+				_spr.frame = _frame
 	IsoUtil.apply_depth(self, position.y, IsoUtil.BIAS_ANIMAL)
 
 func _bug_blocked(p: Vector2) -> bool:

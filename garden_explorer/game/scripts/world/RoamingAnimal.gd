@@ -24,6 +24,11 @@ var follow_locked: bool = false ## when player is chasing this animal
 var _interacting: bool = false
 var _heart: Sprite2D
 var _hop_tween: Tween
+## Yard dog: don't re-flee every frame while the player soft-slides (tornado).
+var _yield_cooldown: float = 0.0
+const YIELD_RADIUS := 44.0
+const YIELD_CLEAR_RADIUS := 68.0
+const YIELD_COOLDOWN_SEC := 1.2
 
 func setup(id: String, map: FarmMap, art: FarmSprites, spawn: Vector2, bound: PackedVector2Array, scale_mul: float = 3.5, kind: String = "", color: String = "default") -> void:
 	animal_id = id
@@ -134,20 +139,28 @@ func _process(delta: float) -> void:
 		_pause_left = randf_range(0.4, 1.0)
 		_sync_map_pos()
 		return
-	## Buddy yields when the gardener is about to walk through him.
+	## Buddy yields once when the gardener gets close — not every frame
+	## (player soft-slide + constant re-yield = orbiting "tornado").
 	if not _interacting and bound_poly.size() < 3:
+		if _yield_cooldown > 0.0:
+			_yield_cooldown = maxf(0.0, _yield_cooldown - delta)
 		var player := _player_node()
-		if player and position.distance_to(player.global_position) < 40.0:
-			var away := position - player.global_position
-			if away.length_squared() < 1.0:
-				away = Vector2(1.0, 0.0)
-			var yield_to := position + away.normalized() * 48.0
-			if farm_map.has_method("nearest_dog_walkable"):
-				yield_to = farm_map.nearest_dog_walkable(yield_to)
-			else:
-				yield_to = farm_map.nearest_walkable(yield_to)
-			_target = yield_to
-			_pause_left = 0.0
+		if player:
+			var d_player := position.distance_to(player.global_position)
+			if _yield_cooldown <= 0.0 and d_player < YIELD_RADIUS:
+				var away := position - player.global_position
+				if away.length_squared() < 1.0:
+					away = Vector2(1.0, 0.0)
+				var yield_to := position + away.normalized() * 72.0
+				if farm_map.has_method("nearest_dog_walkable"):
+					yield_to = farm_map.nearest_dog_walkable(yield_to)
+				else:
+					yield_to = farm_map.nearest_walkable(yield_to)
+				_target = yield_to
+				_pause_left = 0.0
+				_yield_cooldown = YIELD_COOLDOWN_SEC
+			elif d_player > YIELD_CLEAR_RADIUS:
+				_yield_cooldown = minf(_yield_cooldown, 0.15)
 	if _interacting:
 		IsoUtil.apply_depth(self, position.y, IsoUtil.BIAS_ANIMAL)
 		_sync_map_pos()

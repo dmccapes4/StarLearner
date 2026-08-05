@@ -73,8 +73,15 @@ func place_at(world_pos: Vector2) -> void:
 	moving = false
 	_waypoints = PackedVector2Array()
 	_wp_i = 0
-	IsoUtil.apply_depth(self, global_position.y, IsoUtil.BIAS_PLAYER)
+	_apply_player_depth()
 	_wire_seed_carry()
+
+func _apply_player_depth() -> void:
+	var feet_y := global_position.y
+	var farm := _farm()
+	if farm and farm.has_method("player_depth_y"):
+		feet_y = farm.player_depth_y(global_position)
+	IsoUtil.apply_depth(self, feet_y, IsoUtil.BIAS_PLAYER)
 
 func face_toward(world_pos: Vector2) -> void:
 	## Idle pose looking at a target (bed / pet / door) after arrive.
@@ -199,13 +206,25 @@ func _on_path_requested(world_pos: Vector2) -> void:
 		_wp_i = 0
 	moving = true
 
+func stop() -> void:
+	## Suites / demos teleport with global_position — re-sort so we never keep
+	## a stale spawn z_index under a bed lip.
+	moving = false
+	_waypoints = PackedVector2Array()
+	_wp_i = 0
+	target = global_position
+	_apply_player_depth()
+
 func _process(delta: float) -> void:
 	var NarratorScript := preload("res://scripts/audio/Narrator.gd")
 	if NarratorScript.blocks_movement():
 		moving = false
+		_apply_player_depth()
 		_update_anim(Vector2.ZERO, delta)
 		return
 	if not moving:
+		## Idle: keep depth fresh after teleports / camera demos.
+		_apply_player_depth()
 		_update_anim(Vector2.ZERO, delta)
 		return
 	var to := target - global_position
@@ -217,7 +236,7 @@ func _process(delta: float) -> void:
 		if _wp_i + 1 < _waypoints.size():
 			_wp_i += 1
 			target = _waypoints[_wp_i]
-			IsoUtil.apply_depth(self, global_position.y, IsoUtil.BIAS_PLAYER)
+			_apply_player_depth()
 			return
 		moving = false
 		_waypoints = PackedVector2Array()
@@ -226,7 +245,7 @@ func _process(delta: float) -> void:
 		var farm := _farm()
 		if farm and farm.is_blocked(global_position):
 			global_position = farm.nearest_walkable(global_position)
-		IsoUtil.apply_depth(self, global_position.y, IsoUtil.BIAS_PLAYER)
+		_apply_player_depth()
 		Events.player_arrived.emit()
 		return
 	var step := to.normalized() * speed * delta
@@ -244,6 +263,7 @@ func _process(delta: float) -> void:
 		moving = false
 		_waypoints = PackedVector2Array()
 		_wp_i = 0
+		_apply_player_depth()
 		Events.player_arrived.emit()
 		return
 	if farm2 and farm2.is_blocked(next):
@@ -256,38 +276,44 @@ func _process(delta: float) -> void:
 		moving = false
 		_waypoints = PackedVector2Array()
 		_wp_i = 0
+		_apply_player_depth()
 		Events.player_arrived.emit()
 		return
-	## Soft-avoid pets (Buddy): slide around instead of walking through them.
-	if farm2 and farm2.has_method("near_roaming_animal") \
-			and not str(farm2.near_roaming_animal(next)).is_empty():
-		var fwd := to.normalized()
-		var perp := Vector2(-fwd.y, fwd.x)
-		var slid := false
-		for side in [perp * 18.0, -perp * 18.0, perp * 28.0, -perp * 28.0]:
-			var cand: Vector2 = next + side
-			if farm2.is_blocked(cand):
-				continue
-			if farm2.has_method("crossing_allowed") and not farm2.crossing_allowed(global_position, cand):
-				continue
-			if not str(farm2.near_roaming_animal(cand)).is_empty():
-				continue
-			next = cand
-			slid = true
-			break
-		if not slid:
-			if _wp_i + 1 < _waypoints.size():
-				_wp_i += 1
-				target = _waypoints[_wp_i]
+	## Soft-avoid pen pets only. Buddy (yard dog) yields on his own — player
+	## soft-push toward/around him was forcing face-toward-dog walk glitches.
+	if farm2 and farm2.has_method("near_roaming_animal"):
+		var aid := str(farm2.near_roaming_animal(next))
+		if not aid.is_empty() and not aid.begins_with("dog"):
+			var apos: Vector2 = farm2.animal_positions.get(aid, next)
+			var away := next - apos
+			if away.length_squared() < 1.0:
+				away = to if to.length_squared() >= 1.0 else Vector2(1.0, 0.0)
+			var soft_r := FarmMap.ANIMAL_SOFT_R + 2.0
+			var cand: Vector2 = apos + away.normalized() * soft_r
+			cand = cand.lerp(next, 0.35)
+			if farm2.is_blocked(cand) \
+					or (farm2.has_method("crossing_allowed") \
+					and not farm2.crossing_allowed(global_position, cand)):
+				if _wp_i + 1 < _waypoints.size():
+					_wp_i += 1
+					target = _waypoints[_wp_i]
+					return
+				moving = false
+				_waypoints = PackedVector2Array()
+				_wp_i = 0
+				Events.player_arrived.emit()
 				return
-			moving = false
-			_waypoints = PackedVector2Array()
-			_wp_i = 0
-			Events.player_arrived.emit()
-			return
+			next = cand
+	var step_dir := next - global_position
 	global_position = next
-	IsoUtil.apply_depth(self, global_position.y, IsoUtil.BIAS_PLAYER)
-	_update_anim(to, delta)
+	## Depth: when south of a nearby bed lip, sort slightly past the bed so the
+	## head is never painted under the wood/plants at the same Y band.
+	var feet_y := global_position.y
+	if farm2 and farm2.has_method("player_depth_y"):
+		feet_y = farm2.player_depth_y(global_position)
+	IsoUtil.apply_depth(self, feet_y, IsoUtil.BIAS_PLAYER)
+	## Face the way we actually stepped (not the raw waypoint through a pet).
+	_update_anim(step_dir if step_dir.length_squared() > 0.01 else to, delta)
 
 func _update_anim(move_dir: Vector2, delta: float) -> void:
 	var spr := get_node_or_null("Sprite") as Sprite2D

@@ -1,8 +1,8 @@
 {
-  "version": 6,
-  "notes": "Layout rule: 3 beds each side of path → path centered; 6 beds on one side → path lower/left. Current: 3N+3S, path centered shed→gate. Pen = east strip; gate = one fence section.",
+  "version": 7,
+  "notes": "Layout rule: 3 beds each side of path → path centered; 6 beds on one side → path lower/left. Beds scooted west toward shed for clearance from pen fence. Pen = east strip; gate = one fence section.",
   "bounds_tiles": {"min_x": -10, "min_y": -4, "max_x": 16, "max_y": 10},
-  "meadow_pad_tiles": 5,
+  "meadow_pad_tiles": 11,
   "player_spawn_tile": {"x": 2, "y": 3.0},
   "shed": {
     "id": "shed",
@@ -11,12 +11,12 @@
     "label": "Shed"
   },
   "beds": [
-    {"id": "bed_0", "tile": {"x": 0, "y": -0.4}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_1", "tile": {"x": 3.7, "y": -0.4}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_2", "tile": {"x": 7.4, "y": -0.4}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_3", "tile": {"x": 0, "y": 6.4}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_4", "tile": {"x": 3.7, "y": 6.4}, "half_tiles": {"x": 1.05, "y": 0.8}},
-    {"id": "bed_5", "tile": {"x": 7.4, "y": 6.4}, "half_tiles": {"x": 1.05, "y": 0.8}}
+    {"id": "bed_0", "tile": {"x": -2.6, "y": -0.1}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_1", "tile": {"x": 1.1, "y": -0.1}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_2", "tile": {"x": 4.8, "y": -0.1}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_3", "tile": {"x": -2.6, "y": 5.7}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_4", "tile": {"x": 1.1, "y": 5.7}, "half_tiles": {"x": 1.05, "y": 0.8}},
+    {"id": "bed_5", "tile": {"x": 4.8, "y": 5.7}, "half_tiles": {"x": 1.05, "y": 0.8}}
   ],
   "path": {
     "tile_y": 3.0,

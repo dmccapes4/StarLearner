@@ -1,0 +1,49 @@
+{
+  "half_tiles": [
+    1.05,
+    0.8
+  ],
+  "plot_soil_scale": 0.82,
+  "sprite_scale": 2,
+  "anchor": "landing_feet",
+  "plot_layout": "diamond_corner_n_e_s_w",
+  "corner_t": 0.42,
+  "stage_landing_nudge": {
+    "sprout": {
+      "x": 0.0,
+      "y": 1.0
+    },
+    "growing": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "grown": {
+      "x": 0.0,
+      "y": 0.0
+    }
+  },
+  "offsets_n_e_s_w": [
+    {
+      "x": -2.7551999999999994,
+      "y": -10.194239999999999
+    },
+    {
+      "x": 20.388479999999998,
+      "y": 1.3775999999999997
+    },
+    {
+      "x": 2.7551999999999994,
+      "y": 10.194239999999999
+    },
+    {
+      "x": -20.388479999999998,
+      "y": -1.3775999999999997
+    }
+  ],
+  "note": "Pack image center = bed furrow cross. Each plant's feet sit along the cross\u2192corner ray (N,E,S,W furrow regions) at corner_t. Draw Sprite2D.centered at bed_plot_cross.",
+  "star_hover_y": {
+    "sprout": -42.9,
+    "growing": -51.4,
+    "grown": -58.1
+  }
+}

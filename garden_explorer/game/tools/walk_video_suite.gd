@@ -296,27 +296,32 @@ func _force_stage(bed_id: String, target: String) -> void:
 		if _garden.has_signal("bed_changed"):
 			_garden.bed_changed.emit(bed_id)
 
-func _named_pos(key: String) -> Vector2:
+func _path_stand(x: float) -> Vector2:
+	## Dirt strip slightly south of the path tile — keeps goals off bed diamonds.
 	var path_y := IsoUtil.tile_to_world(
 		Vector2(0.0, float(_farm.data.get("path", {}).get("tile_y", 3.0)))).y
+	return _farm.nearest_walkable(Vector2(x, path_y + 10.0))
+
+func _named_pos(key: String) -> Vector2:
 	match key:
 		"path_bed0":
-			return Vector2(_farm.bed_centers["bed_0"].x, path_y)
+			return _path_stand(_farm.bed_centers["bed_0"].x)
 		"path_bed1":
-			return Vector2(_farm.bed_centers["bed_1"].x, path_y)
+			return _path_stand(_farm.bed_centers["bed_1"].x)
 		"path_bed2":
-			return Vector2(_farm.bed_centers["bed_2"].x, path_y)
+			return _path_stand(_farm.bed_centers["bed_2"].x)
 		## Longer path endpoints so ~7s clips stay in motion.
 		"path_west":
-			return Vector2(_farm.bed_centers["bed_0"].x - 90.0, path_y)
+			return _path_stand(_farm.bed_centers["bed_0"].x - 90.0)
 		"path_east":
-			return Vector2(_farm.bed_centers["bed_2"].x + 70.0, path_y)
+			return _path_stand(_farm.bed_centers["bed_2"].x + 70.0)
 		"south_bed1_near":
-			return _farm.nearest_walkable(_farm.bed_centers["bed_1"] + Vector2(0, 56))
+			return _farm.nearest_walkable(_farm.bed_centers["bed_1"] + Vector2(0, 44))
 		"south_bed3":
-			return _farm.nearest_walkable(_farm.bed_centers["bed_3"] + Vector2(-40, 56))
+			return _farm.nearest_walkable(_farm.bed_centers["bed_3"] + Vector2(-40, 44))
 		"south_bed5":
-			return _farm.nearest_walkable(_farm.bed_centers["bed_5"] + Vector2(40, 56))
+			## Stay on the lip, not jammed into the south perimeter rails.
+			return _farm.nearest_walkable(_farm.bed_centers["bed_5"] + Vector2(24, 40))
 		"gate_out":
 			return _farm.gate_world + Vector2(-90, 24)
 		"pen_in":

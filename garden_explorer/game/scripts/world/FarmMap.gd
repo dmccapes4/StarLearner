@@ -4,14 +4,18 @@ extends Node2D
 ## One sprite fence around the yard; the pen shares N/E/S rails. West divider + gate only.
 
 const MAP_PATH := "res://data/map.json"
+## Hit / path slot samples (tile space). Visual plant packs use furrow plot centers.
 const SLOT_OFFSETS := [
 	Vector2(-0.35, -0.25), Vector2(0.35, -0.25),
 	Vector2(-0.35, 0.25), Vector2(0.35, 0.25),
 ]
+## Soil diamond matching `_add_plot_grid` (furrow cross on this inset).
+const PLOT_SOIL_SCALE := 0.82
 const BED_HEIGHT := 28.0
 ## Collision pad beyond visual half — keep in sync with bed_approach stand-off.
 ## Keep modest so aisle gaps between beds stay A*-walkable.
-const BED_SOLID_PAD := 1.08
+## Pad past visible wood so A* tile centers cannot sit on soil / lip.
+const BED_SOLID_PAD := 1.18
 ## Stand just outside the raised lip — next to the bed for gardening, not mid-path.
 const BED_STAND_TILES := 0.68
 ## Opposite-face taps may be longer than the near face; still prefer gap routes.
@@ -52,6 +56,33 @@ var _yard_max: Vector2 = Vector2.ZERO
 var _fence_post_keys: Dictionary = {}
 ## Keep the gardener inside the rails (tile units inset from yard bounds).
 const YARD_WALK_INSET := 0.9
+## Meadow trees outside the rails — kept clear of posts so canopies don't sit on them.
+## Decorative trees outside the yard. South row sits fully past the rail so
+## fence posts don't bisect trunks; canopy tops kiss / slightly overlap the
+## fence bottom (same read as the west bush).
+const MEADOW_TREES := [
+	{"tile": Vector2(-12.0, -3.5), "variant": "large", "scale": 3.2},
+	{"tile": Vector2(-7.0, -5.8), "variant": "med", "scale": 2.9},
+	{"tile": Vector2(-2.0, -5.9), "variant": "large", "scale": 3.1},
+	{"tile": Vector2(3.5, -5.9), "variant": "med", "scale": 2.8},
+	{"tile": Vector2(9.0, -5.7), "variant": "narrow", "scale": 2.7},
+	{"tile": Vector2(17.8, -2.0), "variant": "large", "scale": 3.0},
+	{"tile": Vector2(18.0, 2.5), "variant": "med", "scale": 2.8},
+	{"tile": Vector2(17.8, 7.0), "variant": "bush", "scale": 2.3},
+	{"tile": Vector2(-12.0, 1.5), "variant": "med", "scale": 2.7},
+	{"tile": Vector2(-11.8, 5.5), "variant": "narrow", "scale": 2.5},
+	{"tile": Vector2(-11.6, 9.5), "variant": "bush", "scale": 2.2},
+	## South: whole crown south of the rails so posts don't bisect trunks;
+	## canopy top sits just under the post bottoms (bush-like tuck).
+	{"tile": Vector2(-3.5, 18.6), "variant": "large", "scale": 3.0},
+	{"tile": Vector2(1.5, 19.0), "variant": "med", "scale": 2.9},
+	{"tile": Vector2(6.5, 18.6), "variant": "med", "scale": 2.7},
+	{"tile": Vector2(11.0, 15.4), "variant": "bush", "scale": 2.3},
+]
+var _meadow_trees: Array = [] ## Sprite2D
+var _season_id: String = "spring"
+var _tree_wind_frame: int = 0
+var _tree_wind_timer: Timer
 
 func _ready() -> void:
 	## World owns the authoritative build (with sprites). Skip auto-build to
@@ -69,20 +100,22 @@ func build_from_file(path: String = MAP_PATH) -> void:
 	_clear_visuals()
 	_build_meadows()
 	_build_ground()
-	_build_perimeter_fence()
 	_build_shed()
 	_build_beds()
+	_build_perimeter_fence()
+	_build_meadow_trees()
 	_build_fence()
 	_build_path()
 	_register_animal_spawns()
 	_compute_bounds()
 	_rebuild_nav()
+	apply_season_tint(_season_id)
 	var spawn: Dictionary = data.get("player_spawn_tile", {"x": 2, "y": 4})
 	spawn_world = nearest_walkable(IsoUtil.tile_to_world(Vector2(float(spawn.x), float(spawn.y))))
-	if shed_door_world != Vector2.ZERO:
-		shed_door_world = nearest_walkable(shed_door_world)
-	else:
-		shed_door_world = nearest_walkable(shed_center + Vector2(36, 20))
+	if shed_door_world == Vector2.ZERO:
+		shed_door_world = shed_center + Vector2(36, 40)
+	## Prefer a clear apron stand — never leave the interact goal inside a bed.
+	shed_door_world = shed_approach_world()
 	if dog_spawn_world != Vector2.ZERO:
 		dog_spawn_world = nearest_dog_walkable(dog_spawn_world)
 		animal_positions["dog"] = dog_spawn_world
@@ -117,23 +150,26 @@ func zone_at(world_pos: Vector2) -> Dictionary:
 		if not animal_id.is_empty():
 			return {"id": animal_id, "kind": "animal"}
 		return {"id": "fence", "kind": "fence"}
-	var loose := animal_at(world_pos, 30.0)
+	## Yard dog: tight tap radius so path/bed taps near Buddy aren't stolen.
+	var loose := animal_at(world_pos, 18.0)
 	if not loose.is_empty():
 		return {"id": loose, "kind": "animal"}
 	return {}
 
 func animal_at(world_pos: Vector2, radius: float = 48.0) -> String:
 	var best := ""
-	var best_d := radius * radius
+	var best_d := INF
 	for id in animal_positions.keys():
-		var pos: Vector2 = animal_positions[id]
-		var d := world_pos.distance_squared_to(pos)
-		if d <= best_d:
+		## Buddy needs a deliberate tap — ignore him outside a smaller bubble.
+		var r := minf(radius, 20.0) if str(id).begins_with("dog") else radius
+		var d := world_pos.distance_squared_to(animal_positions[id] as Vector2)
+		if d <= r * r and d < best_d:
 			best_d = d
 			best = str(id)
 	return best
 
 func apply_season_tint(season_id: String) -> void:
+	_season_id = season_id
 	var ground := get_node_or_null("Ground") as Polygon2D
 	if ground == null:
 		return
@@ -150,79 +186,123 @@ func apply_season_tint(season_id: String) -> void:
 		_:
 			## Spring — lively green.
 			ground.modulate = Color(0.98, 1.05, 0.95, 1)
+	_apply_meadow_tree_season(season_id)
 	_apply_season_decor(season_id)
 
-## Scatter decals + weather per season: fall leaves, spring flowers,
-## winter snow/rain particles. Cheap Polygon2Ds — no assets required.
+## Scatter decals + weather per season: fall leaves (ground + falling),
+## spring flowers, winter rain over the full yard (above beds).
 func _apply_season_decor(season_id: String) -> void:
 	var old := get_node_or_null("SeasonDecor")
 	if old:
-		old.queue_free()
+		## Free immediately — queue_free keeps the name until frame end and
+		## blocks the replacement node (weather children never register).
+		remove_child(old)
+		old.free()
+	_clear_weather_layer()
 	var decor := Node2D.new()
 	decor.name = "SeasonDecor"
-	decor.z_index = 2
+	decor.z_as_relative = false
+	decor.z_index = IsoUtil.DEPTH_OFFSET - 10 ## ground decals under props
 	add_child(decor)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20260725
 	match season_id:
 		"fall":
-			for i in 46:
-				var p := _random_yard_point(rng)
-				if p == Vector2.INF:
-					continue
-				var leaf := Polygon2D.new()
-				var s := rng.randf_range(2.5, 4.5)
-				leaf.polygon = PackedVector2Array([
-					p + Vector2(-s, 0), p + Vector2(0, -s * 0.8),
-					p + Vector2(s, 0), p + Vector2(0, s * 0.8),
-				])
-				leaf.color = [Color(0.80, 0.45, 0.15, 0.9), Color(0.72, 0.32, 0.10, 0.9),
-					Color(0.85, 0.60, 0.20, 0.9)][i % 3]
-				decor.add_child(leaf)
+			_scatter_ground_leaves(decor, rng, 46, false)
+			_scatter_ground_leaves(decor, rng, 22, true) ## pen floor too
+			_attach_weather_overlay("leaves")
 		"spring":
-			for i in 36:
-				var p2 := _random_yard_point(rng)
-				if p2 == Vector2.INF:
-					continue
-				var stem := Polygon2D.new()
-				stem.polygon = PackedVector2Array([
-					p2 + Vector2(-1, 0), p2 + Vector2(1, 0),
-					p2 + Vector2(1, -5), p2 + Vector2(-1, -5),
-				])
-				stem.color = Color(0.30, 0.60, 0.25, 0.95)
-				decor.add_child(stem)
-				var bloom := Polygon2D.new()
-				var b := 2.6
-				var c := p2 + Vector2(0, -6)
-				bloom.polygon = PackedVector2Array([
-					c + Vector2(-b, 0), c + Vector2(0, -b), c + Vector2(b, 0), c + Vector2(0, b),
-				])
-				bloom.color = [Color(0.95, 0.75, 0.85, 1), Color(0.98, 0.92, 0.55, 1),
-					Color(0.85, 0.80, 0.98, 1)][i % 3]
-				decor.add_child(bloom)
+			_scatter_ground_flowers(decor, rng, 36, false)
+			_scatter_ground_flowers(decor, rng, 16, true)
 		"winter":
-			var snow := CPUParticles2D.new()
-			snow.name = "Snow"
-			snow.amount = 90
-			snow.lifetime = 6.0
-			snow.preprocess = 3.0
-			snow.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-			snow.emission_rect_extents = Vector2(absf(IsoUtil.tile_to_world(_yard_max).x - IsoUtil.tile_to_world(_yard_min).x) * 0.6, 8)
-			snow.position = Vector2(0, IsoUtil.tile_to_world(_yard_min).y - 160.0)
-			snow.direction = Vector2(0.15, 1.0)
-			snow.spread = 12.0
-			snow.gravity = Vector2(0, 14)
-			snow.initial_velocity_min = 26.0
-			snow.initial_velocity_max = 52.0
-			snow.scale_amount_min = 1.2
-			snow.scale_amount_max = 2.4
-			snow.color = Color(1, 1, 1, 0.85)
-			snow.z_index = 400
-			decor.add_child(snow)
+			## World-space rain — yard + pen landings (SeasonWeather).
+			_attach_weather_overlay("rain")
 		_:
 			pass
 
+func _scatter_ground_leaves(decor: Node2D, rng: RandomNumberGenerator, count: int, in_pen_area: bool) -> void:
+	for i in count:
+		var p: Vector2 = _random_pen_point(rng) if in_pen_area else _random_yard_point(rng)
+		if p == Vector2.INF:
+			continue
+		var leaf := Polygon2D.new()
+		var s := rng.randf_range(2.5, 4.5)
+		leaf.polygon = PackedVector2Array([
+			p + Vector2(-s, 0), p + Vector2(0, -s * 0.8),
+			p + Vector2(s, 0), p + Vector2(0, s * 0.8),
+		])
+		leaf.color = [Color(0.80, 0.45, 0.15, 0.9), Color(0.72, 0.32, 0.10, 0.9),
+			Color(0.85, 0.60, 0.20, 0.9)][i % 3]
+		decor.add_child(leaf)
+
+func _scatter_ground_flowers(decor: Node2D, rng: RandomNumberGenerator, count: int, in_pen_area: bool) -> void:
+	for i in count:
+		var p2: Vector2 = _random_pen_point(rng) if in_pen_area else _random_yard_point(rng)
+		if p2 == Vector2.INF:
+			continue
+		var stem := Polygon2D.new()
+		stem.polygon = PackedVector2Array([
+			p2 + Vector2(-1, 0), p2 + Vector2(1, 0),
+			p2 + Vector2(1, -5), p2 + Vector2(-1, -5),
+		])
+		stem.color = Color(0.30, 0.60, 0.25, 0.95)
+		decor.add_child(stem)
+		var bloom := Polygon2D.new()
+		var b := 2.6
+		var c := p2 + Vector2(0, -6)
+		bloom.polygon = PackedVector2Array([
+			c + Vector2(-b, 0), c + Vector2(0, -b), c + Vector2(b, 0), c + Vector2(0, b),
+		])
+		bloom.color = [Color(0.95, 0.75, 0.85, 1), Color(0.98, 0.92, 0.55, 1),
+			Color(0.85, 0.80, 0.98, 1)][i % 3]
+		decor.add_child(bloom)
+
+func _clear_weather_layer() -> void:
+	## World-space weather lives on FarmMap; also scrub legacy CanvasLayer hosts.
+	var local := get_node_or_null("SeasonWeather")
+	if local:
+		remove_child(local)
+		local.free()
+	var hosts: Array = [self]
+	if is_inside_tree():
+		var scene := get_tree().current_scene
+		if scene:
+			hosts.append(scene)
+		if get_parent():
+			hosts.append(get_parent())
+			if get_parent().get_parent():
+				hosts.append(get_parent().get_parent())
+	for host in hosts:
+		if host == null:
+			continue
+		var old: Node = host.get_node_or_null("WeatherLayer")
+		if old:
+			host.remove_child(old)
+			old.free()
+
+func _attach_weather_overlay(mode: String) -> void:
+	## World-space mapped landings so rain/leaves depth-sort with beds/plants.
+	_clear_weather_layer()
+	var weather = (load("res://scripts/world/SeasonWeather.gd") as GDScript).new()
+	weather.name = "SeasonWeather"
+	add_child(weather)
+	weather.setup(self, sprites, mode)
+
+func _yard_world_aabb() -> Rect2:
+	## Axis-aligned bounds of the farm yard diamond (playable area).
+	if farm_yard_poly.is_empty():
+		return meadow_aabb()
+	var min_p: Vector2 = farm_yard_poly[0]
+	var max_p: Vector2 = farm_yard_poly[0]
+	for p in farm_yard_poly:
+		min_p.x = minf(min_p.x, p.x)
+		min_p.y = minf(min_p.y, p.y)
+		max_p.x = maxf(max_p.x, p.x)
+		max_p.y = maxf(max_p.y, p.y)
+	return Rect2(min_p, max_p - min_p)
+
 func _random_yard_point(rng: RandomNumberGenerator) -> Vector2:
+	## Playable yard floor outside the animal pen (garden side).
 	for attempt in 12:
 		var tx := rng.randf_range(_yard_min.x + 0.5, _yard_max.x - 0.5)
 		var ty := rng.randf_range(_yard_min.y + 0.5, _yard_max.y - 0.5)
@@ -230,6 +310,97 @@ func _random_yard_point(rng: RandomNumberGenerator) -> Vector2:
 		if not is_blocked(w) and not in_pen(w):
 			return w
 	return Vector2.INF
+
+func _random_pen_point(rng: RandomNumberGenerator) -> Vector2:
+	## Inside the animal pen (for rain/leaves/decals). Prefer roam inset.
+	var poly: PackedVector2Array = pen_roam_poly if pen_roam_poly.size() >= 3 else fence_poly
+	if poly.size() < 3:
+		return Vector2.INF
+	var min_p: Vector2 = poly[0]
+	var max_p: Vector2 = poly[0]
+	for p in poly:
+		min_p.x = minf(min_p.x, p.x)
+		min_p.y = minf(min_p.y, p.y)
+		max_p.x = maxf(max_p.x, p.x)
+		max_p.y = maxf(max_p.y, p.y)
+	for attempt in 16:
+		var w := Vector2(rng.randf_range(min_p.x, max_p.x), rng.randf_range(min_p.y, max_p.y))
+		if not IsoUtil.point_in_polygon(w, poly):
+			continue
+		if is_blocked(w):
+			continue
+		return w
+	return Vector2.INF
+
+func _build_meadow_trees() -> void:
+	## Decorative trees outside the yard fence — never on the walkable diamond.
+	_meadow_trees.clear()
+	var old := get_node_or_null("MeadowTrees")
+	if old:
+		remove_child(old)
+		old.free()
+	_tree_wind_timer = null
+	if sprites == null:
+		return
+	var root := Node2D.new()
+	root.name = "MeadowTrees"
+	add_child(root)
+	for i in MEADOW_TREES.size():
+		var spec: Dictionary = MEADOW_TREES[i]
+		var tile: Vector2 = spec.get("tile", Vector2.ZERO)
+		var world := IsoUtil.tile_to_world(tile)
+		## Must sit outside the fenced yard (and preferably outside walk inset).
+		if not farm_yard_poly.is_empty() and IsoUtil.point_in_polygon(world, farm_yard_poly):
+			continue
+		var variant := str(spec.get("variant", "med"))
+		var tex := sprites.tree_texture(_season_id, variant, 0)
+		if tex == null:
+			push_warning("FarmMap: missing tree texture %s/%s" % [_season_id, variant])
+			continue
+		var sc := float(spec.get("scale", 2.5))
+		var spr := Sprite2D.new()
+		spr.name = "MeadowTree_%d" % i
+		spr.texture = tex
+		spr.centered = true
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		spr.scale = Vector2(sc, sc)
+		var h := float(FarmSprites.TREE_CELL_H) * sc
+		spr.position = world - Vector2(0, h * 0.42)
+		spr.set_meta("tree_variant", variant)
+		spr.set_meta("tree_feet_y", world.y)
+		spr.set_meta("wind_phase", i % 2)
+		IsoUtil.apply_depth(spr, world.y, IsoUtil.BIAS_TREE)
+		root.add_child(spr)
+		_meadow_trees.append(spr)
+	if not _meadow_trees.is_empty():
+		_tree_wind_timer = Timer.new()
+		_tree_wind_timer.name = "TreeWind"
+		_tree_wind_timer.wait_time = 0.72
+		_tree_wind_timer.autostart = true
+		_tree_wind_timer.timeout.connect(_on_tree_wind_tick)
+		root.add_child(_tree_wind_timer)
+	print("FarmMap: meadow trees=%d" % _meadow_trees.size())
+
+func _on_tree_wind_tick() -> void:
+	_tree_wind_frame = 1 - _tree_wind_frame
+	_refresh_meadow_tree_frames()
+
+func _refresh_meadow_tree_frames() -> void:
+	if sprites == null:
+		return
+	for spr in _meadow_trees:
+		if spr == null or not is_instance_valid(spr):
+			continue
+		var variant := str(spr.get_meta("tree_variant", "med"))
+		var phase := int(spr.get_meta("wind_phase", 0))
+		var frame := (_tree_wind_frame + phase) % FarmSprites.TREE_WIND_FRAMES
+		var tex := sprites.tree_texture(_season_id, variant, frame)
+		if tex:
+			(spr as Sprite2D).texture = tex
+
+func _apply_meadow_tree_season(season_id: String) -> void:
+	_season_id = season_id
+	_refresh_meadow_tree_frames()
 
 func slot_world(bed_id: String, slot: int) -> Vector2:
 	var arr: Array = slot_positions.get(bed_id, [])
@@ -429,7 +600,8 @@ func _clear_visuals() -> void:
 	coop_poly = PackedVector2Array()
 	coop_world = Vector2.ZERO
 	coop_door_world = Vector2.ZERO
-
+	_meadow_trees.clear()
+	_fence_post_keys.clear()
 func _build_meadows() -> void:
 	## Full AABB underlay first so zoomed camera never shows void past the grass diamond.
 	var b: Dictionary = data.get("bounds_tiles", {})
@@ -638,7 +810,8 @@ func _place_fence_sprite(name: String, tex: Texture2D, world: Vector2, scale: fl
 	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	spr.scale = Vector2(scale, scale)
 	spr.position = world + Vector2(0, -6)
-	IsoUtil.apply_depth(spr, world.y, bias)
+	## Perimeter fence must read in front of beds even when iso Y is ambiguous.
+	IsoUtil.apply_depth(spr, _fence_sort_y(world.y), bias)
 	add_child(spr)
 
 func _place_fence_rail(name: String, kind: String, tile_a: Vector2, tile_b: Vector2) -> void:
@@ -656,8 +829,24 @@ func _place_fence_rail(name: String, kind: String, tile_a: Vector2, tile_b: Vect
 	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	spr.scale = Vector2(2.0, 2.0)
 	spr.position = mid + Vector2(0, -6)
-	IsoUtil.apply_depth(spr, minf(wa.y, wb.y), IsoUtil.BIAS_RAIL)
+	IsoUtil.apply_depth(spr, _fence_sort_y(maxf(wa.y, wb.y)), IsoUtil.BIAS_RAIL)
 	add_child(spr)
+
+func _fence_sort_y(world_y: float) -> float:
+	## Near-side rails/posts must clear bed decks (SW iso Y can put beds in front).
+	## Far-side fence keeps natural Y so north rails stay behind the yard.
+	var bed_y := _max_bed_sort_y()
+	if world_y >= bed_y - 28.0:
+		return maxf(world_y, bed_y + 14.0)
+	return world_y
+
+func _max_bed_sort_y() -> float:
+	var best := -INF
+	for id in bed_tiles.keys():
+		best = maxf(best, _bed_sort_y(bed_tiles[id], bed_halves[id]))
+	if best == -INF:
+		return IsoUtil.tile_to_world(_yard_max).y
+	return best
 
 func _try_place_post(name: String, tile: Vector2) -> bool:
 	## One post per joint. Deduped by key + proximity (corners / T-junctions).
@@ -765,7 +954,8 @@ func _build_shed() -> void:
 	## Bottom of the facade sits on the south corner row of the footprint,
 	## so the door lands at the footprint's near edge, centered.
 	var south := IsoUtil.tile_to_world(tile + Vector2(half.x * 0.5, half.y * 0.5))
-	shed_door_world = south + Vector2(0, 28)
+	## Far enough south that nearest_walkable cannot snap into a bed diamond.
+	shed_door_world = south + Vector2(0, 44)
 
 	var tex: Texture2D = load(SHED_SPRITE) if ResourceLoader.exists(SHED_SPRITE) else null
 	if tex:
@@ -789,8 +979,90 @@ func _build_shed() -> void:
 
 func _bed_sort_y(tile: Vector2, half: Vector2) -> float:
 	## Near-side ground contact, inset from the extreme south tip so a gardener
-	## at the lip sorts in front of the raised NW corner (not under it).
-	return IsoUtil.feet_south(tile, half, 0.62).y
+	## at the lip / path sorts in front of the raised deck (not under it).
+	return IsoUtil.feet_south(tile, half, 0.52).y
+
+func bed_sort_y(bed_id: String) -> float:
+	## Public sort key for plants / stars / weather that sit on a bed deck.
+	if not bed_tiles.has(bed_id):
+		return bed_centers.get(bed_id, Vector2.ZERO).y
+	return _bed_sort_y(bed_tiles[bed_id], bed_halves[bed_id])
+
+func player_depth_y(world_pos: Vector2) -> float:
+	## Sort past every nearby prop whose art can cover the gardener.
+	## Same-bed lip was not enough: a slightly more-southern neighbor bed has
+	## higher sort_y, so its northern canopy painted over the player even when
+	## player_z beat *that* bed's plant_z was never required.
+	##
+	## Contract: player_z = depth_y + BIAS_PLAYER must exceed
+	##   bed_sort_y + BIAS_PLANT, gate.y + BIAS_GATE, and (near south) the
+	##   perimeter fence band from _fence_sort_y (bed_max + 14 + BIAS_POST).
+	var y := world_pos.y
+	const CLEAR_PAST := 22.0
+	## Raised wood + pack foliage still cover the path north of the sort line.
+	const CANOPY_NORTH := 56.0
+	for id in bed_tiles.keys():
+		var half: Vector2 = bed_halves[id]
+		var c: Vector2 = bed_centers[id]
+		var sy := _bed_sort_y(bed_tiles[id], half)
+		var reach := (half.x + half.y) * 22.0 + 48.0
+		## A more-southern bed's north canopy shades far up the iso diagonal.
+		if sy > world_pos.y:
+			reach += minf(sy - world_pos.y, 90.0) + 36.0
+		var in_soil := bed_polys.has(id) and not (bed_polys[id] as PackedVector2Array).is_empty() \
+			and Geometry2D.is_point_in_polygon(world_pos, bed_polys[id])
+		if not in_soil and world_pos.distance_to(c) > reach:
+			continue
+		if in_soil or world_pos.y >= sy - CANOPY_NORTH:
+			y = maxf(y, sy + CLEAR_PAST)
+	## Gate leaf / posts share the fence sort band (often _fence_sort_y-boosted).
+	## Framing posts sit slightly south of gate_world — need a wide margin.
+	if gate_world != Vector2.ZERO and world_pos.distance_to(gate_world) < 80.0:
+		var gate_sort := _fence_sort_y(gate_world.y + 18.0)
+		y = maxf(y, gate_sort + 36.0)
+		y = maxf(y, gate_world.y + 40.0)
+	## Near-side perimeter fence is boosted past all beds (_fence_sort_y).
+	## Match that sort key or south-lip / bed_5 goals draw under the rails.
+	var bed_max := _max_bed_sort_y()
+	if world_pos.y >= bed_max - 48.0:
+		var fence_sort := _fence_sort_y(maxf(world_pos.y, bed_max))
+		y = maxf(y, fence_sort + 22.0)
+	return y
+
+func shed_approach_world() -> Vector2:
+	## Walk-to stand on the dirt apron — never inside a bed diamond.
+	var door := shed_door_world if shed_door_world != Vector2.ZERO \
+		else shed_center + Vector2(36, 40)
+	var candidates: Array = [
+		door,
+		door + Vector2(0, 16),
+		door + Vector2(18, 20),
+		door + Vector2(-18, 20),
+		door + Vector2(0, 32),
+		door + Vector2(28, 28),
+		door + Vector2(-28, 28),
+	]
+	for c in candidates:
+		var w: Vector2 = nearest_walkable(c as Vector2)
+		if not _near_bed_footprint(w, 14.0):
+			return w
+	return nearest_walkable(door + Vector2(0, 48))
+
+func _near_bed_footprint(world_pos: Vector2, pad: float) -> bool:
+	for id in bed_polys.keys():
+		var poly: PackedVector2Array = bed_polys[id]
+		if poly.is_empty():
+			continue
+		if Geometry2D.is_point_in_polygon(world_pos, poly):
+			return true
+		## Pad: close to bed edge still reads as "in the bed" for kids.
+		var c: Vector2 = bed_centers.get(id, world_pos)
+		var half: Vector2 = bed_halves.get(id, Vector2(1.0, 0.8))
+		if world_pos.distance_to(c) < (half.x + half.y) * 18.0 + pad:
+			## Only count when roughly on the bed's south/path side cluster.
+			if absf(world_pos.y - c.y) < 55.0 and absf(world_pos.x - c.x) < 70.0:
+				return true
+	return false
 
 func _build_beds() -> void:
 	var beds: Array = data.get("beds", [])
@@ -831,8 +1103,7 @@ func _build_beds() -> void:
 		_add_plot_grid(id, tile, half, z + 3)
 		_add_slot_markers(id, tile, half)
 
-## Iso half-size (in tiles) of one "plant here" patch. Kept comfortably inside
-## the bed lip (half * 0.90) and clear of the neighboring slot.
+## Iso half-size (in tiles) of one plot patch — inside its furrow square, no overlap.
 const SLOT_MARKER_HALF := Vector2(0.22, 0.155)
 
 func _add_slot_markers(bed_id: String, tile: Vector2, half: Vector2) -> void:
@@ -843,10 +1114,52 @@ func _add_slot_markers(bed_id: String, tile: Vector2, half: Vector2) -> void:
 		positions.append(IsoUtil.tile_to_world(slot_tile))
 	slot_positions[bed_id] = positions
 
+func plot_centers_raised(bed_id: String) -> Array:
+	## World positions of the four furrow-plot centers on the raised soil top.
+	## Order: N, E, S, W (diamond corners) — matches bed_packs bake order.
+	if not bed_tiles.has(bed_id):
+		return []
+	return _plot_centers_raised(bed_tiles[bed_id], bed_halves[bed_id])
+
+func plot_offsets_from_cross(bed_id: String) -> Array:
+	## plot_center - bed_plot_cross for each plot (iso-correct pack child offsets).
+	var cross := bed_plot_cross(bed_id)
+	var out: Array = []
+	for p in plot_centers_raised(bed_id):
+		out.append(p - cross)
+	return out
+
+## Fraction along cross→soil-corner for plant landings (match tools/gen_bed_plant_packs.py).
+const PLOT_CORNER_T := 0.42
+## Seeds use geometric plot centroids (t=0.5), not the inset plant-foot landings.
+const SEED_PLOT_CORNER_T := 0.5
+
+func _plot_centers_raised(tile: Vector2, half: Vector2, corner_t: float = PLOT_CORNER_T) -> Array:
+	## Furrows split the soil diamond into N/E/S/W regions. Landing sits on the
+	## ray from the furrow cross toward each soil corner (not tile-space NW/NE).
+	var top: PackedVector2Array = IsoUtil.raise_poly(
+		IsoUtil.diamond_polygon(tile, half * PLOT_SOIL_SCALE), BED_HEIGHT
+	)
+	var cross := IsoUtil.tile_to_world(tile) + Vector2(0, -BED_HEIGHT)
+	var centers: Array = []
+	for i in mini(4, top.size()):
+		centers.append(cross.lerp(top[i], corner_t))
+	return centers
+
+func plot_seed_offsets_from_cross(bed_id: String) -> Array:
+	## True plot centers for seed sprites (geometric centroid of each furrow region).
+	if not bed_tiles.has(bed_id):
+		return []
+	var cross := bed_plot_cross(bed_id)
+	var out: Array = []
+	for p in _plot_centers_raised(bed_tiles[bed_id], bed_halves[bed_id], SEED_PLOT_CORNER_T):
+		out.append(p - cross)
+	return out
+
 func _add_plot_grid(bed_id: String, tile: Vector2, half: Vector2, z: int) -> void:
-	## Divide the soil-top diamond into four iso squares with two furrow lines
+	## Divide the soil-top diamond into four squares with two furrow lines
 	## through the center (midpoint of each edge to the opposite edge midpoint).
-	var top := IsoUtil.raise_poly(IsoUtil.diamond_polygon(tile, half * 0.82), BED_HEIGHT)
+	var top := IsoUtil.raise_poly(IsoUtil.diamond_polygon(tile, half * PLOT_SOIL_SCALE), BED_HEIGHT)
 	var n := top[0]
 	var e := top[1]
 	var s := top[2]
@@ -887,8 +1200,11 @@ func bed_soil_top_poly(bed_id: String) -> PackedVector2Array:
 	return IsoUtil.raise_poly(IsoUtil.diamond_polygon(tile, half * 0.90), BED_HEIGHT)
 
 func slot_plant_world(bed_id: String, slot: int) -> Vector2:
-	## Visual plant anchor on the raised soil top.
-	return slot_world(bed_id, slot) + Vector2(0, -BED_HEIGHT)
+	## Raised soil — center of furrow plot (for packs / tools).
+	var centers: Array = plot_centers_raised(bed_id)
+	if slot < 0 or slot >= centers.size():
+		return bed_plot_cross(bed_id)
+	return centers[slot]
 
 func bed_plot_cross(bed_id: String) -> Vector2:
 	## Where the four plot furrows meet — soil-top center of the bed.
@@ -1079,7 +1395,10 @@ func _nav_point_blocked(world_pos: Vector2) -> bool:
 			return true
 		if coop_poly.size() >= 3 and IsoUtil.point_in_polygon(p, coop_poly):
 			return true
-	for off_b in [Vector2(10, 0), Vector2(-10, 0), Vector2(0, 8), Vector2(0, -8)]:
+	for off_b in [
+		Vector2(14, 0), Vector2(-14, 0), Vector2(0, 12), Vector2(0, -12),
+		Vector2(12, 10), Vector2(-12, 10), Vector2(12, -10), Vector2(-12, -10),
+	]:
 		var pb: Vector2 = world_pos + off_b
 		for id in bed_polys.keys():
 			var poly: PackedVector2Array = bed_polys[id]
@@ -1318,6 +1637,10 @@ func _rebuild_nav() -> void:
 			var wb: Vector2 = _astar.get_point_position(b)
 			## Pen fence is impassable except through the gate opening.
 			if not crossing_allowed(wa, wb):
+				continue
+			## Diagonal shortcuts must not cut across a bed diamond.
+			var mid: Vector2 = (wa + wb) * 0.5
+			if _nav_point_blocked(mid):
 				continue
 			if not _astar.are_points_connected(a, b):
 				var diag := absi(d.x) + absi(d.y) == 2
