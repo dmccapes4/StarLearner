@@ -18,6 +18,11 @@ export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
 
 mkdir -p "$ROOT/tools/build"
 
+if [[ "${SKIP_QA:-0}" != "1" ]]; then
+  echo "=== interactive QA (ant) ==="
+  bash "$ROOT/../tools/run_interactive_qa.sh" ant
+fi
+
 echo "=== export .pck ==="
 "$GODOT" --headless --path "$GAME" --export-pack "Android" /tmp/ant_colony.pck
 
@@ -50,8 +55,8 @@ cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
   -Pexport_package_name=com.dylan.ant_explorer \
-  -Pexport_version_code=28 \
-  -Pexport_version_name=0.28 \
+  -Pexport_version_code=38 \
+  -Pexport_version_name=0.34 \
   -Pexport_enabled_abis=arm64-v8a \
   -Prelease_keystore_file="$KS" \
   -Prelease_keystore_alias=ants \
