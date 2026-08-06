@@ -1,15 +1,14 @@
 class_name PlaygroundScene
 extends Control
 ## Mode 3 — 3D FLIGHT PLAYGROUND. A fun mini solar system with relative-sized
-## planets and simplified dynamics. The player IS the pilot:
-##   · EVERY LAUNCH: pick speed mode (five gears vs cruise/stop), full
-##     tilt+surge tutorial (no saved controls), aim gate, then fly
-##   · tilt to steer; lift the phone to speed up (or cruise), lower it to
-##     slow down (or stop) — quick jerks, no microphone
-##   · the ship stays near the planetary plane — drift too high or low and
-##     it gently steers back (with a cooldown so the nudge isn't spammy)
-##   · fly right AT a world (head-on, close) → orbit cinematic
-##   · tap a planet → pause tile; tap tile to travel, elsewhere to resume
+## planets and simplified dynamics. The player IS the pilot (tap-only):
+##   · tap a world (even while turning) → auto-fly there; empty cancels
+##   · tap beside the cross → turn; farther from center = more turn (slow coast)
+##   · Sun tile (bottom-left) → fly to the Sun; arrow points toward it
+##   · tap joystick forward → speed up; back → slow down
+##   · red octagon → stop; green circle → cruise
+##   · fly into a world → orbit cinematic (collision capture)
+## Motion (tilt/lift) code remains for QA helpers but is not used in flight.
 
 
 const OrbitCinematic := preload("res://scripts/OrbitCinematic.gd")
@@ -19,18 +18,45 @@ signal arrived(dest_id: String)
 signal go_home()
 signal learn_more(dest_id: String)
 
-const SPACING := 1.6           ## orbit_r multiplier — roomy, not adjacent
-const SPEED := 26.0            ## cruise / step 4 / jerk-lift resume
+const SPACING := 1.8           ## orbit_r multiplier — room for steer between worlds
+## Decorative belt rocks (visual only — never registered in `_bodies`).
+const BELT_DECOR_COUNT := 64
+const BELT_DECOR_RADIAL := 0.10   ## ± fraction of belt ring radius
+const BELT_DECOR_Y := 5.0
+const SPEED := 26.0            ## cruise / step 4 / lift resume
 const SPEED_MIN := 0.0
-const TURN_RATE := 1.4         ## rad/s at full tilt
+const TURN_RATE := 1.4         ## rad/s at full tilt (legacy motion)
 const PITCH_RATE := 0.9
-const Y_MAX := 34.0            ## hard band above/below the planetary plane
-const Y_SOFT := 24.0           ## start steering back past this height
-const Y_CLEAR := 16.0          ## must return inside here to clear band warn
-const BAND_COOLDOWN_S := 10.0  ## don't re-narrate the band every bounce
+const SEEK_TURN := 2.2         ## auto-aim rate while seeking a tapped world
+const SEEK_SPEED_MIN := SPEED * 0.75  ## never crawl while auto-flying
+const Y_MAX := 220.0           ## soft ceiling — far above/below for sightseeing
+const Y_SOFT := 70.0           ## gentle pitch bias toward level / plane starts here
+const Y_CLEAR := 40.0          ## clear rare band VO once back inside
+const BAND_COOLDOWN_S := 20.0  ## don't re-narrate the band every bounce
+const PITCH_ATTITUDE_DECAY := 0.28  ## legacy tilt-band helper only (unused in tap flight)
 const ORBIT_SPEED := 0.3
-const TAP_RADIUS_PX := 52.0
+const TAP_RADIUS_PX := 72.0       ## center / intentional planet pick
+const TAP_PLANET_TIGHT_PX := 34.0 ## outer taps: must hit this close to seek
+const TAP_GUARD_S := 0.28      ## ignore mouse echo after a touch
 const TIME_SCALE := 0.22       ## planets drift slowly — easy targets
+
+## ── Tap flight (primary controls) ──────────────────────────────────
+## One tap sets a coasting turn rate from how far the finger is from the
+## cross (near = nudge, far = big swing). Slow decay — no mash required.
+## Pitch/yaw hold after a coast — no idle auto-level.
+const TAP_RATE_MIN := 0.24       ## rad/s just outside the home cross
+const TAP_RATE_MAX := 0.92       ## rad/s at full reach (slightly less twitchy)
+const TAP_RATE_DECAY := 0.32     ## rad/s² coast back to 0 (~3s from full)
+const TAP_HOME_RADIUS_PX := 70.0 ## near cross: clear turn rates / level nose
+const TAP_REACH_FRAC := 0.42     ## full turn = this × min(screen w,h)
+const TAP_TURNING_EPS := 0.07    ## |rate| above this → still coasting a turn
+const TAP_YAW_STEP := 0.55       ## keyboard / suite medium impulse (rad/s)
+const TAP_PITCH_STEP := 0.50     ## keyboard / suite medium pitch impulse
+const TAP_SPEED_CD_S := 0.12     ## short debounce — mash still reaches limit
+const SPEED_CRUISE_DECAY_S := 2.2 ## after last stick tap, step toward cruise
+const SPEED_VO_CD_S := 0.85      ## don't spam Speeding/Slowing while mashing
+const LINE_WELCOME_TAP := "You're cleared! Tap a planet to visit — even while turning. Farther from the cross means a bigger turn. Sun tile flies you to the Sun."
+const LINE_CRUISE_DECAY := "Back to cruising speed."
 
 ## ── Tilt steering (calibrated, angle-based) ────────────────────────
 const CAL_TIME_S := 0.6
@@ -38,30 +64,25 @@ const TILT_FULL_RAD := 0.30
 const TILT_DEAD_RAD := 0.035
 const TILT_LP_TAU_S := 0.12
 
-## ── Surge speed: calibrated jerks ──────────────────────────────────
-## Speed gears (5): jerk lift +1 / jerk lower −1 (incl. stop at 0).
-## Cruise/stop: jerk lift → cruise, jerk lower → stop.
-## No mic — LE keeps RECORD_AUDIO.
-const SURGE_DEAD := 0.30
-const SURGE_ARM_DEFAULT := 0.70
-const SURGE_JERK_DEFAULT := 3.8
-const SURGE_ARM_MIN := 0.45
-const SURGE_ARM_MAX := 1.40
-const SURGE_JERK_MIN := 1.35
-const SURGE_JERK_MIN_CRUISE := 1.35
-const SURGE_JERK_CD_S := 2.0
+## ── Surge speed (lift/lower) — same idea as tilt, not a gesture FSM ──
+## Accel residual along −ĝ vs rest. Cross FIRE once → ±1 gear (or
+## cruise/stop); must return below DEAD before the next step.
+## Gears polarity (matches preferred feel + joystick):
+##   lift phone → slow down (stick forward); lower → speed up (stick aft).
+const SURGE_DEAD := 0.32
+const SURGE_FIRE := 0.62
+const SURGE_ARM_DEFAULT := SURGE_FIRE   ## suite/telem alias
+const SURGE_JERK_DEFAULT := SURGE_FIRE
+const SURGE_JERK_CD_S := 2.0            ## cool-off after a gear change
 const SURGE_LP_TAU_S := 0.05
 const SURGE_PITCH_HOLD_S := 0.35
 const SURGE_QUIET_S := 0.35
 const SURGE_QUIET_EPS := 0.18
 const SURGE_POST_NEUTRAL_S := 0.35
-const SURGE_CAL_FRAC := 0.34
-const SURGE_JERK_FRAC := 0.42
-const TUT_SURGE_MIN := 0.50
-const TUT_SURGE_JERK_MIN := 1.25
-const TUT_SURGE_WIN_S := 2.0
-const TUT_SURGE_POSE_S := 0.55
-const TUT_SURGE_OK_S := 0.45
+const SURGE_TIP_BLOCK := 0.40           ## |pitch| above this blocks soft surges
+const SURGE_READY_GRACE_S := 0.45       ## no fire right after "Joystick ready"
+const TUT_SURGE_MIN := 0.28
+const TUT_SURGE_SETTLE_S := 0.12        ## short rest after VO before listening
 ## 0 = stop; 1..5 = five flying gears (3 = cruise / launch default)
 const SPEED_STEP_STOP := 0
 const SPEED_STEP_MIN := 1
@@ -72,9 +93,6 @@ const SPEED_BLEND_S := 1.2
 const SPEED_STEP_MULT: Array = [0.40, 0.65, 1.0, 1.35, 1.75]
 
 ## ── Surge displacement telemetry (diagnostic only, no gameplay effect) ──
-## Integrates the lift/lower accel signal into a rough velocity/displacement
-## estimate purely so PGTEL can show gesture shape; ship speed itself is
-## driven by the peak-jerk logic in _speed_from_surge, not by this.
 const SURGE_ACCEL_QUIET := 0.40
 const SURGE_DISP_BAND_MIN := 0.22
 const SURGE_VEL_TAU_S := 0.45
@@ -98,29 +116,27 @@ const TEL_PERIOD_S := 0.25
 
 const LINE_WELCOME := "You're cleared for takeoff — have fun out there!"
 const LINE_BAND := "Let's stay where the planets are — gently turning back!"
-const LINE_TILE := "Tap the picture to travel there, or tap anywhere else to keep flying."
+const LINE_SEEK := "On our way to %s! Tap anywhere else to cancel."
+const LINE_SEEK_CANCEL := "Okay — keep exploring!"
 const LINE_TUT_RIGHT := "Let's learn to steer! Tilt the phone to the right, like turning a wheel."
 const LINE_TUT_LEFT := "Great! Now tilt it to the left."
 const LINE_TUT_UP := "Now point the phone up, to climb."
 const LINE_TUT_DOWN := "And point it down, to dive."
-const LINE_TUT_SURGE_INTRO := ("Five speed gears. Lift the phone to speed up one gear; "
-	+ "lower it to slow down one gear. Lower again at the bottom to stop.")
-const LINE_TUT_SURGE_INTRO_CRUISE := "Speed is just jerks. Lift the phone to cruise; lower it to stop."
-const LINE_TUT_LIFT := "Lift to speed up."
-const LINE_TUT_LOWER := "Lower to slow down."
-const LINE_TUT_GO_LIFT := "Lift."
-const LINE_TUT_GO_LOWER := "Lower."
+const LINE_TUT_LIFT := "Lift to slow down."
+const LINE_TUT_LOWER := "Lower to speed up."
+const LINE_TUT_LIFT_CRUISE := "Lift to cruise."
+const LINE_TUT_LOWER_CRUISE := "Lower to stop."
 const LINE_AIM := "Now aim the phone straight ahead and hold it steady. Get ready to launch!"
 const LINE_STOP := "Holding position."
 const LINE_RESUME := "Cruising!"
+const LINE_SPEEDING := "Speeding up."
+const LINE_SLOWING := "Slowing down."
+const LINE_JOY_READY := "Joystick ready."
 const LINE_MIN := "You are at minimum velocity."
 const LINE_CRUISE_SPEED := "You are at cruising speed."
 const LINE_MAX := "You are at maximum velocity."
 const LINE_ALREADY_MAX := "You are already at maximum velocity."
 const LINE_ALREADY_STOP := "You are already stopped."
-const LINE_FASTER := "Faster."
-const LINE_SLOWER := "Slower."
-const LINE_READY := "Ready — jerk to change speed."
 
 ## Gears: five-speed jerks. Cruise: cruise/stop jerks.
 const TUT_STEPS_GEARS: Array = [
@@ -132,12 +148,10 @@ const TUT_STEPS_GEARS: Array = [
 		"hint": "Point UP", "line": LINE_TUT_UP},
 	{"kind": "tilt", "axis": 1, "dir": -1.0, "learn": false, "arrow": "↓",
 		"hint": "Point DOWN", "line": LINE_TUT_DOWN},
-	{"kind": "surge", "dir": 1.0, "mode": "jerk", "learn": true, "arrow": "▲",
-		"hint": "LIFT — faster", "line": LINE_TUT_LIFT,
-		"go": LINE_TUT_GO_LIFT},
-	{"kind": "surge", "dir": -1.0, "mode": "jerk", "learn": false, "arrow": "▼",
-		"hint": "LOWER — slower", "line": LINE_TUT_LOWER,
-		"go": LINE_TUT_GO_LOWER},
+	{"kind": "surge", "dir": -1.0, "motion": 1.0, "learn": true, "arrow": "▲",
+		"hint": "LIFT — slower", "line": LINE_TUT_LIFT},
+	{"kind": "surge", "dir": 1.0, "motion": -1.0, "learn": false, "arrow": "▼",
+		"hint": "LOWER — faster", "line": LINE_TUT_LOWER},
 ]
 
 const TUT_STEPS_CRUISE: Array = [
@@ -149,15 +163,13 @@ const TUT_STEPS_CRUISE: Array = [
 		"hint": "Point UP", "line": LINE_TUT_UP},
 	{"kind": "tilt", "axis": 1, "dir": -1.0, "learn": false, "arrow": "↓",
 		"hint": "Point DOWN", "line": LINE_TUT_DOWN},
-	{"kind": "surge", "dir": 1.0, "mode": "jerk", "learn": true, "arrow": "▲",
-		"hint": "LIFT — cruise", "line": LINE_TUT_LIFT,
-		"go": LINE_TUT_GO_LIFT},
-	{"kind": "surge", "dir": -1.0, "mode": "jerk", "learn": false, "arrow": "▼",
-		"hint": "LOWER — stop", "line": LINE_TUT_LOWER,
-		"go": LINE_TUT_GO_LOWER},
+	{"kind": "surge", "dir": 1.0, "learn": true, "arrow": "▲",
+		"hint": "LIFT — cruise", "line": LINE_TUT_LIFT_CRUISE},
+	{"kind": "surge", "dir": -1.0, "learn": false, "arrow": "▼",
+		"hint": "LOWER — stop", "line": LINE_TUT_LOWER_CRUISE},
 ]
 
-enum State { SPEED_PICK, TUTORIAL, AIM_GATE, FLYING, PAUSED_TILE, ORBITING }
+enum State { SPEED_PICK, TUTORIAL, AIM_GATE, FLYING, SEEKING, ORBITING }
 
 var _cfg: SolarFlyerConfig
 var _viewport: SubViewport
@@ -165,6 +177,7 @@ var _host: SubViewportContainer
 var _world: Node3D
 var _cam: Camera3D
 var _bodies: Dictionary = {}     ## id → {root, mesh, icon, data, hero}
+var _belt_decor: MultiMeshInstance3D = null  ## rocks only; never tapped/captured
 var _state: State = State.FLYING
 var _ship_pos: Vector3 = Vector3.ZERO
 var _yaw: float = 0.0
@@ -187,7 +200,7 @@ var _calibrated: bool = false
 var _g_filt: Vector3 = Vector3.ZERO         ## low-passed gravity estimate
 var _sx: float = 1.0     ## roll sign (identity; tutorial may learn otherwise)
 var _sy: float = 1.0     ## pitch sign
-var _sz: float = 1.0     ## surge sign: + = lift is positive
+var _sz: float = -1.0    ## gears default: lift → negative surge → slow down
 var _flip: float = 1.0   ## −1 when the sensor frame is 180° from the screen
 var _speed_gears: bool = true  ## false = cruise/stop jerks only
 var _tut_steps: Array = []
@@ -196,74 +209,65 @@ var _tut_ref: Vector2 = Vector2.ZERO
 var _tut_ref_sum: Vector2 = Vector2.ZERO
 var _tut_ref_t: float = 0.0
 var _tut_hold: float = 0.0
-var _tut_onset_locked: bool = false
 var _gate_hold: float = 0.0
 var _gate_sum: Vector2 = Vector2.ZERO
 var _no_sensor_frames: int = 0
 var _capture_grace: float = 0.0
 var _last_tilt: Vector2 = Vector2.ZERO
 var _raw_tilt_y: float = 0.0   ## pitch before surge suppress — prioritizes climb/dive
-var _last_surge: float = 0.0   ## signed delta vs neutral (lift = +)
+var _last_surge: float = 0.0   ## signed: gears + = speed up (lower), − = slow (lift)
 var _surge_filt: float = 0.0   ## raw vertical (lift/lower) linear accel (pre-_sz)
-var _surge_neutral: float = 0.0  ## rest baseline; reset after each capture CD
-var _surge_pulse_peak: float = 0.0  ## legacy peak (cruise jerk path)
-var _surge_pulse_dir: float = 0.0
-var _surge_pulse_armed: bool = false
-var _surge_hold_t: float = 0.0
-var _surge_release_t: float = 0.0
+var _surge_neutral: float = 0.0  ## rest baseline
 var _surge_pitch_cd: float = 0.0
-var _surge_capture_cd: float = 0.0  ## unused long backoff; kept for telem
 var _surge_need_recenter: bool = true
 var _surge_quiet_t: float = 0.0
 var _surge_prev_filt: float = 0.0
 var _surge_post_neutral: float = 0.0
-var _surge_announce_ready: bool = false
 var _surge_await_rest: bool = false
-var _surge_win_active: bool = false  ## gears: capturing a 2s window
-var _surge_win_t: float = 0.0
-var _surge_win_pos: float = 0.0   ## max +surge in window
-var _surge_win_neg: float = 0.0   ## max |−surge| in window
-## Displacement telemetry (integrated lin-accel, meters-ish) — diagnostic
-## only, shown in PGTEL; doesn't drive ship speed.
+var _surge_armed: bool = false          ## must return to rest before next fire
+var _surge_ready_grace: float = 0.0     ## blocks fire after ready VO
+## Displacement telemetry only (PGTEL).
 var _surge_vel: float = 0.0
-var _surge_disp: float = 0.0      ## signed: lift + after _sz
+var _surge_disp: float = 0.0
 var _surge_disp_band: float = SURGE_DISP_BAND_MIN
 var _surge_disp_quiet_t: float = 0.0
-var _surge_arm: float = SURGE_ARM_DEFAULT
-var _surge_jerk: float = SURGE_JERK_DEFAULT
-var _tut_surge_peak: float = 0.0
-var _tut_pull_peak: float = 0.0
-var _tut_push_peak: float = 0.0
-var _tut_pull_raw: float = 0.0
-var _tut_push_raw: float = 0.0
-var _tut_jerk_peak: float = 0.0
-## surge tutorial: pose → capture → success
+var _surge_arm: float = SURGE_FIRE
+var _surge_jerk: float = SURGE_FIRE
+## surge tutorial: pose → go → accept (instant, like tilt)
 var _tut_surge_phase: String = "pose"
 var _tut_surge_phase_t: float = 0.0
-var _tut_surge_idle_sum: float = 0.0
-var _tut_surge_intro_done: bool = false
-var _tut_win_pos: float = 0.0
-var _tut_win_neg: float = 0.0
 var _jerk_cd: float = 0.0
+var _joy_ready_announced: bool = false
 var _tel_t: float = 0.0
 var _orbit_id: String = ""
 var _orbit_ang: float = 0.0
-var _tile_id: String = ""
+var _seek_id: String = ""
+var _tap_guard_t: float = 0.0  ## ignore mouse echo after a touch
 var _active: bool = false
 var _cine: OrbitCinematic
 var _sun_light: OmniLight3D
 var _hint: Label
 var _speed_bar: SpeedBar
+var _gear_joy: GearJoystick
 var _home_btn: Button
 var _reticle: AimReticle
+var _aim_mark: FlyAimMarker
+var _stop_btn: StopCruiseButton
 var _tut_arrow: Label
 var _tut_phone: PhoneTiltHint
 var _speed_pick: SpeedModeChooser
-var _tile: Control
-var _tile_pic: TextureRect
-var _tile_name: Label
 var _arrival_title: Label
 var _arrival: Control
+var _arrival_planet_pic: TextureRect
+var _arrival_planet_lbl: Label
+var _tap_yaw_rate: float = 0.0
+var _tap_pitch_rate: float = 0.0
+var _tap_speed_cd: float = 0.0
+var _tap_x_sign: float = 1.0   ## screen-left → +yaw (turn left); set at launch
+var _cruise_decay_t: float = -1.0  ## <0 inactive; else seconds to next cruise step
+var _held_stopped: bool = false    ## STOP button or mashed to stop — no auto-cruise
+var _speed_vo_cd: float = 0.0
+var _sun_tile: SunCompassTile
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -294,63 +298,53 @@ func begin(start_at: String = "earth") -> void:
 	_jerk_cd = 0.0
 	_surge_filt = 0.0
 	_surge_neutral = 0.0
-	_surge_pulse_peak = 0.0
-	_surge_pulse_dir = 0.0
-	_surge_pulse_armed = false
-	_surge_hold_t = 0.0
-	_surge_release_t = 0.0
 	_surge_pitch_cd = 0.0
-	_surge_capture_cd = 0.0
 	_surge_need_recenter = true
 	_surge_quiet_t = 0.0
 	_surge_prev_filt = 0.0
 	_surge_post_neutral = 0.0
-	_surge_announce_ready = false
 	_surge_await_rest = false
-	_surge_win_active = false
-	_surge_win_t = 0.0
-	_surge_win_pos = 0.0
-	_surge_win_neg = 0.0
-	_surge_arm = SURGE_ARM_DEFAULT
-	_surge_jerk = SURGE_JERK_DEFAULT
-	_tut_surge_peak = 0.0
-	_tut_pull_peak = 0.0
-	_tut_push_peak = 0.0
-	_tut_pull_raw = 0.0
-	_tut_push_raw = 0.0
-	_tut_jerk_peak = 0.0
-	_tut_onset_locked = false
+	_surge_armed = false
+	_surge_ready_grace = 0.0
+	_surge_arm = SURGE_FIRE
+	_surge_jerk = SURGE_FIRE
 	_tut_surge_phase = "pose"
 	_tut_surge_phase_t = 0.0
-	_tut_surge_idle_sum = 0.0
-	_tut_surge_intro_done = false
-	_tut_win_pos = 0.0
-	_tut_win_neg = 0.0
 	_speed_gears = true
+	_sz = -1.0
+	_joy_ready_announced = false
 	_surge_vel = 0.0
 	_surge_disp = 0.0
 	_surge_disp_band = SURGE_DISP_BAND_MIN
 	_surge_disp_quiet_t = 0.0
 	_tut_steps = []
-	_tile.visible = false
+	_seek_id = ""
+	_tap_guard_t = 0.0
+	_tap_yaw_rate = 0.0
+	_tap_pitch_rate = 0.0
+	_tap_speed_cd = 0.0
+	_cruise_decay_t = -1.0
+	_held_stopped = false
+	_speed_vo_cd = 0.0
 	_arrival.visible = false
+	if _gear_joy != null:
+		_gear_joy.visible = false
+		_gear_joy.set_ready()
+	if _stop_btn != null:
+		_stop_btn.visible = false
+	if _aim_mark != null:
+		_aim_mark.visible = false
 	if _speed_pick != null:
 		_speed_pick.visible = false
+		_speed_pick.set_active(false)
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	var body := SolarData.flyer_body_by_id(start_at, _cfg)
-	var p := _body_playground_pos(body, 0.0)
-	var hero: float = float(body.get("hero_r", 2.0))
-	# Start well outside orbit capture, home world ahead but off center.
-	_ship_pos = p + Vector3(0, 2.0, OrbitMath.orbit_standoff(hero) * 3.5)
-	# Level look toward the home world — never into empty space below.
-	_look_at_body(start_at)
-	_recalibrate()
 	_place_bodies()
+	_spawn_start(start_at)
+	_recalibrate()
 	_apply_cam()
-	_tel_event("begin at=%s pos=(%.1f,%.1f,%.1f)" % [
-		start_at, _ship_pos.x, _ship_pos.y, _ship_pos.z])
-	# No saved controls — every Free Flight launch picks mode + tutorials.
-	_enter_speed_pick()
+	_tel_event("begin at=%s pos=(%.1f,%.1f,%.1f) yaw=%.2f" % [
+		start_at, _ship_pos.x, _ship_pos.y, _ship_pos.z, _yaw])
+	_launch_tap()
 
 func _enter_speed_pick() -> void:
 	_state = State.SPEED_PICK
@@ -360,17 +354,23 @@ func _enter_speed_pick() -> void:
 	_hint.text = "Choose how to control speed"
 	if _speed_bar != null:
 		_speed_bar.visible = false
+	if _gear_joy != null:
+		_gear_joy.visible = false
 	_speed_pick.set_active(true)
 	_tel_event("speed pick enter")
 
 func _on_speed_gears() -> void:
 	_speed_gears = true
+	_sz = -1.0  ## lift → slow, lower → faster
 	_speed_pick.set_active(false)
 	_tel_event("speed mode=gears")
 	_enter_tutorial()
 
 func _on_speed_cruise_stop() -> void:
 	_speed_gears = false
+	_sz = 1.0  ## lift → cruise, lower → stop
+	if _gear_joy != null:
+		_gear_joy.visible = false
 	_speed_pick.set_active(false)
 	_tel_event("speed mode=cruise_stop")
 	_enter_tutorial()
@@ -388,9 +388,9 @@ func set_active(on: bool) -> void:
 		_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 
 func resume_flying() -> void:
-	## After a video or an orbit stay — back to the stick.
+	## After a video or an orbit stay — back to tap flight.
 	_arrival.visible = false
-	_tile.visible = false
+	_seek_id = ""
 	if not _orbit_id.is_empty():
 		# Leave orbit outward so we don't instantly re-capture.
 		var b := SolarData.flyer_body_by_id(_orbit_id, _cfg)
@@ -410,13 +410,14 @@ func resume_flying() -> void:
 	_speed = SPEED
 	_speed_blending = false
 	_surge_need_recenter = true
-	_enter_gate()
+	_launch_tap()
 	_tel_event("resume pos=(%.1f,%.1f,%.1f)" % [
 		_ship_pos.x, _ship_pos.y, _ship_pos.z])
 
 func _process(delta: float) -> void:
 	if not _active:
 		return
+	_tap_guard_t = maxf(0.0, _tap_guard_t - delta)
 	match _state:
 		State.SPEED_PICK:
 			pass
@@ -428,31 +429,378 @@ func _process(delta: float) -> void:
 			_clock += delta * TIME_SCALE
 			_capture_grace = maxf(0.0, _capture_grace - delta)
 			_band_cd = maxf(0.0, _band_cd - delta)
-			_jerk_cd = maxf(0.0, _jerk_cd - delta)
-			_surge_pitch_cd = maxf(0.0, _surge_pitch_cd - delta)
-			_surge_capture_cd = maxf(0.0, _surge_capture_cd - delta)
-			_surge_post_neutral = maxf(0.0, _surge_post_neutral - delta)
-			# Sample surge first so steering can ignore pitch during a shove.
-			_surge_sample(delta)
-			_steer(delta)
-			_speed_from_surge(delta)
+			_tap_speed_cd = maxf(0.0, _tap_speed_cd - delta)
+			_speed_vo_cd = maxf(0.0, _speed_vo_cd - delta)
+			_tick_speed_blend(delta)
+			_tick_cruise_decay(delta)
+			_tap_steer_tick(delta)
 			_fly(delta)
 			_check_capture()
+			_tick_tap_hud()
+			_telemetry(delta)
+		State.SEEKING:
+			_clock += delta * TIME_SCALE
+			_band_cd = maxf(0.0, _band_cd - delta)
+			_tap_speed_cd = maxf(0.0, _tap_speed_cd - delta)
+			_speed_vo_cd = maxf(0.0, _speed_vo_cd - delta)
+			_tick_speed_blend(delta)
+			_tick_cruise_decay(delta)
+			_tick_tap_hud()
+			_seek_tick(delta)
 			_telemetry(delta)
 		State.ORBITING:
 			_clock += delta * TIME_SCALE * 0.4
 			_orbit_ang += delta * ORBIT_SPEED
 			_place_orbit_cam()
-		State.PAUSED_TILE:
-			pass   # world frozen under the tile
 	_place_bodies()
 	_update_markers()
+
+## ── Tap flight: stacked turn rates that decay back to center ─────────
+func _launch_tap() -> void:
+	_speed_gears = true
+	_sz = -1.0
+	_calibrated = true
+	_state = State.FLYING
+	_capture_grace = CAPTURE_GRACE_S
+	_apply_speed_step(SPEED_STEP_CRUISE, false)
+	_tap_yaw_rate = 0.0
+	_tap_pitch_rate = 0.0
+	_tap_speed_cd = 0.0
+	_cruise_decay_t = -1.0
+	_held_stopped = false
+	_speed_vo_cd = 0.0
+	_refresh_tap_screen_signs()
+	_band_warned = false
+	_reticle.visible = false
+	_tut_arrow.visible = false
+	_tut_phone.visible = false
+	if _speed_pick != null:
+		_speed_pick.set_active(false)
+	_reset_level_look()
+	_show_tap_hud(true)
+	_update_speed_hint()
+	_tel_event("launch_tap cruise step=%d x_sign=%.0f" % [
+		_speed_step, _tap_x_sign])
+	Narrator.speak(LINE_WELCOME_TAP)
+
+## Map screen left/right → ship yaw for this bootloaded landscape kiosk.
+## Heading: increasing yaw faces −X (left when looking down −Z). Viewport x
+## grows to the visual right, so tap-left should increase yaw. Reverse
+## landscape is checked in case a future image flips the sensor frame.
+func _refresh_tap_screen_signs() -> void:
+	_tap_x_sign = 1.0
+	var ori := DisplayServer.screen_get_orientation()
+	# Godot viewport x is already visual; reverse landscape rarely needs flip.
+	# If Ant Phone ever boots reverse and L/R feel wrong again, invert here.
+	if ori == DisplayServer.SCREEN_REVERSE_LANDSCAPE \
+			or ori == DisplayServer.SCREEN_SENSOR_LANDSCAPE:
+		# SENSOR_LANDSCAPE may settle either way — keep visual mapping (+1)
+		# and log so a field check can confirm.
+		pass
+	_tel_event("tap_signs ori=%d x_sign=%.0f" % [int(ori), _tap_x_sign])
+
+func _show_tap_hud(on: bool) -> void:
+	if _aim_mark != null:
+		_aim_mark.visible = on
+	if _gear_joy != null:
+		_gear_joy.visible = on
+		if on:
+			_gear_joy.gear = _speed_step
+			# Never call set_ready here — that was wiping throw_forward/aft art.
+	if _speed_bar != null:
+		_speed_bar.visible = on
+		if on:
+			_speed_bar.horizontal = true
+			_speed_bar.step = _speed_step
+			_speed_bar.speed = _speed
+			_speed_bar.blending = _speed_blending
+			_speed_bar.queue_redraw()
+	if _stop_btn != null:
+		_stop_btn.visible = on
+		if on:
+			_stop_btn.set_stopped(_speed_step <= SPEED_STEP_STOP)
+	if _sun_tile != null:
+		_sun_tile.visible = on
+		if on:
+			_update_sun_tile()
+
+func _tick_tap_hud() -> void:
+	if _gear_joy != null and _gear_joy.visible:
+		_gear_joy.gear = _speed_step
+	if _speed_bar != null and _speed_bar.visible:
+		_speed_bar.step = _speed_step
+		_speed_bar.speed = _speed
+		_speed_bar.blending = _speed_blending
+		_speed_bar.queue_redraw()
+	if _stop_btn != null and _stop_btn.visible:
+		_stop_btn.set_stopped(_speed_step <= SPEED_STEP_STOP)
+	if _sun_tile != null and _sun_tile.visible:
+		_update_sun_tile()
+
+func _update_sun_tile() -> void:
+	if _sun_tile == null:
+		return
+	# Relative bearing: 0 = sun dead ahead, + = sun to the right.
+	var want: float = _yaw_facing_flat(_sun_world_pos() - _ship_pos)
+	_sun_tile.bearing = wrapf(want - _yaw, -PI, PI)
+	_sun_tile.queue_redraw()
+
+func _tap_steer_tick(delta: float) -> void:
+	# Desktop arrows: medium impulse (same as a mid-screen tap).
+	if Input.is_action_just_pressed("ui_left"):
+		_nudge_yaw(_tap_x_sign)
+	if Input.is_action_just_pressed("ui_right"):
+		_nudge_yaw(-_tap_x_sign)
+	if Input.is_action_just_pressed("ui_up"):
+		_nudge_pitch(1.0)
+	if Input.is_action_just_pressed("ui_down"):
+		_nudge_pitch(-1.0)
+	# Apply turn rates first, then slow-coast decay.
+	# Attitude holds: rate→0 stops turning, but pitch/yaw stay put until
+	# the player taps near the cross (_straighten_attitude) or turns again.
+	_last_tilt = Vector2(_tap_yaw_rate / TAP_RATE_MAX, _tap_pitch_rate / TAP_RATE_MAX)
+	_yaw += _tap_yaw_rate * delta
+	_pitch = clampf(_pitch + _tap_pitch_rate * delta, -0.85, 0.85)
+	_tap_yaw_rate = move_toward(_tap_yaw_rate, 0.0, TAP_RATE_DECAY * delta)
+	_tap_pitch_rate = move_toward(_tap_pitch_rate, 0.0, TAP_RATE_DECAY * delta)
+	var ay: float = absf(_ship_pos.y)
+	if ay > Y_MAX:
+		_ship_pos.y = signf(_ship_pos.y) * Y_MAX
+	if ay < Y_CLEAR:
+		_band_warned = false
+	elif ay > Y_MAX * 0.92 and not _band_warned and _band_cd <= 0.0:
+		_band_warned = true
+		_band_cd = BAND_COOLDOWN_S
+		_tel_event("band ceiling y=%.1f" % _ship_pos.y)
+
+func _is_turning() -> bool:
+	return absf(_tap_yaw_rate) > TAP_TURNING_EPS \
+		or absf(_tap_pitch_rate) > TAP_TURNING_EPS
+
+func _sun_world_pos() -> Vector3:
+	if _bodies.has("sun"):
+		return (_bodies["sun"]["root"] as Node3D).global_position
+	return Vector3.ZERO
+
+func _yaw_facing_flat(dir: Vector3) -> float:
+	var flat := Vector3(dir.x, 0.0, dir.z)
+	if flat.length() < 0.01:
+		return _yaw
+	flat = flat.normalized()
+	# _heading flat: (-sin yaw, 0, -cos yaw) == flat
+	return atan2(-flat.x, -flat.z)
+
+func _face_sun() -> void:
+	_yaw = _yaw_facing_flat(_sun_world_pos() - _ship_pos)
+	_pitch = 0.0
+
+## Just outside / behind home world, a little above the ecliptic, facing the Sun.
+func _spawn_start(start_at: String) -> void:
+	var body := SolarData.flyer_body_by_id(start_at, _cfg)
+	var p := _body_playground_pos(body, 0.0)
+	var hero: float = float(body.get("hero_r", 2.0))
+	var sun := _sun_world_pos()
+	var radial := Vector3(p.x - sun.x, 0.0, p.z - sun.z)
+	if radial.length() < 0.01:
+		radial = Vector3(0.0, 0.0, 1.0)
+	radial = radial.normalized()
+	var standoff: float = OrbitMath.orbit_standoff(hero) * 3.2
+	# Behind Earth (further from the Sun than home) + slightly above the plane.
+	_ship_pos = p + radial * standoff
+	_ship_pos.y = 14.0
+	_face_sun()
+	_look_yaw = _yaw
+
+func _tap_reach_px() -> float:
+	return maxf(minf(size.x, size.y) * TAP_REACH_FRAC, TAP_HOME_RADIUS_PX + 80.0)
+
+func _tap_strength_from_dist(dist_px: float) -> float:
+	## 0 at home edge → 1 at full reach. Smoothstep so far taps feel bigger.
+	var u: float = clampf(
+		(dist_px - TAP_HOME_RADIUS_PX) / (_tap_reach_px() - TAP_HOME_RADIUS_PX),
+		0.0, 1.0)
+	return u * u * (3.0 - 2.0 * u)
+
+func _rate_from_strength(strength: float) -> float:
+	return lerpf(TAP_RATE_MIN, TAP_RATE_MAX, clampf(strength, 0.0, 1.0))
+
+func _nudge_yaw(dir: float, strength: float = 0.55) -> void:
+	## dir > 0 = turn left (visual left of cross, after _tap_x_sign).
+	## Replaces rate (no mash-stack) — farther taps pass higher strength.
+	var rate: float = signf(dir) * _rate_from_strength(strength)
+	_tap_yaw_rate = rate
+	_tap_pitch_rate = 0.0
+	_tel_event("tap yaw dir=%.0f str=%.2f rate=%.2f" % [dir, strength, rate])
+
+func _nudge_pitch(dir: float, strength: float = 0.55) -> void:
+	## dir > 0 = climb (tap above cross).
+	var rate: float = signf(dir) * _rate_from_strength(strength)
+	_tap_pitch_rate = rate
+	_tap_yaw_rate = 0.0
+	_tel_event("tap pitch dir=%.0f str=%.2f rate=%.2f" % [dir, strength, rate])
+
+func _straighten_attitude() -> void:
+	## Clear coasting turn and level the nose — does not move the ship.
+	_tap_yaw_rate = 0.0
+	_tap_pitch_rate = 0.0
+	_pitch = 0.0
+	_tel_event("tap straighten attitude")
+
+func _on_empty_flight_tap(local: Vector2) -> void:
+	var c := size * 0.5
+	var d: Vector2 = local - c
+	var dist: float = d.length()
+	if dist <= TAP_HOME_RADIUS_PX:
+		_straighten_attitude()
+		return
+	var strength: float = _tap_strength_from_dist(dist)
+	if absf(d.x) >= absf(d.y):
+		# Visual left (d.x < 0) → turn left via _tap_x_sign.
+		var side: float = -signf(d.x)  ## left → +1, right → −1
+		_nudge_yaw(side * _tap_x_sign, strength)
+	else:
+		_nudge_pitch(1.0 if d.y < 0.0 else -1.0, strength)
+
+func _on_sun_tile_pressed() -> void:
+	if _state != State.FLYING and _state != State.SEEKING:
+		return
+	if _bodies.has("sun"):
+		_begin_seek("sun")
+	else:
+		_face_sun()
+		_straighten_attitude()
+		_tel_event("sun tile face (no body)")
+
+func _tap_speed_delta(delta_step: int) -> void:
+	## Mash-friendly: short CD only (blend does not block). Forward → max,
+	## aft → stop; then cruise-decay unless held stopped.
+	if _tap_speed_cd > 0.0:
+		return
+	if delta_step > 0:
+		_held_stopped = false
+		if _speed_step >= SPEED_STEP_MAX:
+			if _speed_vo_cd <= 0.0:
+				Narrator.speak(LINE_ALREADY_MAX)
+				_speed_vo_cd = SPEED_VO_CD_S
+			return
+		if _gear_joy != null:
+			_gear_joy.throw_forward()
+		var prev_up: int = _speed_step
+		_apply_speed_step(_speed_step + 1, true)
+		_maybe_narrate_speed(prev_up, _speed_step)
+		_cruise_decay_t = SPEED_CRUISE_DECAY_S
+		_tel_event("tap gear %d→%d faster" % [prev_up, _speed_step])
+	else:
+		if _speed_step <= SPEED_STEP_STOP:
+			_held_stopped = true
+			_cruise_decay_t = -1.0
+			if _speed_vo_cd <= 0.0:
+				Narrator.speak(LINE_ALREADY_STOP)
+				_speed_vo_cd = SPEED_VO_CD_S
+			return
+		if _gear_joy != null:
+			_gear_joy.throw_aft()
+		var prev_dn: int = _speed_step
+		_apply_speed_step(_speed_step - 1, true)
+		_maybe_narrate_speed(prev_dn, _speed_step)
+		if _speed_step <= SPEED_STEP_STOP:
+			_held_stopped = true
+			_cruise_decay_t = -1.0
+		else:
+			_held_stopped = false
+			_cruise_decay_t = SPEED_CRUISE_DECAY_S
+		_tel_event("tap gear %d→%d slower" % [prev_dn, _speed_step])
+	_tap_speed_cd = TAP_SPEED_CD_S
+	_update_speed_hint()
+
+func _maybe_narrate_speed(prev: int, step: int) -> void:
+	if _speed_vo_cd > 0.0:
+		return
+	_narrate_speed_change(prev, step)
+	_speed_vo_cd = SPEED_VO_CD_S
+
+func _tick_cruise_decay(delta: float) -> void:
+	if _held_stopped or _cruise_decay_t < 0.0:
+		return
+	if _speed_step == SPEED_STEP_CRUISE:
+		_cruise_decay_t = -1.0
+		return
+	if _speed_blending:
+		return
+	_cruise_decay_t -= delta
+	if _cruise_decay_t > 0.0:
+		return
+	var prev: int = _speed_step
+	if _speed_step > SPEED_STEP_CRUISE:
+		_apply_speed_step(_speed_step - 1, true)
+	elif _speed_step < SPEED_STEP_CRUISE:
+		_apply_speed_step(_speed_step + 1, true)
+	_tel_event("cruise_decay %d→%d" % [prev, _speed_step])
+	if _speed_step == SPEED_STEP_CRUISE:
+		_cruise_decay_t = -1.0
+		Narrator.speak(LINE_CRUISE_DECAY)
+	else:
+		_cruise_decay_t = SPEED_CRUISE_DECAY_S
+	_update_speed_hint()
+
+func _on_stop_cruise_pressed() -> void:
+	if _state != State.FLYING and _state != State.SEEKING:
+		return
+	if _tap_speed_cd > 0.0:
+		return
+	_tap_guard_t = TAP_GUARD_S
+	_tap_speed_cd = TAP_SPEED_CD_S
+	if _speed_step <= SPEED_STEP_STOP and _state != State.SEEKING:
+		_held_stopped = false
+		_apply_speed_step(SPEED_STEP_CRUISE, false)
+		_cruise_decay_t = -1.0
+		Narrator.speak(LINE_RESUME)
+		_tel_event("tap cruise")
+	else:
+		# STOP while seeking: cancel autopilot AND hold position.
+		if _state == State.SEEKING:
+			_tel_event("seek cancel via stop id=%s" % _seek_id)
+			_seek_id = ""
+			_state = State.FLYING
+		_held_stopped = true
+		_cruise_decay_t = -1.0
+		_apply_speed_step(SPEED_STEP_STOP, false)
+		_tap_yaw_rate = 0.0
+		_tap_pitch_rate = 0.0
+		Narrator.speak(LINE_STOP)
+		_tel_event("tap stop")
+	_update_speed_hint()
+
+func _on_joy_gui_input(event: InputEvent) -> void:
+	if _state != State.FLYING and _state != State.SEEKING:
+		return
+	var tap := false
+	var pos := Vector2.ZERO
+	if event is InputEventScreenTouch and event.pressed:
+		tap = true
+		pos = event.position
+		_tap_guard_t = TAP_GUARD_S
+	elif event is InputEventMouseButton \
+			and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if _tap_guard_t > 0.0:
+			return
+		tap = true
+		pos = event.position
+	if not tap:
+		return
+	accept_event()
+	# Upper half of stick = forward = faster; lower = aft = slower.
+	if pos.y < _gear_joy.size.y * 0.5:
+		_tap_speed_delta(1)
+	else:
+		_tap_speed_delta(-1)
 
 ## Tilt steering: gravity vector when the device reports one, arrow keys as
 ## the desktop fallback. Landscape phone: roll (x) yaws, pitch (y) climbs.
 ## All tilts are DELTAS from the calibrated neutral pose.
 ## Lifting/lowering for speed rocks the gravity estimate — ignore pitch (and
-## mute the planetary-plane VO) while a surge gesture is active.
+## mute the planetary-plane VO) while a clear lift/lower is active.
+## (Unused in tap-only flight; kept for suite/helpers.)
 func _steer(delta: float) -> void:
 	var g := _gravity_filtered(delta)
 	var tilt_x := 0.0
@@ -474,17 +822,16 @@ func _steer(delta: float) -> void:
 	tilt_x += Input.get_axis("ui_left", "ui_right") * 0.7
 	tilt_y += Input.get_axis("ui_down", "ui_up") * 0.6
 	_raw_tilt_y = tilt_y
-	# Tip up/down for climb/dive must win over soft Z spikes from the same tip.
-	# Only freeze pitch when a real surge hold/jerk is active (or a strong
-	# shove without much pitch).
+	# Tip vs lift: different sensors (gravity angle vs linear residual).
+	# Only mute climb/dive for a short hold after a real surge fire — NEVER
+	# for the whole 2s gear CD (that was freezing aim up/down after every gear).
 	var pitching: bool = absf(_raw_tilt_y) > 0.28
-	var surge_motion: bool = (
-		_surge_pulse_armed
-		or _jerk_cd > 0.0
-		or (absf(_last_surge) > _surge_arm and not pitching))
+	var surge_motion: bool = absf(_last_surge) >= SURGE_FIRE and not pitching
 	if surge_motion:
 		_surge_pitch_cd = SURGE_PITCH_HOLD_S
-	var surge_busy: bool = surge_motion or (_surge_pitch_cd > 0.0 and not pitching)
+	var surge_busy: bool = (
+		surge_motion
+		or (_surge_pitch_cd > 0.0 and not pitching))
 	if surge_busy:
 		tilt_y = 0.0
 	_last_tilt = Vector2(tilt_x, tilt_y)
@@ -523,9 +870,7 @@ func _steer(delta: float) -> void:
 ## Vertical lift/lower accel, projected onto the (low-passed) up axis so a
 ## landscape phone reads correctly however it's rotated in the player's
 ## hand — raw lin.y would break on a sideways device. Filtered signal is
-## kept raw; signed delta vs neutral drives the jerk logic (lift = + after
-## _sz). Also integrated into a displacement estimate (_surge_disp) purely
-## for telemetry.
+## kept raw; signed delta vs neutral drives speed (lift = + after _sz).
 func _surge_sample(delta: float) -> float:
 	var raw := Input.get_accelerometer()
 	if raw.length() < 0.5:
@@ -570,56 +915,19 @@ func _reset_surge_disp() -> void:
 
 func _recenter_surge_neutral() -> void:
 	_surge_neutral = _surge_filt
-	_surge_pulse_peak = 0.0
-	_surge_pulse_dir = 0.0
-	_surge_pulse_armed = false
-	_surge_release_t = 0.0
 	_surge_quiet_t = 0.0
 	_surge_prev_filt = _surge_filt
 	_surge_post_neutral = SURGE_POST_NEUTRAL_S
 	_last_surge = 0.0
 	_reset_surge_disp()
 	_tel_event("surge neutral=%.2f" % _surge_neutral)
-	if _surge_announce_ready:
-		_surge_announce_ready = false
-		Narrator.speak(LINE_READY)
 
-func _apply_surge_thresholds(pull_peak: float, push_peak: float) -> void:
-	# Both modes: thresholds from tutorial jerks only.
-	var pull_a: float = absf(pull_peak)
-	var push_a: float = absf(push_peak)
-	var soft_ref: float = 0.0
-	if pull_a > 0.05 and push_a > 0.05:
-		soft_ref = minf(pull_a, push_a)
-	else:
-		soft_ref = maxf(pull_a, push_a)
-	var jpk: float = maxf(_tut_jerk_peak, soft_ref)
-	if jpk < 0.05:
-		jpk = SURGE_JERK_DEFAULT
-	_surge_arm = clampf(jpk * 0.22, 0.40, 0.85)
-	var jmin: float = SURGE_JERK_MIN if _speed_gears else SURGE_JERK_MIN_CRUISE
-	_surge_jerk = clampf(
-		maxf(jmin, jpk * SURGE_JERK_FRAC),
-		_surge_arm + 0.45,
-		3.8)
-	_tel_event("surge cal arm=%.2f jerk=%.2f soft=%.2f pull=%.2f push=%.2f jerkpk=%.2f sz=%.0f gears=%d" % [
-		_surge_arm, _surge_jerk, soft_ref, pull_peak, push_peak, _tut_jerk_peak, _sz,
-		1 if _speed_gears else 0])
-
-## Lift → faster (+1 gear or resume cruise); lower → slower (−1 gear or stop).
-## Peak jerks only — no soft gesture path.
-func _surge_clear_pulse(await_rest: bool = false) -> void:
-	_surge_pulse_peak = 0.0
-	_surge_pulse_dir = 0.0
-	_surge_pulse_armed = false
-	_surge_hold_t = 0.0
-	_surge_release_t = 0.0
-	_surge_win_t = 0.0
-	_surge_win_pos = 0.0
-	_surge_win_neg = 0.0
-	_surge_win_active = false
-	if await_rest:
-		_surge_await_rest = true
+func _apply_surge_thresholds(_pull_peak: float = 0.0, _push_peak: float = 0.0) -> void:
+	## Fixed floors — tutorial does not calibrate a gesture library.
+	_surge_arm = SURGE_FIRE
+	_surge_jerk = SURGE_FIRE
+	_tel_event("surge thr fire=%.2f dead=%.2f sz=%.0f gears=%d" % [
+		SURGE_FIRE, SURGE_DEAD, _sz, 1 if _speed_gears else 0])
 
 func _surge_input_blocked() -> bool:
 	return _speed_blending \
@@ -627,12 +935,17 @@ func _surge_input_blocked() -> bool:
 		or _surge_post_neutral > 0.0 \
 		or _jerk_cd > 0.0
 
+## Gears: +surge (lower) → speed up; −surge (lift) → slow down.
+## Cruise: +surge (lift) → cruise; −surge (lower) → stop.
+## Rising-edge only: must return below DEAD (armed) before the next FIRE.
+## No queued / held-level fires after "Joystick ready".
 func _speed_from_surge(delta: float) -> void:
 	_tick_speed_blend(delta)
 	var s: float = _last_surge
 	var a: float = absf(s)
 	if _surge_input_blocked():
-		_surge_clear_pulse(true)
+		_surge_await_rest = true
+		_surge_armed = false
 		if _surge_need_recenter:
 			var dfilt: float = absf(_surge_filt - _surge_prev_filt)
 			_surge_prev_filt = _surge_filt
@@ -646,47 +959,43 @@ func _speed_from_surge(delta: float) -> void:
 		else:
 			_surge_quiet_t = 0.0
 		return
-	if _surge_await_rest:
-		_surge_clear_pulse(false)
-		if a > SURGE_DEAD:
-			return
+	if _surge_ready_grace > 0.0:
+		# Re-arm only after a quiet moment during grace.
+		if a <= SURGE_DEAD:
+			_surge_armed = true
+		return
+	if a <= SURGE_DEAD:
 		_surge_await_rest = false
-	# Tip (pitch) vs lift/lower: ignore a weak surge signal while climbing or
-	# diving so a tip-triggered accel spike doesn't fire a gear change.
-	if absf(_raw_tilt_y) > 0.42 and a < _surge_arm * 0.85 \
-			and not _surge_pulse_armed:
-		_surge_clear_pulse(false)
+		_surge_armed = true
 		return
-	# Peak jerks for both modes. Lock onset direction — settle/brake must
-	# not steal the gesture (that flipped gears the wrong way).
-	if a >= _surge_arm:
-		if not _surge_pulse_armed:
-			_surge_pulse_armed = true
-			_surge_pulse_dir = signf(s)
-			_surge_pulse_peak = a
-		elif signf(s) == _surge_pulse_dir:
-			if a > _surge_pulse_peak:
-				_surge_pulse_peak = a
-		# opposite half ignored
-		if _jerk_cd <= 0.0 and _surge_pulse_peak >= _surge_jerk:
-			_fire_surge_jerk(_surge_pulse_dir)
+	if _surge_await_rest:
 		return
-	if _surge_pulse_armed:
-		if _jerk_cd <= 0.0 and _surge_pulse_peak >= _surge_jerk:
-			var jd: float = _surge_pulse_dir
-			_surge_clear_pulse(true)
-			_fire_surge_jerk(jd)
-		else:
-			_surge_clear_pulse(true)
+	# Tip-up/down (gravity pitch) wins over soft vertical spikes from tipping.
+	# A real lift/lower with little pitch can still fire.
+	var tip: float = absf(_raw_tilt_y)
+	if tip > SURGE_TIP_BLOCK:
+		return
+	# One fire per rest→motion edge. Never fire while still "high".
+	if _surge_armed and a >= SURGE_FIRE:
+		_surge_armed = false
+		_surge_await_rest = true
+		_fire_surge_jerk(signf(s))
 
 func _begin_speed_backoff() -> void:
 	_surge_pitch_cd = SURGE_PITCH_HOLD_S
-	_surge_capture_cd = 0.0
 	_surge_need_recenter = false
-	_surge_announce_ready = false
-	_surge_clear_pulse(true)
+	_surge_await_rest = true
+	_surge_armed = false
+	_joy_ready_announced = false
+	if _gear_joy != null and _speed_gears:
+		_gear_joy.set_waiting()
 
 func _fire_surge_jerk(dir: float) -> void:
+	# Single shot — CD blocks until rest+edge again (no queue).
+	if _jerk_cd > 0.0 or _speed_blending:
+		_tel_event("surge ignored queued dir=%.0f cd=%.2f blend=%d" % [
+			dir, _jerk_cd, 1 if _speed_blending else 0])
+		return
 	_jerk_cd = SURGE_JERK_CD_S
 	if _speed_gears:
 		_fire_gear_jerk(dir)
@@ -698,37 +1007,67 @@ func _fire_cruise_jerk(dir: float) -> void:
 	_begin_speed_backoff()
 	if dir > 0.0:
 		_apply_speed_step(SPEED_STEP_CRUISE, false)
-		_tel_event("surge jerk_lift cruise step=%d" % _speed_step)
+		_tel_event("surge lift cruise step=%d" % _speed_step)
 		Narrator.speak(LINE_RESUME)
 	else:
 		_apply_speed_step(SPEED_STEP_STOP, false)
-		_tel_event("surge jerk_lower stop")
+		_tel_event("surge lower stop")
 		Narrator.speak(LINE_STOP)
 
 func _fire_gear_jerk(dir: float) -> void:
-	# Lift = +1 gear; lower = −1 gear (0 = stop).
+	# dir > 0 = speed up (phone lowered); dir < 0 = slow down (phone lifted).
 	if dir > 0.0:
 		if _speed_step >= SPEED_STEP_MAX:
 			_surge_await_rest = true
 			Narrator.speak(LINE_ALREADY_MAX)
 			_tel_event("surge already_max step=%d" % _speed_step)
 			return
+		if _gear_joy != null:
+			_gear_joy.throw_aft()  ## pull back → speed up
 		_begin_speed_backoff()
 		var prev_up: int = _speed_step
 		_apply_speed_step(_speed_step + 1, true)
 		_narrate_speed_change(prev_up, _speed_step)
-		_tel_event("surge gear %d→%d lift" % [prev_up, _speed_step])
+		_tel_event("surge gear %d→%d lower/faster" % [prev_up, _speed_step])
 		return
 	if _speed_step <= SPEED_STEP_STOP:
 		_surge_await_rest = true
 		Narrator.speak(LINE_ALREADY_STOP)
 		_tel_event("surge already_stop")
 		return
+	if _gear_joy != null:
+		_gear_joy.throw_forward()  ## push forward → slow down
 	_begin_speed_backoff()
 	var prev_dn: int = _speed_step
 	_apply_speed_step(_speed_step - 1, true)
 	_narrate_speed_change(prev_dn, _speed_step)
-	_tel_event("surge gear %d→%d lower" % [prev_dn, _speed_step])
+	_tel_event("surge gear %d→%d lift/slower" % [prev_dn, _speed_step])
+
+## Gears HUD: waiting (yellow) while blending/CD → ready (green) + VO.
+## Entering ready recenters surge + grace so residual cannot auto-fire.
+func _tick_gear_joystick(_delta: float) -> void:
+	if _gear_joy == null or not _speed_gears:
+		return
+	_gear_joy.gear = _speed_step
+	_gear_joy.visible = true
+	var busy: bool = _surge_input_blocked() \
+		or (_surge_await_rest and absf(_last_surge) > SURGE_DEAD)
+	if busy:
+		_gear_joy.set_waiting()
+		_joy_ready_announced = false
+		return
+	if _gear_joy.phase != GearJoystick.Phase.READY:
+		_gear_joy.set_ready()
+	if not _joy_ready_announced:
+		_joy_ready_announced = true
+		# Snapshot rest at the ready moment — hanging lift must not count.
+		_surge_neutral = _surge_filt
+		_last_surge = 0.0
+		_surge_armed = false
+		_surge_await_rest = false
+		_surge_ready_grace = SURGE_READY_GRACE_S
+		Narrator.speak(LINE_JOY_READY)
+		_tel_event("joystick ready grace=%.2f" % SURGE_READY_GRACE_S)
 
 func _speed_for_step(step: int) -> float:
 	if step <= SPEED_STEP_STOP:
@@ -763,15 +1102,13 @@ func _tick_speed_blend(delta: float) -> void:
 		_speed_blending = false
 	_update_speed_hint()
 
-## already_max / already_stop are narrated separately (see _fire_gear_jerk);
-## every other gear change just calls out the direction and new gear number.
 func _narrate_speed_change(prev: int, step: int) -> void:
 	if step <= SPEED_STEP_STOP:
 		Narrator.speak(LINE_STOP)
 	elif step > prev:
-		Narrator.speak("Speeding up. Gear %d." % step)
+		Narrator.speak(LINE_SPEEDING)
 	else:
-		Narrator.speak("Slowing down. Gear %d." % step)
+		Narrator.speak(LINE_SLOWING)
 
 static func _gravity_sample() -> Vector3:
 	var g := Input.get_gravity()
@@ -830,23 +1167,12 @@ func _enter_tutorial() -> void:
 	_tut_hold = 0.0
 	_tut_ref_sum = Vector2.ZERO
 	_tut_ref_t = 0.0
-	_tut_onset_locked = false
 	_no_sensor_frames = 0
 	_sx = 1.0
 	_sy = 1.0
-	_sz = 1.0
-	_tut_pull_peak = 0.0
-	_tut_push_peak = 0.0
-	_tut_pull_raw = 0.0
-	_tut_push_raw = 0.0
-	_tut_jerk_peak = 0.0
-	_tut_surge_peak = 0.0
+	_sz = -1.0 if _speed_gears else 1.0
 	_tut_surge_phase = "pose"
 	_tut_surge_phase_t = 0.0
-	_tut_surge_idle_sum = 0.0
-	_tut_surge_intro_done = false
-	_tut_win_pos = 0.0
-	_tut_win_neg = 0.0
 	if _speed_gears:
 		_tut_steps = TUT_STEPS_GEARS
 	else:
@@ -856,6 +1182,8 @@ func _enter_tutorial() -> void:
 	_tut_phone.visible = true
 	if _speed_bar != null:
 		_speed_bar.visible = false
+	if _gear_joy != null:
+		_gear_joy.visible = false
 	_reset_level_look()
 	_show_tut_step(0)
 	_tel_event("tutorial enter gears=%d" % [1 if _speed_gears else 0])
@@ -878,36 +1206,20 @@ func _show_tut_step(i: int) -> void:
 
 func _speak_tut_step(i: int) -> void:
 	var step: Dictionary = _tut_steps[i]
-	if str(step.get("kind", "tilt")) == "surge":
-		var pose: String = str(step["line"])
-		if not _tut_surge_intro_done:
-			_tut_surge_intro_done = true
-			var intro: String = LINE_TUT_SURGE_INTRO
-			if not _speed_gears:
-				intro = LINE_TUT_SURGE_INTRO_CRUISE
-			Narrator.speak(intro + " " + pose)
-		else:
-			Narrator.speak(pose)
-		return
 	Narrator.speak(str(step["line"]))
 
 func _begin_surge_step(step: Dictionary) -> void:
-	_tut_phone.set_surge(float(step["dir"]), str(step.get("mode", "hold")))
-	_tut_phone.set_status("red")
-	_tut_phone.set_animate(false)
+	# motion = physical lift(+)/lower(−) for the phone graphic; dir = signed surge.
+	var motion: float = float(step.get("motion", step["dir"]))
+	_tut_phone.set_surge(motion)
+	_tut_phone.set_status("yellow")
+	_tut_phone.set_animate(true)
 	_tut_surge_phase = "pose"
 	_tut_surge_phase_t = 0.0
-	_tut_surge_idle_sum = 0.0
-	_tut_surge_peak = 0.0
-	_tut_win_pos = 0.0
-	_tut_win_neg = 0.0
-	_tut_onset_locked = false
-	_surge_release_t = 0.0
-	_tut_ref_t = 0.0
 	_tut_hold = 0.0
 	_hint.text = str(step["hint"])
-	_tel_event("tut_surge pose dir=%.0f mode=%s" % [float(step["dir"]),
-		str(step.get("mode", "hold"))])
+	_tel_event("tut_surge begin dir=%.0f motion=%.0f" % [
+		float(step["dir"]), motion])
 
 func _reset_level_look() -> void:
 	## Snap the camera back to a level look at the home world so a phone
@@ -941,8 +1253,7 @@ func _tut_tick(delta: float) -> void:
 		_no_sensor_frames += 1
 		if _no_sensor_frames >= NO_SENSOR_SKIP_FRAMES:
 			_tel_event("tutorial skipped (no sensor)")
-			_apply_surge_thresholds(SURGE_ARM_DEFAULT / SURGE_CAL_FRAC,
-				SURGE_ARM_DEFAULT / SURGE_CAL_FRAC)
+			_apply_surge_thresholds()
 			_enter_gate()
 		return
 	_no_sensor_frames = 0
@@ -992,6 +1303,7 @@ func _tut_tick(delta: float) -> void:
 	else:
 		_tut_hold = 0.0
 
+## Lift/lower tutorial: same shape as tilt — short VO, settle, hold, Got it.
 func _tut_surge_tick(delta: float, step: Dictionary) -> void:
 	var raw := _gravity_filtered(delta)
 	if raw.length() < 0.5 and Input.get_accelerometer().length() < 0.5:
@@ -1003,135 +1315,67 @@ func _tut_surge_tick(delta: float, step: Dictionary) -> void:
 	_no_sensor_frames = 0
 	_surge_sample(delta)
 	var want: float = float(step["dir"])
-	var mode: String = str(step.get("mode", "hold"))
 	var learn: bool = bool(step.get("learn", false))
 
-	# ── RED: brief ready while VO finishes ──────────────────────────
 	if _tut_surge_phase == "pose":
-		_tut_phone.set_status("red")
-		_tut_phone.set_animate(false)
-		_tut_surge_phase_t += delta
-		_last_surge = 0.0
+		_tut_phone.set_status("yellow")
+		_tut_phone.set_animate(true)
+		_hint.text = str(step["hint"])
 		if Narrator.is_playing():
 			return
-		var pose_s: float = TUT_SURGE_POSE_S
-		if _tut_surge_phase_t < pose_s:
-			return
+		# Brief settle so the VO-end wobble isn't the "lift" sample.
+		_tut_surge_phase_t += delta
 		_surge_neutral = _surge_filt
 		_last_surge = 0.0
-		_tut_surge_peak = 0.0
-		_tut_win_pos = 0.0
-		_tut_win_neg = 0.0
-		_tut_onset_locked = false
+		if _tut_surge_phase_t < TUT_SURGE_SETTLE_S:
+			return
 		_reset_surge_disp()
+		_tut_hold = 0.0
+		_tut_surge_phase = "go"
 		_tut_surge_phase_t = 0.0
 		_tut_phone.set_status("green")
-		_tut_phone.set_animate(true)
-		_tut_surge_phase = "capture"
-		_hint.text = "Capturing…"
-		_tel_event("tut_surge capture start=%.2f mode=%s" % [_surge_neutral, mode])
-		Narrator.speak(str(step["go"]))
+		_tel_event("tut_surge go neutral=%.2f" % _surge_neutral)
 		return
 
 	if _tut_surge_phase == "success":
-		_tut_phone.set_status("green")
-		_tut_phone.set_animate(false)
-		if Narrator.is_playing():
-			return
-		_tut_surge_phase_t += delta
-		if _tut_surge_phase_t < TUT_SURGE_OK_S:
-			return
+		# Kept for telem compatibility — accept advances immediately.
 		_tut_advance()
 		return
 
-	# ── GREEN: fixed 2s window; lock first onset (ignore settle brake) ─
+	# Listen: first clear motion → next step (no hold window).
 	_tut_phone.set_status("green")
 	_tut_phone.set_animate(true)
-	_hint.text = "Capturing…"
+	_hint.text = str(step["hint"])
 	var axis_delta: float = _surge_filt - _surge_neutral
-	var arm_on: float = TUT_SURGE_MIN
-	if not _tut_onset_locked:
-		if absf(axis_delta) >= arm_on:
-			_tut_onset_locked = true
-			_tut_surge_peak = axis_delta
-			_tut_win_pos = maxf(0.0, axis_delta)
-			_tut_win_neg = maxf(0.0, -axis_delta)
-			_tel_event("tut_surge onset=%.2f want=%.0f" % [axis_delta, want])
-	elif signf(axis_delta) == signf(_tut_surge_peak):
-		if absf(axis_delta) > absf(_tut_surge_peak):
-			_tut_surge_peak = axis_delta
-		if axis_delta > _tut_win_pos:
-			_tut_win_pos = axis_delta
-		if -axis_delta > _tut_win_neg:
-			_tut_win_neg = -axis_delta
-	_tut_surge_phase_t += delta
-	if _tut_surge_phase_t < TUT_SURGE_WIN_S:
-		return
-	_tut_analyze_capture(want, mode, learn)
-
-func _tut_analyze_capture(want: float, mode: String, learn: bool) -> void:
-	var accept_thr: float = TUT_SURGE_JERK_MIN
-	# Prefer onset-locked peak so settle/brake cannot invert polarity.
-	var raw_peak: float = _tut_surge_peak
-	if absf(raw_peak) < 0.01:
-		var pos_pk: float = _tut_win_pos
-		var neg_pk: float = _tut_win_neg
-		raw_peak = pos_pk if pos_pk >= neg_pk else -neg_pk
-	_tel_event("tut_surge analyze peak=%.2f pos=%.2f neg=%.2f want=%.0f mode=%s" % [
-		raw_peak, _tut_win_pos, _tut_win_neg, want, mode])
-	if absf(raw_peak) < accept_thr:
-		_tel_event("tut_surge reject weak peak=%.2f thr=%.2f" % [
-			raw_peak, accept_thr])
-		_tut_retry_capture()
-		return
-	if learn:
-		_sz = signf(raw_peak) * want
-		_tut_pull_raw = raw_peak
-		_tut_pull_peak = absf(raw_peak)
-		_tut_push_peak = absf(raw_peak)
-		_tut_jerk_peak = maxf(_tut_jerk_peak, absf(raw_peak))
-		_tut_surge_peak = raw_peak
-		_tel_event("learned sz=%.0f pull_raw=%.2f" % [_sz, _tut_pull_raw])
-		_tut_surge_accept()
-		return
-	var signed: float = _sz * raw_peak
-	if signed * want < accept_thr:
-		_tel_event("tut_surge reject dir peak_raw=%.2f signed=%.2f want=%.0f" % [
-			raw_peak, signed, want])
-		_tut_retry_capture()
-		return
-	_tut_jerk_peak = maxf(_tut_jerk_peak, absf(signed))
-	if want < 0.0:
-		_tut_push_raw = raw_peak
-		_tut_push_peak = maxf(_tut_push_peak, absf(signed))
+	var ok: bool = false
+	if _speed_gears:
+		# Gears: lift → slow (−surge), lower → faster (+surge).
+		if learn:
+			ok = absf(axis_delta) >= TUT_SURGE_MIN
+			if ok and signf(axis_delta) != 0.0:
+				_sz = -signf(axis_delta)
+				_tel_event("learned sz=%.0f lift_raw=%.2f" % [_sz, axis_delta])
+		else:
+			ok = _last_surge >= TUT_SURGE_MIN
+	elif learn:
+		ok = absf(axis_delta) >= TUT_SURGE_MIN
+		if ok:
+			var sgn: float = signf(axis_delta) * want
+			if sgn != 0.0 and sgn != _sz:
+				_sz = sgn
+				_tel_event("learned sz=%.0f raw=%.2f" % [_sz, axis_delta])
 	else:
-		_tut_pull_raw = raw_peak
-		_tut_pull_peak = maxf(_tut_pull_peak, absf(signed))
-	_tut_surge_peak = raw_peak
-	_tel_event("tut_surge hit peak_raw=%.2f signed=%.2f mode=%s" % [
-		raw_peak, signed, mode])
-	_tut_surge_accept()
-
-func _tut_retry_capture() -> void:
-	_surge_neutral = _surge_filt
-	_tut_win_pos = 0.0
-	_tut_win_neg = 0.0
-	_tut_surge_peak = 0.0
-	_tut_onset_locked = false
-	_tut_surge_phase = "capture"
-	_tut_surge_phase_t = 0.0
-	_hint.text = "Capturing…"
-	_tel_event("tut_surge retry")
+		ok = _last_surge * want >= TUT_SURGE_MIN
+	if ok:
+		_tut_surge_accept()
 
 func _tut_surge_accept() -> void:
-	_tut_surge_phase = "success"
-	_tut_surge_phase_t = 0.0
-	_tut_onset_locked = false
-	_surge_release_t = 0.0
 	_tut_phone.set_status("green")
 	_tut_phone.set_animate(false)
 	_hint.text = "Got it!"
 	_tel_event("tut_surge success")
+	# Same pace as a completed tilt step — next VO immediately.
+	_tut_advance()
 
 func _tut_advance() -> void:
 	_tel_event("tutorial step %d done" % _tut_i)
@@ -1139,44 +1383,29 @@ func _tut_advance() -> void:
 	_tut_hold = 0.0
 	_tut_ref_sum = Vector2.ZERO
 	_tut_ref_t = 0.0
-	_tut_surge_peak = 0.0
-	_tut_win_pos = 0.0
-	_tut_win_neg = 0.0
-	_tut_onset_locked = false
-	_surge_release_t = 0.0
 	_tut_surge_phase = "pose"
 	_tut_surge_phase_t = 0.0
-	_tut_surge_idle_sum = 0.0
 	_reset_level_look()
 	if _tut_i >= _tut_steps.size():
 		_tut_phone.visible = false
 		_tut_arrow.visible = false
-		if _tut_pull_peak > 0.0 and _tut_push_peak > 0.0:
-			_apply_surge_thresholds(_tut_pull_peak, _tut_push_peak)
-		elif _tut_jerk_peak > 0.0:
-			_apply_surge_thresholds(_tut_jerk_peak, _tut_jerk_peak)
-		elif _tut_pull_peak > 0.0:
-			_apply_surge_thresholds(_tut_pull_peak, _tut_pull_peak)
-		_tel_event("tutorial done lift=%.2f lower=%.2f jerkpk=%.2f sz=%.0f" % [
-			_tut_pull_peak, _tut_push_peak, _tut_jerk_peak, _sz])
+		_apply_surge_thresholds()
+		_tel_event("tutorial done sz=%.0f" % _sz)
 		_enter_gate()
 		return
 	_show_tut_step(_tut_i)
 	_speak_tut_step(_tut_i)
 
 func _update_speed_hint() -> void:
-	if _speed_bar != null:
-		_speed_bar.visible = _speed_gears
-		_speed_bar.speed = _speed
-		_speed_bar.step = _speed_step
-		_speed_bar.blending = _speed_blending
-		_speed_bar.queue_redraw()
+	var flying: bool = _state == State.FLYING or _state == State.SEEKING
+	_show_tap_hud(flying)
 	if _speed_step <= SPEED_STEP_STOP:
-		_hint.text = "HOLDING — quick lift to speed up"
-	elif _speed_gears:
-		_hint.text = "Gear %d / %d · jerk lift/lower" % [_speed_step, SPEED_STEP_MAX]
+		_hint.text = "STOPPED — tap green to cruise · tap a planet to go"
+	elif _state == State.SEEKING:
+		pass  ## seek sets its own hint
 	else:
-		_hint.text = "Cruising · quick lower to stop · tilt to steer"
+		_hint.text = "Gear %d / %d · tap stick · tap planets" % [
+			_speed_step, SPEED_STEP_MAX]
 
 ## ── Every-play aim gate ─────────────────────────────────────────────
 func _enter_gate() -> void:
@@ -1231,24 +1460,10 @@ func _gate_tick(delta: float) -> void:
 	_reticle.queue_redraw()
 
 func _launch(neutral: Vector2) -> void:
+	## Suite / legacy entry — same tap HUD as _launch_tap.
 	_tilt_neutral = neutral
-	_calibrated = true
-	_state = State.FLYING
-	_capture_grace = CAPTURE_GRACE_S
-	_apply_speed_step(SPEED_STEP_CRUISE, false)
-	_surge_need_recenter = true
-	_surge_capture_cd = 0.0
-	_band_warned = false
-	_reticle.visible = false
-	_tut_arrow.visible = false
-	_tut_phone.visible = false
-	# Launch looking straight ahead at the home world — never the leftover
-	# pitch from a tutorial dive.
-	_reset_level_look()
-	_update_speed_hint()
-	_tel_event("launch neutral=(%.3f,%.3f) sx=%.0f sy=%.0f sz=%.0f gears=%d flip=%.0f" % [
-		neutral.x, neutral.y, _sx, _sy, _sz, 1 if _speed_gears else 0, _flip])
-	Narrator.speak(LINE_WELCOME)
+	_tel_event("launch→tap neutral=(%.3f,%.3f)" % [neutral.x, neutral.y])
+	_launch_tap()
 func _fly(delta: float) -> void:
 	var fwd := _heading()
 	_ship_pos += fwd * _speed * delta
@@ -1312,14 +1527,14 @@ func _telemetry(delta: float) -> void:
 		aim = _heading().dot((c - _ship_pos).normalized())
 	var ang := _tilt_angles(Vector3(_g_filt.x * _flip, _g_filt.y * _flip, _g_filt.z)) \
 		if _g_filt.length() > 0.5 else Vector2.ZERO
-	print("PGTEL g=(%.2f,%.2f,%.2f) acc=(%.2f,%.2f,%.2f) ang=(%.3f,%.3f) na=(%.3f,%.3f) s=(%.0f,%.0f,%.0f) cal=%d tilt=(%.2f,%.2f) yaw=%.2f pitch=%.2f y=%.1f near=%s d=%.1f x=%.2f aim=%.2f spd=%.0f step=%d blend=%d surge=%.2f peak=%.2f arm=%.2f jerk_cd=%.1f cap_cd=%.1f disp=%.3f vel=%.3f" % [
+	print("PGTEL g=(%.2f,%.2f,%.2f) acc=(%.2f,%.2f,%.2f) ang=(%.3f,%.3f) na=(%.3f,%.3f) s=(%.0f,%.0f,%.0f) cal=%d tilt=(%.2f,%.2f) yaw=%.2f pitch=%.2f y=%.1f near=%s d=%.1f x=%.2f aim=%.2f spd=%.0f step=%d blend=%d surge=%.2f fire=%.2f jerk_cd=%.1f rest=%d disp=%.3f vel=%.3f" % [
 		g.x, g.y, g.z, acc.x, acc.y, acc.z,
 		ang.x, ang.y, _tilt_neutral.x, _tilt_neutral.y,
 		_sx, _sy, _sz,
 		1 if _calibrated else 0, _last_tilt.x, _last_tilt.y,
 		_yaw, _pitch, _ship_pos.y, near_id, near_d, near_x, aim,
 		_speed, _speed_step, 1 if _speed_blending else 0, _last_surge,
-		_surge_pulse_peak, _surge_arm, _jerk_cd, _surge_capture_cd,
+		SURGE_FIRE, _jerk_cd, 1 if _surge_await_rest else 0,
 		_surge_disp, _surge_vel])
 
 func _tel_event(msg: String) -> void:
@@ -1336,7 +1551,10 @@ func _enter_orbit(id: String) -> void:
 	_tel_event("orbit id=%s" % id)
 	_state = State.ORBITING
 	_orbit_id = id
-	_tile.visible = false
+	_seek_id = ""
+	_tap_yaw_rate = 0.0
+	_tap_pitch_rate = 0.0
+	_show_tap_hud(false)
 	var center: Vector3 = (_bodies[id]["root"] as Node3D).global_position
 	# Park ~90° off the sun-planet line so the lit face fills the glass.
 	if center.length() > 0.01:
@@ -1381,54 +1599,149 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch and event.pressed:
 		tap = true
 		pos = event.position
+		_tap_guard_t = TAP_GUARD_S
 	elif event is InputEventMouseButton \
 			and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		# Android often synthesizes a mouse click after a touch — that was
+		# immediately cancelling seek ("keep exploring!") before travel.
+		if _tap_guard_t > 0.0:
+			return
 		tap = true
 		pos = event.position
 	if not tap:
 		return
+	var vp_pos: Vector2 = _map_to_viewport(pos)
 	match _state:
-		State.PAUSED_TILE:
-			if _tile.get_global_rect().has_point(get_global_transform() * pos):
-				_enter_orbit(_tile_id)
-			else:
-				_state = State.FLYING
-				_tile.visible = false
-				_update_speed_hint()
 		State.FLYING:
-			var id := _body_at_screen(pos)
-			if not id.is_empty():
-				_show_tile(id)
+			_resolve_flying_tap(pos, vp_pos)
+		State.SEEKING:
+			# Planet under finger retargets (even mid-turn); empty cancels.
+			var id2 := _body_at_screen(vp_pos)
+			if id2.is_empty():
+				_cancel_seek()
+			elif id2 != _seek_id:
+				_begin_seek(id2)
+			# same body: ignore (do not cancel)
 
-func _body_at_screen(screen: Vector2) -> String:
+## Planet under finger always wins (even while turning). Otherwise steer.
+func _resolve_flying_tap(local: Vector2, vp_pos: Vector2) -> void:
+	var id := _body_at_screen(vp_pos)
+	if not id.is_empty():
+		_begin_seek(id)
+		return
+	_on_empty_flight_tap(local)
+
+## Control / stretch coords → SubViewport pixel space for unproject.
+func _map_to_viewport(local: Vector2) -> Vector2:
+	if _host == null or _viewport == null:
+		return local
+	var hs: Vector2 = _host.size
+	if hs.x < 1.0 or hs.y < 1.0:
+		return local
+	var vs: Vector2 = Vector2(_viewport.size)
+	return Vector2(local.x / hs.x * vs.x, local.y / hs.y * vs.y)
+
+func _body_at_screen(vp_pos: Vector2, radius_px: float = -1.0) -> String:
+	## Hit-test worlds by screen distance; large/near bodies get a bigger target.
 	var best := ""
-	var best_d := TAP_RADIUS_PX
+	var best_score := INF
 	for id in _bodies:
-		var wp: Vector3 = (_bodies[id]["root"] as Node3D).global_position
+		var info: Dictionary = _bodies[id]
+		var wp: Vector3 = (info["root"] as Node3D).global_position
 		if _cam.is_position_behind(wp):
 			continue
-		var d: float = _cam.unproject_position(wp).distance_to(screen)
-		if d < best_d:
-			best_d = d
+		var sp: Vector2 = _cam.unproject_position(wp)
+		var d: float = sp.distance_to(vp_pos)
+		var hit_r: float = radius_px if radius_px > 0.0 else TAP_RADIUS_PX
+		if radius_px < 0.0:
+			var hero: float = float(info["hero"])
+			var dist3: float = maxf(_cam.global_position.distance_to(wp), 0.5)
+			# Rough projected radius in viewport px (FOV ~70°).
+			var proj: float = (hero / dist3) * float(_viewport.size.y) * 0.85
+			hit_r = clampf(maxf(TAP_RADIUS_PX, proj * 1.15), 40.0, 160.0)
+		if d < hit_r and d < best_score:
+			best_score = d
 			best = id
 	return best
 
-func _show_tile(id: String) -> void:
-	_tel_event("tile id=%s" % id)
-	_state = State.PAUSED_TILE
-	_tile_id = id
+func _begin_seek(id: String) -> void:
+	if not _bodies.has(id):
+		return
+	_seek_id = id
+	_state = State.SEEKING
+	_tap_yaw_rate = 0.0
+	_tap_pitch_rate = 0.0
+	_surge_await_rest = true
+	_capture_grace = 0.0
 	var b := SolarData.flyer_body_by_id(id, _cfg)
-	_tile_pic.texture = OrbitCinematic.texture_for(id)
-	if _tile_pic.texture == null:
-		_tile_pic.texture = CockpitHud.make_planet_thumb(
-			b.get("color", Color(0.7, 0.7, 0.8)), 200)
-	_tile_name.text = str(b.get("name", id))
-	_tile.visible = true
-	Narrator.speak(LINE_TILE)
+	var place: String = str(b.get("name", id))
+	_hint.text = "→ %s  (tap empty to cancel)" % place
+	_show_tap_hud(true)
+	_tel_event("seek start id=%s" % id)
+	Narrator.speak(LINE_SEEK % place)
+
+func _cancel_seek() -> void:
+	_tel_event("seek cancel id=%s" % _seek_id)
+	_seek_id = ""
+	_state = State.FLYING
+	_update_speed_hint()
+	Narrator.speak(LINE_SEEK_CANCEL)
+
+## Controls locked: auto-aim + cruise toward the tapped world until capture.
+func _seek_tick(delta: float) -> void:
+	if _seek_id.is_empty() or not _bodies.has(_seek_id):
+		_cancel_seek()
+		return
+	var info: Dictionary = _bodies[_seek_id]
+	var center: Vector3 = (info["root"] as Node3D).global_position
+	var hero: float = float(info["hero"])
+	var to: Vector3 = center - _ship_pos
+	var dist: float = to.length()
+	if dist < 0.05:
+		_enter_orbit(_seek_id)
+		return
+	var desired: Vector3 = to / dist
+	var want_pitch: float = asin(clampf(desired.y, -0.99, 0.99))
+	var want_yaw: float = atan2(-desired.x, -desired.z)
+	var u: float = minf(1.0, SEEK_TURN * delta)
+	_yaw = lerp_angle(_yaw, want_yaw, u)
+	_pitch = clampf(lerpf(_pitch, want_pitch, u), -0.7, 0.7)
+	var spd: float = maxf(_speed, SEEK_SPEED_MIN)
+	if _speed < SEEK_SPEED_MIN:
+		_speed = SEEK_SPEED_MIN
+		if _speed_gears:
+			_speed_step = maxi(_speed_step, SPEED_STEP_MIN)
+	_ship_pos += _heading() * spd * delta
+	_ship_pos.y = clampf(_ship_pos.y, -Y_MAX, Y_MAX)
+	_apply_cam()
+	# Arrive when close enough — head-on is guaranteed by auto-aim.
+	if dist <= hero * CAPTURE_HERO_X:
+		_tel_event("seek capture id=%s d=%.1f" % [_seek_id, dist])
+		_enter_orbit(_seek_id)
 
 func _show_arrival(place: String) -> void:
 	_arrival_title.text = "Welcome to %s!" % place
+	_refresh_arrival_planet_tile()
 	_arrival.visible = true
+
+func _refresh_arrival_planet_tile() -> void:
+	if _arrival_planet_pic == null:
+		return
+	var id := _orbit_id
+	var b := SolarData.flyer_body_by_id(id, _cfg) if not id.is_empty() else {}
+	var name := str(b.get("name", id if not id.is_empty() else "Planet"))
+	if _arrival_planet_lbl != null:
+		_arrival_planet_lbl.text = name
+	var fallback: Color = b.get("color", Color(0.55, 0.7, 1.0)) as Color
+	var hero: float = float(b.get("hero_r", 2.0))
+	# Relative size in the tile: tiny worlds stay small; gas giants / Sun fill.
+	var u: float = clampf((hero - 1.0) / 12.0, 0.0, 1.0)
+	var diam: int = int(lerpf(72.0, 200.0, u))
+	if bool(b.get("is_star", false)):
+		diam = 210
+	_arrival_planet_pic.texture = PlanetSkins.make_disc_texture(id, fallback, diam)
+	# Center the disc; KEEP_ASPECT_CENTERED so size reads as relative.
+	_arrival_planet_pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
 ## ── World ───────────────────────────────────────────────────────────
 func _body_playground_pos(b: Dictionary, t: float) -> Vector3:
@@ -1552,12 +1865,57 @@ func _build_world() -> void:
 			"hero": hero, "tier": SolarData.icon_tier_for(b),
 		}
 
+	_build_belt_decor()
+
 	_cam = Camera3D.new()
 	_cam.fov = 70.0
 	_cam.near = 0.15
 	_cam.far = 3000.0
 	_world.add_child(_cam)
 	_cam.current = true
+
+## Sparse rock ring between Mars and Jupiter — atmosphere only.
+## Ceres / Vesta / Psyche stay the only interactive belt worlds.
+func _build_belt_decor() -> void:
+	_belt_decor = null
+	var belt := SolarData.flyer_body_by_id("asteroid_belt", _cfg)
+	if belt.is_empty():
+		return
+	var ring_r: float = float(belt.get("orbit_r", 0.0)) * SPACING
+	if ring_r < 1.0:
+		return
+	var mm := MultiMeshInstance3D.new()
+	mm.name = "BeltDecor"
+	var multi := MultiMesh.new()
+	var rock := SphereMesh.new()
+	rock.radius = 0.45
+	rock.height = 0.9
+	rock.radial_segments = 6
+	rock.rings = 4
+	multi.mesh = rock
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.instance_count = BELT_DECOR_COUNT
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.32, 0.30, 0.28)
+	mm.material_override = mat
+	mm.multimesh = multi
+	_world.add_child(mm)
+	_belt_decor = mm
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 424242
+	for i in BELT_DECOR_COUNT:
+		var ang: float = (TAU * float(i) / float(BELT_DECOR_COUNT)) \
+			+ rng.randf_range(-0.04, 0.04)
+		var rr: float = ring_r * (1.0 + rng.randf_range(-BELT_DECOR_RADIAL, BELT_DECOR_RADIAL))
+		var y: float = rng.randf_range(-BELT_DECOR_Y, BELT_DECOR_Y)
+		var pos := Vector3(cos(ang) * rr, y, sin(ang) * rr)
+		var s: float = rng.randf_range(0.4, 1.5)
+		if i % 16 == 0:
+			s = rng.randf_range(1.8, 2.8)
+		var basis := Basis.from_euler(Vector3(
+			rng.randf() * TAU, rng.randf() * TAU, rng.randf() * TAU))
+		basis = basis.scaled(Vector3(s, s * rng.randf_range(0.65, 1.25), s))
+		multi.set_instance_transform(i, Transform3D(basis, pos))
 
 func _build_ui() -> void:
 	_hint = Label.new()
@@ -1570,17 +1928,44 @@ func _build_ui() -> void:
 	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_hint)
 
+	_gear_joy = GearJoystick.new()
+	_gear_joy.name = "GearJoystick"
+	_gear_joy.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_gear_joy.offset_left = -236
+	_gear_joy.offset_right = -18
+	_gear_joy.offset_top = -270
+	_gear_joy.offset_bottom = -22
+	_gear_joy.mouse_filter = Control.MOUSE_FILTER_STOP
+	_gear_joy.visible = false
+	_gear_joy.gui_input.connect(_on_joy_gui_input)
+	add_child(_gear_joy)
+
+	# Horizontal speed bar just above the joystick.
 	_speed_bar = SpeedBar.new()
 	_speed_bar.name = "SpeedBar"
 	_speed_bar.step_max = SPEED_STEP_MAX
 	_speed_bar.cruise_step = SPEED_STEP_CRUISE
-	_speed_bar.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	_speed_bar.offset_left = -64
-	_speed_bar.offset_right = -14
-	_speed_bar.offset_top = -150
-	_speed_bar.offset_bottom = 150
+	_speed_bar.horizontal = true
+	_speed_bar.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_speed_bar.offset_left = -236
+	_speed_bar.offset_right = -18
+	_speed_bar.offset_top = -318
+	_speed_bar.offset_bottom = -274
 	_speed_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_speed_bar.visible = false
 	add_child(_speed_bar)
+
+	_stop_btn = StopCruiseButton.new()
+	_stop_btn.name = "StopCruise"
+	_stop_btn.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_stop_btn.offset_left = -340
+	_stop_btn.offset_right = -250
+	_stop_btn.offset_top = -140
+	_stop_btn.offset_bottom = -50
+	_stop_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	_stop_btn.visible = false
+	_stop_btn.pressed.connect(_on_stop_cruise_pressed)
+	add_child(_stop_btn)
 
 	_home_btn = Button.new()
 	_home_btn.text = "\u25C0"
@@ -1595,12 +1980,33 @@ func _build_ui() -> void:
 	_home_btn.pressed.connect(func() -> void: go_home.emit())
 	add_child(_home_btn)
 
+	# Bottom-left Sun compass — arrow points toward the Sun; tap to fly there.
+	_sun_tile = SunCompassTile.new()
+	_sun_tile.name = "SunTile"
+	_sun_tile.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_sun_tile.offset_left = 18
+	_sun_tile.offset_right = 118
+	_sun_tile.offset_top = -140
+	_sun_tile.offset_bottom = -40
+	_sun_tile.mouse_filter = Control.MOUSE_FILTER_STOP
+	_sun_tile.visible = false
+	_sun_tile.pressed.connect(_on_sun_tile_pressed)
+	add_child(_sun_tile)
+
 	_reticle = AimReticle.new()
 	_reticle.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_reticle.radius_rad = GATE_RADIUS_RAD
 	_reticle.visible = false
 	add_child(_reticle)
+
+	_aim_mark = FlyAimMarker.new()
+	_aim_mark.name = "FlyAimMarker"
+	_aim_mark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_aim_mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_aim_mark.home_radius_px = TAP_HOME_RADIUS_PX
+	_aim_mark.visible = false
+	add_child(_aim_mark)
 
 	_tut_arrow = Label.new()
 	_tut_arrow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1629,81 +2035,298 @@ func _build_ui() -> void:
 	_speed_pick.cruise_stop_pressed.connect(_on_speed_cruise_stop)
 	add_child(_speed_pick)
 
-	# Planet picture tile shown when a world is tapped mid-flight.
-	_tile = PanelContainer.new()
-	_tile.name = "PlanetTile"
-	_tile.visible = false
-	_tile.position = Vector2(440, 100)
-	_tile.custom_minimum_size = Vector2(400, 340)
-	var tsb := StyleBoxFlat.new()
-	tsb.bg_color = Color(0.06, 0.10, 0.20, 0.97)
-	tsb.set_corner_radius_all(24)
-	tsb.set_border_width_all(3)
-	tsb.border_color = Color(1.0, 0.86, 0.36, 0.95)
-	_tile.add_theme_stylebox_override("panel", tsb)
-	var tv := VBoxContainer.new()
-	tv.add_theme_constant_override("separation", 8)
-	_tile.add_child(tv)
-	_tile_pic = TextureRect.new()
-	_tile_pic.custom_minimum_size = Vector2(376, 250)
-	_tile_pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_tile_pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	_tile_pic.clip_contents = true
-	_tile_pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	tv.add_child(_tile_pic)
-	_tile_name = Label.new()
-	_tile_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_tile_name.add_theme_font_size_override("font_size", 30)
-	_tile_name.add_theme_color_override("font_color", Color(1, 0.95, 0.7))
-	tv.add_child(_tile_name)
-	var tap := Label.new()
-	tap.text = "Tap to travel here"
-	tap.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	tap.add_theme_font_size_override("font_size", 18)
-	tap.add_theme_color_override("font_color", Color(0.8, 0.88, 1.0, 0.9))
-	tv.add_child(tap)
-	add_child(_tile)
-
-	# Arrival choices while parked in playground orbit.
+	# Arrival tiles while parked in playground orbit (kid-clear chooser).
 	_arrival = Control.new()
 	_arrival.visible = false
-	_arrival.position = Vector2(280, 420)
-	_arrival.size = Vector2(720, 150)
+	_arrival.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_arrival.mouse_filter = Control.MOUSE_FILTER_STOP
+	var dim := ColorRect.new()
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0.02, 0.04, 0.1, 0.72)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	_arrival.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_arrival.add_child(center)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 18)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center.add_child(vbox)
 	_arrival_title = Label.new()
-	_arrival_title.size = Vector2(720, 40)
 	_arrival_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_arrival_title.add_theme_font_size_override("font_size", 30)
+	_arrival_title.add_theme_font_size_override("font_size", 34)
 	_arrival_title.add_theme_color_override("font_color", Color(1, 0.95, 0.6))
-	_arrival.add_child(_arrival_title)
-	var keep := Button.new()
-	keep.text = "Keep flying  ▶"
-	keep.position = Vector2(90, 60)
-	keep.size = Vector2(250, 68)
-	keep.focus_mode = Control.FOCUS_NONE
-	keep.add_theme_font_size_override("font_size", 24)
-	var ksb := StyleBoxFlat.new()
-	ksb.bg_color = Color(0.3, 0.75, 0.45, 0.96)
-	ksb.set_corner_radius_all(18)
-	keep.add_theme_stylebox_override("normal", ksb)
-	keep.pressed.connect(resume_flying)
-	_arrival.add_child(keep)
-	var learn := Button.new()
-	learn.text = "Learn more  ★"
-	learn.position = Vector2(390, 60)
-	learn.size = Vector2(250, 68)
-	learn.focus_mode = Control.FOCUS_NONE
-	learn.add_theme_font_size_override("font_size", 24)
-	var lsb := StyleBoxFlat.new()
-	lsb.bg_color = Color(0.35, 0.7, 0.95, 0.96)
-	lsb.set_corner_radius_all(18)
-	learn.add_theme_stylebox_override("normal", lsb)
-	learn.pressed.connect(func() -> void: learn_more.emit(_orbit_id))
-	_arrival.add_child(learn)
+	_arrival_title.add_theme_constant_override("outline_size", 6)
+	_arrival_title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.65))
+	vbox.add_child(_arrival_title)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 36)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(row)
+	row.add_child(_make_arrival_tile(
+		"Keep flying",
+		"Back to the cockpit",
+		"res://images/cockpit.png",
+		Color(0.18, 0.42, 0.32),
+		true,
+		resume_flying))
+	var planet_col := _make_arrival_tile(
+		"Planet",
+		"Learn more",
+		"",
+		Color(0.16, 0.28, 0.48),
+		false,
+		func() -> void: learn_more.emit(_orbit_id))
+	_arrival_planet_pic = planet_col.get_node("TileButton/Pic") as TextureRect
+	_arrival_planet_lbl = planet_col.get_node("NameLabel") as Label
+	row.add_child(planet_col)
 	add_child(_arrival)
 
-## Launch-gate reticle: a dead-ahead crosshair circle, a dot showing the
-## current aim, and a ring that fills while the aim is held near dead-on.
-## Vertical speed meter: STOP + five gears.
+func _make_arrival_tile(label: String, hint: String, tex_path: String,
+		tint: Color, cover: bool, on_press: Callable) -> Control:
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 8)
+	col.custom_minimum_size = Vector2(340, 320)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var btn := Button.new()
+	btn.name = "TileButton"
+	btn.custom_minimum_size = Vector2(340, 220)
+	btn.focus_mode = Control.FOCUS_NONE
+	btn.clip_contents = true
+	btn.add_theme_color_override("font_color", Color(0, 0, 0, 0))
+	btn.add_theme_color_override("font_hover_color", Color(0, 0, 0, 0))
+	btn.add_theme_color_override("font_pressed_color", Color(0, 0, 0, 0))
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = tint
+	sb.set_corner_radius_all(22)
+	sb.set_border_width_all(3)
+	sb.border_color = Color(1, 1, 1, 0.55)
+	sb.shadow_color = Color(0, 0, 0, 0.45)
+	sb.shadow_size = 10
+	var hover := sb.duplicate() as StyleBoxFlat
+	hover.border_color = Color(0.95, 0.82, 0.35)
+	hover.bg_color = tint.lightened(0.08)
+	var pressed := sb.duplicate() as StyleBoxFlat
+	pressed.bg_color = tint.darkened(0.12)
+	pressed.border_color = Color(0.95, 0.82, 0.35)
+	btn.add_theme_stylebox_override("normal", sb)
+	btn.add_theme_stylebox_override("hover", hover)
+	btn.add_theme_stylebox_override("focus", hover)
+	btn.add_theme_stylebox_override("pressed", pressed)
+	btn.pressed.connect(on_press)
+	col.add_child(btn)
+	var pic := TextureRect.new()
+	pic.name = "Pic"
+	pic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pic.offset_left = 10
+	pic.offset_top = 10
+	pic.offset_right = -10
+	pic.offset_bottom = -10
+	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED if cover \
+		else TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	if not tex_path.is_empty() and ResourceLoader.exists(tex_path):
+		pic.texture = load(tex_path)
+	btn.add_child(pic)
+	var name_lbl := Label.new()
+	name_lbl.name = "NameLabel"
+	name_lbl.text = label
+	name_lbl.add_theme_font_size_override("font_size", 26)
+	name_lbl.add_theme_color_override("font_color", Color(1, 1, 1))
+	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(name_lbl)
+	var hint_lbl := Label.new()
+	hint_lbl.text = hint
+	hint_lbl.add_theme_font_size_override("font_size", 16)
+	hint_lbl.add_theme_color_override("font_color", Color(0.75, 0.82, 0.98))
+	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(hint_lbl)
+	return col
+
+## Center cross — turn reference. Empty taps near it level the nose.
+class FlyAimMarker:
+	extends Control
+	var home_radius_px: float = 70.0
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r: float = home_radius_px
+		draw_arc(c, r, 0.0, TAU, 48, Color(1.0, 0.95, 0.55, 0.35), 2.0, true)
+		draw_circle(c, 5.0, Color(1.0, 0.92, 0.4, 0.85))
+		var arm: float = 18.0
+		var col := Color(1.0, 0.95, 0.6, 0.75)
+		draw_line(c + Vector2(-arm, 0.0), c + Vector2(arm, 0.0), col, 2.0, true)
+		draw_line(c + Vector2(0.0, -arm), c + Vector2(0.0, arm), col, 2.0, true)
+
+## Bottom-left Sun tile: disc + arrow that rotates toward the Sun (bearing).
+class SunCompassTile:
+	extends Control
+	signal pressed
+	var bearing: float = 0.0  ## rad; 0 = ahead, + = right
+
+	func _gui_input(event: InputEvent) -> void:
+		if event is InputEventScreenTouch and event.pressed:
+			accept_event()
+			pressed.emit()
+		elif event is InputEventMouseButton \
+				and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			accept_event()
+			pressed.emit()
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r: float = minf(size.x, size.y) * 0.42
+		draw_circle(c, r, Color(0.12, 0.10, 0.08, 0.82))
+		draw_arc(c, r, 0.0, TAU, 40, Color(1.0, 0.75, 0.25, 0.85), 2.5, true)
+		draw_circle(c, r * 0.38, Color(1.0, 0.85, 0.25, 0.95))
+		draw_circle(c + Vector2(-r * 0.12, -r * 0.10), r * 0.12,
+			Color(1.0, 0.95, 0.55, 0.55))
+		# Arrow: up = sun ahead; rotates by bearing (screen y-down).
+		var ang: float = bearing - PI * 0.5
+		var tip := c + Vector2(cos(ang), sin(ang)) * (r * 0.88)
+		var left := c + Vector2(cos(ang + 2.5), sin(ang + 2.5)) * (r * 0.42)
+		var right := c + Vector2(cos(ang - 2.5), sin(ang - 2.5)) * (r * 0.42)
+		draw_colored_polygon(PackedVector2Array([tip, left, right]),
+			Color(1.0, 0.55, 0.15, 0.95))
+		var font := ThemeDB.fallback_font
+		var lab := "SUN"
+		var fs := 16
+		var tw := font.get_string_size(lab, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		draw_string(font, Vector2(c.x - tw * 0.5, size.y - 4.0), lab,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(1.0, 0.92, 0.55, 0.95))
+
+## Red octagon (stop) ↔ green circle (cruise).
+class StopCruiseButton:
+	extends Control
+	signal pressed
+	var stopped: bool = false
+
+	func set_stopped(on: bool) -> void:
+		if stopped == on:
+			return
+		stopped = on
+		queue_redraw()
+
+	func _gui_input(event: InputEvent) -> void:
+		if event is InputEventScreenTouch and event.pressed:
+			accept_event()
+			pressed.emit()
+		elif event is InputEventMouseButton \
+				and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			accept_event()
+			pressed.emit()
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r: float = minf(size.x, size.y) * 0.42
+		var font := ThemeDB.fallback_font
+		if stopped:
+			draw_circle(c, r, Color(0.25, 0.82, 0.42, 0.95))
+			draw_arc(c, r, 0.0, TAU, 40, Color(0.85, 1.0, 0.9, 0.9), 3.0, true)
+			var lab := "GO"
+			var fs := 22
+			var tw := font.get_string_size(lab, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+			draw_string(font, Vector2(c.x - tw * 0.5, c.y + 8.0), lab,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.05, 0.2, 0.1))
+		else:
+			_draw_octagon(c, r, Color(0.9, 0.18, 0.16, 0.95))
+			_draw_octagon_outline(c, r, Color(1.0, 0.85, 0.8, 0.9))
+			var lab2 := "STOP"
+			var fs2 := 18
+			var tw2 := font.get_string_size(lab2, HORIZONTAL_ALIGNMENT_LEFT, -1, fs2).x
+			draw_string(font, Vector2(c.x - tw2 * 0.5, c.y + 7.0), lab2,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, fs2, Color(1.0, 0.95, 0.95))
+
+	func _draw_octagon(c: Vector2, r: float, col: Color) -> void:
+		var pts := PackedVector2Array()
+		for i in 8:
+			var a: float = -PI * 0.5 + float(i) * TAU / 8.0 + PI / 8.0
+			pts.append(c + Vector2(cos(a), sin(a)) * r)
+		draw_colored_polygon(pts, col)
+
+	func _draw_octagon_outline(c: Vector2, r: float, col: Color) -> void:
+		var prev := Vector2.ZERO
+		for i in 9:
+			var a: float = -PI * 0.5 + float(i % 8) * TAU / 8.0 + PI / 8.0
+			var p: Vector2 = c + Vector2(cos(a), sin(a)) * r
+			if i > 0:
+				draw_line(prev, p, col, 3.0, true)
+			prev = p
+
+## Interactive stick (lower right): top-down art with green/yellow chevrons.
+## Tap forward (top) = faster; aft (bottom) = slower.
+class GearJoystick:
+	extends Control
+	const NEUTRAL_TEX: Texture2D = preload("res://assets/joystick/neutral.png")
+	const FASTER_TEX: Texture2D = preload("res://assets/joystick/faster.png")
+	const SLOWER_TEX: Texture2D = preload("res://assets/joystick/slower.png")
+	enum Phase { WAITING, READY, THROW }
+	var phase: int = Phase.WAITING
+	var gear: int = 3
+	var stick: float = 0.0       ## −1 forward, +1 aft
+	var _stick_tgt: float = 0.0
+	var _throw_hold: float = 0.0
+	var _t: float = 0.0
+
+	func set_waiting() -> void:
+		if phase == Phase.THROW and _throw_hold > 0.0:
+			return
+		phase = Phase.WAITING
+		_stick_tgt = 0.0
+		queue_redraw()
+
+	func set_ready() -> void:
+		phase = Phase.READY
+		_stick_tgt = 0.0
+		queue_redraw()
+
+	func throw_forward() -> void:
+		phase = Phase.THROW
+		_stick_tgt = -1.0
+		_throw_hold = 0.85
+		queue_redraw()
+
+	func throw_aft() -> void:
+		phase = Phase.THROW
+		_stick_tgt = 1.0
+		_throw_hold = 0.85
+		queue_redraw()
+
+	func _process(delta: float) -> void:
+		if not visible:
+			return
+		_t += delta
+		if phase == Phase.THROW:
+			_throw_hold -= delta
+			if _throw_hold <= 0.0:
+				_stick_tgt = 0.0
+				phase = Phase.READY
+		var k: float = 1.0 - exp(-delta * 12.0)
+		stick = lerpf(stick, _stick_tgt, k)
+		queue_redraw()
+
+	func _draw() -> void:
+		var tex: Texture2D = NEUTRAL_TEX
+		if phase == Phase.THROW:
+			tex = FASTER_TEX if _stick_tgt < 0.0 else SLOWER_TEX
+		var art_size: float = minf(size.x, size.y - 22.0)
+		var art_rect := Rect2(
+			Vector2((size.x - art_size) * 0.5, 0.0),
+			Vector2(art_size, art_size))
+		draw_texture_rect(tex, art_rect, false)
+		var font := ThemeDB.fallback_font
+		var g_lab: String = "STOP" if gear <= 0 else "GEAR %d" % gear
+		var fs := 18
+		var tw := font.get_string_size(g_lab, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		draw_string(font, Vector2((size.x - tw) * 0.5, size.y - 6.0), g_lab,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.92, 0.95, 1.0, 0.95))
+
+## Speed meter: STOP + five gears. Horizontal sits above the joystick.
 class SpeedBar:
 	extends Control
 	var speed: float = 26.0
@@ -1711,8 +2334,57 @@ class SpeedBar:
 	var step_max: int = 5
 	var cruise_step: int = 3
 	var blending: bool = false
+	var horizontal: bool = false
 
 	func _draw() -> void:
+		if horizontal:
+			_draw_horizontal()
+		else:
+			_draw_vertical()
+
+	func _step_color() -> Color:
+		var col := Color(0.35, 0.85, 1.0, 0.9) if step > 0 \
+			else Color(0.55, 0.55, 0.65, 0.85)
+		if step >= step_max:
+			col = Color(1.0, 0.78, 0.30, 0.95)
+		elif step == cruise_step:
+			col = Color(0.45, 0.95, 0.55, 0.92)
+		if blending:
+			col = col.lightened(0.12)
+		return col
+
+	func _draw_horizontal() -> void:
+		var w := size.x
+		var h := size.y
+		var track := Rect2(10.0, h * 0.28, w - 20.0, h * 0.44)
+		draw_rect(track, Color(0.05, 0.08, 0.16, 0.82), true)
+		draw_rect(track, Color(1.0, 1.0, 1.0, 0.35), false, 2.0)
+		var t: float = float(clampi(step, 0, step_max)) / float(step_max)
+		var fill_w: float = track.size.x * t
+		draw_rect(Rect2(track.position.x, track.position.y, fill_w, track.size.y),
+			_step_color(), true)
+		var labels: Array = ["0", "1", "2", "3", "4", "5"]
+		var font := ThemeDB.fallback_font
+		for g in range(0, step_max + 1):
+			var u: float = float(g) / float(step_max)
+			var x: float = track.position.x + track.size.x * u
+			var thick: float = 3.0 if g == cruise_step else 1.5
+			var tc := Color(1.0, 0.9, 0.4, 0.95) if g == cruise_step \
+				else Color(1.0, 1.0, 1.0, 0.35)
+			draw_line(Vector2(x, track.position.y - 2.0),
+				Vector2(x, track.end.y + 2.0), tc, thick)
+			var lab: String = str(labels[g]) if g < labels.size() else str(g)
+			var tw := font.get_string_size(lab, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
+			draw_string(font, Vector2(x - tw * 0.5, track.position.y - 4.0), lab,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.9, 0.92, 1.0, 0.9))
+		var nx: float = track.position.x + track.size.x * t
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(nx, track.end.y + 3.0),
+			Vector2(nx - 6.0, track.end.y + 11.0),
+			Vector2(nx + 6.0, track.end.y + 11.0),
+		]), Color(1.0, 0.92, 0.45, 0.95))
+
+	func _draw_vertical() -> void:
 		var w := size.x
 		var h := size.y
 		var track := Rect2(w * 0.30, 10.0, w * 0.40, h - 36.0)
@@ -1722,15 +2394,7 @@ class SpeedBar:
 		var fill_h: float = track.size.y * t
 		var fill := Rect2(track.position.x, track.end.y - fill_h,
 			track.size.x, fill_h)
-		var col := Color(0.35, 0.85, 1.0, 0.9) if step > 0 \
-			else Color(0.55, 0.55, 0.65, 0.85)
-		if step >= step_max:
-			col = Color(1.0, 0.78, 0.30, 0.95)
-		elif step == cruise_step:
-			col = Color(0.45, 0.95, 0.55, 0.92)
-		if blending:
-			col = col.lightened(0.12)
-		draw_rect(fill, col, true)
+		draw_rect(fill, _step_color(), true)
 		var labels: Array = ["STOP", "1", "2", "3", "4", "5"]
 		for g in range(0, step_max + 1):
 			var u: float = float(g) / float(step_max)
@@ -1788,34 +2452,27 @@ class AimReticle:
 			Color(0.4, 1.0, 0.55) if inside else Color(1.0, 0.75, 0.3))
 
 ## Animated landscape phone outline for the tilt/surge tutorial — shows the
-## player which way to tip or shove the device for the current step.
-## Surge cal: start offset (red/yellow) → animate into rest (green).
-## Outline: red (start pose) → yellow (capturing start) → green (go / done).
+## player which way to tip or lift/lower the device for the current step.
+## Outline: yellow (coach) → green (listening / got it).
 class PhoneTiltHint:
 	extends Control
-	var axis: int = 0       ## 0 = roll, 1 = pitch, 2 = surge (toward/away)
+	var axis: int = 0       ## 0 = roll, 1 = pitch, 2 = surge (lift/lower)
 	var dir: float = 1.0    ## +1 right/up/lift, −1 left/down/lower
-	var surge_mode: String = "hold"  ## hold | jerk
-	var status: String = "yellow"    ## red | yellow | green
+	var status: String = "yellow"    ## yellow | green (red unused)
 	var animate_motion: bool = true
-	var inbound_cal: bool = false    ## surge: start offset → rest
 	var _t: float = 0.0
 
 	func set_step(a: int, d: float) -> void:
 		axis = a
 		dir = d
-		surge_mode = "hold"
-		inbound_cal = false
 		status = "yellow"
 		animate_motion = true
 		_t = 0.0
 		queue_redraw()
 
-	func set_surge(d: float, mode: String = "hold") -> void:
+	func set_surge(d: float, _mode: String = "hold") -> void:
 		axis = 2
 		dir = d
-		surge_mode = mode
-		inbound_cal = true
 		_t = 0.0
 		queue_redraw()
 
@@ -1849,26 +2506,11 @@ class PhoneTiltHint:
 			_:
 				return Color(0.95, 0.88, 0.45, 0.95)
 
-	## Surge cal amount: −dir at start pose, 0 at rest. Gesture animates
-	## start→rest (no out-and-back), matching "land in neutral and stay".
+	## Pulse out and back — same coaching feel as tilt (not a capture pose).
 	func _motion_amount() -> float:
-		if axis == 2 and inbound_cal:
-			var start: float = -dir
-			if status == "green" and not animate_motion:
-				return 0.0  ## landed / success
-			if not animate_motion:
-				return start  ## frozen at start pose
-			var cycle: float = 0.65 if surge_mode == "jerk" else 1.35
-			var u: float = clampf(_t / cycle, 0.0, 1.0)
-			# Ease into rest, then hold.
-			var eased: float = u * u * (3.0 - 2.0 * u)
-			return start * (1.0 - eased)
-		# Tilt (and legacy surge): pulse out and back.
 		var pulse: float = 0.0
 		if animate_motion:
-			pulse = 0.5 + 0.5 * sin(_t * (5.0 if surge_mode == "jerk" else 2.6))
-			if surge_mode == "jerk":
-				pulse = clampf(sin(_t * 5.5), 0.0, 1.0)
+			pulse = 0.5 + 0.5 * sin(_t * 2.6)
 		return pulse * dir
 
 	func _draw() -> void:
@@ -1888,10 +2530,10 @@ class PhoneTiltHint:
 			Vector2(pw * 0.5, ph * 0.5),
 			Vector2(-pw * 0.5, ph * 0.5),
 		])
-		# Pitch / surge: foreshorten + scale so lift grows, lower shrinks.
+		# Pitch / surge: foreshorten + scale so lift grows; screen-Y up for lift.
 		var top_s: float = 1.0 - 0.35 * pitch - 0.18 * depth
 		var bot_s: float = 1.0 + 0.20 * pitch + 0.12 * depth
-		var y_shift: float = -22.0 * pitch
+		var y_shift: float = -22.0 * pitch - 20.0 * depth
 		var scale: float = 1.0 + 0.22 * depth
 		for i in 4:
 			var p: Vector2 = pts[i]
@@ -1915,11 +2557,8 @@ class PhoneTiltHint:
 		var top_m: Vector2 = (pts[0] + pts[1]) * 0.5
 		draw_circle(top_m + (mid - top_m).normalized() * 10.0, 5.0,
 			Color(0.2, 0.25, 0.35, 0.9))
-		# Chevron: show during green go, or always for tilt.
-		var show_chev: bool = animate_motion or (axis != 2)
-		if axis == 2 and inbound_cal and status != "green":
-			show_chev = true  ## point the way they'll move into rest
-		if not show_chev:
+		# Chevron while coaching motion is animating.
+		if not animate_motion and axis == 2:
 			return
 		var tip: Vector2
 		if axis == 0:
@@ -1927,7 +2566,8 @@ class PhoneTiltHint:
 		elif axis == 1:
 			tip = c + Vector2(0.0, -dir * 70.0)
 		else:
-			tip = c + Vector2(0.0, dir * 78.0)
+			# Match pitch: +dir (lift) = screen up (−Y).
+			tip = c + Vector2(0.0, -dir * 78.0)
 		var col := Color(edge.r, edge.g, edge.b, 0.55 + 0.45 * clampf(pulse_vis, 0.35, 1.0))
 		if axis == 0:
 			var base := tip - Vector2(dir * 28.0, 0.0)
@@ -1940,7 +2580,7 @@ class PhoneTiltHint:
 			draw_line(tip, tip + Vector2(-10.0, dir * 14.0), col, 4.0, true)
 			draw_line(tip, tip + Vector2(10.0, dir * 14.0), col, 4.0, true)
 		else:
-			var base3 := tip - Vector2(0.0, dir * 28.0)
+			var base3 := tip + Vector2(0.0, dir * 28.0)
 			draw_line(base3, tip, col, 4.0, true)
-			draw_line(tip, tip + Vector2(-10.0, -dir * 14.0), col, 4.0, true)
-			draw_line(tip, tip + Vector2(10.0, -dir * 14.0), col, 4.0, true)
+			draw_line(tip, tip + Vector2(-10.0, dir * 14.0), col, 4.0, true)
+			draw_line(tip, tip + Vector2(10.0, dir * 14.0), col, 4.0, true)

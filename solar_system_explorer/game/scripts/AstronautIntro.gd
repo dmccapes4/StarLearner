@@ -10,7 +10,7 @@ const IMG_PATH := "res://images/astronaut_girl.png"
 
 const BRIEFING_MISSION := "Welcome aboard, astronaut! In Mission Flight, you'll travel on simulated courses — paths we plot between the planets, the Sun, and even worlds in the asteroid belt. Swipe to pick a destination, watch your route appear on the map, and your ship will follow that charted path through space. Tap a world when you're ready to plot your course!"
 
-const BRIEFING_FREE_FLIGHT := "You're the pilot now! In Free Flight, tilt the phone to steer anywhere in the solar system. Lift the phone to speed up a gear; lower it to slow down. We'll practice in just a moment. Ready? Let's fly!"
+const BRIEFING_FREE_FLIGHT := "You're the pilot now! Tap a planet to fly there. Tap left or right of the cross to turn, or the center to straighten. Tap the stick forward to speed up, back to slow down. Ready? Let's fly!"
 
 ## Back-compat alias — Mission briefing.
 const BRIEFING := BRIEFING_MISSION

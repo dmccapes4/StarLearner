@@ -5,8 +5,8 @@ extends Control
 signal gears_pressed()
 signal cruise_stop_pressed()
 
-const LINE_GEARS := ("Speed Control has five gears — lift the phone to go one gear "
-	+ "faster, lower it to go one gear slower.")
+const LINE_GEARS := ("Speed Control has five gears — lower the phone to speed up "
+	+ "one gear, lift it to slow down one gear. Watch the joystick.")
 const LINE_CRUISE := ("Cruise and Stop keeps it simple — lift the phone to cruise, "
 	+ "lower it to stop.")
 const NARRATION := LINE_GEARS + " " + LINE_CRUISE

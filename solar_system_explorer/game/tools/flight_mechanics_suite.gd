@@ -1,5 +1,5 @@
 extends SceneTree
-## Flight mechanics suite — mission burn profile + Free Flight (tilt/surge/joy).
+## Flight mechanics suite — mission burn profile + Free Flight (tap controls).
 ##
 ##   ./qa/run_flight_mechanics_suite.sh
 ##   godot --path game -s res://tools/flight_mechanics_suite.gd
@@ -158,59 +158,60 @@ func _check_speed_chooser_copy() -> void:
 		SpeedModeChooser.LINE_CRUISE.contains("Cruise") \
 		and SpeedModeChooser.LINE_CRUISE.contains("lift"),
 		SpeedModeChooser.LINE_CRUISE)
-	# Joystick / constant-accel mode retired — chooser must not advertise it.
-	_check("chooser_no_joy_line",
-		SpeedModeChooser.NARRATION.find("Joystick") < 0 \
-		and SpeedModeChooser.NARRATION.find("joystick") < 0,
-		SpeedModeChooser.NARRATION)
+	# Chooser may mention the gears joystick HUD (not a separate speed mode).
+	_check("chooser_gears_mentions_joy",
+		SpeedModeChooser.LINE_GEARS.find("joystick") >= 0 \
+		or SpeedModeChooser.LINE_GEARS.find("Joystick") >= 0,
+		SpeedModeChooser.LINE_GEARS)
 
 ## ── Free Flight constants (kid + Moto G Play research) ───────────────
 
 func _check_playground_constants() -> void:
-	_check("tilt_full_~17deg",
-		is_equal_approx(PlaygroundScene.TILT_FULL_RAD, 0.30),
-		"TILT_FULL_RAD=%s" % PlaygroundScene.TILT_FULL_RAD)
-	_check("tilt_dead_small",
-		PlaygroundScene.TILT_DEAD_RAD > 0.0 \
-		and PlaygroundScene.TILT_DEAD_RAD < PlaygroundScene.TILT_FULL_RAD * 0.25,
-		"dead=%s full=%s" % [PlaygroundScene.TILT_DEAD_RAD, PlaygroundScene.TILT_FULL_RAD])
 	_check("speed_cruise_base", is_equal_approx(PlaygroundScene.SPEED, 26.0),
 		"SPEED=%s" % PlaygroundScene.SPEED)
+	_check("playground_spacing",
+		PlaygroundScene.SPACING >= 1.75 and PlaygroundScene.SPACING <= 2.0,
+		"SPACING=%s" % PlaygroundScene.SPACING)
+	_check("belt_decor_count",
+		PlaygroundScene.BELT_DECOR_COUNT >= 40 \
+		and PlaygroundScene.BELT_DECOR_COUNT <= 100,
+		"n=%d" % PlaygroundScene.BELT_DECOR_COUNT)
 	_check("gear_mult_count", PlaygroundScene.SPEED_STEP_MULT.size() == 5,
 		"n=%d" % PlaygroundScene.SPEED_STEP_MULT.size())
 	_check("gear_max_step", PlaygroundScene.SPEED_STEP_MAX == 5,
 		"max=%d" % PlaygroundScene.SPEED_STEP_MAX)
-	_check("surge_jerk_cd_2s",
-		is_equal_approx(PlaygroundScene.SURGE_JERK_CD_S, 2.0),
-		"SURGE_JERK_CD_S=%s" % PlaygroundScene.SURGE_JERK_CD_S)
 	_check("band_soft_lt_hard",
 		PlaygroundScene.Y_SOFT < PlaygroundScene.Y_MAX \
 		and PlaygroundScene.Y_CLEAR < PlaygroundScene.Y_SOFT,
 		"clear=%s soft=%s max=%s" % [
 			PlaygroundScene.Y_CLEAR, PlaygroundScene.Y_SOFT, PlaygroundScene.Y_MAX])
-	_check("gate_hold_kid",
-		PlaygroundScene.GATE_HOLD_S >= 0.5 and PlaygroundScene.GATE_HOLD_S <= 1.5,
-		"GATE_HOLD_S=%s" % PlaygroundScene.GATE_HOLD_S)
+	_check("band_allows_sightseeing",
+		PlaygroundScene.Y_MAX >= 150.0,
+		"Y_MAX=%s" % PlaygroundScene.Y_MAX)
 	_check("capture_grace",
 		PlaygroundScene.CAPTURE_GRACE_S >= 1.0,
 		"CAPTURE_GRACE_S=%s" % PlaygroundScene.CAPTURE_GRACE_S)
-	_check("tut_gears_steps", PlaygroundScene.TUT_STEPS_GEARS.size() == 6,
-		"n=%d" % PlaygroundScene.TUT_STEPS_GEARS.size())
-	_check("tut_cruise_steps", PlaygroundScene.TUT_STEPS_CRUISE.size() == 6,
-		"n=%d" % PlaygroundScene.TUT_STEPS_CRUISE.size())
-	var gear_hints: Array = []
-	for s in PlaygroundScene.TUT_STEPS_GEARS:
-		if str(s.get("kind", "")) == "surge":
-			gear_hints.append(str(s.get("hint", "")))
-	_check("tut_gears_lift_lower",
-		gear_hints.size() == 2 \
-		and str(gear_hints[0]).contains("LIFT") \
-		and str(gear_hints[1]).contains("LOWER"),
-		"hints=%s" % str(gear_hints))
-	_check("tut_lift_line",
-		PlaygroundScene.LINE_TUT_LIFT.contains("Lift") \
-		and PlaygroundScene.LINE_TUT_LOWER.contains("Lower"),
-		"%s | %s" % [PlaygroundScene.LINE_TUT_LIFT, PlaygroundScene.LINE_TUT_LOWER])
+	_check("tap_rate_min_max",
+		PlaygroundScene.TAP_RATE_MIN < PlaygroundScene.TAP_RATE_MAX \
+		and PlaygroundScene.TAP_RATE_MIN > 0.1,
+		"min=%s max=%s" % [
+			PlaygroundScene.TAP_RATE_MIN, PlaygroundScene.TAP_RATE_MAX])
+	_check("tap_decay_slow",
+		PlaygroundScene.TAP_RATE_DECAY > 0.15 \
+		and PlaygroundScene.TAP_RATE_DECAY < 0.55,
+		"decay=%s" % PlaygroundScene.TAP_RATE_DECAY)
+	_check("tap_home_radius",
+		PlaygroundScene.TAP_HOME_RADIUS_PX >= 48.0,
+		"home_r=%s" % PlaygroundScene.TAP_HOME_RADIUS_PX)
+	_check("welcome_tap_line",
+		PlaygroundScene.LINE_WELCOME_TAP.contains("planet") \
+		and PlaygroundScene.LINE_WELCOME_TAP.to_lower().contains("sun"),
+		PlaygroundScene.LINE_WELCOME_TAP)
+	_check("capture_aim_or_surface",
+		PlaygroundScene.CAPTURE_AIM_DOT < 0.5 \
+		and PlaygroundScene.CAPTURE_HERO_X > 1.2,
+		"aim=%s x=%s" % [
+			PlaygroundScene.CAPTURE_AIM_DOT, PlaygroundScene.CAPTURE_HERO_X])
 
 func _check_tilt_helpers() -> void:
 	# Resting landscape-ish gravity → near-zero tilt after normalize
@@ -232,7 +233,7 @@ func _check_tilt_helpers() -> void:
 		PlaygroundScene._tilt_axis(-PlaygroundScene.TILT_FULL_RAD) < 0.0,
 		"neg")
 
-## ── Runtime playground: gears + lift jerks, screenshots ─────────────
+## ── Runtime playground: tap flight + HUD, screenshots ────────────────
 
 func _check_playground_runtime() -> void:
 	var pg: PlaygroundScene = PlaygroundScene.new()
@@ -242,11 +243,55 @@ func _check_playground_runtime() -> void:
 	pg.begin("earth")
 	await _settle(8)
 
-	_check("pg_state_speed_pick",
-		pg._state == PlaygroundScene.State.SPEED_PICK,
+	_check("pg_state_flying",
+		pg._state == PlaygroundScene.State.FLYING,
 		"state=%s" % pg._state)
-	await _shot(pg, "01_speed_pick",
-		"Free Flight speed chooser — gears + cruise tiles (no joystick)")
+	# Spawn: behind Earth (further from Sun) and slightly above the ecliptic
+	var earth_p0: Vector3 = (pg._bodies["earth"]["root"] as Node3D).global_position \
+		if pg._bodies.has("earth") else Vector3.ZERO
+	var sun_p0: Vector3 = pg._sun_world_pos()
+	var d_ship0: float = Vector3(pg._ship_pos.x, 0.0, pg._ship_pos.z) \
+		.distance_to(Vector3(sun_p0.x, 0.0, sun_p0.z))
+	var d_earth0: float = Vector3(earth_p0.x, 0.0, earth_p0.z) \
+		.distance_to(Vector3(sun_p0.x, 0.0, sun_p0.z))
+	_check("spawn_behind_earth",
+		d_ship0 > d_earth0 and pg._ship_pos.y > 8.0,
+		"ship_sun=%s earth_sun=%s y=%s" % [d_ship0, d_earth0, pg._ship_pos.y])
+	_check("pg_belt_decor",
+		pg._belt_decor != null \
+		and pg._belt_decor.multimesh != null \
+		and pg._belt_decor.multimesh.instance_count == PlaygroundScene.BELT_DECOR_COUNT \
+		and not pg._bodies.has("asteroid_belt"),
+		"mm=%s n=%s bodies_has_belt=%s" % [
+			pg._belt_decor != null,
+			pg._belt_decor.multimesh.instance_count if pg._belt_decor != null \
+				and pg._belt_decor.multimesh != null else -1,
+			pg._bodies.has("asteroid_belt")])
+	_check("pg_aim_mark",
+		pg._aim_mark != null and pg._aim_mark.visible,
+		"mark=%s vis=%s" % [
+			pg._aim_mark != null,
+			pg._aim_mark.visible if pg._aim_mark != null else false])
+	_check("pg_stop_btn",
+		pg._stop_btn != null and pg._stop_btn.visible,
+		"stop=%s vis=%s" % [
+			pg._stop_btn != null,
+			pg._stop_btn.visible if pg._stop_btn != null else false])
+	_check("pg_gear_joystick",
+		pg._gear_joy != null and pg._gear_joy.visible,
+		"joy=%s vis=%s" % [
+			pg._gear_joy != null,
+			pg._gear_joy.visible if pg._gear_joy != null else false])
+	_check("pg_sun_tile",
+		pg._sun_tile != null and pg._sun_tile.visible,
+		"sun=%s vis=%s" % [
+			pg._sun_tile != null,
+			pg._sun_tile.visible if pg._sun_tile != null else false])
+	_check("pg_launch_cruise_speed",
+		is_equal_approx(pg._speed, PlaygroundScene.SPEED),
+		"speed=%s" % pg._speed)
+	await _shot(pg, "01_tap_flight",
+		"Tap Free Flight — center cross, stop, interactive stick")
 
 	# Gear speeds
 	_check("gear_stop_0", is_equal_approx(pg._speed_for_step(0), 0.0), "0")
@@ -262,18 +307,6 @@ func _check_playground_runtime() -> void:
 		and pg._speed_for_step(4) < pg._speed_for_step(5),
 		"steps ok")
 
-	# Gears path → tutorial
-	pg._on_speed_gears()
-	await _settle(6)
-	_check("pg_gears_tutorial",
-		pg._state == PlaygroundScene.State.TUTORIAL and pg._speed_gears,
-		"state=%s gears=%s steps=%d" % [
-			pg._state, pg._speed_gears, pg._tut_steps.size()])
-	_check("pg_gears_tut_len", pg._tut_steps.size() == 6, "n=%d" % pg._tut_steps.size())
-	await _shot(pg, "02_tutorial_gears",
-		"Gears tutorial — tilt + lift/lower coaching")
-
-	# Gear step apply + blend
 	pg._apply_speed_step(PlaygroundScene.SPEED_STEP_CRUISE, false)
 	_check("apply_cruise_immediate",
 		is_equal_approx(pg._speed, PlaygroundScene.SPEED),
@@ -286,50 +319,201 @@ func _check_playground_runtime() -> void:
 		and not pg._speed_blending,
 		"speed=%s" % pg._speed)
 
-	# Skip to flying (gears)
-	pg._launch(Vector2.ZERO)
-	await _settle(6)
-	_check("pg_flying_gears",
-		pg._state == PlaygroundScene.State.FLYING,
-		"state=%s" % pg._state)
-	_check("pg_launch_cruise_speed",
-		is_equal_approx(pg._speed, PlaygroundScene.SPEED),
-		"speed=%s" % pg._speed)
-	await _shot(pg, "03_flying_gears",
-		"Flying after launch — planetary playground, cruise gear")
-
-	# Lift = +1 gear, lower = −1; 2s cooldown after fire
-	pg._surge_post_neutral = 0.0
-	pg._jerk_cd = 0.0
-	pg._speed_gears = true
+	# Tap stick: mash forward to max; aft toward stop; decay to cruise
 	pg._apply_speed_step(PlaygroundScene.SPEED_STEP_CRUISE, false)
+	pg._tap_speed_cd = 0.0
+	pg._held_stopped = false
 	var step0: int = pg._speed_step
-	pg._fire_surge_jerk(1.0)  ## lift → +1 gear + 2s CD
-	_check("gear_lift_up",
+	pg._tap_speed_delta(1)
+	_check("tap_faster_up",
 		pg._speed_step == step0 + 1,
 		"step %d→%d" % [step0, pg._speed_step])
-	_check("gear_cd_after_up",
-		pg._jerk_cd >= PlaygroundScene.SURGE_JERK_CD_S - 0.05,
-		"cd=%s" % pg._jerk_cd)
-	pg._jerk_cd = 0.0
-	step0 = pg._speed_step
-	pg._fire_surge_jerk(-1.0)
-	_check("gear_lower_down",
-		pg._speed_step == step0 - 1,
-		"step %d→%d" % [step0, pg._speed_step])
-	await _shot(pg, "04_flying_gears_shift",
-		"Flying after simulated lift/lower gear shifts")
+	_check("joy_throw_faster_art",
+		pg._gear_joy != null \
+		and pg._gear_joy.phase == PlaygroundScene.GearJoystick.Phase.THROW \
+		and pg._gear_joy._stick_tgt < 0.0,
+		"phase=%s tgt=%s" % [
+			pg._gear_joy.phase if pg._gear_joy != null else -1,
+			pg._gear_joy._stick_tgt if pg._gear_joy != null else 0.0])
+	_check("speed_bar_above_joy",
+		pg._speed_bar != null and pg._speed_bar.visible \
+		and pg._speed_bar.horizontal,
+		"bar=%s vis=%s horiz=%s" % [
+			pg._speed_bar != null,
+			pg._speed_bar.visible if pg._speed_bar != null else false,
+			pg._speed_bar.horizontal if pg._speed_bar != null else false])
+	_check("tap_cruise_decay_armed",
+		pg._cruise_decay_t > 0.0,
+		"decay_t=%s" % pg._cruise_decay_t)
+	# Mash through blend
+	pg._tap_speed_cd = 0.0
+	pg._tap_speed_delta(1)
+	pg._tap_speed_cd = 0.0
+	pg._tap_speed_delta(1)
+	_check("tap_mash_to_max",
+		pg._speed_step == PlaygroundScene.SPEED_STEP_MAX,
+		"step=%d" % pg._speed_step)
+	pg._tick_speed_blend(PlaygroundScene.SPEED_BLEND_S)
+	# Decay steps back toward cruise
+	pg._cruise_decay_t = 0.0
+	pg._tick_cruise_decay(0.01)
+	_check("cruise_decay_step",
+		pg._speed_step == PlaygroundScene.SPEED_STEP_MAX - 1,
+		"step=%d" % pg._speed_step)
+	await _shot(pg, "02_tap_speed",
+		"Stick mash faster + cruise-decay step")
 
-	# Cruise/stop mode selects correct tutorial table
-	pg.begin("earth")
-	await _settle(3)
-	pg._on_speed_cruise_stop()
-	await _settle(3)
-	_check("pg_cruise_mode",
-		not pg._speed_gears and pg._tut_steps.size() == 6,
-		"gears=%s steps=%d" % [pg._speed_gears, pg._tut_steps.size()])
-	await _shot(pg, "05_tutorial_cruise",
-		"Cruise & Stop tutorial — lift cruise / lower stop coaching")
+	# Distance-based yaw: farther tap → higher rate; slow coast; no mash-stack
+	pg._refresh_tap_screen_signs()
+	pg._tap_yaw_rate = 0.0
+	var yaw0: float = pg._yaw
+	pg._nudge_yaw(pg._tap_x_sign, 0.55)
+	_check("tap_yaw_nudge_left",
+		pg._tap_yaw_rate > 0.0,
+		"rate=%s sign=%s" % [pg._tap_yaw_rate, pg._tap_x_sign])
+	pg._tap_steer_tick(0.2)
+	_check("tap_left_increases_yaw",
+		pg._yaw > yaw0,
+		"yaw0=%s yaw=%s" % [yaw0, pg._yaw])
+	pg._nudge_yaw(pg._tap_x_sign, 0.25)
+	var near_rate: float = pg._tap_yaw_rate
+	pg._nudge_yaw(pg._tap_x_sign, 0.95)
+	var far_rate: float = pg._tap_yaw_rate
+	_check("tap_yaw_distance_scales",
+		far_rate > near_rate + 0.15,
+		"near=%s far=%s" % [near_rate, far_rate])
+	_check("tap_yaw_replaces_not_stacks",
+		is_equal_approx(far_rate, pg._rate_from_strength(0.95)),
+		"rate=%s expect=%s" % [far_rate, pg._rate_from_strength(0.95)])
+	var before_decay: float = pg._tap_yaw_rate
+	pg._tap_steer_tick(0.5)
+	_check("tap_yaw_decays_slowly",
+		pg._tap_yaw_rate < before_decay \
+		and pg._tap_yaw_rate > before_decay - 0.4,
+		"after=%s before=%s" % [pg._tap_yaw_rate, before_decay])
+	_check("tap_is_turning",
+		pg._is_turning(),
+		"yaw_rate=%s" % pg._tap_yaw_rate)
+	pg._tap_yaw_rate = 0.0
+	pg._tap_pitch_rate = 0.0
+	# Climb taps must move pitch
+	pg._pitch = 0.0
+	pg._ship_pos.y = 0.0
+	pg._nudge_pitch(1.0, 0.7)
+	var pitch_rate0: float = pg._tap_pitch_rate
+	pg._tap_steer_tick(0.25)
+	_check("tap_pitch_climbs",
+		pg._pitch > 0.04 and pitch_rate0 > 0.2,
+		"pitch=%s rate0=%s" % [pg._pitch, pitch_rate0])
+	# Pitch must hold after coast — no idle auto-level
+	var held_pitch: float = pg._pitch
+	pg._tap_pitch_rate = 0.0
+	pg._ship_pos.y = 120.0
+	for _i in 12:
+		pg._tap_steer_tick(0.25)
+	_check("pitch_holds_no_auto_level",
+		absf(pg._pitch - held_pitch) < 0.02,
+		"pitch=%s held=%s y=%s" % [pg._pitch, held_pitch, pg._ship_pos.y])
+	# Outer turn (empty-flight path) → distance steer
+	pg._seek_id = ""
+	pg._state = PlaygroundScene.State.FLYING
+	var c: Vector2 = pg.size * 0.5
+	var turn_pos: Vector2 = c + Vector2(-200.0, 0.0)
+	pg._tap_yaw_rate = 0.0
+	pg._on_empty_flight_tap(turn_pos)
+	_check("outer_tap_steers_not_seek",
+		pg._state == PlaygroundScene.State.FLYING \
+		and pg._seek_id.is_empty() \
+		and absf(pg._tap_yaw_rate) > 0.0,
+		"state=%s seek=%s yaw_rate=%s" % [
+			pg._state, pg._seek_id, pg._tap_yaw_rate])
+	# Planet tap while turning still seeks
+	pg._nudge_yaw(pg._tap_x_sign, 0.9)
+	_check("turning_before_planet_tap", pg._is_turning(),
+		"rate=%s" % pg._tap_yaw_rate)
+	pg._begin_seek("mars")
+	_check("seek_while_turning_ok",
+		pg._state == PlaygroundScene.State.SEEKING and pg._seek_id == "mars",
+		"state=%s seek=%s" % [pg._state, pg._seek_id])
+	pg._cancel_seek()
+	# Sun tile seeks the Sun
+	pg._state = PlaygroundScene.State.FLYING
+	pg._on_sun_tile_pressed()
+	_check("sun_tile_seeks",
+		pg._state == PlaygroundScene.State.SEEKING and pg._seek_id == "sun",
+		"state=%s seek=%s" % [pg._state, pg._seek_id])
+	pg._cancel_seek()
+	# Collision capture still enters orbit
+	pg._state = PlaygroundScene.State.FLYING
+	pg._capture_grace = 0.0
+	pg._seek_id = ""
+	if pg._bodies.has("uranus"):
+		var uroot: Node3D = pg._bodies["uranus"]["root"]
+		var uhero: float = float(pg._bodies["uranus"]["hero"])
+		pg._ship_pos = uroot.global_position + Vector3(uhero * 0.5, 0.0, 0.0)
+		pg._yaw = 0.0
+		pg._pitch = 0.0
+		pg._check_capture()
+		_check("collision_captures_orbit",
+			pg._state == PlaygroundScene.State.ORBITING \
+			and pg._orbit_id == "uranus",
+			"state=%s orbit=%s" % [pg._state, pg._orbit_id])
+		# Leave orbit + clear body so settle frames don't re-capture
+		if pg._cine != null and pg._cine.has_method("stop"):
+			pg._cine.stop()
+		pg._state = PlaygroundScene.State.FLYING
+		pg._orbit_id = ""
+		pg._capture_grace = PlaygroundScene.CAPTURE_GRACE_S
+		pg._ship_pos = Vector3(0.0, 14.0, 220.0)
+		pg._arrival.visible = false
+		pg._show_tap_hud(true)
+	await _shot(pg, "03_tap_turn",
+		"Distance turn + planet-while-turning + sun tile")
+
+	# Stop holds — no cruise decay; GO resumes cruise
+	pg._state = PlaygroundScene.State.FLYING
+	pg._tap_speed_cd = 0.0
+	pg._apply_speed_step(PlaygroundScene.SPEED_STEP_CRUISE, false)
+	pg._held_stopped = false
+	pg._on_stop_cruise_pressed()
+	_check("tap_stop",
+		pg._speed_step == PlaygroundScene.SPEED_STEP_STOP \
+		and is_equal_approx(pg._speed, 0.0) and pg._held_stopped,
+		"step=%d speed=%s held=%s" % [
+			pg._speed_step, pg._speed, pg._held_stopped])
+	_check("stop_btn_green",
+		pg._stop_btn != null and pg._stop_btn.stopped,
+		"stopped=%s" % (pg._stop_btn.stopped if pg._stop_btn != null else false))
+	pg._cruise_decay_t = 0.0
+	pg._tick_cruise_decay(0.01)
+	_check("stop_no_decay",
+		pg._speed_step == PlaygroundScene.SPEED_STEP_STOP,
+		"step=%d" % pg._speed_step)
+	pg._tap_speed_cd = 0.0
+	pg._on_stop_cruise_pressed()
+	_check("tap_cruise",
+		pg._speed_step == PlaygroundScene.SPEED_STEP_CRUISE \
+		and not pg._held_stopped,
+		"step=%d held=%s" % [pg._speed_step, pg._held_stopped])
+	await _shot(pg, "04_stop_cruise",
+		"Stop holds; green GO → cruise")
+
+	# Seek + STOP cancels target and holds
+	pg._begin_seek("mars")
+	await _settle(2)
+	_check("seek_started",
+		pg._state == PlaygroundScene.State.SEEKING,
+		"state=%s" % pg._state)
+	pg._tap_speed_cd = 0.0
+	pg._apply_speed_step(PlaygroundScene.SPEED_STEP_CRUISE, false)
+	pg._held_stopped = false
+	pg._on_stop_cruise_pressed()
+	_check("stop_cancels_seek",
+		pg._state == PlaygroundScene.State.FLYING \
+		and pg._seek_id.is_empty() \
+		and pg._speed_step == PlaygroundScene.SPEED_STEP_STOP,
+		"state=%s seek=%s step=%d" % [
+			pg._state, pg._seek_id, pg._speed_step])
 
 	pg.queue_free()
 	await _settle(2)
@@ -362,4 +546,4 @@ func _check(name: String, ok: bool, detail: String) -> void:
 	print(("OK  " if ok else "FAIL"), " ", name, " — ", detail)
 
 func _agent_brief() -> String:
-	return """Flight mechanics regression suite. (1) Read docs/RESEARCH_MOTO_G_PLAY_2024_SENSORS_AND_KID_MOTION.md for lift/lower gear jerks. (2) Open every PNG: speed pick shows gears+cruise (no joystick); tutorials coach lift/lower; flying shots show playground worlds. (3) Any FAIL in report.json is a production regression — fix PlaygroundScene / OrbitMath / SolarFlyerConfig, do not soften asserts. Key invariants: SURGE_JERK_CD_S=2s; lift=+gear lower=−gear; mission burn is accel→coast→brake (triangular short hops)."""
+	return """Flight mechanics regression suite. (1) Free Flight is tap-only: planet seek, directional taps with rate decay, interactive stick (forward=faster), stop/cruise button. (2) Open every PNG: tap HUD, speed taps, turn/straighten, stop/cruise. (3) Any FAIL in report.json is a production regression. Mission burn remains accel→coast→brake."""

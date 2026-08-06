@@ -119,13 +119,14 @@ func _playground(dir: String) -> void:
 				target = id
 	_check(not target.is_empty(), "a body is on screen to tap")
 	if not target.is_empty():
-		pg._show_tile(target)
+		pg._begin_seek(target)
 		await process_frame
-		await _shot(dir + "/playground_tile.png")
-		_check(pg._state == PlaygroundScene.State.PAUSED_TILE, "tap pauses with tile")
-		# Tap the tile → orbit (cinematic starts; skip it).
+		await _shot(dir + "/playground_seek.png")
+		_check(pg._state == PlaygroundScene.State.SEEKING, "tap starts seek")
+		_check(pg._seek_id == target, "seek target set")
+		# Arrive via seek capture path (enter orbit).
 		pg._enter_orbit(target)
-		_check(pg._state == PlaygroundScene.State.ORBITING, "tile tap enters orbit")
+		_check(pg._state == PlaygroundScene.State.ORBITING, "seek arrives in orbit")
 		pg._cine._finish()
 		for i in 10:
 			await process_frame
@@ -136,6 +137,12 @@ func _playground(dir: String) -> void:
 		for i in 40:
 			await process_frame
 		_check(pg._state == PlaygroundScene.State.FLYING, "keep-flying resumes")
+		# Cancel path: seek then tap away.
+		pg._begin_seek(target)
+		await process_frame
+		pg._cancel_seek()
+		_check(pg._state == PlaygroundScene.State.FLYING and pg._seek_id.is_empty(),
+			"tap-away cancels seek")
 	# Plane band: force the ship high and confirm it gets steered back.
 	pg._ship_pos.y = PlaygroundScene.Y_MAX - 0.5
 	pg._pitch = 0.5

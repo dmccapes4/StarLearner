@@ -81,7 +81,7 @@ Optional PlotBoard Astrogator: Kid pace vs Astrogator, Chemical / NTP / Nuclear 
 
 Outputs: `qa/out/astrogator/<stamp>/report.json` + PNGs.
 
-Outputs: `qa/out/flight_mechanics/<stamp>/report.json` + PNGs.
+Outputs: `qa/out/flight_mechanics/<stamp>/report.json` + PNGs (tap HUD / speed / turn / stop-cruise).
 
 ### Agent workflow
 

@@ -61,36 +61,37 @@ func _run() -> void:
 	_add(AstrogatorPanel.engine_explain("ntp"))
 	_add(AstrogatorPanel.engine_explain("orion"))
 
-	# Free-flight playground beats (incl. first-play tutorial + launch gate).
+	# Free-flight playground beats (tap controls + legacy lines).
 	_add(PlaygroundScript.LINE_WELCOME)
+	_add(PlaygroundScript.LINE_WELCOME_TAP)
+	_add(PlaygroundScript.LINE_CRUISE_DECAY)
 	_add(PlaygroundScript.LINE_BAND)
-	_add(PlaygroundScript.LINE_TILE)
+	_add(PlaygroundScript.LINE_SEEK_CANCEL)
+	for b in SolarData.flyer_bodies(SolarFlyerConfig.load_default()):
+		if bool(b.get("belt", false)):
+			continue
+		_add(PlaygroundScript.LINE_SEEK % str(b.get("name", "")))
 	_add(PlaygroundScript.LINE_TUT_RIGHT)
 	_add(PlaygroundScript.LINE_TUT_LEFT)
 	_add(PlaygroundScript.LINE_TUT_UP)
 	_add(PlaygroundScript.LINE_TUT_DOWN)
-	_add(PlaygroundScript.LINE_TUT_SURGE_INTRO)
-	_add(PlaygroundScript.LINE_TUT_SURGE_INTRO_CRUISE)
 	_add(PlaygroundScript.LINE_TUT_LIFT)
 	_add(PlaygroundScript.LINE_TUT_LOWER)
-	_add(PlaygroundScript.LINE_TUT_GO_LIFT)
-	_add(PlaygroundScript.LINE_TUT_GO_LOWER)
+	_add(PlaygroundScript.LINE_TUT_LIFT_CRUISE)
+	_add(PlaygroundScript.LINE_TUT_LOWER_CRUISE)
 	_add(PlaygroundScript.LINE_AIM)
 	_add(SpeedModeChooser.LINE_GEARS)
 	_add(SpeedModeChooser.LINE_CRUISE)
 	_add(PlaygroundScript.LINE_STOP)
 	_add(PlaygroundScript.LINE_RESUME)
+	_add(PlaygroundScript.LINE_SPEEDING)
+	_add(PlaygroundScript.LINE_SLOWING)
+	_add(PlaygroundScript.LINE_JOY_READY)
 	_add(PlaygroundScript.LINE_MIN)
 	_add(PlaygroundScript.LINE_CRUISE_SPEED)
 	_add(PlaygroundScript.LINE_MAX)
 	_add(PlaygroundScript.LINE_ALREADY_MAX)
 	_add(PlaygroundScript.LINE_ALREADY_STOP)
-	_add(PlaygroundScript.LINE_FASTER)
-	_add(PlaygroundScript.LINE_SLOWER)
-	_add(PlaygroundScript.LINE_READY)
-	for g in range(1, PlaygroundScript.SPEED_STEP_MAX + 1):
-		_add("Speeding up. Gear %d." % g)
-		_add("Slowing down. Gear %d." % g)
 	for b in SolarData.flyer_destinations():
 		_add("You have arrived at %s!" % str(b.get("name", "")))
 
