@@ -1,17 +1,20 @@
 class_name TitleView
 extends Control
-## Launch hub: two large tiles — Spaceship (3D flyer) and Solar System (orrery tour).
+## Launch hub: Spaceship, Solar System tour, and Zodiac Sky.
 ## Narration highlights each tile with a gold outline as it is named.
 
 const NavModes := preload("res://scripts/NavModes.gd")
+const ZodiacDataScript := preload("res://scripts/ZodiacData.gd")
 
 signal flight_pressed()
 signal explainer_pressed()
+signal constellations_pressed()
 
-## Spoken after the boot orrery cinematic. Two beats — Spaceship, then Solar System.
+## Spoken after the boot orrery cinematic.
 const LINE_SHIP := "Explore the solar system in a spaceship."
 const LINE_SOLAR := "Or get a narrated overview of the planets."
-const WELCOME := LINE_SHIP + " " + LINE_SOLAR
+const LINE_ZODIAC := "Or fly among the zodiac constellations and learn each sign."
+const WELCOME := LINE_SHIP + " " + LINE_SOLAR + " " + LINE_ZODIAC
 
 const SHIP_TEX := "res://images/spaceship.png"
 const SOLAR_TEX := "res://images/launch_solar.png"
@@ -19,13 +22,17 @@ const GOLD := Color(1.0, 0.86, 0.28, 1.0)
 
 var _ship_btn: Button
 var _solar_btn: Button
+var _zodiac_btn: Button
 var _ship_tint: Color = Color(0.18, 0.32, 0.55)
 var _solar_tint: Color = Color(0.35, 0.22, 0.12)
+var _zodiac_tint: Color = Color(0.16, 0.14, 0.38)
 var _narr_gen: int = 0
+var _zodiac_tex: Texture2D
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_zodiac_tex = ZodiacDataScript.make_tile_texture()
 
 	var center_wrap := CenterContainer.new()
 	center_wrap.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -34,31 +41,31 @@ func _ready() -> void:
 
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.add_theme_constant_override("separation", 16)
-	box.custom_minimum_size = Vector2(1100, 520)
+	box.add_theme_constant_override("separation", 12)
+	box.custom_minimum_size = Vector2(1180, 520)
 	center_wrap.add_child(box)
 
 	var title := Label.new()
 	title.text = "Solar System Explorer"
-	title.add_theme_font_size_override("font_size", 48)
+	title.add_theme_font_size_override("font_size", 44)
 	title.add_theme_color_override("font_color", Color(1, 1, 1))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title)
 
 	var sub := Label.new()
 	sub.text = "Pick how you want to explore"
-	sub.add_theme_font_size_override("font_size", 22)
+	sub.add_theme_font_size_override("font_size", 20)
 	sub.add_theme_color_override("font_color", Color(0.75, 0.82, 1.0))
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(sub)
 
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 8)
+	spacer.custom_minimum_size = Vector2(0, 4)
 	box.add_child(spacer)
 
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 36)
+	row.add_theme_constant_override("separation", 22)
 	box.add_child(row)
 
 	var ship_col := _make_tile(
@@ -85,13 +92,26 @@ func _ready() -> void:
 	_solar_btn = solar_col.get_node("TileButton") as Button
 	row.add_child(solar_col)
 
+	var zodiac_col := _make_tile(
+		"Zodiac Sky",
+		"Constellations and star signs",
+		"",
+		_zodiac_tint,
+		func() -> void:
+			_narr_gen += 1
+			Narrator.stop()
+			constellations_pressed.emit(),
+		_zodiac_tex)
+	_zodiac_btn = zodiac_col.get_node("TileButton") as Button
+	row.add_child(zodiac_col)
+
 	# Nav-mode toggle: how the Spaceship trip is rendered/played.
 	var mode_btn := Button.new()
 	mode_btn.name = "ModeButton"
 	mode_btn.text = "Flight style:  %s" % NavModes.label()
 	mode_btn.focus_mode = Control.FOCUS_NONE
-	mode_btn.custom_minimum_size = Vector2(360, 54)
-	mode_btn.add_theme_font_size_override("font_size", 20)
+	mode_btn.custom_minimum_size = Vector2(360, 50)
+	mode_btn.add_theme_font_size_override("font_size", 18)
 	var msb := StyleBoxFlat.new()
 	msb.bg_color = Color(0.10, 0.16, 0.30, 0.95)
 	msb.set_corner_radius_all(14)
@@ -116,14 +136,15 @@ func set_active(on: bool) -> void:
 		Narrator.stop()
 		_set_outline(_ship_btn, _ship_tint, false)
 		_set_outline(_solar_btn, _solar_tint, false)
+		_set_outline(_zodiac_btn, _zodiac_tint, false)
 
 func _narrate_welcome(gen: int) -> void:
-	# Let the boot cinematic's Narrator.stop() settle so the first line isn't clipped.
 	await get_tree().create_timer(0.4).timeout
 	if gen != _narr_gen or not visible:
 		return
 	_set_outline(_ship_btn, _ship_tint, true)
 	_set_outline(_solar_btn, _solar_tint, false)
+	_set_outline(_zodiac_btn, _zodiac_tint, false)
 	Narrator.speak(LINE_SHIP)
 	await _await_vo(gen)
 	if gen != _narr_gen or not visible:
@@ -134,10 +155,16 @@ func _narrate_welcome(gen: int) -> void:
 	await _await_vo(gen)
 	if gen != _narr_gen or not visible:
 		return
+	_set_outline(_solar_btn, _solar_tint, false)
+	_set_outline(_zodiac_btn, _zodiac_tint, true)
+	Narrator.speak(LINE_ZODIAC)
+	await _await_vo(gen)
+	if gen != _narr_gen or not visible:
+		return
 	await get_tree().create_timer(0.5).timeout
 	if gen != _narr_gen:
 		return
-	_set_outline(_solar_btn, _solar_tint, false)
+	_set_outline(_zodiac_btn, _zodiac_tint, false)
 
 func _await_vo(gen: int) -> void:
 	await get_tree().process_frame
@@ -147,19 +174,18 @@ func _await_vo(gen: int) -> void:
 			return
 		await get_tree().create_timer(0.05).timeout
 		t += 0.05
-	# Small gap so the next outline/line doesn't stomp the tail.
 	if gen == _narr_gen:
 		await get_tree().create_timer(0.3).timeout
 
 func _make_tile(label: String, hint: String, tex_path: String, tint: Color,
-		on_press: Callable) -> Control:
+		on_press: Callable, tex_override: Texture2D = null) -> Control:
 	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 10)
-	col.custom_minimum_size = Vector2(480, 380)
+	col.add_theme_constant_override("separation", 8)
+	col.custom_minimum_size = Vector2(340, 340)
 
 	var btn := Button.new()
 	btn.name = "TileButton"
-	btn.custom_minimum_size = Vector2(480, 300)
+	btn.custom_minimum_size = Vector2(340, 220)
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.clip_contents = true
 	_set_outline(btn, tint, false)
@@ -168,13 +194,15 @@ func _make_tile(label: String, hint: String, tex_path: String, tint: Color,
 
 	var pic := TextureRect.new()
 	pic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	pic.offset_left = 18
-	pic.offset_top = 18
-	pic.offset_right = -18
-	pic.offset_bottom = -18
+	pic.offset_left = 14
+	pic.offset_top = 14
+	pic.offset_right = -14
+	pic.offset_bottom = -14
 	pic.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	var tex: Texture2D = load(tex_path)
+	var tex: Texture2D = tex_override
+	if tex == null and not tex_path.is_empty():
+		tex = load(tex_path)
 	if tex != null:
 		pic.texture = tex
 	if tex_path.ends_with("spaceship.png"):
@@ -185,7 +213,7 @@ func _make_tile(label: String, hint: String, tex_path: String, tint: Color,
 
 	var name_lbl := Label.new()
 	name_lbl.text = label
-	name_lbl.add_theme_font_size_override("font_size", 32)
+	name_lbl.add_theme_font_size_override("font_size", 26)
 	name_lbl.add_theme_color_override("font_color", Color(1, 1, 1))
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -193,7 +221,7 @@ func _make_tile(label: String, hint: String, tex_path: String, tint: Color,
 
 	var hint_lbl := Label.new()
 	hint_lbl.text = hint
-	hint_lbl.add_theme_font_size_override("font_size", 18)
+	hint_lbl.add_theme_font_size_override("font_size", 15)
 	hint_lbl.add_theme_color_override("font_color", Color(0.72, 0.78, 0.95))
 	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -209,11 +237,11 @@ func _set_outline(b: Button, tint: Color, gold: bool) -> void:
 	b.add_theme_color_override("font_pressed_color", Color(0, 0, 0, 0))
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = tint.lightened(0.06) if gold else tint
-	sb.set_corner_radius_all(28)
+	sb.set_corner_radius_all(24)
 	sb.set_border_width_all(6 if gold else 3)
 	sb.border_color = GOLD if gold else Color(1, 1, 1, 0.55)
 	sb.shadow_color = Color(0.95, 0.75, 0.2, 0.55) if gold else Color(0, 0, 0, 0.45)
-	sb.shadow_size = 18 if gold else 12
+	sb.shadow_size = 16 if gold else 10
 	var hover := sb.duplicate() as StyleBoxFlat
 	hover.border_color = GOLD
 	hover.bg_color = tint.lightened(0.08)

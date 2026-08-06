@@ -50,8 +50,8 @@ cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
   -Pexport_package_name=com.dylan.solar_system_explorer \
-  -Pexport_version_code=43 \
-  -Pexport_version_name=0.39 \
+  -Pexport_version_code=46 \
+  -Pexport_version_name=0.42 \
   -Pexport_enabled_abis=arm64-v8a \
   -Prelease_keystore_file="$KS" \
   -Prelease_keystore_alias=ants \

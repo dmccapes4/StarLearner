@@ -2,13 +2,14 @@ extends Node
 ## Solar System Explorer — flow controller.
 ##
 ##   Title boot: 3s orrery cinematic ("Welcome to Solar System Explorer!")
-##      ─▶ Title (two tiles, gold-outline narration)
+##      ─▶ Title (Spaceship / Solar System / Zodiac Sky)
 ##      ─▶ Spaceship ─▶ FlightChooser (two tiles)
 ##           ─▶ Mission Flight ─▶ Astronaut briefing ─▶ ScrollView
 ##                ─▶ CourseModeChooser (Quick Course / Rocket Science)
 ##                     ─▶ [Rocket] PropulsionChooser ─▶ PlotBoard ─▶ FlyScene
-##           ─▶ Free Flight ─▶ Astronaut briefing (tilt + surge) ─▶ Playground
+##           ─▶ Free Flight ─▶ Astronaut briefing ─▶ Playground
 ##      ─▶ Solar System ─▶ Orrery tour ─▶ back to Title
+##      ─▶ Zodiac Sky ─▶ Astronaut briefing ─▶ ConstellationScene
 ##
 ## Flip USE_3D_FLYER to false for strip → video only (no 3D hop).
 
@@ -23,6 +24,7 @@ const FlyScene := preload("res://scripts/FlyScene.gd")
 const VideoPanel := preload("res://scripts/VideoPanel.gd")
 const AstronautIntro := preload("res://scripts/AstronautIntro.gd")
 const PlaygroundScene := preload("res://scripts/PlaygroundScene.gd")
+const ConstellationScene := preload("res://scripts/ConstellationScene.gd")
 const FlightChooser := preload("res://scripts/FlightChooser.gd")
 const CourseModeChooser := preload("res://scripts/CourseModeChooser.gd")
 const PropulsionChooser := preload("res://scripts/PropulsionChooser.gd")
@@ -38,6 +40,7 @@ var _scroll: ScrollView
 var _board: PlotBoard
 var _fly: FlyScene
 var _playground: PlaygroundScene
+var _zodiac: ConstellationScene
 var _video: VideoPanel
 var _astro: AstronautIntro
 var _briefing: BriefingSlideshow
@@ -45,6 +48,9 @@ var _ship_at: String = "earth"
 var _pending_dest: String = ""
 var _last_route: Dictionary = {}
 var _in_playground: bool = false
+var _in_zodiac: bool = false
+## Zodiac opened from Free Flight — Home returns to playground, not hub.
+var _zodiac_return_playground: bool = false
 
 func _ready() -> void:
 	var starfield := Starfield.new()
@@ -59,6 +65,7 @@ func _ready() -> void:
 	_board = PlotBoard.new()
 	_fly = FlyScene.new()
 	_playground = PlaygroundScene.new()
+	_zodiac = ConstellationScene.new()
 	_video = VideoPanel.new()
 	_astro = AstronautIntro.new()
 	_briefing = BriefingSlideshow.new()
@@ -71,12 +78,14 @@ func _ready() -> void:
 	add_child(_board)
 	add_child(_fly)
 	add_child(_playground)
+	add_child(_zodiac)
 	add_child(_video)
 	add_child(_astro)
 	add_child(_briefing)
 
 	_title.flight_pressed.connect(_on_flight)
 	_title.explainer_pressed.connect(_on_explainer)
+	_title.constellations_pressed.connect(_on_constellations)
 	_chooser.mission_pressed.connect(_on_mission_flight)
 	_chooser.free_flight_pressed.connect(_on_free_flight)
 	_chooser.go_home.connect(_show_title)
@@ -98,6 +107,8 @@ func _ready() -> void:
 	_playground.go_home.connect(_show_title)
 	_playground.arrived.connect(_on_playground_arrived)
 	_playground.learn_more.connect(_on_learn_more)
+	_playground.zodiac_visit.connect(_on_playground_zodiac_visit)
+	_zodiac.go_home.connect(_on_zodiac_home)
 	_video.closed.connect(_on_video_closed)
 	_astro.finished.connect(_on_astro_finished)
 
@@ -116,13 +127,21 @@ func _on_flight() -> void:
 
 func _on_mission_flight() -> void:
 	_in_playground = false
+	_in_zodiac = false
 	_show_scroll()
 	_astro.begin(AstronautIntro.BRIEFING_MISSION)
 
 func _on_free_flight() -> void:
 	_in_playground = true
+	_in_zodiac = false
 	_hide_all_views()
 	_astro.begin(AstronautIntro.BRIEFING_FREE_FLIGHT)
+
+func _on_constellations() -> void:
+	_in_zodiac = true
+	_in_playground = false
+	_hide_all_views()
+	_astro.begin(AstronautIntro.BRIEFING_ZODIAC)
 
 func _on_explainer() -> void:
 	_set_view(_orrery)
@@ -132,10 +151,36 @@ func _show_title() -> void:
 	_orrery.stop_tour()
 	_fly.set_active(false)
 	_playground.set_active(false)
+	_zodiac.set_active(false)
 	_in_playground = false
+	_in_zodiac = false
+	_zodiac_return_playground = false
 	_set_view(_title)
 
+func _on_zodiac_home() -> void:
+	if _zodiac_return_playground:
+		_return_to_playground_from_zodiac()
+		return
+	_show_title()
+
+func _on_playground_zodiac_visit(sign_id: String) -> void:
+	_zodiac_return_playground = true
+	_in_zodiac = true
+	_playground.set_active(false)
+	_zodiac.begin_at(sign_id)
+
+func _return_to_playground_from_zodiac() -> void:
+	_zodiac_return_playground = false
+	_in_zodiac = false
+	_in_playground = true
+	_zodiac.set_active(false)
+	_playground.set_active(true)
+	_playground.resume_flying()
+
 func _on_astro_finished() -> void:
+	if _in_zodiac:
+		_zodiac.begin()
+		return
 	if _in_playground:
 		_playground.set_active(true)
 		_playground.begin(_ship_at)
@@ -297,4 +342,5 @@ func _hide_all_views() -> void:
 	_propulsion.set_active(false)
 	_fly.set_active(false)
 	_playground.set_active(false)
+	_zodiac.set_active(false)
 

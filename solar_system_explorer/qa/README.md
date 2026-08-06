@@ -14,6 +14,16 @@ Covers **mission chart burn profile** (OrbitMath accel→coast→brake, transfer
 ./qa/run_flight_mechanics_suite.sh
 ```
 
+## Zodiac Sky suite
+
+Twelve-sign data + ConstellationScene seek smoke.
+
+```bash
+./qa/run_zodiac_suite.sh
+```
+
+Retrograde follow-up idea: [`../docs/NOTE_ZODIAC_RETROGRADE.md`](../docs/NOTE_ZODIAC_RETROGRADE.md).
+
 ## Marker LOD suite
 
 Pixel AR pins vs 3D mesh handoff for **every** flyer body (far → handoff → near).

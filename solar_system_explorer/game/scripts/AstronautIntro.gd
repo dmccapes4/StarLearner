@@ -12,6 +12,8 @@ const BRIEFING_MISSION := "Welcome aboard, astronaut! In Mission Flight, you'll 
 
 const BRIEFING_FREE_FLIGHT := "You're the pilot now! Tap a planet to fly there. Tap left or right of the cross to turn, or the center to straighten. Tap the stick forward to speed up, back to slow down. Ready? Let's fly!"
 
+const BRIEFING_ZODIAC := "Welcome to the zodiac sky! Twelve star patterns circle the Sun's yearly path. Tap a constellation to fly there. You'll learn its stars, when Earth lines up with that sign, and a little astrology for fun. Ready to explore the night?"
+
 ## Back-compat alias — Mission briefing.
 const BRIEFING := BRIEFING_MISSION
 

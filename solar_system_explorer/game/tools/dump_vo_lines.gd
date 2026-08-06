@@ -15,6 +15,8 @@ const FlySceneScript := preload("res://scripts/FlyScene.gd")
 const PlotBoardScript := preload("res://scripts/PlotBoard.gd")
 const NarratorScript := preload("res://scripts/Narrator.gd")
 const PlaygroundScript := preload("res://scripts/PlaygroundScene.gd")
+const ConstellationScript := preload("res://scripts/ConstellationScene.gd")
+const ZodiacDataScript := preload("res://scripts/ZodiacData.gd")
 const FlightChooserScript := preload("res://scripts/FlightChooser.gd")
 const SpeedModeChooser := preload("res://scripts/SpeedModeChooser.gd")
 const CourseModeChooser := preload("res://scripts/CourseModeChooser.gd")
@@ -30,6 +32,7 @@ func _init() -> void:
 func _run() -> void:
 	_add(TitleView.LINE_SHIP)
 	_add(TitleView.LINE_SOLAR)
+	_add(TitleView.LINE_ZODIAC)
 	_add(TitleView.WELCOME)
 	_add(FlightChooserScript.LINE_MISSION)
 	_add(FlightChooserScript.LINE_FREE)
@@ -43,6 +46,17 @@ func _run() -> void:
 	_add(OrreryView.BOOT_LINE)
 	_add(AstronautIntro.BRIEFING_MISSION)
 	_add(AstronautIntro.BRIEFING_FREE_FLIGHT)
+	_add(AstronautIntro.BRIEFING_ZODIAC)
+
+	# Zodiac Sky — welcome + every sign's seek / arrive / season / astrology lines.
+	_add(ConstellationScript.LINE_WELCOME)
+	_add("Okay — keep exploring!")
+	for s in ZodiacDataScript.signs():
+		_add(str(s["line_seek"]))
+		_add(str(s["line_arrive"]))
+		_add(str(s["astronomy"]))
+		_add(str(s["line_astro"]))
+		_add(str(s["line_earth"]))
 
 	# Burn-phase beats spoken during every flight.
 	_add(FlySceneScript.LINE_LAUNCH)

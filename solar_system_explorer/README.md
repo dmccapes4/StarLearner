@@ -1,7 +1,7 @@
 # Solar System Explorer
 
 **Game #2 in the [Star Learner](../README.md) catalog** — a calm tour of the Sun and its planets
-for a young child, with a two-tile launch hub (Spaceship flight sim or Solar System orrery) and a
+for a young child, with a three-tile launch hub (Spaceship, Solar System orrery, Zodiac Sky) and a
 full 3D flyer loop (plot → burn → orbit).
 
 - **Engine:** Godot **4.3** (Mobile renderer), landscape 1280×600, offline-first.
@@ -17,6 +17,7 @@ full 3D flyer loop (plot → burn → orbit).
 
 1. **Launch hub — two tiles.** A star-field home screen with two large choices:
    - **Spaceship** → the 3D flight simulation (briefing → strip → plot → fly → orbit).
+   - **Zodiac Sky** → tap a constellation → astronomy + astrology VO → Earth-among-the-stars season beat.
    - **Solar System** → the narrated orrery explainer tour. When the tour ends (or you tap
      **◀** / **Skip ▶**), you're back at the hub — flight is a separate choice.
 2. **Orrery (top-down).** The Sun with the eight planets tracing flattened ellipses, plus the
