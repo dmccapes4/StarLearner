@@ -10,8 +10,8 @@ android {
         applicationId "com.dylan.star_learner"
         minSdk 26
         targetSdk 34
-        versionCode 4
-        versionName "0.4-star-learner"
+        versionCode 11
+        versionName "0.11-star-learner"
     }
 
     signingConfigs {

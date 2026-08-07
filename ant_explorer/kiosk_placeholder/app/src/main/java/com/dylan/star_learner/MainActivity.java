@@ -7,6 +7,7 @@ import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Outline;
 import android.graphics.Typeface;
@@ -15,6 +16,7 @@ import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -60,6 +62,20 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             "/sdcard/AntPhone/videos", "/data/local/tmp/antphone_videos"};
     private static final String ANT_EXPLORER_PACKAGE = "com.dylan.ant_explorer";
     private static final String EXTRA_WIPE_SAVE = "com.dylan.star_learner.EXTRA_WIPE_SAVE";
+    /** adb: am start -n com.dylan.star_learner/.MainActivity -a …MAINTENANCE */
+    private static final String ACTION_MAINTENANCE = "com.dylan.star_learner.MAINTENANCE";
+    /** adb: am start -n com.dylan.star_learner/.MainActivity -a …KIOSK_ON */
+    private static final String ACTION_KIOSK_ON = "com.dylan.star_learner.KIOSK_ON";
+    /** Packages soft-disabled on the appliance that Moto/OEM check-in may need. */
+    private static final String[] MAINTENANCE_ENABLE_PKGS = {
+            "com.android.settings",
+            "com.motorola.settings",
+            "com.motorola.android.fota",
+            "com.motorola.carrierconfig",
+            "com.motorola.entitlement",
+            "com.motorola.ccc.ota",
+            "com.motorola.ccc.devicemanagement",
+    };
 
     private static final String HELP_SCRIPT =
             "Welcome to Star Learner. Tap a game to play. "
@@ -74,8 +90,12 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     private boolean ttsReady = false;
     /** Last game package we launched — used to show the restart chip while it is alive. */
     private String activeGamePackage = null;
+    private ScreenPowerHelper screenPower;
+    /** When true, do not re-assert immersive lock-task (Settings / OEM unlock / Magisk). */
+    private boolean maintenanceMode = false;
     private final Runnable keepImmersive = new Runnable() {
         @Override public void run() {
+            if (maintenanceMode) return;
             applyImmersive();
             tryStartLockTask();
             handler.postDelayed(this, 2500);
@@ -85,14 +105,16 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Screen-on policy is battery-aware (see ScreenPowerHelper) — do not keep
+        // the backlight forever; that drained cove overnight on a sleeping USB host.
         getWindow().addFlags(
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-                        | WindowManager.LayoutParams.FLAG_FULLSCREEN
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
                         | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
                         | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
         );
 
         tts = new TextToSpeech(this, this);
+        screenPower = new ScreenPowerHelper(this);
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(0xFF1B3D24);
@@ -145,6 +167,15 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         applyImmersive();
         ensureLockTaskPackages();
         tryStartLockTask();
+        screenPower.start();
+        handleControlIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleControlIntent(intent);
     }
 
     @Override
@@ -158,6 +189,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
     @Override
     protected void onDestroy() {
+        if (screenPower != null) screenPower.stop();
         if (tts != null) {
             tts.stop();
             tts.shutdown();
@@ -170,11 +202,14 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     protected void onResume() {
         super.onResume();
         rebuildTiles();
-        applyImmersive();
-        ensureLockTaskPackages();
-        tryStartLockTask();
+        if (!maintenanceMode) {
+            applyImmersive();
+            ensureLockTaskPackages();
+            tryStartLockTask();
+        }
+        if (screenPower != null) screenPower.onResume();
         handler.removeCallbacks(keepImmersive);
-        handler.postDelayed(keepImmersive, 800);
+        if (!maintenanceMode) handler.postDelayed(keepImmersive, 800);
     }
 
     @Override
@@ -584,8 +619,11 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 // (that would kill an in-progress Voice session / mic).
                 forceStopPackage(t.packageName);
             } else {
-                // Resume existing task when possible — keeps mid-session progress warm.
-                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                // Resume existing task when possible — warm PAUSED games skip Godot relaunch.
+                launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                        | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                        | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             }
             if (!isLockTaskPermitted(t.packageName)) {
                 try { stopLockTask(); } catch (Exception ignored) {}
@@ -685,6 +723,81 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                         | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         );
+    }
+
+    private void handleControlIntent(Intent intent) {
+        if (intent == null) return;
+        String action = intent.getAction();
+        if (ACTION_MAINTENANCE.equals(action)) {
+            enterMaintenanceMode();
+        } else if (ACTION_KIOSK_ON.equals(action)) {
+            exitMaintenanceMode();
+        }
+    }
+
+    /** Leave lock-task so Settings / OEM unlocking / USB-auth dialogs can run. */
+    private void enterMaintenanceMode() {
+        maintenanceMode = true;
+        handler.removeCallbacks(keepImmersive);
+        enableMaintenancePackages();
+        try {
+            Settings.Global.putString(getContentResolver(), "policy_control", "null*");
+        } catch (Exception ignored) {}
+        try {
+            DevicePolicyManager dpm =
+                    (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+            if (dpm != null && dpm.isDeviceOwnerApp(getPackageName())) {
+                ComponentName admin = new ComponentName(this, AdminReceiver.class);
+                dpm.setLockTaskPackages(admin, new String[]{
+                        getPackageName(),
+                        "com.android.settings",
+                        "com.motorola.settings",
+                });
+            }
+        } catch (Exception ignored) {}
+        try { stopLockTask(); } catch (Exception ignored) {}
+        Toast.makeText(this, "Maintenance: Settings unlocked", Toast.LENGTH_LONG).show();
+        try {
+            Intent dev = new Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS);
+            dev.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(dev);
+        } catch (Exception e) {
+            try {
+                Intent settings = new Intent(Settings.ACTION_SETTINGS);
+                settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(settings);
+            } catch (Exception ignored) {}
+        }
+    }
+
+    private void exitMaintenanceMode() {
+        maintenanceMode = false;
+        ensureLockTaskPackages();
+        applyImmersive();
+        tryStartLockTask();
+        handler.removeCallbacks(keepImmersive);
+        handler.postDelayed(keepImmersive, 800);
+        Toast.makeText(this, "Kiosk back on", Toast.LENGTH_SHORT).show();
+    }
+
+    private void enableMaintenancePackages() {
+        PackageManager pm = getPackageManager();
+        for (String pkg : MAINTENANCE_ENABLE_PKGS) {
+            try {
+                pm.setApplicationEnabledSetting(
+                        pkg,
+                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                        0);
+            } catch (Exception ignored) {}
+            try {
+                DevicePolicyManager dpm =
+                        (DevicePolicyManager) getSystemService(Context.DEVICE_POLICY_SERVICE);
+                if (dpm != null && dpm.isDeviceOwnerApp(getPackageName())) {
+                    ComponentName admin = new ComponentName(this, AdminReceiver.class);
+                    dpm.setApplicationHidden(admin, pkg, false);
+                }
+            } catch (Exception ignored) {}
+        }
     }
 
     private void ensureLockTaskPackages() {

@@ -17,12 +17,25 @@
 |----|-------|
 | Hostname / fleet label | `star-learner` |
 | Android `device_name` (production kiosk) | `Star Learner` |
-| Local test handset codename | **reef** (`ZL8326FWKM`) — distinct from gift **fogona** (`ZL8326G8ND`) |
+| Hardware model (all units) | **fogona** — moto g play 2024 product name (not a unit codename) |
+| Digs / Dylan's digs handset | **shoal** (`ZL8324ZNRK`) |
+| Travel / nieces gift handset | **reef** (`ZL8326FWKM`) |
+| Production / gift kiosk | **cove** (`ZL8326G8ND`) |
 | Home package | `com.dylan.star_learner` |
 | On-device catalog path | `/sdcard/AntPhone/` for now (legacy); migrate to `/sdcard/StarLearner/` when convenient |
-| Game packages | `com.dylan.ant_explorer`, **`com.dylan.antexplorer.garden`** (kept — her installs), `com.dylan.solar_system_explorer`, `com.dylan.math_explorer`, `com.dylan.language_explorer` |
+| Game packages | `com.dylan.ant_explorer`, `com.dylan.garden_explorer`, `com.dylan.solar_system_explorer`, `com.dylan.math_explorer`, `com.dylan.language_explorer` |
 
-Canonical list: `tools/packages.sh`.
+Canonical packages: `tools/packages.sh`. Handset serials: `tools/devices.sh`.
+
+**Do not** call a unit “fogona” in ops prose — that is the shared model name. Say **shoal**, **reef**, or **cove**.
+
+### USB homes (as of 2026-08-07)
+
+| Codename | Serial | Role / typical USB |
+|----------|--------|--------------------|
+| **shoal** | `ZL8324ZNRK` | Dylan's digs / local digs on **82** |
+| **reef** | `ZL8326FWKM` | Nieces gift track (dad's house when ready) |
+| **cove** | `ZL8326G8ND` | Production kiosk (often **245**) |
 
 ## Layout
 
