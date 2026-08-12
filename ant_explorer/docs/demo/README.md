@@ -2,7 +2,7 @@
 
 | File | What it is |
 |------|------------|
-| [`ant_explorer_playthrough.mp4`](ant_explorer_playthrough.mp4) | Automated in-engine playthrough: START → intro → entrance-room star (10s) → check side rails → pheromone trail → surface star (10s) → check sides → 15s wander → rail tile (3s) |
+| [`ant_explorer_playthrough.mp4`](ant_explorer_playthrough.mp4) | Automated in-engine playthrough: START → intro → entrance-room star (10s) → check side rails → locked-rail reveal tour → pheromone trail → surface star (10s) → check sides → 15s wander → rail tile (3s) |
 | [`ant_explorer_explainer.mp4`](ant_explorer_explainer.mp4) | Short overview cut — gift framing + how to play (screenshots + dedicated VO) |
 | [`ant_explorer_homeostasis.mp4`](ant_explorer_homeostasis.mp4) | Live sim viz (~71s): caste census, pressures, larva nutrition/JH histogram, speed & zoom; narrated |
 

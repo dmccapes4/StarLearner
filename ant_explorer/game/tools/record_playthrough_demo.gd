@@ -7,6 +7,7 @@ extends SceneTree
 ##
 ## Beats:
 ##   START → intro → entrance-room star (10s video) → check sides (tile lit)
+##   → locked-rail reveal tour (camera pans to a locked star)
 ##   → tunnel to pheromone trail → another star (10s) → check sides
 ##   → 15s wander → rail tile double-tap (3s video)
 ##
@@ -89,6 +90,10 @@ func _run() -> void:
 	print("DEMO: check sides (entrance tile)")
 	await _check_sides(4.0)
 
+	# 3b) Locked-rail "tap again to reveal" — camera pans to a still-locked star.
+	print("DEMO: locked-rail reveal tour (queen)")
+	await _locked_rail_reveal_tour("01_queen", "queen", 5.0)
+
 	# 4) Tunnel up to the pheromone / leaf-cutter trail and ride it briefly.
 	print("DEMO: tunnel to pheromone trail")
 	await _walk_or_place(colony, TRAIL_FORAGER, 120.0, 40.0)
@@ -156,6 +161,55 @@ func _check_sides(hold_sec: float) -> void:
 	elif shell.has_method("_handle_side_touch"):
 		shell.call("_handle_side_touch", now)
 	await _sec(hold_sec)
+
+## Locked tile: arm → confirm → camera pans to the star; then cancel tour.
+func _locked_rail_reveal_tour(star_id: String, zone: String, hold_sec: float) -> void:
+	var world: Node = get_first_node_in_group("world")
+	var colony: Node = world.get("colony") if world else null
+	var shell: Node = get_first_node_in_group("landscape_shell")
+	if world == null or shell == null:
+		print("DEMO: skip reveal tour (missing world/shell)")
+		return
+	# Park away from the destination so discovery dwell cannot steal the tour.
+	var nursery_pos := _star_pos(world, "nursery", Vector2(-450, 250))
+	# Prefer chamber center-ish: offset from nursery star toward entrance path.
+	_place(colony, nursery_pos + Vector2(120, 80))
+	await _sec(0.4)
+	if world.has_method("_end_star_discovery"):
+		world.call("_end_star_discovery")
+	if world.has_method("_end_reveal_tour"):
+		world.call("_end_reveal_tour", true)
+	var now := float(Time.get_ticks_msec()) / 1000.0
+	if shell.has_method("reveal"):
+		shell.call("reveal", now)
+	await _sec(0.6)
+	if not shell.has_method("_handle_tile_tap"):
+		return
+	var t0 := float(Time.get_ticks_msec()) / 1000.0
+	var a1: String = str(shell.call("_handle_tile_tap", star_id, t0))
+	print("DEMO: reveal arm → ", a1)
+	await process_frame
+	var a2: String = str(shell.call("_handle_tile_tap", star_id, t0 + 0.2))
+	print("DEMO: reveal tour → ", a2)
+	var dest := _star_pos(world, zone, Vector2.ZERO)
+	var cam_ok := await _wait_camera_near(world, dest, 180.0, 6.0)
+	print("DEMO: reveal pan near %s = %s" % [zone, cam_ok])
+	await _sec(hold_sec)
+	if world.has_method("_end_reveal_tour"):
+		world.call("_end_reveal_tour", true)
+	await _sec(0.5)
+
+func _wait_camera_near(world: Node, target: Vector2, radius: float, timeout_sec: float) -> bool:
+	if target == Vector2.ZERO:
+		return false
+	var frames_left := _frames(timeout_sec)
+	while frames_left > 0:
+		var cam: Camera2D = world.get("camera") as Camera2D if world else null
+		if cam != null and cam.global_position.distance_to(target) <= radius:
+			return true
+		frames_left -= 1
+		await process_frame
+	return false
 
 func _play_rail_tile(star_id: String, watch_sec: float) -> void:
 	var shell: Node = get_first_node_in_group("landscape_shell")
