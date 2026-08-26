@@ -235,6 +235,10 @@ without removing those accounts or factory-resetting. Game saves are always pres
 Detailed device, WSL/Windows-adb bridge, OTA, and recovery notes:
 [`ant_explorer/docs/STRATEGY_ANT_PHONE_UPDATES.md`](ant_explorer/docs/STRATEGY_ANT_PHONE_UPDATES.md).
 
+**Fleet USB updates (kiosk locked, reef + cove, ADB keys):**
+[`docs/RUNBOOK_FLEET_UPDATE_LOCKED_KIOSK.md`](docs/RUNBOOK_FLEET_UPDATE_LOCKED_KIOSK.md) —
+`tools/fleet_status.sh`, `tools/sync_fleet_adbkey.sh`, `tools/deploy_fleet_usb.sh`.
+
 ---
 
 ## Repository layout
