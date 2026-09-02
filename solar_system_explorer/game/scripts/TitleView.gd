@@ -1,20 +1,17 @@
 class_name TitleView
 extends Control
-## Launch hub: Spaceship, Solar System tour, and Zodiac Sky.
+## Launch hub: Spaceship and Solar System tour.
 ## Narration highlights each tile with a gold outline as it is named.
 
 const NavModes := preload("res://scripts/NavModes.gd")
-const ZodiacDataScript := preload("res://scripts/ZodiacData.gd")
 
 signal flight_pressed()
 signal explainer_pressed()
-signal constellations_pressed()
 
 ## Spoken after the boot orrery cinematic.
 const LINE_SHIP := "Explore the solar system in a spaceship."
 const LINE_SOLAR := "Or get a narrated overview of the planets."
-const LINE_ZODIAC := "Or fly among the zodiac constellations and learn each sign."
-const WELCOME := LINE_SHIP + " " + LINE_SOLAR + " " + LINE_ZODIAC
+const WELCOME := LINE_SHIP + " " + LINE_SOLAR
 
 const SHIP_TEX := "res://images/spaceship.png"
 const SOLAR_TEX := "res://images/launch_solar.png"
@@ -22,17 +19,13 @@ const GOLD := Color(1.0, 0.86, 0.28, 1.0)
 
 var _ship_btn: Button
 var _solar_btn: Button
-var _zodiac_btn: Button
 var _ship_tint: Color = Color(0.18, 0.32, 0.55)
 var _solar_tint: Color = Color(0.35, 0.22, 0.12)
-var _zodiac_tint: Color = Color(0.16, 0.14, 0.38)
 var _narr_gen: int = 0
-var _zodiac_tex: Texture2D
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_zodiac_tex = ZodiacDataScript.make_tile_texture()
 
 	var center_wrap := CenterContainer.new()
 	center_wrap.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -92,19 +85,6 @@ func _ready() -> void:
 	_solar_btn = solar_col.get_node("TileButton") as Button
 	row.add_child(solar_col)
 
-	var zodiac_col := _make_tile(
-		"Zodiac Sky",
-		"Constellations and star signs",
-		"",
-		_zodiac_tint,
-		func() -> void:
-			_narr_gen += 1
-			Narrator.stop()
-			constellations_pressed.emit(),
-		_zodiac_tex)
-	_zodiac_btn = zodiac_col.get_node("TileButton") as Button
-	row.add_child(zodiac_col)
-
 	# Nav-mode toggle: how the Spaceship trip is rendered/played.
 	var mode_btn := Button.new()
 	mode_btn.name = "ModeButton"
@@ -136,7 +116,6 @@ func set_active(on: bool) -> void:
 		Narrator.stop()
 		_set_outline(_ship_btn, _ship_tint, false)
 		_set_outline(_solar_btn, _solar_tint, false)
-		_set_outline(_zodiac_btn, _zodiac_tint, false)
 
 func _narrate_welcome(gen: int) -> void:
 	await get_tree().create_timer(0.4).timeout
@@ -144,7 +123,6 @@ func _narrate_welcome(gen: int) -> void:
 		return
 	_set_outline(_ship_btn, _ship_tint, true)
 	_set_outline(_solar_btn, _solar_tint, false)
-	_set_outline(_zodiac_btn, _zodiac_tint, false)
 	Narrator.speak(LINE_SHIP)
 	await _await_vo(gen)
 	if gen != _narr_gen or not visible:
@@ -155,16 +133,10 @@ func _narrate_welcome(gen: int) -> void:
 	await _await_vo(gen)
 	if gen != _narr_gen or not visible:
 		return
-	_set_outline(_solar_btn, _solar_tint, false)
-	_set_outline(_zodiac_btn, _zodiac_tint, true)
-	Narrator.speak(LINE_ZODIAC)
-	await _await_vo(gen)
-	if gen != _narr_gen or not visible:
-		return
 	await get_tree().create_timer(0.5).timeout
 	if gen != _narr_gen:
 		return
-	_set_outline(_zodiac_btn, _zodiac_tint, false)
+	_set_outline(_solar_btn, _solar_tint, false)
 
 func _await_vo(gen: int) -> void:
 	await get_tree().process_frame

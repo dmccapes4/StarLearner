@@ -14,9 +14,10 @@ Covers **mission chart burn profile** (OrbitMath accel→coast→brake, transfer
 ./qa/run_flight_mechanics_suite.sh
 ```
 
-## Zodiac Sky suite
+## Constellation suite (`run_zodiac_suite.sh`)
 
-Twelve-sign data + ConstellationScene seek smoke.
+Zodiac + major-constellation catalog (J2000 RA/Dec), playground sky without lines,
+and leftover ConstellationScene seek smoke.
 
 ```bash
 ./qa/run_zodiac_suite.sh

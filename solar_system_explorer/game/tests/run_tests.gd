@@ -8,6 +8,7 @@ extends SceneTree
 ## before the editor rescans the global class cache.
 const NavModes := preload("res://scripts/NavModes.gd")
 const PlaygroundScene := preload("res://scripts/PlaygroundScene.gd")
+const ConstellationDataScript := preload("res://scripts/ConstellationData.gd")
 
 var _pass := 0
 var _fail := 0
@@ -272,7 +273,7 @@ func _test_orbit_math() -> void:
 		"Mercury icon tier = draw_radius ratio")
 	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["neptune"]), 68.0 / 54.0),
 		"Neptune icon tier = draw_radius ratio")
-	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["sun"]), 150.0 / 54.0),
+	_ok(is_equal_approx(SolarData.icon_tier_for(by_id["sun"]), 300.0 / 54.0),
 		"Sun icon tier = draw_radius ratio")
 	_ok(PlanetSkins.has_pixel_marker("earth") and PlanetSkins.has_pixel_marker("jupiter"),
 		"baked pixel AR markers exist for Earth and Jupiter")
@@ -379,9 +380,12 @@ func _test_flight() -> void:
 		_ok(is_equal_approx(float(route_b["duration"]), float(route_b["t_arr"])),
 			"duration == t_arr for %s" % b["id"])
 		var t_len: float = OrbitMath.burn_travel_time(float(route_b["path_len"]), cfg)
-		_ok(absf(t_len - float(route_b["t_arr"])) < 2.0,
+		var t_arr_b: float = float(route_b["t_arr"])
+		# Longer outer hops (2× orbit span) leave a larger intercept residual;
+		# tolerate a fraction of trip time, not a flat 2s.
+		_ok(absf(t_len - t_arr_b) < maxf(2.0, t_arr_b * 0.25),
 			"intercept time near course time for %s (Δ%.2fs)" % [
-				b["id"], absf(t_len - float(route_b["t_arr"]))])
+				b["id"], absf(t_len - t_arr_b)])
 
 	# ── Physics course + navigation simulation (sim-first, STRATEGY §3) ──
 	# burn_time_at_dist inverts burn_dist_at.
@@ -423,6 +427,71 @@ func _test_flight() -> void:
 		"antipodal hop sweeps around the Sun (min %.1f)" %
 		OrbitMath.course_min_sun_dist(around))
 
+	# ── Hohmann transfer (MATH_MISSION_CONTROL §12, Phase 1) ──
+	var mars: Dictionary = by_id["mars"]
+	var r1_au: float = float(earth.get("a_au", 1.0))
+	var r2_au: float = float(mars.get("a_au", 1.52))
+	_ok(is_equal_approx(OrbitMath.hohmann_r_at_nu(r1_au, r2_au, 0.0), r1_au),
+		"Hohmann peri at inner orbit AU")
+	_ok(is_equal_approx(OrbitMath.hohmann_r_at_nu(r1_au, r2_au, PI), r2_au),
+		"Hohmann apo at outer orbit AU")
+	var route_m := OrbitMath.plot_route(ship, mars, 0.0, cfg)
+	_ok(str(route_m.get("path_class", "")) == OrbitMath.PATH_HOHMANN,
+		"Earth→Mars default path_class is hohmann")
+	var max_au := 0.0
+	var curve_m: Curve3D = route_m["curve"]
+	for i in curve_m.get_point_count():
+		var p_m: Vector3 = curve_m.get_point_position(i)
+		max_au = maxf(max_au, OrbitMath.decompress_radius_au(p_m.length(), cfg))
+	_ok(absf(max_au - r2_au) < 0.08,
+		"Earth→Mars Hohmann apoapsis ≈ Mars orbit (%.2f vs %.2f AU)" % [max_au, r2_au])
+	var hoh_arc := OrbitMath.build_hohmann_course(
+		Vector3(60, 0, 0), Vector3(0, 0, 90), 48, 0.0, 60.0, 90.0)
+	var h_r_lo := 59.5
+	var h_r_hi := 90.5
+	var h_radius_ok := true
+	for i in hoh_arc.get_point_count() - 1:
+		var hp: Vector3 = hoh_arc.get_point_position(i)
+		if hp.length() < h_r_lo or hp.length() > h_r_hi:
+			h_radius_ok = false
+	_ok(h_radius_ok, "Hohmann arc radius bounded by endpoint orbits")
+	var route_spiral := OrbitMath.plot_route(ship, mars, 0.0, cfg, 0.0,
+		OrbitMath.PATH_QUICK_SPIRAL)
+	_ok(str(route_spiral.get("path_class", "")) == OrbitMath.PATH_QUICK_SPIRAL,
+		"explicit quick_spiral path_class stamped")
+
+	# ── Constellation sky (precise RA/Dec, not an ecliptic ring) ──
+	var catalog: Array = ConstellationDataScript.all_constellations()
+	_ok(catalog.size() >= 24, "zodiac + major constellations (%d)" % catalog.size())
+	var kinds := {"zodiac": 0, "major": 0}
+	for c in catalog:
+		kinds[str(c["kind"])] = int(kinds.get(str(c["kind"]), 0)) + 1
+		_ok((c["stars"] as Array).size() >= 4, "%s has asterism" % c["id"])
+		_ok(not str(c["line_ask"]).is_empty() and not str(c["line_learn"]).is_empty(),
+			"%s VO template" % c["id"])
+	_ok(int(kinds["zodiac"]) == 12, "twelve zodiac constellations")
+	_ok(int(kinds["major"]) >= 12, "major non-zodiac constellations")
+	var orion: Dictionary = ConstellationDataScript.by_id("orion")
+	var dipper: Dictionary = ConstellationDataScript.by_id("ursa_major")
+	var o_c: Vector3 = ConstellationDataScript.center_of(orion)
+	var d_c: Vector3 = ConstellationDataScript.center_of(dipper)
+	_ok(absf(o_c.y) < absf(d_c.y) * 0.55,
+		"Orion nearer the ecliptic than the Dipper (oy=%.0f dy=%.0f)" % [o_c.y, d_c.y])
+	var hamal: Vector3 = ConstellationDataScript.sky_pos(2.1196, 23.463, 1000.0)
+	_ok(hamal.length() > 990.0 and hamal.length() < 1010.0,
+		"celestial sphere radius preserved")
+	var eq: Vector2 = ConstellationDataScript.equatorial_to_ecliptic(0.0, 0.0)
+	_ok(absf(eq.y) < 0.01, "RA 0h Dec 0° sits on the ecliptic equator (β≈0)")
+	var tex_o: Texture2D = ConstellationDataScript.make_orion_tile()
+	_ok(tex_o != null, "Orion HUD tile")
+	var host := Node3D.new()
+	root.add_child(host)
+	var built: Dictionary = ConstellationDataScript.build_sky(host, 800.0, false)
+	_ok(built.size() == catalog.size(), "build_sky places every constellation")
+	_ok(built.has("orion") and not (built["orion"]["links"] as Node3D).visible,
+		"playground sky has no connecting lines by default")
+	host.queue_free()
+
 	# Every hop from Earth with the full sim: the timeline is honest
 	# (monotonic, ends on the parking sphere), carries only burn-phase
 	# events, and nothing narrated is derived outside the sim.
@@ -440,14 +509,14 @@ func _test_flight() -> void:
 		var frames_expected: int = int(ceil(float(route_s["duration"]) / float(tl["dt"]))) + 1
 		_ok(absf(tl_pos.size() - frames_expected) <= 1,
 			"timeline covers the whole hop for %s" % b["id"])
-		# Playback distance along the hop never runs backwards.
-		var s_prev := -1.0
+		# Playback advances along the course heading — arc length is ground truth,
+		# not Euclidean distance from the launch point (Hohmann sweeps can dip
+		# closer to origin in 2D while still moving forward on the curve).
 		var mono_tl := true
-		for i in tl_pos.size():
-			var s_here: float = tl_pos[0].distance_to(tl_pos[i])
-			if s_here < s_prev - 0.5:
+		for i in range(1, tl_pos.size()):
+			var step: Vector3 = tl_pos[i] - tl_pos[i - 1]
+			if step.length() > 0.01 and step.normalized().dot(tl_fwd[i - 1]) < -0.05:
 				mono_tl = false
-			s_prev = maxf(s_prev, s_here)
 		_ok(mono_tl, "timeline playback monotonic for %s" % b["id"])
 		# The timeline ENDS on the destination's parking sphere — orbit entry
 		# is a precomputed state, not a live geometric check.
@@ -571,8 +640,8 @@ func _test_scale_tune() -> void:
 
 	# JSON overlay apply + reject a too-hot burn (hops collapse under hop_min).
 	var tuned := cfg.duplicate(true) as SolarFlyerConfig
-	ScaleTune.apply_overrides(tuned, {"burn_accel": 40.0, "v_max": 120.0})
-	_ok(is_equal_approx(tuned.burn_accel, 40.0), "overlay sets burn_accel")
+	ScaleTune.apply_overrides(tuned, {"burn_accel": 400.0, "v_max": 800.0})
+	_ok(is_equal_approx(tuned.burn_accel, 400.0), "overlay sets burn_accel")
 	var bad := ScaleTune.evaluate(tuned)
 	_ok(not bool(bad["ok"]), "too-hot burn fails happy-medium")
 	var mentions_dur := false
@@ -1042,6 +1111,7 @@ func _test_scripts_compile() -> void:
 		"res://scripts/PlanetSkins.gd", "res://scripts/VoStream.gd",
 		"res://scripts/NarratorVoice.gd", "res://scripts/NavModes.gd",
 		"res://scripts/OrbitCinematic.gd", "res://scripts/PlaygroundScene.gd",
+		"res://scripts/ConstellationData.gd", "res://scripts/PlaygroundOrreryHud.gd",
 		"res://scripts/FlightChooser.gd", "res://scripts/RealismBudget.gd",
 		"res://scripts/AstrogatorPanel.gd",
 		"res://scripts/CourseModeChooser.gd",

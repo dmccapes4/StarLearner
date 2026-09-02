@@ -1,8 +1,8 @@
 # Solar System Explorer
 
 **Game #2 in the [Star Learner](../README.md) catalog** — a calm tour of the Sun and its planets
-for a young child, with a three-tile launch hub (Spaceship, Solar System orrery, Zodiac Sky) and a
-full 3D flyer loop (plot → burn → orbit).
+for a young child, with a two-tile launch hub (Spaceship, Solar System orrery) and a
+full 3D flyer loop (plot → burn → orbit). Constellations live in Free Flight as a HUD option.
 
 - **Engine:** Godot **4.3** (Mobile renderer), landscape 1280×600, offline-first.
 - **Assets:** bodies + orbits drawn procedurally; narration is the same warm baked ElevenLabs
@@ -16,10 +16,11 @@ full 3D flyer loop (plot → burn → orbit).
 ## The flow
 
 1. **Launch hub — two tiles.** A star-field home screen with two large choices:
-   - **Spaceship** → the 3D flight simulation (briefing → strip → plot → fly → orbit).
-   - **Zodiac Sky** → tap a constellation → astronomy + astrology VO → Earth-among-the-stars season beat.
+   - **Spaceship** → Mission Flight or Free Flight (briefing → strip / playground).
    - **Solar System** → the narrated orrery explainer tour. When the tour ends (or you tap
      **◀** / **Skip ▶**), you're back at the hub — flight is a separate choice.
+   Free Flight includes an orrery HUD and optional constellation lights (zodiac plus major
+   Northern patterns, placed from J2000 RA/Dec) — not a separate hub mode.
 2. **Orrery (top-down).** The Sun with the eight planets tracing flattened ellipses, plus the
    **asteroid belt** as a scattered ring between Mars and Jupiter. A voice walks the tour
    (Mercury → Mars → asteroid belt → Jupiter → Neptune) naming a couple of facts, highlighting the
@@ -55,8 +56,8 @@ full 3D flyer loop (plot → burn → orbit).
 
 | File | What it is |
 |------|------------|
-| [`docs/demo/solar_system_explorer_playthrough.mp4`](docs/demo/solar_system_explorer_playthrough.mp4) | In-engine walkthrough: hub → orrery peek → Spaceship chooser → Mission (Jupiter + belt) → Free Flight playground |
-| [`docs/demo/solar_system_explorer_explainer.mp4`](docs/demo/solar_system_explorer_explainer.mp4) | Short narrated overview (astronaut → hub → Mission/Free → plot → belt → playground → orbit) |
+| [`docs/demo/solar_system_explorer_playthrough.mp4`](docs/demo/solar_system_explorer_playthrough.mp4) | In-engine walkthrough: hub → orrery peek → Zodiac peek → Spaceship chooser → Mission (Jupiter + belt) → Free Flight (turns, Mars, constellation shell) |
+| [`docs/demo/solar_system_explorer_explainer.mp4`](docs/demo/solar_system_explorer_explainer.mp4) | Short narrated overview (astronaut → hub → Mission/Free → plot → belt → Free Flight → orbit) |
 
 ```bash
 ./tools/make_demo_videos.sh          # needs DISPLAY (or xvfb); regenerates both MP4s
@@ -74,6 +75,8 @@ godot --headless --path . -s res://tests/run_tests.gd     # logic tests (data + 
 DISPLAY=:1 godot --path . -s res://tools/capture_preview_shots.gd   # regenerate screenshots
 DISPLAY=:1 godot --path . -s res://tools/make_tile.gd              # regenerate the launcher tile
 ```
+
+**Mission Control math (Hohmann, patched assists, chart→render):** [`docs/MATH_MISSION_CONTROL.md`](docs/MATH_MISSION_CONTROL.md) — full scope for making Mission Flight path honesty match the Rocket Science ledger; Free Flight stays separate.
 
 **Agent QA (flight mechanics):** see [`qa/README.md`](qa/README.md) — run `./qa/run_flight_mechanics_suite.sh` for mission burn + Free Flight asserts and PNGs. Sensor / kid-motion research: [`docs/RESEARCH_MOTO_G_PLAY_2024_SENSORS_AND_KID_MOTION.md`](docs/RESEARCH_MOTO_G_PLAY_2024_SENSORS_AND_KID_MOTION.md). Shared process: [`../docs/QA_SUITE_PROCESS.md`](../docs/QA_SUITE_PROCESS.md).
 

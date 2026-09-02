@@ -6,6 +6,7 @@
 **Status:** Handoff dialed in (2026-08-04) — marker LOD **0 fails**; Earth→Saturn
 Jupiter pin + late Saturn loom verified.  
 Companion to [`STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY.md`](STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY.md).
+Course calculation math / Hohmann→assist scope: [`MATH_MISSION_CONTROL.md`](MATH_MISSION_CONTROL.md).
 
 **Audience:** agents + Dylan.
 

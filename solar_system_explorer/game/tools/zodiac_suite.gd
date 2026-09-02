@@ -3,6 +3,7 @@ extends SceneTree
 ##   DISPLAY=:1 godot --path . -s res://tools/zodiac_suite.gd
 
 const ZodiacDataScript := preload("res://scripts/ZodiacData.gd")
+const ConstellationDataScript := preload("res://scripts/ConstellationData.gd")
 const ConstellationScene := preload("res://scripts/ConstellationScene.gd")
 
 var _pass := 0
@@ -20,6 +21,21 @@ func _check(name: String, ok: bool, detail: String = "") -> void:
 		print("FAIL ", name, (" — " + detail) if not detail.is_empty() else "")
 
 func _run() -> void:
+	var catalog: Array = ConstellationDataScript.all_constellations()
+	_check("catalog_size", catalog.size() >= 24, "n=%d" % catalog.size())
+	var orion: Dictionary = ConstellationDataScript.by_id("orion")
+	var dipper: Dictionary = ConstellationDataScript.by_id("ursa_major")
+	_check("orion_below_dipper",
+		absf(ConstellationDataScript.center_of(orion).y)
+		< absf(ConstellationDataScript.center_of(dipper).y) * 0.55,
+		"precise sky, not one ecliptic ring")
+	var sky_host_c := Node3D.new()
+	get_root().add_child(sky_host_c)
+	var built_c: Dictionary = ConstellationDataScript.build_sky(sky_host_c, 900.0, false)
+	_check("constellation_sky_no_lines",
+		built_c.has("orion") and not (built_c["orion"]["links"] as Node3D).visible,
+		"lines hidden in playground")
+
 	var signs: Array = ZodiacDataScript.signs()
 	_check("twelve_signs", signs.size() == 12, "n=%d" % signs.size())
 	var ids: Dictionary = {}

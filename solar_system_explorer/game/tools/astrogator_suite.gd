@@ -354,8 +354,10 @@ func _check_window_epoch_chart(cfg: SolarFlyerConfig) -> void:
 	_check("saturn_crossings_include_jupiter",
 		board._bodies.crossing_ids.has("jupiter"),
 		"crossings=%s" % ",".join(board._bodies.crossing_ids))
-	_check("saturn_crossings_include_mars",
-		board._bodies.crossing_ids.has("mars"),
+	# Mars sits between Earth and Saturn radially but is not a path encounter on
+	# the Hohmann arc — only worlds the ship actually passes near are listed.
+	_check("saturn_crossings_exclude_mars",
+		not board._bodies.crossing_ids.has("mars"),
 		"crossings=%s" % ",".join(board._bodies.crossing_ids))
 	# All planets advance with trip clock during preview (not dest-only).
 	board._bodies.ship_preview_u = 0.55

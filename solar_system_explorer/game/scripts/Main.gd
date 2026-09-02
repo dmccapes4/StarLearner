@@ -2,14 +2,14 @@ extends Node
 ## Solar System Explorer — flow controller.
 ##
 ##   Title boot: 3s orrery cinematic ("Welcome to Solar System Explorer!")
-##      ─▶ Title (Spaceship / Solar System / Zodiac Sky)
+##      ─▶ Title (Spaceship / Solar System)
 ##      ─▶ Spaceship ─▶ FlightChooser (two tiles)
 ##           ─▶ Mission Flight ─▶ Astronaut briefing ─▶ ScrollView
 ##                ─▶ CourseModeChooser (Quick Course / Rocket Science)
 ##                     ─▶ [Rocket] PropulsionChooser ─▶ PlotBoard ─▶ FlyScene
 ##           ─▶ Free Flight ─▶ Astronaut briefing ─▶ Playground
+##                (constellation lights + orrery HUD live in Free Flight)
 ##      ─▶ Solar System ─▶ Orrery tour ─▶ back to Title
-##      ─▶ Zodiac Sky ─▶ Astronaut briefing ─▶ ConstellationScene
 ##
 ## Flip USE_3D_FLYER to false for strip → video only (no 3D hop).
 
@@ -85,7 +85,6 @@ func _ready() -> void:
 
 	_title.flight_pressed.connect(_on_flight)
 	_title.explainer_pressed.connect(_on_explainer)
-	_title.constellations_pressed.connect(_on_constellations)
 	_chooser.mission_pressed.connect(_on_mission_flight)
 	_chooser.free_flight_pressed.connect(_on_free_flight)
 	_chooser.go_home.connect(_show_title)
@@ -107,7 +106,6 @@ func _ready() -> void:
 	_playground.go_home.connect(_show_title)
 	_playground.arrived.connect(_on_playground_arrived)
 	_playground.learn_more.connect(_on_learn_more)
-	_playground.zodiac_visit.connect(_on_playground_zodiac_visit)
 	_zodiac.go_home.connect(_on_zodiac_home)
 	_video.closed.connect(_on_video_closed)
 	_astro.finished.connect(_on_astro_finished)
@@ -137,12 +135,6 @@ func _on_free_flight() -> void:
 	_hide_all_views()
 	_astro.begin(AstronautIntro.BRIEFING_FREE_FLIGHT)
 
-func _on_constellations() -> void:
-	_in_zodiac = true
-	_in_playground = false
-	_hide_all_views()
-	_astro.begin(AstronautIntro.BRIEFING_ZODIAC)
-
 func _on_explainer() -> void:
 	_set_view(_orrery)
 	_orrery.begin_tour()
@@ -162,12 +154,6 @@ func _on_zodiac_home() -> void:
 		_return_to_playground_from_zodiac()
 		return
 	_show_title()
-
-func _on_playground_zodiac_visit(sign_id: String) -> void:
-	_zodiac_return_playground = true
-	_in_zodiac = true
-	_playground.set_active(false)
-	_zodiac.begin_at(sign_id)
 
 func _return_to_playground_from_zodiac() -> void:
 	_zodiac_return_playground = false

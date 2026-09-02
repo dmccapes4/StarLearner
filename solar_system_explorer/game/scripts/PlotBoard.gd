@@ -400,7 +400,9 @@ func _chart_at(id: String, t_depart: float, from_belt: bool, window_wait_yr: flo
 	var depart := 0.0
 	if not bool(origin.get("is_star", false)):
 		depart = OrbitMath.orbit_standoff(float(origin.get("hero_r", 2.0)))
-	_route = OrbitMath.plot_route(ship_pos, target, _t0, _cfg, depart)
+	var path_class := OrbitMath.PATH_QUICK_SPIRAL if _pace_mode == AstrogatorPanel.PACE_KID \
+		else OrbitMath.PATH_HOHMANN
+	_route = OrbitMath.plot_route(ship_pos, target, _t0, _cfg, depart, path_class)
 	_route["travel_au"] = absf(float(target.get("a_au", 0.0)) - float(origin.get("a_au", 0.0)))
 	_route["origin_id"] = _ship_id
 	_route["dest_name"] = str(target.get("name", id))

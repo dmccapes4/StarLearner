@@ -63,7 +63,36 @@ static func make_icon_texture(b: Dictionary, size: int = MARKER_CANVAS_PX) -> Te
 	var baked := marker_texture_for(id)
 	if baked != null:
 		return baked
-	return _fallback_pixel_marker(b, maxi(size, 16))
+	return _fallback_pixel_marker(b, maxi(size, 16), true)
+
+
+## Same chunky pixel marker face, without the AR corner brackets.
+static func make_plain_icon(b: Dictionary, size: int = MARKER_CANVAS_PX) -> Texture2D:
+	var baked := marker_texture_for(str(b.get("id", "")))
+	if baked != null:
+		return _mask_inner_disc(baked, size)
+	return _fallback_pixel_marker(b, maxi(size, 16), false)
+
+
+static func _mask_inner_disc(tex: Texture2D, size: int) -> Texture2D:
+	var src: Image = tex.get_image()
+	if src == null:
+		return tex
+	if src.is_compressed():
+		src.decompress()
+	var s: int = maxi(size, 16)
+	if src.get_width() != s or src.get_height() != s:
+		src.resize(s, s, Image.INTERPOLATE_NEAREST)
+	var img := Image.create(s, s, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var r: float = float(s) * 0.36
+	var c: float = float(s) * 0.5
+	for y in s:
+		for x in s:
+			var d: float = Vector2(x + 0.5 - c, y + 0.5 - c).length()
+			if d <= r:
+				img.set_pixel(x, y, src.get_pixel(x, y))
+	return ImageTexture.create_from_image(img)
 
 
 static func marker_texture_for(body_id: String) -> Texture2D:
@@ -82,7 +111,8 @@ static func has_pixel_marker(body_id: String) -> bool:
 	return ResourceLoader.exists(marker_path_for(body_id))
 
 
-static func _fallback_pixel_marker(b: Dictionary, s: int) -> Texture2D:
+static func _fallback_pixel_marker(b: Dictionary, s: int,
+		brackets: bool = true) -> Texture2D:
 	var id := str(b.get("id", ""))
 	var col: Color = b.get("color", Color(0.7, 0.7, 0.7))
 	if bool(b.get("is_star", false)):
@@ -93,7 +123,8 @@ static func _fallback_pixel_marker(b: Dictionary, s: int) -> Texture2D:
 	var disc_img := _flat_marker_disc(id, col, disc_d)
 	var img := Image.create(s, s, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	_draw_ar_brackets(img, s)
+	if brackets:
+		_draw_ar_brackets(img, s)
 	var off := Vector2i((s - disc_d) / 2, (s - disc_d) / 2)
 	var cx := s * 0.5
 	var cy := s * 0.5

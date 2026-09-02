@@ -287,17 +287,20 @@ func _check_playground_runtime() -> void:
 		"sun=%s vis=%s" % [
 			pg._sun_tile != null,
 			pg._sun_tile.visible if pg._sun_tile != null else false])
-	_check("pg_zodiac_sky_built",
-		pg._zodiac_root != null and pg._signs.size() == 12,
+	_check("pg_constellation_sky_built",
+		pg._zodiac_root != null and pg._signs.size() >= 24,
 		"n=%d" % pg._signs.size())
-	_check("pg_zodiac_btn",
-		pg._zodiac_btn != null and pg._zodiac_btn.visible,
-		"btn=%s" % (pg._zodiac_btn != null))
+	_check("pg_orrery_tile",
+		pg._orrery_tile != null and pg._orrery_tile.visible,
+		"tile=%s" % (pg._orrery_tile != null))
+	_check("pg_ecliptic_tile",
+		pg._ecliptic_tile != null and pg._ecliptic_tile.visible,
+		"ecl=%s" % (pg._ecliptic_tile != null))
 	pg._set_zodiac_sky(true)
-	_check("pg_zodiac_toggle_on",
+	_check("pg_constellation_toggle_on",
 		pg._zodiac_on and pg._zodiac_root.visible, "on")
 	pg._set_zodiac_sky(false)
-	_check("pg_zodiac_toggle_off",
+	_check("pg_constellation_toggle_off",
 		(not pg._zodiac_on) and (not pg._zodiac_root.visible), "off")
 	_check("pg_launch_cruise_speed",
 		is_equal_approx(pg._speed, PlaygroundScene.SPEED),

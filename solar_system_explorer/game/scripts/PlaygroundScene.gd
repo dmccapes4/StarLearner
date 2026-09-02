@@ -14,12 +14,12 @@ extends Control
 const OrbitCinematic := preload("res://scripts/OrbitCinematic.gd")
 const SpeedModeChooser := preload("res://scripts/SpeedModeChooser.gd")
 const ZodiacDataScript := preload("res://scripts/ZodiacData.gd")
+const ConstellationDataScript := preload("res://scripts/ConstellationData.gd")
+const PlaygroundOrreryHudScript := preload("res://scripts/PlaygroundOrreryHud.gd")
 
 signal arrived(dest_id: String)
 signal go_home()
 signal learn_more(dest_id: String)
-## Tap / fly-to a sky asterism → Main opens Zodiac Sky lesson for that sign.
-signal zodiac_visit(sign_id: String)
 
 const SPACING := 1.8           ## orbit_r multiplier — room for steer between worlds
 ## Decorative belt rocks (visual only — never registered in `_bodies`).
@@ -121,12 +121,11 @@ const LINE_WELCOME := "You're cleared for takeoff — have fun out there!"
 const LINE_BAND := "Let's stay where the planets are — gently turning back!"
 const LINE_SEEK := "On our way to %s! Tap anywhere else to cancel."
 const LINE_SEEK_CANCEL := "Okay — keep exploring!"
-const LINE_ZODIAC_ON := "Constellations are on! Fly toward one or tap it to visit."
+const LINE_ZODIAC_ON := "Constellations are on! Tap one to turn and learn."
 const LINE_ZODIAC_OFF := "Constellations hidden."
-const LINE_SEEK_ZODIAC := "On our way to %s! Tap empty to cancel."
-## Capture when this close to the outer shell (fraction of shell radius).
-const ZODIAC_CAPTURE_FRAC := 0.10
-const ZODIAC_TAP_PX := 96.0
+const CONST_TAP_PX := 110.0
+const HUD_ORBIT_SLOW := 0.15  ## revolution keeps moving, much slower in HUD
+const CONST_TURN := 2.6
 const LINE_TUT_RIGHT := "Let's learn to steer! Tilt the phone to the right, like turning a wheel."
 const LINE_TUT_LEFT := "Great! Now tilt it to the left."
 const LINE_TUT_UP := "Now point the phone up, to climb."
@@ -277,12 +276,16 @@ var _cruise_decay_t: float = -1.0  ## <0 inactive; else seconds to next cruise s
 var _held_stopped: bool = false    ## STOP button or mashed to stop — no auto-cruise
 var _speed_vo_cd: float = 0.0
 var _sun_tile: SunCompassTile
+var _ecliptic_tile: EclipticTile
 var _zodiac_root: Node3D
-var _signs: Dictionary = {}   ## id → {root, data}
-var _zodiac_shell_r: float = 1100.0
+var _signs: Dictionary = {}   ## id → {root, data, links}
+var _zodiac_shell_r: float = 2800.0
 var _zodiac_on: bool = false
-var _zodiac_btn: Button
 var _seek_is_zodiac: bool = false
+var _const_focus_id: String = ""
+var _orrery_tile: Button
+var _hud: Control
+var _hud_open: bool = false
 var _arrival_earth_row: HBoxContainer
 
 func _ready() -> void:
@@ -336,6 +339,7 @@ func begin(start_at: String = "earth") -> void:
 	_tut_steps = []
 	_seek_id = ""
 	_seek_is_zodiac = false
+	_const_focus_id = ""
 	_tap_guard_t = 0.0
 	_tap_yaw_rate = 0.0
 	_tap_pitch_rate = 0.0
@@ -398,6 +402,7 @@ func set_active(on: bool) -> void:
 	visible = on
 	if not on:
 		_cine.stop()
+		_close_orrery_hud()
 		_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 		Narrator.stop()
 		if _speed_pick != null:
@@ -445,30 +450,38 @@ func _process(delta: float) -> void:
 		State.AIM_GATE:
 			_gate_tick(delta)
 		State.FLYING:
-			_clock += delta * TIME_SCALE
+			_clock += delta * _orbit_time_scale()
 			_capture_grace = maxf(0.0, _capture_grace - delta)
 			_band_cd = maxf(0.0, _band_cd - delta)
 			_tap_speed_cd = maxf(0.0, _tap_speed_cd - delta)
 			_speed_vo_cd = maxf(0.0, _speed_vo_cd - delta)
-			_tick_speed_blend(delta)
-			_tick_cruise_decay(delta)
-			_tap_steer_tick(delta)
-			_fly(delta)
-			_check_capture()
-			_tick_tap_hud()
-			_telemetry(delta)
+			if _hud_open:
+				_tick_tap_hud()
+			else:
+				_tick_speed_blend(delta)
+				_tick_cruise_decay(delta)
+				_tap_steer_tick(delta)
+				if not _const_focus_id.is_empty():
+					_const_focus_tick(delta)
+				_fly(delta)
+				_check_capture()
+				_tick_tap_hud()
+				_telemetry(delta)
 		State.SEEKING:
-			_clock += delta * TIME_SCALE
+			_clock += delta * _orbit_time_scale()
 			_band_cd = maxf(0.0, _band_cd - delta)
 			_tap_speed_cd = maxf(0.0, _tap_speed_cd - delta)
 			_speed_vo_cd = maxf(0.0, _speed_vo_cd - delta)
-			_tick_speed_blend(delta)
-			_tick_cruise_decay(delta)
-			_tick_tap_hud()
-			_seek_tick(delta)
-			_telemetry(delta)
+			if _hud_open:
+				_tick_tap_hud()
+			else:
+				_tick_speed_blend(delta)
+				_tick_cruise_decay(delta)
+				_tick_tap_hud()
+				_seek_tick(delta)
+				_telemetry(delta)
 		State.ORBITING:
-			_clock += delta * TIME_SCALE * 0.4
+			_clock += delta * _orbit_time_scale() * 0.4
 			_orbit_ang += delta * ORBIT_SPEED
 			_place_orbit_cam()
 	_place_bodies()
@@ -518,16 +531,24 @@ func _refresh_tap_screen_signs() -> void:
 		pass
 	_tel_event("tap_signs ori=%d x_sign=%.0f" % [int(ori), _tap_x_sign])
 
+func _orbit_time_scale() -> float:
+	return TIME_SCALE * HUD_ORBIT_SLOW if _hud_open else TIME_SCALE
+
 func _show_tap_hud(on: bool) -> void:
+	var hide_aim: bool = _hud_open or _state == State.SEEKING \
+		or not _const_focus_id.is_empty()
 	if _aim_mark != null:
-		_aim_mark.visible = on
+		_aim_mark.visible = on and not hide_aim
 	if _gear_joy != null:
 		_gear_joy.visible = on
+		_gear_joy.modulate = Color(0.45, 0.45, 0.48, 0.55) if _hud_open else Color.WHITE
+		_gear_joy.mouse_filter = Control.MOUSE_FILTER_IGNORE if _hud_open \
+			else Control.MOUSE_FILTER_STOP
 		if on:
 			_gear_joy.gear = _speed_step
-			# Never call set_ready here — that was wiping throw_forward/aft art.
 	if _speed_bar != null:
 		_speed_bar.visible = on
+		_speed_bar.modulate = Color(0.45, 0.45, 0.48, 0.55) if _hud_open else Color.WHITE
 		if on:
 			_speed_bar.horizontal = true
 			_speed_bar.step = _speed_step
@@ -536,14 +557,25 @@ func _show_tap_hud(on: bool) -> void:
 			_speed_bar.queue_redraw()
 	if _stop_btn != null:
 		_stop_btn.visible = on
+		_stop_btn.modulate = Color(0.45, 0.45, 0.48, 0.55) if _hud_open else Color.WHITE
+		_stop_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE if _hud_open \
+			else Control.MOUSE_FILTER_STOP
 		if on:
 			_stop_btn.set_stopped(_speed_step <= SPEED_STEP_STOP)
 	if _sun_tile != null:
 		_sun_tile.visible = on
+		_sun_tile.modulate = Color(0.45, 0.45, 0.48, 0.55) if _hud_open else Color.WHITE
+		_sun_tile.mouse_filter = Control.MOUSE_FILTER_IGNORE if _hud_open \
+			else Control.MOUSE_FILTER_STOP
 		if on:
 			_update_sun_tile()
-	if _zodiac_btn != null:
-		_zodiac_btn.visible = on
+	if _ecliptic_tile != null:
+		_ecliptic_tile.visible = on
+		if on:
+			_update_ecliptic_tile()
+	if _orrery_tile != null:
+		_orrery_tile.visible = on
+		_style_orrery_tile(_hud_open)
 
 func _tick_tap_hud() -> void:
 	if _gear_joy != null and _gear_joy.visible:
@@ -557,6 +589,10 @@ func _tick_tap_hud() -> void:
 		_stop_btn.set_stopped(_speed_step <= SPEED_STEP_STOP)
 	if _sun_tile != null and _sun_tile.visible:
 		_update_sun_tile()
+	if _ecliptic_tile != null and _ecliptic_tile.visible:
+		_update_ecliptic_tile()
+	if _hud_open and _hud != null:
+		_hud.sync(_clock, _ship_pos, _heading())
 
 func _update_sun_tile() -> void:
 	if _sun_tile == null:
@@ -565,6 +601,52 @@ func _update_sun_tile() -> void:
 	var want: float = _yaw_facing_flat(_sun_world_pos() - _ship_pos)
 	_sun_tile.bearing = wrapf(want - _yaw, -PI, PI)
 	_sun_tile.queue_redraw()
+
+func _update_ecliptic_tile() -> void:
+	if _ecliptic_tile == null:
+		return
+	var sun := _sun_world_pos()
+	_ecliptic_tile.ship_xz = Vector2(_ship_pos.x - sun.x, _ship_pos.z - sun.z)
+	_ecliptic_tile.ship_y = _ship_pos.y - sun.y
+	_ecliptic_tile.heading = _heading()
+	_ecliptic_tile.queue_redraw()
+
+func _style_orrery_tile(gold: bool) -> void:
+	if _orrery_tile == null:
+		return
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.22, 0.18, 0.08, 0.96) if gold \
+		else Color(0.10, 0.14, 0.22, 0.88)
+	sb.set_corner_radius_all(14)
+	sb.set_border_width_all(4 if gold else 2)
+	sb.border_color = Color(1.0, 0.86, 0.28, 1.0) if gold \
+		else Color(1, 1, 1, 0.35)
+	_orrery_tile.add_theme_stylebox_override("normal", sb)
+	_orrery_tile.add_theme_stylebox_override("hover", sb)
+	_orrery_tile.add_theme_stylebox_override("pressed", sb)
+	_orrery_tile.modulate = Color(1.12, 1.06, 0.85) if gold else Color.WHITE
+
+func _toggle_orrery_hud() -> void:
+	if _hud_open:
+		_close_orrery_hud()
+	else:
+		_open_orrery_hud()
+
+func _open_orrery_hud() -> void:
+	if _hud == null:
+		return
+	_hud_open = true
+	_hud.lights_on = _zodiac_on
+	_hud.open_hud(_cfg, _bodies, _clock, _ship_pos, _heading(), SPACING)
+	_show_tap_hud(true)
+
+func _close_orrery_hud() -> void:
+	if not _hud_open:
+		return
+	_hud_open = false
+	if _hud != null:
+		_hud.close_hud()
+	_show_tap_hud(_state == State.FLYING or _state == State.SEEKING)
 
 func _tap_steer_tick(delta: float) -> void:
 	# Desktop arrows: medium impulse (same as a mid-screen tap).
@@ -1631,6 +1713,8 @@ func _gui_input(event: InputEvent) -> void:
 		pos = event.position
 	if not tap:
 		return
+	if _hud_open:
+		return
 	var vp_pos: Vector2 = _map_to_viewport(pos)
 	match _state:
 		State.FLYING:
@@ -1641,11 +1725,11 @@ func _gui_input(event: InputEvent) -> void:
 			if id2.is_empty() and _zodiac_on:
 				id2 = _sign_at_screen(vp_pos)
 				if not id2.is_empty():
-					_begin_seek_zodiac(id2)
+					_begin_const_focus(id2)
 					return
 			if id2.is_empty():
 				_cancel_seek()
-			elif _seek_is_zodiac or id2 != _seek_id:
+			elif id2 != _seek_id:
 				_begin_seek(id2)
 			# same body: ignore (do not cancel)
 
@@ -1653,13 +1737,17 @@ func _gui_input(event: InputEvent) -> void:
 func _resolve_flying_tap(local: Vector2, vp_pos: Vector2) -> void:
 	var id := _body_at_screen(vp_pos)
 	if not id.is_empty():
+		_clear_const_focus()
 		_begin_seek(id)
 		return
 	if _zodiac_on:
 		var sid := _sign_at_screen(vp_pos)
 		if not sid.is_empty():
-			_begin_seek_zodiac(sid)
+			_begin_const_focus(sid)
 			return
+	if not _const_focus_id.is_empty():
+		_clear_const_focus()
+		return
 	_on_empty_flight_tap(local)
 
 ## Control / stretch coords → SubViewport pixel space for unproject.
@@ -1698,6 +1786,7 @@ func _body_at_screen(vp_pos: Vector2, radius_px: float = -1.0) -> String:
 func _begin_seek(id: String) -> void:
 	if not _bodies.has(id):
 		return
+	_clear_const_focus()
 	_seek_is_zodiac = false
 	_seek_id = id
 	_state = State.SEEKING
@@ -1705,6 +1794,8 @@ func _begin_seek(id: String) -> void:
 	_tap_pitch_rate = 0.0
 	_surge_await_rest = true
 	_capture_grace = 0.0
+	if _speed < SEEK_SPEED_MIN:
+		_apply_speed_step(SPEED_STEP_CRUISE, false)
 	var b := SolarData.flyer_body_by_id(id, _cfg)
 	var place: String = str(b.get("name", id))
 	_hint.text = "→ %s  (tap empty to cancel)" % place
@@ -1712,36 +1803,58 @@ func _begin_seek(id: String) -> void:
 	_tel_event("seek start id=%s" % id)
 	Narrator.speak(LINE_SEEK % place)
 
-func _begin_seek_zodiac(id: String) -> void:
+func _begin_const_focus(id: String) -> void:
 	if not _zodiac_on or not _signs.has(id):
 		return
-	_seek_is_zodiac = true
-	_seek_id = id
-	_state = State.SEEKING
-	_tap_yaw_rate = 0.0
-	_tap_pitch_rate = 0.0
-	_surge_await_rest = true
-	_capture_grace = 0.0
+	if _const_focus_id == id:
+		return
+	_clear_const_focus()
+	if _state == State.SEEKING:
+		_cancel_seek()
+	_const_focus_id = id
+	ConstellationDataScript.set_focus(_signs[id], true)
 	var data: Dictionary = _signs[id]["data"]
-	var place: String = str(data.get("name", id))
-	_hint.text = "→ %s  (tap empty to cancel)" % place
+	_hint.text = str(data.get("name", id))
 	_show_tap_hud(true)
-	_tel_event("seek zodiac id=%s" % id)
-	Narrator.speak(LINE_SEEK_ZODIAC % place)
+	_tel_event("const focus id=%s" % id)
+	Narrator.speak(str(data.get("line_learn", "")))
+
+func _clear_const_focus() -> void:
+	if _const_focus_id.is_empty():
+		return
+	if _signs.has(_const_focus_id):
+		ConstellationDataScript.set_focus(_signs[_const_focus_id], false)
+	_const_focus_id = ""
+	if _state == State.FLYING:
+		_show_tap_hud(true)
+		_update_speed_hint()
+
+func _const_focus_tick(delta: float) -> void:
+	if _const_focus_id.is_empty() or not _signs.has(_const_focus_id):
+		return
+	var data: Dictionary = _signs[_const_focus_id]["data"]
+	var center: Vector3 = ConstellationDataScript.center_of(data)
+	var to: Vector3 = center - _ship_pos
+	if to.length() < 0.05:
+		return
+	var desired: Vector3 = to / to.length()
+	var want_pitch: float = asin(clampf(desired.y, -0.99, 0.99))
+	var want_yaw: float = atan2(-desired.x, -desired.z)
+	var u: float = minf(1.0, CONST_TURN * delta)
+	_yaw = lerp_angle(_yaw, want_yaw, u)
+	_pitch = clampf(lerpf(_pitch, want_pitch, u), -0.7, 0.7)
 
 func _cancel_seek() -> void:
-	_tel_event("seek cancel id=%s zodiac=%s" % [_seek_id, _seek_is_zodiac])
+	_tel_event("seek cancel id=%s" % _seek_id)
 	_seek_id = ""
 	_seek_is_zodiac = false
 	_state = State.FLYING
+	_show_tap_hud(true)
 	_update_speed_hint()
 	Narrator.speak(LINE_SEEK_CANCEL)
 
 ## Controls locked: auto-aim + cruise toward the tapped world until capture.
 func _seek_tick(delta: float) -> void:
-	if _seek_is_zodiac:
-		_seek_zodiac_tick(delta)
-		return
 	if _seek_id.is_empty() or not _bodies.has(_seek_id):
 		_cancel_seek()
 		return
@@ -1772,43 +1885,6 @@ func _seek_tick(delta: float) -> void:
 		_tel_event("seek capture id=%s d=%.1f" % [_seek_id, dist])
 		_enter_orbit(_seek_id)
 
-func _seek_zodiac_tick(delta: float) -> void:
-	if _seek_id.is_empty() or not _signs.has(_seek_id):
-		_cancel_seek()
-		return
-	var data: Dictionary = _signs[_seek_id]["data"]
-	var center: Vector3 = ZodiacDataScript.center_of(data)
-	var to: Vector3 = center - _ship_pos
-	var dist: float = to.length()
-	if dist < 0.05:
-		_finish_zodiac_seek(_seek_id)
-		return
-	var desired: Vector3 = to / dist
-	var want_pitch: float = asin(clampf(desired.y, -0.99, 0.99))
-	var want_yaw: float = atan2(-desired.x, -desired.z)
-	var u: float = minf(1.0, SEEK_TURN * delta)
-	_yaw = lerp_angle(_yaw, want_yaw, u)
-	_pitch = clampf(lerpf(_pitch, want_pitch, u), -0.7, 0.7)
-	# Faster cruise — shell sits far outside the planet pill.
-	var spd: float = maxf(_speed, SEEK_SPEED_MIN * 2.4)
-	if _speed < SEEK_SPEED_MIN * 2.0:
-		_speed = SEEK_SPEED_MIN * 2.0
-		if _speed_gears:
-			_speed_step = maxi(_speed_step, SPEED_STEP_MIN)
-	# Allow climbing toward the outer shell (past the soft planet band).
-	_ship_pos += _heading() * spd * delta
-	_ship_pos.y = clampf(_ship_pos.y, -_zodiac_shell_r * 0.35, _zodiac_shell_r * 0.35)
-	_apply_cam()
-	if dist <= _zodiac_shell_r * ZODIAC_CAPTURE_FRAC:
-		_finish_zodiac_seek(_seek_id)
-
-func _finish_zodiac_seek(id: String) -> void:
-	_tel_event("zodiac arrive id=%s" % id)
-	_seek_id = ""
-	_seek_is_zodiac = false
-	_state = State.FLYING
-	zodiac_visit.emit(id)
-
 func _sign_at_screen(vp_pos: Vector2) -> String:
 	if not _zodiac_on or _cam == null:
 		return ""
@@ -1816,12 +1892,12 @@ func _sign_at_screen(vp_pos: Vector2) -> String:
 	var best_score := INF
 	for id in _signs:
 		var data: Dictionary = _signs[id]["data"]
-		var wp: Vector3 = ZodiacDataScript.center_of(data)
+		var wp: Vector3 = ConstellationDataScript.center_of(data)
 		if _cam.is_position_behind(wp):
 			continue
 		var sp: Vector2 = _cam.unproject_position(wp)
 		var d: float = sp.distance_to(vp_pos)
-		if d < ZODIAC_TAP_PX and d < best_score:
+		if d < CONST_TAP_PX and d < best_score:
 			best_score = d
 			best = id
 	return best
@@ -1830,35 +1906,20 @@ func _set_zodiac_sky(on: bool) -> void:
 	_zodiac_on = on
 	if _zodiac_root != null:
 		_zodiac_root.visible = on
-	_refresh_zodiac_btn()
+	if not on:
+		_clear_const_focus()
+	if _hud != null:
+		_hud.lights_on = on
+		_hud._refresh_lights_btn()
 
 func _toggle_zodiac_sky() -> void:
 	_set_zodiac_sky(not _zodiac_on)
 	if _zodiac_on:
 		Narrator.speak(LINE_ZODIAC_ON)
-		_hint.text = "Constellations on — tap one to visit"
+		_hint.text = "Constellations on — tap one to learn"
 	else:
-		if _seek_is_zodiac:
-			_cancel_seek()
 		Narrator.speak(LINE_ZODIAC_OFF)
 		_update_speed_hint()
-
-func _refresh_zodiac_btn() -> void:
-	if _zodiac_btn == null:
-		return
-	_zodiac_btn.text = "✦" if _zodiac_on else "✧"
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.22, 0.28, 0.48, 0.92) if _zodiac_on \
-		else Color(0.12, 0.14, 0.22, 0.72)
-	sb.set_corner_radius_all(14)
-	sb.set_border_width_all(2)
-	sb.border_color = Color(0.95, 0.82, 0.4, 0.95) if _zodiac_on \
-		else Color(1, 1, 1, 0.28)
-	_zodiac_btn.add_theme_stylebox_override("normal", sb)
-	var hover := sb.duplicate() as StyleBoxFlat
-	hover.border_color = Color(0.95, 0.82, 0.4)
-	_zodiac_btn.add_theme_stylebox_override("hover", hover)
-	_zodiac_btn.add_theme_stylebox_override("pressed", hover)
 
 func _on_earth_constellations() -> void:
 	_set_zodiac_sky(true)
@@ -2023,12 +2084,12 @@ func _build_world() -> void:
 		var rp: Vector3 = (_bodies[id]["root"] as Node3D).position
 		planet_r_max = maxf(planet_r_max,
 			Vector2(rp.x, rp.z).length() + float(_bodies[id].get("hero", 1.0)))
-	_zodiac_shell_r = ZodiacDataScript.playground_shell_radius(planet_r_max, Y_MAX)
+	_zodiac_shell_r = ConstellationDataScript.celestial_radius(planet_r_max, Y_MAX)
 	_zodiac_root = Node3D.new()
-	_zodiac_root.name = "ZodiacSky"
+	_zodiac_root.name = "ConstellationSky"
 	_zodiac_root.visible = false
 	_world.add_child(_zodiac_root)
-	_signs = ZodiacDataScript.build_sky(_zodiac_root, _zodiac_shell_r)
+	_signs = ConstellationDataScript.build_sky(_zodiac_root, _zodiac_shell_r, false)
 
 	_cam = Camera3D.new()
 	_cam.fov = 70.0
@@ -2143,36 +2204,53 @@ func _build_ui() -> void:
 	_home_btn.pressed.connect(func() -> void: go_home.emit())
 	add_child(_home_btn)
 
-	# Discrete window-frame toggle — constellations / signs in Free Flight sky.
-	_zodiac_btn = Button.new()
-	_zodiac_btn.name = "ZodiacToggle"
-	_zodiac_btn.text = "✧"
-	_zodiac_btn.tooltip_text = "Constellations"
-	_zodiac_btn.focus_mode = Control.FOCUS_NONE
-	_zodiac_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_zodiac_btn.offset_left = -92
-	_zodiac_btn.offset_right = -20
-	_zodiac_btn.offset_top = 20
-	_zodiac_btn.offset_bottom = 78
-	_zodiac_btn.add_theme_font_size_override("font_size", 28)
-	_zodiac_btn.add_theme_color_override("font_color", Color(0.95, 0.9, 0.65))
-	_zodiac_btn.pressed.connect(_toggle_zodiac_sky)
-	_zodiac_btn.visible = false
-	_refresh_zodiac_btn()
-	add_child(_zodiac_btn)
+	# Top-right: ecliptic side-view + sun compass (was bottom-left / constellation).
+	_ecliptic_tile = EclipticTile.new()
+	_ecliptic_tile.name = "EclipticTile"
+	_ecliptic_tile.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_ecliptic_tile.offset_left = -212
+	_ecliptic_tile.offset_right = -112
+	_ecliptic_tile.offset_top = 16
+	_ecliptic_tile.offset_bottom = 116
+	_ecliptic_tile.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ecliptic_tile.visible = false
+	add_child(_ecliptic_tile)
 
-	# Bottom-left Sun compass — arrow points toward the Sun; tap to fly there.
 	_sun_tile = SunCompassTile.new()
 	_sun_tile.name = "SunTile"
-	_sun_tile.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	_sun_tile.offset_left = 18
-	_sun_tile.offset_right = 118
-	_sun_tile.offset_top = -140
-	_sun_tile.offset_bottom = -40
+	_sun_tile.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_sun_tile.offset_left = -104
+	_sun_tile.offset_right = -4
+	_sun_tile.offset_top = 16
+	_sun_tile.offset_bottom = 116
 	_sun_tile.mouse_filter = Control.MOUSE_FILTER_STOP
 	_sun_tile.visible = false
 	_sun_tile.pressed.connect(_on_sun_tile_pressed)
 	add_child(_sun_tile)
+
+	_orrery_tile = Button.new()
+	_orrery_tile.name = "OrreryTile"
+	_orrery_tile.text = "◎"
+	_orrery_tile.tooltip_text = "Orrery map"
+	_orrery_tile.focus_mode = Control.FOCUS_NONE
+	_orrery_tile.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	_orrery_tile.offset_left = -118
+	_orrery_tile.offset_right = -18
+	_orrery_tile.offset_top = -430
+	_orrery_tile.offset_bottom = -330
+	_orrery_tile.add_theme_font_size_override("font_size", 36)
+	_orrery_tile.add_theme_color_override("font_color", Color(0.95, 0.88, 0.55))
+	_orrery_tile.visible = false
+	_orrery_tile.pressed.connect(_toggle_orrery_hud)
+	_style_orrery_tile(false)
+	add_child(_orrery_tile)
+
+	_hud = PlaygroundOrreryHudScript.new()
+	_hud.visible = false
+	_hud.closed.connect(_close_orrery_hud)
+	_hud.travel_requested.connect(_on_hud_travel)
+	_hud.lights_toggled.connect(_on_hud_lights)
+	add_child(_hud)
 
 	_reticle = AimReticle.new()
 	_reticle.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -2283,6 +2361,26 @@ func _build_ui() -> void:
 		c_pic.texture = ZodiacDataScript.make_tile_texture()
 	vbox.add_child(_arrival_earth_row)
 	add_child(_arrival)
+	_raise_flight_chrome()
+
+func _raise_flight_chrome() -> void:
+	for n in [_ecliptic_tile, _sun_tile, _speed_bar, _gear_joy, _stop_btn,
+			_orrery_tile, _home_btn, _hint]:
+		if n != null:
+			move_child(n, get_child_count() - 1)
+
+func _on_hud_travel(id: String) -> void:
+	_hud_open = false
+	_show_tap_hud(true)
+	if _bodies.has(id):
+		_begin_seek(id)
+
+func _on_hud_lights(on: bool) -> void:
+	_set_zodiac_sky(on)
+	if on:
+		Narrator.speak(LINE_ZODIAC_ON)
+	else:
+		Narrator.speak(LINE_ZODIAC_OFF)
 
 func _make_arrival_tile(label: String, hint: String, tex_path: String,
 		tint: Color, cover: bool, on_press: Callable,
@@ -2358,14 +2456,58 @@ class FlyAimMarker:
 	func _draw() -> void:
 		var c := size * 0.5
 		var r: float = home_radius_px
-		draw_arc(c, r, 0.0, TAU, 48, Color(1.0, 0.95, 0.55, 0.35), 2.0, true)
-		draw_circle(c, 5.0, Color(1.0, 0.92, 0.4, 0.85))
-		var arm: float = 18.0
-		var col := Color(1.0, 0.95, 0.6, 0.75)
-		draw_line(c + Vector2(-arm, 0.0), c + Vector2(arm, 0.0), col, 2.0, true)
-		draw_line(c + Vector2(0.0, -arm), c + Vector2(0.0, arm), col, 2.0, true)
+		draw_arc(c, r, 0.0, TAU, 48, Color(1.0, 0.95, 0.55, 0.22), 1.5, true)
+		var col := Color(1.0, 0.95, 0.6, 0.88)
+		var outer: float = 22.0
+		var gap: float = 7.0
+		# Four ticks N/W/E/S with a clear gap so the forward view stays open.
+		draw_line(c + Vector2(0.0, -outer), c + Vector2(0.0, -gap), col, 2.4, true)
+		draw_line(c + Vector2(0.0, outer), c + Vector2(0.0, gap), col, 2.4, true)
+		draw_line(c + Vector2(-outer, 0.0), c + Vector2(-gap, 0.0), col, 2.4, true)
+		draw_line(c + Vector2(outer, 0.0), c + Vector2(gap, 0.0), col, 2.4, true)
 
-## Bottom-left Sun tile: disc + arrow that rotates toward the Sun (bearing).
+## Side view of the ecliptic: horizontal plane + sun disc + arcade ship.
+class EclipticTile:
+	extends Control
+	var ship_xz: Vector2 = Vector2.ZERO  ## sun-relative XZ (map, not orbits)
+	var ship_y: float = 0.0
+	var heading: Vector3 = Vector3.FORWARD
+
+	func _draw() -> void:
+		var c := size * 0.5
+		var r: float = minf(size.x, size.y) * 0.42
+		draw_circle(c, r, Color(0.08, 0.10, 0.14, 0.82))
+		draw_arc(c, r, 0.0, TAU, 40, Color(0.55, 0.72, 0.95, 0.75), 2.5, true)
+		# Ecliptic as a horizontal line through the sun disc.
+		draw_line(Vector2(c.x - r * 0.92, c.y), Vector2(c.x + r * 0.92, c.y),
+			Color(0.75, 0.82, 0.95, 0.85), 2.0, true)
+		# Sun circle — same relative size as the sun-compass disc.
+		draw_circle(c, r * 0.38, Color(1.0, 0.85, 0.25, 0.95))
+		draw_circle(c + Vector2(-r * 0.12, -r * 0.10), r * 0.12,
+			Color(1.0, 0.95, 0.55, 0.55))
+		var reach: float = 420.0
+		var u: float = clampf(ship_xz.x / reach, -1.0, 1.0)
+		var v: float = clampf(ship_y / 220.0, -1.0, 1.0)
+		var sp := c + Vector2(u * r * 0.78, -v * r * 0.62)
+		var flat := Vector2(heading.x, heading.y)
+		if flat.length() < 0.05:
+			flat = Vector2(1.0, 0.0)
+		var ang: float = atan2(-flat.y, flat.x)
+		var nose := Vector2(9, 0).rotated(ang)
+		var left := Vector2(-6, 5).rotated(ang)
+		var right := Vector2(-6, -5).rotated(ang)
+		var notch := Vector2(-2.5, 0).rotated(ang)
+		draw_colored_polygon(PackedVector2Array([
+			sp + nose, sp + left, sp + notch, sp + right
+		]), Color(0.25, 0.92, 0.38, 0.98))
+		var font := ThemeDB.fallback_font
+		var lab := "ECL"
+		var fs := 14
+		var tw := font.get_string_size(lab, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		draw_string(font, Vector2(c.x - tw * 0.5, size.y - 4.0), lab,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color(0.8, 0.88, 1.0, 0.9))
+
+## Sun tile: disc + arrow that rotates toward the Sun (bearing).
 class SunCompassTile:
 	extends Control
 	signal pressed

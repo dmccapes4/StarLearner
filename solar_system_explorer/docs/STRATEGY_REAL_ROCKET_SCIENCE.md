@@ -4,7 +4,9 @@
 honest Δv, propellant mass, propulsion classes (chemical → nuclear thermal → nuclear electric →
 nuclear pulse), and planetary windows — without turning a six-year-old’s session into a
 multi-year loading bar. Companion to [`STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY.md`](STRATEGY_FLIGHT_DYNAMICS_AND_PROXIMITY.md)
-(today’s kid-paced burn→coast→brake) and [`STRATEGY_3D_FLYER.md`](STRATEGY_3D_FLYER.md).*
+(today’s kid-paced burn→coast→brake), [`STRATEGY_3D_FLYER.md`](STRATEGY_3D_FLYER.md), and
+[`MATH_MISSION_CONTROL.md`](MATH_MISSION_CONTROL.md) (Hohmann path = flown path, patched assists,
+why n-body is audit-only).*
 
 **Status:** Phase A + Phase B implemented. Phase C not started.  
 - Phase A: `RealismBudget.gd` + `./tools/run_realism_budget.sh`  

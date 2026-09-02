@@ -207,6 +207,119 @@ static func _arc_pt(r0: float, r1: float, th0: float, dth: float, u: float) -> V
 	var th: float = th0 + dth * u
 	return Vector3(cos(th) * r, 0.0, sin(th) * r)
 
+# ── Hohmann transfer (MATH_MISSION_CONTROL §12, Phase 1) ─────────────
+## Semi-major axis, eccentricity, and semi-latus rectum for a coplanar
+## Hohmann ellipse between circular orbits ri (inner) and ro (outer).
+static func hohmann_ellipse(ri: float, ro: float) -> Dictionary:
+	var inner: float = minf(ri, ro)
+	var outer: float = maxf(ri, ro)
+	var sum: float = inner + outer
+	if sum < 0.001:
+		return {"a": 0.0, "e": 0.0, "p": 0.0}
+	var a: float = 0.5 * sum
+	var e: float = (outer - inner) / sum
+	var p: float = a * (1.0 - e * e)
+	return {"a": a, "e": e, "p": p}
+
+## Radius on the Hohmann transfer ellipse at true anomaly nu (radians).
+## ri/ro are the inner/outer circular orbit radii (game units or AU).
+static func hohmann_r_at_nu(ri: float, ro: float, nu: float) -> float:
+	var ell := hohmann_ellipse(ri, ro)
+	var denom: float = 1.0 + ell.e * cos(nu)
+	return ell.p / maxf(denom, 1.0e-6)
+
+## Sample a coplanar Hohmann transfer in AU (same math as RealismBudget.hohmann).
+## theta sweeps from theta_start to theta_end while nu follows the Hohmann half-ellipse.
+static func hohmann_transfer_path_au(r1_au: float, r2_au: float,
+		theta_start: float, theta_end: float, samples: int = 48) -> PackedVector3Array:
+	var ri: float = minf(r1_au, r2_au)
+	var ro: float = maxf(r1_au, r2_au)
+	var outward: bool = r2_au >= r1_au
+	var th0: float = theta_start
+	var dth: float = wrapf(theta_end - th0, -PI, PI)
+	var n: int = maxi(samples, 2)
+	var pts := PackedVector3Array()
+	pts.resize(n + 1)
+	for i in n + 1:
+		var u: float = float(i) / float(n)
+		var nu: float = PI * u if outward else PI + PI * u
+		var r: float = hohmann_r_at_nu(ri, ro, nu)
+		var th: float = th0 + dth * u
+		pts[i] = Vector3(cos(th) * r, 0.0, sin(th) * r)
+	return pts
+
+## Hohmann transfer arc: bearing sweeps ship→intercept while radius follows
+## the Kepler ellipse between origin and destination orbit_r values. Same trim
+## and exact-arrival pinning as build_course; min radius is the inner orbit.
+static func build_hohmann_course(ship_pos: Vector3, arrival_pos: Vector3,
+		samples: int, depart_standoff: float,
+		r_depart_orbit: float, r_arrive_orbit: float) -> Curve3D:
+	var span: float = ship_pos.distance_to(arrival_pos)
+	if span < 0.01:
+		arrival_pos = ship_pos + Vector3(0.01, 0.0, 0.0)
+		span = 0.01
+	var ri: float = minf(r_depart_orbit, r_arrive_orbit)
+	var ro: float = maxf(r_depart_orbit, r_arrive_orbit)
+	if ri < 0.001:
+		return build_course(ship_pos, arrival_pos, samples, depart_standoff)
+	var th0: float = atan2(ship_pos.z, ship_pos.x)
+	var dth: float = wrapf(atan2(arrival_pos.z, arrival_pos.x) - th0, -PI, PI)
+	var outward: bool = r_arrive_orbit >= r_depart_orbit
+	var curve := Curve3D.new()
+	var n: int = maxi(samples, 2)
+	var u0: float = 0.0
+	var trim: float = minf(depart_standoff, span * 0.3)
+	if trim > 0.001 and _hohmann_pt(ri, ro, th0, dth, outward, 0.5).distance_to(ship_pos) > trim:
+		var hi := 0.5
+		var lo := 0.0
+		for _i in 24:
+			var mid: float = (lo + hi) * 0.5
+			if _hohmann_pt(ri, ro, th0, dth, outward, mid).distance_to(ship_pos) >= trim:
+				hi = mid
+			else:
+				lo = mid
+		u0 = hi
+	for i in n:
+		var u: float = lerpf(u0, 1.0, float(i) / float(n))
+		curve.add_point(_hohmann_pt(ri, ro, th0, dth, outward, u))
+	curve.add_point(arrival_pos)
+	curve.bake_interval = 0.5
+	return curve
+
+static func _hohmann_pt(ri: float, ro: float, th0: float, dth: float,
+		outward: bool, u: float) -> Vector3:
+	var nu: float = PI * u if outward else PI + PI * u
+	var r: float = hohmann_r_at_nu(ri, ro, nu)
+	var th: float = th0 + dth * u
+	return Vector3(cos(th) * r, 0.0, sin(th) * r)
+
+## Path class for Mission Flight: Hohmann (Rocket Science) or quick spiral (Kid).
+const PATH_HOHMANN := "hohmann"
+const PATH_QUICK_SPIRAL := "quick_spiral"
+
+static func _origin_orbit_r(ship_pos: Vector3, target: Dictionary, t0: float,
+		cfg: SolarFlyerConfig) -> float:
+	var dest_id := str(target.get("id", ""))
+	var oid := nearest_planet_id(ship_pos, t0, cfg, dest_id)
+	if oid.is_empty():
+		return maxf(ship_pos.length(), 0.01)
+	var origin: Dictionary = SolarData.flyer_body_by_id(oid, cfg)
+	var r: float = float(origin.get("orbit_r", 0.0))
+	return r if r > 0.001 else maxf(ship_pos.length(), 0.01)
+
+static func _build_transfer_course(ship_pos: Vector3, arrival_pos: Vector3,
+		target: Dictionary, t0: float, cfg: SolarFlyerConfig,
+		depart_standoff: float, path_class: String) -> Curve3D:
+	var star: bool = bool(target.get("is_star", false))
+	if star or path_class == PATH_QUICK_SPIRAL:
+		return build_course(ship_pos, arrival_pos, cfg.course_samples, depart_standoff)
+	var r_dest: float = float(target.get("orbit_r", 0.0))
+	if r_dest <= 0.001:
+		return build_course(ship_pos, arrival_pos, cfg.course_samples, depart_standoff)
+	var r_origin: float = _origin_orbit_r(ship_pos, target, t0, cfg)
+	return build_hohmann_course(ship_pos, arrival_pos, cfg.course_samples,
+		depart_standoff, r_origin, r_dest)
+
 ## Run the whole hop at SIM_DT: ship along the course via the burn profile,
 ## worlds on their orbits at the same clock. Produces the ground-truth
 ## timeline the renderer plays back: positions, headings, burn-phase events,
@@ -840,8 +953,9 @@ static func snapshot_angles(bodies: Array, t0: float) -> Dictionary:
 ##    destination's parking sphere (orbit standoff) exactly when the planet
 ##    gets there. The Sun is a fixed target at a radial standoff.
 ## 2. Geometry: a transfer arc that sweeps around the Sun between the two
-##    orbits (build_course) — real curved trajectory, no hand-drawn swerves,
-##    and NO collision dodging: worlds are points and space is empty.
+##    orbits — Hohmann ellipse for Rocket Science (`path_class=hohmann`) or
+##    the legacy Archimedean spiral for Quick Course (`quick_spiral`). Stars
+##    still use the radial spiral. NO collision dodging: worlds are points.
 ## 3. Simulation: the whole hop runs at SIM_DT; the timeline (positions,
 ##    headings, phase events, orbit entry) is ground truth for the renderer.
 ## Invariant: duration == t_arr — wall-clock flight and orbital clock agree.
@@ -852,7 +966,8 @@ static func snapshot_angles(bodies: Array, t0: float) -> Dictionary:
 ## inner planets (Mercury laps faster than we fly), so we scan T for the
 ## first sign change and bisect — always converges, honest endpoint.
 static func plot_route(ship_pos: Vector3, target: Dictionary, t0: float,
-		cfg: SolarFlyerConfig, depart_standoff: float = 0.0) -> Dictionary:
+		cfg: SolarFlyerConfig, depart_standoff: float = 0.0,
+		path_class: String = PATH_HOHMANN) -> Dictionary:
 	var star: bool = bool(target.get("is_star", false))
 	var dest_stand: float = sun_approach_standoff(cfg) if star \
 		else orbit_standoff(float(target.get("hero_r", 2.0)))
@@ -867,12 +982,12 @@ static func plot_route(ship_pos: Vector3, target: Dictionary, t0: float,
 	var hi: float = -1.0
 	var prev_t: float = lo
 	var prev_err: float = _hop_err(prev_t, ship_pos, target, t0, cfg,
-		depart_standoff, dest_stand, fixed_arrival, star)
+		depart_standoff, dest_stand, fixed_arrival, star, path_class)
 	var scan_steps := 48
 	for k in range(1, scan_steps + 1):
 		var t: float = lo + (t_max - lo) * float(k) / float(scan_steps)
 		var err: float = _hop_err(t, ship_pos, target, t0, cfg,
-			depart_standoff, dest_stand, fixed_arrival, star)
+			depart_standoff, dest_stand, fixed_arrival, star, path_class)
 		if prev_err > 0.0 and err <= 0.0:
 			lo = prev_t
 			hi = t
@@ -884,15 +999,17 @@ static func plot_route(ship_pos: Vector3, target: Dictionary, t0: float,
 		for _i in 32:
 			var mid: float = (lo + hi) * 0.5
 			if _hop_err(mid, ship_pos, target, t0, cfg, depart_standoff,
-					dest_stand, fixed_arrival, star) > 0.0:
+					dest_stand, fixed_arrival, star, path_class) > 0.0:
 				lo = mid
 			else:
 				hi = mid
 		t_fly = (lo + hi) * 0.5
 	var planet_arr := fixed_arrival if star else body_pos(target, t0 + t_fly)
-	var curve := build_course(ship_pos,
-		_hop_entry(planet_arr, ship_pos, dest_stand, star),
-		cfg.course_samples, depart_standoff)
+	var entry := _hop_entry(planet_arr, ship_pos, dest_stand, star)
+	var curve := _build_transfer_course(ship_pos, entry, target, t0, cfg,
+		depart_standoff, path_class)
+	var resolved_path := PATH_QUICK_SPIRAL if star or path_class == PATH_QUICK_SPIRAL \
+		else (PATH_HOHMANN if float(target.get("orbit_r", 0.0)) > 0.001 else PATH_QUICK_SPIRAL)
 	var sim := simulate_route(curve, target, t0, t_fly, cfg)
 	var dest_id := str(target.get("id", ""))
 	var origin_id := nearest_planet_id(ship_pos, t0, cfg, dest_id)
@@ -904,6 +1021,7 @@ static func plot_route(ship_pos: Vector3, target: Dictionary, t0: float,
 		"curve": curve,
 		"path_len": curve.get_baked_length(),
 		"duration": t_fly,
+		"path_class": resolved_path,
 		"encounters": encounters,
 		"min_sun_dist": float(sim["min_sun_dist"]),
 		"timeline": sim["timeline"],
@@ -930,11 +1048,12 @@ static func _hop_entry(planet_arr: Vector3, ship_pos: Vector3,
 ## solved time matches the final course length EXACTLY (duration honesty).
 static func _hop_err(T: float, ship_pos: Vector3, target: Dictionary, t0: float,
 		cfg: SolarFlyerConfig, depart_standoff: float,
-		dest_stand: float, fixed_arrival: Vector3, star: bool) -> float:
+		dest_stand: float, fixed_arrival: Vector3, star: bool,
+		path_class: String = PATH_HOHMANN) -> float:
 	var planet_arr := fixed_arrival if star else body_pos(target, t0 + T)
-	var c := build_course(ship_pos,
+	var c := _build_transfer_course(ship_pos,
 		_hop_entry(planet_arr, ship_pos, dest_stand, star),
-		cfg.course_samples, depart_standoff)
+		target, t0, cfg, depart_standoff, path_class)
 	return burn_travel_time(c.get_baked_length(), cfg) - T
 
 # ── Phase 3 flight helpers (headless-testable) ──────────────────────
