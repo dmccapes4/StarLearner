@@ -35,6 +35,7 @@ func _run() -> void:
 	_add(TitleView.WELCOME)
 	_add(FlightChooserScript.LINE_MISSION)
 	_add(FlightChooserScript.LINE_FREE)
+	_add(FlightChooserScript.LINE_EARTH)
 	_add(FlightChooserScript.NARRATION)
 	_add(CourseModeChooser.LINE_KID)
 	_add(CourseModeChooser.LINE_ROCKET)
@@ -55,6 +56,21 @@ func _run() -> void:
 		_add(PlaygroundHudScript.LINE_TRAVEL % str(b.get("name", "")))
 	_add(PlaygroundScript.LINE_ZODIAC_ON)
 	_add(PlaygroundScript.LINE_ZODIAC_OFF)
+	const EarthNightSkyScript := preload("res://scripts/EarthNightSkyScene.gd")
+	_add(EarthNightSkyScript.LINE_OPEN)
+	_add(EarthNightSkyScript.LINE_BODIES)
+	_add(EarthNightSkyScript.LINE_RX)
+
+	# EarthShip: the hub's three beats, plus one line per viewer and the
+	# southern-hemisphere payoff.
+	const EarthShipScript := preload("res://scripts/EarthShipScene.gd")
+	const SkyViewerScript := preload("res://scripts/EarthSkyViewer.gd")
+	_add(EarthShipScript.LINE_OPEN)
+	_add(EarthShipScript.LINE_LOOPERS)
+	_add(EarthShipScript.LINE_ECLIPSERS)
+	_add(SkyViewerScript.LINE_RETROGRADE)
+	_add(SkyViewerScript.LINE_ECLIPSE)
+	_add(SkyViewerScript.LINE_SOUTH)
 
 	# Burn-phase beats spoken during every flight.
 	_add(FlySceneScript.LINE_LAUNCH)

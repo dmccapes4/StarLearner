@@ -390,7 +390,7 @@ func _build() -> void:
 
 	_sun = MeshInstance3D.new()
 	var sun_mesh := SphereMesh.new()
-	sun_mesh.radius = 14.0
+	sun_mesh.radius = 28.0
 	sun_mesh.height = 28.0
 	sun_mesh.radial_segments = 20
 	sun_mesh.rings = 10

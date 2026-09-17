@@ -9,6 +9,9 @@ extends Node
 ##                     ─▶ [Rocket] PropulsionChooser ─▶ PlotBoard ─▶ FlyScene
 ##           ─▶ Free Flight ─▶ Astronaut briefing ─▶ Playground
 ##                (constellation lights + orrery HUD live in Free Flight)
+##           ─▶ Earth Ship ─▶ EarthShipScene (one tile per naked-eye body)
+##                ─▶ [Mercury/Venus/Jupiter] EarthSkyViewer, retrograde mode
+##                ─▶ [Moon/Sun]              EarthSkyViewer, eclipse mode
 ##      ─▶ Solar System ─▶ Orrery tour ─▶ back to Title
 ##
 ## Flip USE_3D_FLYER to false for strip → video only (no 3D hop).
@@ -25,11 +28,15 @@ const VideoPanel := preload("res://scripts/VideoPanel.gd")
 const AstronautIntro := preload("res://scripts/AstronautIntro.gd")
 const PlaygroundScene := preload("res://scripts/PlaygroundScene.gd")
 const ConstellationScene := preload("res://scripts/ConstellationScene.gd")
+const EarthNightSkyScene := preload("res://scripts/EarthNightSkyScene.gd")
 const FlightChooser := preload("res://scripts/FlightChooser.gd")
+const EarthShipScene := preload("res://scripts/EarthShipScene.gd")
+const EarthSkyViewer := preload("res://scripts/EarthSkyViewer.gd")
 const CourseModeChooser := preload("res://scripts/CourseModeChooser.gd")
 const PropulsionChooser := preload("res://scripts/PropulsionChooser.gd")
 const BriefingSlideshow := preload("res://scripts/BriefingSlideshow.gd")
 const NavModes := preload("res://scripts/NavModes.gd")
+const ConstellationViewer := preload("res://scripts/ConstellationViewer.gd")
 
 var _title: TitleView
 var _chooser: FlightChooser
@@ -41,6 +48,10 @@ var _board: PlotBoard
 var _fly: FlyScene
 var _playground: PlaygroundScene
 var _zodiac: ConstellationScene
+var _earth_sky: EarthNightSkyScene
+var _earth_ship: EarthShipScene
+var _sky_viewer: EarthSkyViewer
+var _night_sky: ConstellationViewer
 var _video: VideoPanel
 var _astro: AstronautIntro
 var _briefing: BriefingSlideshow
@@ -51,6 +62,7 @@ var _in_playground: bool = false
 var _in_zodiac: bool = false
 ## Zodiac opened from Free Flight — Home returns to playground, not hub.
 var _zodiac_return_playground: bool = false
+var _earth_sky_return_playground: bool = false
 
 func _ready() -> void:
 	var starfield := Starfield.new()
@@ -66,6 +78,10 @@ func _ready() -> void:
 	_fly = FlyScene.new()
 	_playground = PlaygroundScene.new()
 	_zodiac = ConstellationScene.new()
+	_earth_sky = EarthNightSkyScene.new()
+	_earth_ship = EarthShipScene.new()
+	_sky_viewer = EarthSkyViewer.new()
+	_night_sky = ConstellationViewer.new()
 	_video = VideoPanel.new()
 	_astro = AstronautIntro.new()
 	_briefing = BriefingSlideshow.new()
@@ -79,6 +95,10 @@ func _ready() -> void:
 	add_child(_fly)
 	add_child(_playground)
 	add_child(_zodiac)
+	add_child(_earth_sky)
+	add_child(_earth_ship)
+	add_child(_sky_viewer)
+	add_child(_night_sky)
 	add_child(_video)
 	add_child(_astro)
 	add_child(_briefing)
@@ -87,6 +107,8 @@ func _ready() -> void:
 	_title.explainer_pressed.connect(_on_explainer)
 	_chooser.mission_pressed.connect(_on_mission_flight)
 	_chooser.free_flight_pressed.connect(_on_free_flight)
+	_chooser.earth_ship_pressed.connect(_on_earth_ship)
+	_chooser.night_sky_pressed.connect(_on_night_sky)
 	_chooser.go_home.connect(_show_title)
 	_course_mode.kid_pressed.connect(_on_course_kid)
 	_course_mode.rocket_pressed.connect(_on_course_rocket)
@@ -106,7 +128,13 @@ func _ready() -> void:
 	_playground.go_home.connect(_show_title)
 	_playground.arrived.connect(_on_playground_arrived)
 	_playground.learn_more.connect(_on_learn_more)
+	_playground.earth_night_sky.connect(_on_earth_night_sky)
 	_zodiac.go_home.connect(_on_zodiac_home)
+	_earth_sky.closed.connect(_on_earth_sky_closed)
+	_earth_ship.target_picked.connect(_on_earth_ship_target)
+	_earth_ship.go_home.connect(_on_earth_ship_home)
+	_sky_viewer.closed.connect(_on_sky_viewer_closed)
+	_night_sky.closed.connect(_on_night_sky_closed)
 	_video.closed.connect(_on_video_closed)
 	_astro.finished.connect(_on_astro_finished)
 
@@ -135,6 +163,51 @@ func _on_free_flight() -> void:
 	_hide_all_views()
 	_astro.begin(AstronautIntro.BRIEFING_FREE_FLIGHT)
 
+## Earth Ship: no flying, no briefing. You are already standing on the planet,
+## so the hub opens straight away.
+func _on_earth_ship() -> void:
+	_in_playground = false
+	_in_zodiac = false
+	_hide_all_views()
+	_earth_ship.begin()
+
+func _on_earth_ship_home() -> void:
+	_earth_ship.set_active(false)
+	_set_view(_chooser)
+
+func _on_night_sky() -> void:
+	_in_playground = false
+	_in_zodiac = false
+	_hide_all_views()
+	_night_sky.begin(EarthSkyViewer.LAT_MID_NORTH)
+
+func _on_night_sky_closed() -> void:
+	_night_sky.set_active(false)
+	_set_view(_chooser)
+
+## A tile decides which viewer opens and where the observer stands. Retrograde
+## targets start at the mid-northern latitude the player can then change;
+## eclipse targets are pinned to the equator, where the Sun and Moon ride
+## highest and the shadow geometry is cleanest.
+func _on_earth_ship_target(body_id: String) -> void:
+	_earth_ship.set_active(false)
+	var eclipse: bool = EarthShipScene.launches_eclipse(body_id)
+	var mode: int = EarthSkyViewer.Mode.ECLIPSE if eclipse \
+		else EarthSkyViewer.Mode.RETROGRADE
+	var lat: float = EarthSkyViewer.LAT_EQUATOR if eclipse \
+		else EarthSkyViewer.LAT_MID_NORTH
+	_sky_viewer.begin(body_id, mode, lat, _default_sky_year())
+
+func _on_sky_viewer_closed() -> void:
+	_sky_viewer.set_active(false)
+	_earth_ship.begin()
+
+## Open on the current year so the sky matches the one outside, clamped to the
+## span the Standish elements are fitted for.
+func _default_sky_year() -> int:
+	return clampi(Time.get_datetime_dict_from_system().get("year", 2026),
+		EarthSkyViewer.YEAR_MIN, EarthSkyViewer.YEAR_MAX)
+
 func _on_explainer() -> void:
 	_set_view(_orrery)
 	_orrery.begin_tour()
@@ -144,14 +217,34 @@ func _show_title() -> void:
 	_fly.set_active(false)
 	_playground.set_active(false)
 	_zodiac.set_active(false)
+	_earth_sky.set_active(false)
+	_earth_ship.set_active(false)
+	_sky_viewer.set_active(false)
+	_night_sky.set_active(false)
 	_in_playground = false
 	_in_zodiac = false
 	_zodiac_return_playground = false
+	_earth_sky_return_playground = false
 	_set_view(_title)
 
 func _on_zodiac_home() -> void:
 	if _zodiac_return_playground:
 		_return_to_playground_from_zodiac()
+		return
+	_show_title()
+
+func _on_earth_night_sky() -> void:
+	_earth_sky_return_playground = true
+	_playground.set_active(false)
+	_earth_sky.begin()
+
+func _on_earth_sky_closed() -> void:
+	if _earth_sky_return_playground:
+		_earth_sky_return_playground = false
+		_in_playground = true
+		_earth_sky.set_active(false)
+		_playground.set_active(true)
+		_playground.resume_flying()
 		return
 	_show_title()
 
@@ -329,4 +422,8 @@ func _hide_all_views() -> void:
 	_fly.set_active(false)
 	_playground.set_active(false)
 	_zodiac.set_active(false)
+	_earth_sky.set_active(false)
+	_earth_ship.set_active(false)
+	_night_sky.set_active(false)
+	_sky_viewer.set_active(false)
 

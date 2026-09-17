@@ -20,14 +20,14 @@ const OVERRIDE_KEYS := [
 	"orbit_time_scale", "belt_fade_near", "belt_fade_far",
 ]
 
-@export var distance_base: float = 12.0
-@export var distance_span: float = 420.0
+@export var distance_base: float = 24.0
+@export var distance_span: float = 840.0
 @export var compression_exp: float = 0.45
 @export var a_max_au: float = 39.5
 
 @export var hero_min: float = 1.2
 @export var hero_max: float = 12.0
-@export var sun_hero_r: float = 16.0
+@export var sun_hero_r: float = 32.0
 
 ## Marker size rule: in flight every world is an icon MARKER of world size
 ## icon_scale · distance · tier — a small constant screen size (the legible
@@ -43,8 +43,8 @@ const OVERRIDE_KEYS := [
 ## Belt reveal (STRATEGY §5.1): rocks are fully visible within belt_fade_near
 ## of the camera, fully invisible beyond belt_fade_far — the belt is a
 ## surprise you fly INTO, not a dotted line across the sky.
-@export var belt_fade_near: float = 35.0
-@export var belt_fade_far: float = 70.0
+@export var belt_fade_near: float = 70.0
+@export var belt_fade_far: float = 140.0
 
 ## Legacy straight-line speed — only seeds the first intercept guess now.
 @export var cruise_speed: float = 11.0
@@ -53,13 +53,13 @@ const OVERRIDE_KEYS := [
 @export var burn_accel: float = 1.1
 @export var v_max: float = 17.0
 @export var game_year_seconds: float = 45.0
-@export var sun_clearance: float = 18.0
+@export var sun_clearance: float = 36.0
 ## Design band asserted by ScaleTune — NOT a runtime clamp (burn profile owns time).
 ## Physics is ground truth: at close conjunction a neighbour world can pass
 ## right by the ship, making that hop genuinely tiny on a short transfer
 ## arc. The band is a design assertion, not a runtime clamp.
 @export var hop_min_s: float = 1.5
-@export var hop_max_s: float = 55.0
+@export var hop_max_s: float = 95.0
 @export var course_samples: int = 96
 @export var intercept_iters: int = 10
 

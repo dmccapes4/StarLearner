@@ -19,7 +19,7 @@ static func bodies() -> Array:
 	return [
 		{
 			"id": "sun", "name": "The Sun", "color": Color(1.0, 0.80, 0.24),
-			"ring": false, "draw_radius": 150.0, "orbit_index": -1,
+			"ring": false, "draw_radius": 300.0, "orbit_index": -1,
 			"orrery_rx": 0.0, "period": 0.0, "is_star": true, "dwarf": false,
 			"a_au": 0.0, "period_yr": 0.0, "real_radius_km": 695700.0,
 			"blurb": "This is the Sun. It is a giant star at the center of everything, and its light and warmth reach all the way to Earth.",
@@ -28,7 +28,7 @@ static func bodies() -> Array:
 		{
 			"id": "mercury", "name": "Mercury", "color": Color(0.66, 0.63, 0.60),
 			"ring": false, "draw_radius": 34.0, "orbit_index": 0,
-			"orrery_rx": 90.0, "period": 6.0, "is_star": false, "dwarf": false,
+			"orrery_rx": 110.0, "period": 6.0, "is_star": false, "dwarf": false,
 			"a_au": 0.39, "period_yr": 0.24, "real_radius_km": 2440.0,
 			"blurb": "Mercury is the closest planet to the Sun, and the smallest planet. A whole year there is only eighty-eight days.",
 			"facts": ["Closest to the Sun", "The smallest planet", "No air to breathe"],
@@ -36,7 +36,7 @@ static func bodies() -> Array:
 		{
 			"id": "venus", "name": "Venus", "color": Color(0.90, 0.72, 0.40),
 			"ring": false, "draw_radius": 52.0, "orbit_index": 1,
-			"orrery_rx": 150.0, "period": 8.0, "is_star": false, "dwarf": false,
+			"orrery_rx": 175.0, "period": 8.0, "is_star": false, "dwarf": false,
 			"a_au": 0.72, "period_yr": 0.62, "real_radius_km": 6052.0,
 			"blurb": "Venus is the hottest planet, wrapped in thick clouds. It even spins backwards compared to the others.",
 			"facts": ["The hottest planet", "Covered in thick clouds", "Spins backwards"],
@@ -44,7 +44,7 @@ static func bodies() -> Array:
 		{
 			"id": "earth", "name": "Earth", "color": Color(0.28, 0.55, 0.85),
 			"ring": false, "draw_radius": 54.0, "orbit_index": 2,
-			"orrery_rx": 210.0, "period": 10.0, "is_star": false, "dwarf": false,
+			"orrery_rx": 240.0, "period": 10.0, "is_star": false, "dwarf": false,
 			"a_au": 1.0, "period_yr": 1.0, "real_radius_km": 6371.0,
 			"blurb": "Earth is our home. It is the only planet we know that has life, with lots of water and one moon.",
 			"facts": ["Our home planet", "The only one with life we know of", "Mostly covered in water"],
@@ -52,7 +52,7 @@ static func bodies() -> Array:
 		{
 			"id": "mars", "name": "Mars", "color": Color(0.80, 0.36, 0.22),
 			"ring": false, "draw_radius": 40.0, "orbit_index": 3,
-			"orrery_rx": 270.0, "period": 12.0, "is_star": false, "dwarf": false,
+			"orrery_rx": 310.0, "period": 12.0, "is_star": false, "dwarf": false,
 			"a_au": 1.52, "period_yr": 1.88, "real_radius_km": 3390.0,
 			"blurb": "Mars is the red planet, covered in rusty dust. It has the tallest volcano in the whole solar system.",
 			"facts": ["The red planet", "Covered in rusty dust", "Has the tallest volcano"],
@@ -60,7 +60,7 @@ static func bodies() -> Array:
 		{
 			"id": "asteroid_belt", "name": "Asteroid Belt", "color": Color(0.62, 0.58, 0.52),
 			"ring": false, "draw_radius": 74.0, "orbit_index": -1, "belt": true,
-			"orrery_rx": 305.0, "period": 0.0, "is_star": false, "dwarf": false,
+			"orrery_rx": 350.0, "period": 0.0, "is_star": false, "dwarf": false,
 			"a_au": 2.7, "period_yr": 4.6, "real_radius_km": 0.0,
 			"blurb": "Between Mars and Jupiter is the asteroid belt, a wide ring of rocky chunks left over from when the planets formed.",
 			"facts": ["A ring of rocky chunks", "Sits between Mars and Jupiter", "Leftovers from the young solar system"],
@@ -68,7 +68,7 @@ static func bodies() -> Array:
 		{
 			"id": "jupiter", "name": "Jupiter", "color": Color(0.82, 0.66, 0.48),
 			"ring": false, "draw_radius": 112.0, "orbit_index": 4,
-			"orrery_rx": 340.0, "period": 15.0, "is_star": false, "dwarf": false,
+			"orrery_rx": 390.0, "period": 15.0, "is_star": false, "dwarf": false,
 			"a_au": 5.2, "period_yr": 11.86, "real_radius_km": 69911.0,
 			"blurb": "Jupiter is the biggest planet, a giant ball of gas. Its Great Red Spot is a storm bigger than the whole Earth.",
 			"facts": ["The biggest planet", "A giant ball of gas", "Has a storm bigger than Earth"],
@@ -76,7 +76,7 @@ static func bodies() -> Array:
 		{
 			"id": "saturn", "name": "Saturn", "color": Color(0.86, 0.78, 0.55),
 			"ring": true, "draw_radius": 94.0, "orbit_index": 5,
-			"orrery_rx": 410.0, "period": 18.0, "is_star": false, "dwarf": false,
+			"orrery_rx": 460.0, "period": 18.0, "is_star": false, "dwarf": false,
 			"a_au": 9.58, "period_yr": 29.5, "real_radius_km": 58232.0,
 			"blurb": "Saturn has beautiful rings made of ice and rock. It is so light that it could float in water.",
 			"facts": ["Famous for its rings", "Rings are ice and rock", "Light enough to float in water"],
@@ -84,7 +84,7 @@ static func bodies() -> Array:
 		{
 			"id": "uranus", "name": "Uranus", "color": Color(0.55, 0.82, 0.85),
 			"ring": false, "draw_radius": 72.0, "orbit_index": 6,
-			"orrery_rx": 480.0, "period": 21.0, "is_star": false, "dwarf": false,
+			"orrery_rx": 520.0, "period": 21.0, "is_star": false, "dwarf": false,
 			"a_au": 19.2, "period_yr": 84.0, "real_radius_km": 25362.0,
 			"blurb": "Uranus is a cold, blue-green planet. It is tipped over, so it rolls on its side like a ball.",
 			"facts": ["A cold blue-green world", "Rolls on its side", "Made mostly of icy gas"],
@@ -92,7 +92,7 @@ static func bodies() -> Array:
 		{
 			"id": "neptune", "name": "Neptune", "color": Color(0.24, 0.40, 0.90),
 			"ring": false, "draw_radius": 68.0, "orbit_index": 7,
-			"orrery_rx": 550.0, "period": 24.0, "is_star": false, "dwarf": false,
+			"orrery_rx": 580.0, "period": 24.0, "is_star": false, "dwarf": false,
 			"a_au": 30.05, "period_yr": 165.0, "real_radius_km": 24622.0,
 			"blurb": "Neptune is a deep blue, windy world. It is the farthest big planet from the Sun.",
 			"facts": ["A deep blue planet", "The windiest world", "Farthest big planet from the Sun"],
@@ -212,7 +212,7 @@ static func nearest_major_asteroid(ship_pos: Vector3, t: float,
 
 ## Marker recognition tier — matches ScrollView draw_radius ratios so the
 ## AR pin for Jupiter reads ~2× Earth the same way the strip does.
-## Earth draw_radius = 54 → tier 1.0; Sun 150 → ~2.78; Mercury 34 → ~0.63.
+## Earth draw_radius = 54 → tier 1.0; Sun 300 → ~5.56; Mercury 34 → ~0.63.
 const MARKER_TIER_EARTH_DRAW := 54.0
 
 static func icon_tier_for(b: Dictionary) -> float:
@@ -221,7 +221,7 @@ static func icon_tier_for(b: Dictionary) -> float:
 		return maxf(dr / MARKER_TIER_EARTH_DRAW, 0.22)
 	# Major asteroids / fallbacks without draw_radius on the strip.
 	if bool(b.get("is_star", false)):
-		return 150.0 / MARKER_TIER_EARTH_DRAW
+		return 300.0 / MARKER_TIER_EARTH_DRAW
 	var rk: float = float(b.get("real_radius_km", 0.0))
 	if rk >= 50000.0:
 		return 112.0 / MARKER_TIER_EARTH_DRAW

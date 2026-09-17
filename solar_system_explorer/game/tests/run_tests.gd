@@ -491,7 +491,29 @@ func _test_flight() -> void:
 	_ok(built.has("orion") and not (built["orion"]["links"] as Node3D).visible,
 		"playground sky has no connecting lines by default")
 	host.queue_free()
-
+	_ok(ConstellationDataScript.by_id("canis_minor").size() > 0,
+		"Canis Minor in catalog")
+	const EarthNightSkyScript := preload("res://scripts/EarthNightSkyScene.gd")
+	_ok(EarthNightSkyScript != null, "EarthNightSkyScene compiles")
+	var triad: Vector2 = EarthNightSkyScript.triad_center()
+	_ok(absf(triad.x - EarthNightSkyScript.TRIAD_RA) < 0.02
+			and absf(triad.y - EarthNightSkyScript.TRIAD_DEC) < 0.05,
+		"TRIAD constants match Gemini/Cancer/Canis Minor centroid")
+	var mars0: Vector2 = EarthNightSkyScript.mars_at(0.0)
+	var mars1: Vector2 = EarthNightSkyScript.mars_at(0.5)
+	_ok(absf(mars0.x - triad.x) < 0.02 and absf(mars0.y - triad.y) < 0.05,
+		"Mars terminus before Rx coincides with triad / Moon (%.3f,%.2f)" % [
+			mars0.x, mars0.y])
+	_ok(mars0.x > mars1.x - 0.01,
+		"Mars Rx path decreases RA (westward) early in the loop (%.2f → %.2f)" % [
+			mars0.x, mars1.x])
+	var moon_r: float = EarthNightSkyScript.moon_radius_px(Rect2(0, 0, 1000, 504))
+	_ok(moon_r > 2.0 and moon_r < 8.0,
+		"Moon radius matches ~0.5° Earth angular size (%.2f px)" % moon_r)
+	var p_gem: Vector2 = EarthNightSkyScript.project(7.5, 28.0, Rect2(0, 0, 1000, 600))
+	var p_can: Vector2 = EarthNightSkyScript.project(8.7, 15.0, Rect2(0, 0, 1000, 600))
+	_ok(p_gem.x > p_can.x, "Gemini projects right of Cancer (eastward look)")
+	_ok(p_gem.y < p_can.y, "Gemini projects above Cancer")
 	# Every hop from Earth with the full sim: the timeline is honest
 	# (monotonic, ends on the parking sphere), carries only burn-phase
 	# events, and nothing narrated is derived outside the sim.
@@ -1112,10 +1134,17 @@ func _test_scripts_compile() -> void:
 		"res://scripts/NarratorVoice.gd", "res://scripts/NavModes.gd",
 		"res://scripts/OrbitCinematic.gd", "res://scripts/PlaygroundScene.gd",
 		"res://scripts/ConstellationData.gd", "res://scripts/PlaygroundOrreryHud.gd",
+		"res://scripts/EarthNightSkyScene.gd",
 		"res://scripts/FlightChooser.gd", "res://scripts/RealismBudget.gd",
 		"res://scripts/AstrogatorPanel.gd",
 		"res://scripts/CourseModeChooser.gd",
 		"res://scripts/PropulsionChooser.gd",
+		"res://scripts/Ephemeris.gd", "res://scripts/Exposure.gd",
+		"res://scripts/SolarBrilliance.gd", "res://scripts/PointGlow.gd",
+		"res://scripts/StarMagnitudes.gd",
+		"res://scripts/ConstellationView.gd",
+		"res://scripts/EarthSkyViewer.gd", "res://scripts/EarthShipScene.gd",
+		"res://scripts/LunarCycleStrip.gd",
 	]:
 		_ok(load(path) != null, "compiles: %s" % path)
 

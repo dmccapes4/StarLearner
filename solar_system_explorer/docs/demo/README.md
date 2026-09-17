@@ -2,8 +2,8 @@
 
 | File | What it is |
 |------|------------|
-| [`solar_system_explorer_playthrough.mp4`](solar_system_explorer_playthrough.mp4) | Automated in-engine walkthrough: hub → Solar System peek → Spaceship chooser → Mission Flight (plot Jupiter + belt) → Free Flight playground |
-| [`solar_system_explorer_explainer.mp4`](solar_system_explorer_explainer.mp4) | Short overview cut — astronaut art, hub, Mission/Free chooser, plot / belt / playground / orbit stills + dedicated VO |
+| [`solar_system_explorer_playthrough.mp4`](solar_system_explorer_playthrough.mp4) | Automated in-engine walkthrough: hub → Solar System peek → Zodiac peek → Spaceship chooser → Mission Flight (plot Jupiter + belt) → Free Flight (turns, Mars, constellation shell) |
+| [`solar_system_explorer_explainer.mp4`](solar_system_explorer_explainer.mp4) | Short overview cut — astronaut art, hub, Mission/Free chooser, plot / belt / Free Flight / orbit stills + dedicated VO |
 
 Explainer script: [`explainer_narration.json`](explainer_narration.json) · WAVs in [`vo/`](vo/).
 

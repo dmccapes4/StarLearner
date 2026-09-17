@@ -16,6 +16,8 @@ const BOARD_SCALE_DEFAULT := 2.0
 ## Half-width budget (px) for the farthest orbit on the plot board.
 ## Keeps the intercept marker + label clear of the hint text at the top.
 const BOARD_FIT_PX := 246.0
+## Floor after 2× orbit spread (Sun 32 / distance_span 840) — Neptune/Pluto hops zoom out.
+const BOARD_SCALE_MIN := 0.28
 const SHIP_PATH := "res://images/spaceship.png"
 const ETA_PIP_COUNT := 5
 
@@ -131,7 +133,7 @@ func _refit_board_scale() -> void:
 			max_r = maxf(max_r, curve.get_point_position(i).length())
 	else:
 		max_r *= 1.18
-	board_scale = clampf(BOARD_FIT_PX / maxf(max_r, 1.0), 0.72, BOARD_SCALE_DEFAULT)
+	board_scale = clampf(BOARD_FIT_PX / maxf(max_r, 1.0), BOARD_SCALE_MIN, BOARD_SCALE_DEFAULT)
 
 func hit_test(screen: Vector2) -> String:
 	if mode == Mode.TOUR:
@@ -177,8 +179,8 @@ func _draw() -> void:
 func _draw_tour() -> void:
 	var c := _center()
 	var flat := _flatten()
-	draw_circle(c, 40.0, Color(1.0, 0.86, 0.35, 0.28))
-	draw_circle(c, 30.0, Color(1.0, 0.80, 0.24))
+	draw_circle(c, 80.0, Color(1.0, 0.86, 0.35, 0.28))
+	draw_circle(c, 60.0, Color(1.0, 0.80, 0.24))
 	for b in _orbiting:
 		var rx: float = float(b["orrery_rx"])
 		_draw_orbit(c, rx, rx * flat, Color(0.5, 0.56, 0.85, 0.25), 1.5)
@@ -224,8 +226,8 @@ func _draw_plot() -> void:
 	var flat := _flatten()
 	# Soft instrument plate.
 	draw_rect(Rect2(-20, -20, 1320, 640), Color(0.02, 0.03, 0.08, 0.55))
-	draw_circle(c, 38.0, Color(1.0, 0.86, 0.35, 0.22))
-	draw_circle(c, 28.0, Color(1.0, 0.80, 0.24))
+	draw_circle(c, 76.0, Color(1.0, 0.86, 0.35, 0.22))
+	draw_circle(c, 56.0, Color(1.0, 0.80, 0.24))
 
 	for b in _flyer:
 		if bool(b.get("is_star", false)):

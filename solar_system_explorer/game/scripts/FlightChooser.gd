@@ -1,25 +1,39 @@
 class_name FlightChooser
 extends Control
-## Two-tile screen shown after tapping Spaceship, BEFORE the horizontal
-## scroll view: pick MISSION FLIGHT (realistic plotted courses) or FREE FLIGHT
-## (fun phone-joystick playground). Gold-outline narration on entry.
+## Three-tile screen shown after tapping Spaceship, BEFORE the horizontal
+## scroll view: pick MISSION FLIGHT (realistic plotted courses), FREE FLIGHT
+## (fun phone-joystick playground) or EARTH SHIP (stand on Earth and watch the
+## real sky move). Gold-outline narration on entry.
 
 signal mission_pressed()
 signal free_flight_pressed()
+signal earth_ship_pressed()
+signal night_sky_pressed()
 signal go_home()
 
 const LINE_MISSION := "Mission Flight is realistic — we plot a course and fly you there."
 const LINE_FREE := "Free Flight is for fun — tilt your phone and steer anywhere you like!"
-const NARRATION := LINE_MISSION + " " + LINE_FREE
+const LINE_EARTH := "Earth Ship keeps your feet on the ground — you watch the real sky from a real place on Earth."
+const LINE_NIGHT := "Night Sky is a constellation viewer — explore the zodiac and the great star figures."
+const NARRATION := LINE_MISSION + " " + LINE_FREE + " " + LINE_EARTH + " " + LINE_NIGHT
 
 const MISSION_TEX := "res://images/tile_mission.png"
 const FREE_TEX := "res://images/tile_free_flight.png"
+const EARTH_TEX := "res://images/tile_earth_ship.png"
+const NIGHT_TEX := "res://images/tile_night_sky.png"
 const GOLD := Color(1.0, 0.86, 0.28, 1.0)
+
+## Four across at 1280 wide: 4*270 + 3*26 = 1158, with margin to spare.
+const TILE_SIZE := Vector2(270, 250)
 
 var _mission_btn: Button
 var _free_btn: Button
+var _earth_btn: Button
+var _night_btn: Button
 var _mission_tint: Color = Color(0.16, 0.30, 0.52)
 var _free_tint: Color = Color(0.34, 0.20, 0.46)
+var _earth_tint: Color = Color(0.12, 0.34, 0.30)
+var _night_tint: Color = Color(0.18, 0.18, 0.42)
 var _narr_gen: int = 0
 
 func _ready() -> void:
@@ -34,7 +48,7 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_theme_constant_override("separation", 14)
-	box.custom_minimum_size = Vector2(1100, 520)
+	box.custom_minimum_size = Vector2(1180, 400)
 	center_wrap.add_child(box)
 
 	var title := Label.new()
@@ -46,7 +60,7 @@ func _ready() -> void:
 
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 36)
+	row.add_theme_constant_override("separation", 20)
 	box.add_child(row)
 
 	var mission_col := _make_tile(
@@ -73,6 +87,30 @@ func _ready() -> void:
 	_free_btn = free_col.get_node("TileButton") as Button
 	row.add_child(free_col)
 
+	var earth_col := _make_tile(
+		"Earth Ship",
+		"Watch the real sky from Earth",
+		EARTH_TEX,
+		_earth_tint,
+		func() -> void:
+			_narr_gen += 1
+			Narrator.stop()
+			earth_ship_pressed.emit())
+	_earth_btn = earth_col.get_node("TileButton") as Button
+	row.add_child(earth_col)
+
+	var night_col := _make_tile(
+		"Night Sky",
+		"Constellations from Earth",
+		NIGHT_TEX,
+		_night_tint,
+		func() -> void:
+			_narr_gen += 1
+			Narrator.stop()
+			night_sky_pressed.emit())
+	_night_btn = night_col.get_node("TileButton") as Button
+	row.add_child(night_col)
+
 	var back := Button.new()
 	back.text = "\u25C0"
 	back.size = Vector2(84, 66)
@@ -95,29 +133,36 @@ func set_active(on: bool) -> void:
 		_narrate(_narr_gen)
 	else:
 		Narrator.stop()
-		_set_outline(_mission_btn, _mission_tint, false)
-		_set_outline(_free_btn, _free_tint, false)
+		_clear_outlines()
 
+func _clear_outlines() -> void:
+	_set_outline(_mission_btn, _mission_tint, false)
+	_set_outline(_free_btn, _free_tint, false)
+	_set_outline(_earth_btn, _earth_tint, false)
+	_set_outline(_night_btn, _night_tint, false)
+
+## Walk the gold outline across the four tiles, one narration line each.
 func _narrate(gen: int) -> void:
 	await get_tree().create_timer(0.25).timeout
 	if gen != _narr_gen or not visible:
 		return
-	_set_outline(_mission_btn, _mission_tint, true)
-	_set_outline(_free_btn, _free_tint, false)
-	Narrator.speak(LINE_MISSION)
-	await _await_vo(gen)
-	if gen != _narr_gen or not visible:
-		return
-	_set_outline(_mission_btn, _mission_tint, false)
-	_set_outline(_free_btn, _free_tint, true)
-	Narrator.speak(LINE_FREE)
-	await _await_vo(gen)
-	if gen != _narr_gen or not visible:
-		return
+	var walk: Array = [
+		[_mission_btn, _mission_tint, LINE_MISSION],
+		[_free_btn, _free_tint, LINE_FREE],
+		[_earth_btn, _earth_tint, LINE_EARTH],
+		[_night_btn, _night_tint, LINE_NIGHT],
+	]
+	for step in walk:
+		_clear_outlines()
+		_set_outline(step[0] as Button, step[1] as Color, true)
+		Narrator.speak(str(step[2]))
+		await _await_vo(gen)
+		if gen != _narr_gen or not visible:
+			return
 	await get_tree().create_timer(0.5).timeout
 	if gen != _narr_gen:
 		return
-	_set_outline(_free_btn, _free_tint, false)
+	_clear_outlines()
 
 func _await_vo(gen: int) -> void:
 	await get_tree().process_frame
@@ -134,11 +179,11 @@ func _make_tile(label: String, hint: String, tex_path: String, tint: Color,
 		on_press: Callable) -> Control:
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
-	col.custom_minimum_size = Vector2(480, 380)
+	col.custom_minimum_size = Vector2(TILE_SIZE.x, TILE_SIZE.y + 80.0)
 
 	var btn := Button.new()
 	btn.name = "TileButton"
-	btn.custom_minimum_size = Vector2(480, 300)
+	btn.custom_minimum_size = TILE_SIZE
 	btn.focus_mode = Control.FOCUS_NONE
 	btn.clip_contents = true
 	_set_outline(btn, tint, false)

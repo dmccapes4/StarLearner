@@ -20,6 +20,8 @@ const PlaygroundOrreryHudScript := preload("res://scripts/PlaygroundOrreryHud.gd
 signal arrived(dest_id: String)
 signal go_home()
 signal learn_more(dest_id: String)
+## Earth arrival → open the Cancer–Gemini morning sky chart (Mars Rx).
+signal earth_night_sky()
 
 const SPACING := 1.8           ## orbit_r multiplier — room for steer between worlds
 ## Decorative belt rocks (visual only — never registered in `_bodies`).
@@ -2354,11 +2356,24 @@ func _build_ui() -> void:
 		Color(0.14, 0.18, 0.38),
 		false,
 		_on_earth_constellations,
-		Vector2(300, 280),
-		Vector2(300, 180)))
+		Vector2(280, 280),
+		Vector2(280, 180)))
 	var c_pic := _arrival_earth_row.get_child(0).get_node("TileButton/Pic") as TextureRect
 	if c_pic != null:
 		c_pic.texture = ZodiacDataScript.make_tile_texture()
+	_arrival_earth_row.add_child(_make_arrival_tile(
+		"Tonight's sky",
+		"From Earth — Mars Rx",
+		"",
+		Color(0.08, 0.08, 0.14),
+		false,
+		func() -> void: earth_night_sky.emit(),
+		Vector2(280, 280),
+		Vector2(280, 180)))
+	var night_pic := _arrival_earth_row.get_child(1).get_node("TileButton/Pic") as TextureRect
+	if night_pic != null:
+		night_pic.texture = ConstellationDataScript.make_asterism_tile(
+			ConstellationDataScript.by_id("gemini"), 240, 160, true)
 	vbox.add_child(_arrival_earth_row)
 	add_child(_arrival)
 	_raise_flight_chrome()

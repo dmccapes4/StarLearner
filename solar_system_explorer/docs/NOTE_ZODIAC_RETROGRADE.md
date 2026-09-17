@@ -1,6 +1,8 @@
 # Note: Retrograde simulations (future)
 
-**Status.** Not built yet — capture the idea so Zodiac Sky / Free Flight can grow into it.
+**Status.** Partial — Earth night-sky chart (`EarthNightSkyScene`) shows Mars
+apparent retrograde through Gemini with an animated westward path + Rx badge.
+Full orrery-rise theatre (camera climbs above the ecliptic) is still future.
 
 ## Why it’s cool
 

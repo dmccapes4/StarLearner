@@ -181,6 +181,67 @@ def pluto(u, v, seed, x, y):
     return _mix((0.55, 0.48, 0.42), (0.78, 0.70, 0.60), n)
 
 
+def _blob(u, v, cu, cv, ru, rv):
+    """Soft elliptical falloff, 1.0 at the centre and 0.0 at the rim."""
+    d = ((u - cu) / ru) ** 2 + ((v - cv) / rv) ** 2
+    if d >= 1.0:
+        return 0.0
+    return 1.0 - d
+
+
+# Near-side maria, as (u, v, half-width, half-height) in equirectangular
+# coordinates where u = 0.5 + lon/360 and v = 0.5 - lat/180. Positions are the
+# real selenographic ones, so the face that turns toward Earth is recognisable
+# rather than generic grey noise.
+_MARIA = (
+    (0.339, 0.394, 0.085, 0.150),  # Oceanus Procellarum
+    (0.450, 0.317, 0.058, 0.078),  # Mare Imbrium
+    (0.547, 0.344, 0.040, 0.052),  # Mare Serenitatis
+    (0.586, 0.450, 0.040, 0.050),  # Mare Tranquillitatis
+    (0.664, 0.406, 0.028, 0.036),  # Mare Crisium
+    (0.453, 0.617, 0.042, 0.040),  # Mare Nubium
+    (0.392, 0.633, 0.030, 0.032),  # Mare Humorum
+    (0.594, 0.583, 0.028, 0.032),  # Mare Nectaris
+    (0.644, 0.544, 0.032, 0.044),  # Mare Fecunditatis
+)
+
+# Bright ray craters, as (u, v, radius).
+_RAY_CRATERS = ((0.469, 0.739, 0.020), (0.444, 0.444, 0.014))
+
+
+def moon(u, v, seed, x, y):
+    # Coarse cells for terrain, a gentler fine grain on top. Kept low-contrast
+    # so the disc reads as the Moon and not as sandpaper -- the maria have to
+    # be the thing the eye picks up.
+    n = _hash(x // 4, y // 4, seed)
+    mid = _hash(x // 2, y // 2, seed + 11)
+    fine = _hash(x, y, seed + 3)
+    # Bright, heavily cratered highlands.
+    base = _mix((0.60, 0.58, 0.55), (0.72, 0.70, 0.66), n * 0.6 + mid * 0.4)
+    # Dark basalt plains sit on top of the highlands.
+    mare = 0.0
+    for cu, cv, ru, rv in _MARIA:
+        mare = max(mare, _blob(u, v, cu, cv, ru, rv))
+    if mare > 0.0:
+        edge = _clamp(mare * 2.4)
+        base = _mix(base, _mix((0.30, 0.30, 0.32), (0.36, 0.36, 0.38), mid),
+                    edge)
+    # Craters: sparse dark pits with bright rims.
+    if mid > 0.955:
+        base = tuple(c * 0.80 for c in base)
+    elif mid > 0.930:
+        base = tuple(min(1.0, c * 1.14) for c in base)
+    # Fresh craters throw bright rays across everything.
+    for cu, cv, r in _RAY_CRATERS:
+        d = math.hypot(u - cu, v - cv)
+        if d < r:
+            base = (0.92, 0.91, 0.88)
+        elif d < r * 4.0 and fine > 0.70:
+            t = 1.0 - (d - r) / (r * 3.0)
+            base = _mix(base, (0.88, 0.87, 0.84), _clamp(t) * 0.55)
+    return tuple(c * (0.97 + 0.03 * fine) for c in base)
+
+
 SKINS = {
     "sun": sun,
     "mercury": mercury,
@@ -196,6 +257,9 @@ SKINS = {
     "uranus": uranus,
     "neptune": neptune,
     "pluto": pluto,
+    # Appended deliberately: the seed is 1000 + index, so inserting anywhere
+    # above would reshuffle every later body's texture.
+    "moon": moon,
 }
 
 

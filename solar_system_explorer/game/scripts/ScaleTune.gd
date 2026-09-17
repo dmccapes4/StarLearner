@@ -40,11 +40,11 @@ static func evaluate(cfg: SolarFlyerConfig) -> Dictionary:
 		if a >= c:
 			issues.append("orbit order broken: %s >= %s" % [order[i], order[i + 1]])
 
-	# Plot board auto-zooms (OrreryBodies._refit_board_scale, floor 0.72) — the
-	# farthest orbit must fit the fit budget at that minimum zoom.
+	# Plot board auto-zooms (OrreryBodies._refit_board_scale, floor BOARD_SCALE_MIN) —
+	# the farthest orbit must fit the fit budget at that minimum zoom.
 	var nep_r: float = float(by_id["neptune"]["orbit_r"])
-	if nep_r * 0.72 > 280.0:
-		issues.append("Neptune orbit too wide even at min plot zoom (%.0f px)" % (nep_r * 0.72))
+	if nep_r * 0.28 > 280.0:
+		issues.append("Neptune orbit too wide even at min plot zoom (%.0f px)" % (nep_r * 0.28))
 	if float(by_id["jupiter"]["hero_r"]) <= float(by_id["mercury"]["hero_r"]):
 		issues.append("Jupiter hero_r must beat Mercury")
 

@@ -92,16 +92,21 @@ func _playground(dir: String) -> void:
 	root.add_child(pg)
 	pg.set_active(true)
 	pg.begin("earth")
-	# Speed pick → gears; tutorial + aim gate auto-skip with no accelerometer.
+	# begin() launches tap flight directly (no speed-pick / tutorial).
 	await process_frame
 	await process_frame
-	pg._on_speed_gears()
-	for i in 120:
+	for i in 24:
 		await process_frame
 	if pg._state != PlaygroundScene.State.FLYING and pg.has_method("_launch"):
 		pg._launch(Vector2.ZERO)
 		for i in 12:
 			await process_frame
+	# Cool hero still: bank a little, zodiac shell on, looking past the planets.
+	pg._tap_yaw_rate = 0.35
+	pg._set_zodiac_sky(true)
+	for i in 36:
+		await process_frame
+	pg._tap_yaw_rate = 0.0
 	await _shot(dir + "/playground_flying.png")
 	_check(pg._state == PlaygroundScene.State.FLYING, "playground starts flying")
 	# Tap the nearest on-screen body → pause tile.
@@ -133,7 +138,6 @@ func _playground(dir: String) -> void:
 		await _shot(dir + "/playground_orbit.png")
 		_check(pg._arrival.visible, "arrival choices shown in playground orbit")
 		pg.resume_flying()
-		# Resume re-enters the aim gate (clean level look); no-sensor skips it.
 		for i in 40:
 			await process_frame
 		_check(pg._state == PlaygroundScene.State.FLYING, "keep-flying resumes")
@@ -143,12 +147,12 @@ func _playground(dir: String) -> void:
 		pg._cancel_seek()
 		_check(pg._state == PlaygroundScene.State.FLYING and pg._seek_id.is_empty(),
 			"tap-away cancels seek")
-	# Plane band: force the ship high and confirm it gets steered back.
+	# Soft ceiling check (tap flight clamps y; band VO may fire).
 	pg._ship_pos.y = PlaygroundScene.Y_MAX - 0.5
 	pg._pitch = 0.5
-	for i in 240:
+	for i in 60:
 		await process_frame
-	_check(pg._ship_pos.y < PlaygroundScene.Y_MAX - 0.4,
-		"band steering pulls the ship back toward the plane (y=%.1f)" % pg._ship_pos.y)
+	_check(absf(pg._ship_pos.y) <= PlaygroundScene.Y_MAX + 0.05,
+		"y stays within soft ceiling (y=%.1f)" % pg._ship_pos.y)
 	pg.queue_free()
 	await process_frame
