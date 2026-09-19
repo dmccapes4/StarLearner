@@ -52,6 +52,10 @@ static func texture(id: String) -> Texture2D:
 			_draw_lang(img, "Aa")
 		"spanish":
 			_draw_lang(img, "Ñ")
+		"case_upper":
+			_draw_lang(img, "A")
+		"case_lower":
+			_draw_lang(img, "a")
 		"spell_demo", "apple_en", "apple_es":
 			_draw_apple_badge(img)
 		"credits":
@@ -68,16 +72,17 @@ static func texture(id: String) -> Texture2D:
 
 static func _load_png(id: String) -> Texture2D:
 	var path := "%s/%s.png" % [UI_DIR, id]
-	if not ResourceLoader.exists(path) and not FileAccess.file_exists(path):
-		return null
 	# Prefer imported Texture2D when the editor/export has scanned the PNG.
 	if ResourceLoader.exists(path):
 		var res: Resource = load(path)
 		if res is Texture2D:
 			return res as Texture2D
 	var abs_path := ProjectSettings.globalize_path(path)
+	if not FileAccess.file_exists(abs_path) and not FileAccess.file_exists(path):
+		return null
 	var img := Image.new()
-	if img.load(abs_path) != OK:
+	var err := img.load(abs_path if FileAccess.file_exists(abs_path) else path)
+	if err != OK:
 		return null
 	return ImageTexture.create_from_image(img)
 

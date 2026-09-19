@@ -28,11 +28,12 @@ tile explains and other modes still work.
 
 - Ingest free/public-domain children’s books; bake page VO with ElevenLabs.
 - A **page** is a list of **sentences**. Show one sentence at a time.
-- Auto-narrate the sentence; the spoken word is **bold + gold**, then the next
-  word. A **next sentence** tile advances anytime (rough page-turn when the page
-  changes).
-- Tap a word → spell letter-by-letter (bold/gold) → speak the whole word bold/gold
-  → restore.
+- Auto-narrate the sentence; the spoken word is **bold + gold outline**, then the
+  next word. A **next sentence** tile advances anytime (rough page-turn when the
+  page changes).
+- Tap a word → speak the word (bold + gold outline).
+- Double-tap a word → spell letter-by-letter (bold/gold) → speak the whole word
+  bold/gold → restore.
 - Long-press a word → kid-friendly definition VO when present in
   `data/definitions.json` (built from book vocabulary). If a word has no gloss,
   ignore the long-press. Prefer a tiny offline glossary over live dictionary APIs.

@@ -21,6 +21,7 @@ var _slide_i: int = 0
 var _slide_wait: float = 0.0
 var _mode: String = "" ## video | slides
 var _media_id: String = ""
+var _skip_armed_ms: int = 0 ## Mash may skip after this (ceremony included).
 
 func _ready() -> void:
 	add_to_group("media_panel")
@@ -48,18 +49,12 @@ func play_plant(plant_id: String, kind: String, topic: String = "") -> bool:
 	var title := topic
 	if title.is_empty():
 		title = "%s — %s" % [seed_db.display_name(plant_id), kind.capitalize()]
-	## First seed collection / first harvest are ceremonies: no tap-to-exit.
-	var no_exit := kind == "seed" or kind == "harvest"
+	## Ceremony keeps a brief arm delay so the first accidental mash doesn't skip;
+	## after that, dim tap / ◀ always dismisses (kid must never be trapped).
 	var path := seed_db.media_path(plant_id, kind)
 	if not path.is_empty() and (ResourceLoader.exists(path) or FileAccess.file_exists(ProjectSettings.globalize_path(path))):
-		var ok := _open_video("plant:%s:%s" % [plant_id, kind], path, title)
-		if ok and no_exit:
-			_back.visible = false
-		return ok
-	var ok2 := _open_slides("plant:%s:%s" % [plant_id, kind], title, _plant_slides(plant_id, kind))
-	if ok2 and no_exit:
-		_back.visible = false
-	return ok2
+		return _open_video("plant:%s:%s" % [plant_id, kind], path, title)
+	return _open_slides("plant:%s:%s" % [plant_id, kind], title, _plant_slides(plant_id, kind))
 
 ## Real-photo lead-in card, if a matching photo exists.
 ## Drop photos at res://assets/photos/<folder>/<plant_id>.png (or .jpg).
@@ -131,9 +126,16 @@ func _plant_slides(plant_id: String, kind: String) -> Array:
 			out.append(s)
 	return out
 
+func _arm_skip() -> void:
+	_skip_armed_ms = Time.get_ticks_msec() + 400
+	_back.visible = true
+
+func _skip_armed() -> bool:
+	return Time.get_ticks_msec() >= _skip_armed_ms
+
 func _open_video(media_id: String, path: String, title: String) -> bool:
 	_stop_all()
-	_back.visible = true
+	_arm_skip()
 	_media_id = media_id
 	_mode = "video"
 	_open = true
@@ -155,7 +157,7 @@ func _open_video(media_id: String, path: String, title: String) -> bool:
 
 func _open_slides(media_id: String, title: String, slides: Array) -> bool:
 	_stop_all()
-	_back.visible = true
+	_arm_skip()
 	_media_id = media_id
 	_mode = "slides"
 	_slides = slides
@@ -236,12 +238,14 @@ func _build() -> void:
 	_dim.color = Color(0.06, 0.1, 0.08, 1)
 	_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_dim.process_mode = Node.PROCESS_MODE_ALWAYS
+	_dim.gui_input.connect(_on_dim_input)
 	root.add_child(_dim)
 
 	_player = VideoStreamPlayer.new()
 	_player.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_player.expand = true
 	_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	_player.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_player.finished.connect(_close)
 	root.add_child(_player)
 
@@ -252,6 +256,7 @@ func _build() -> void:
 	_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_tex.process_mode = Node.PROCESS_MODE_ALWAYS
+	_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_tex)
 
 	_title = Label.new()
@@ -261,6 +266,7 @@ func _build() -> void:
 	_title.add_theme_font_size_override("font_size", 28)
 	_title.add_theme_color_override("font_color", Color(1, 0.95, 0.75, 1))
 	_title.process_mode = Node.PROCESS_MODE_ALWAYS
+	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_title)
 
 	_body = Label.new()
@@ -271,6 +277,7 @@ func _build() -> void:
 	_body.add_theme_font_size_override("font_size", 24)
 	_body.add_theme_color_override("font_color", Color(0.95, 0.98, 0.9, 1))
 	_body.process_mode = Node.PROCESS_MODE_ALWAYS
+	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_body)
 
 	_back = Button.new()
@@ -295,6 +302,14 @@ func _style_back(btn: Button) -> void:
 	btn.add_theme_stylebox_override("hover", sb)
 	btn.add_theme_stylebox_override("pressed", sb)
 
+func _on_dim_input(event: InputEvent) -> void:
+	if not _open or not _skip_armed():
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_close()
+	elif event is InputEventScreenTouch and event.pressed:
+		_close()
+
 func _stop_all() -> void:
 	SpeakScript.stop()
 	if _player:
@@ -307,6 +322,7 @@ func _close() -> void:
 	if not _open:
 		return
 	_open = false
+	_skip_armed_ms = 0
 	_stop_all()
 	visible = false
 	set_process(false)

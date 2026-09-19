@@ -53,13 +53,13 @@ echo "=== 3) ensure explainer VO ==="
 python3 "$ROOT/tools/gen_explainer_vo.py"
 
 echo "=== 4) narrated explainer (screenshots + VO slides) ==="
-for need in 01_open 02_read 03_write 04_alphabet 05_menu 06_close; do
+for need in 01_open 02_read 03_words 04_write 05_voice 06_close; do
   [[ -f "$DEMO_VO/${need}.wav" ]] || {
     echo "missing $DEMO_VO/${need}.wav — run tools/gen_explainer_vo.py --force"
     exit 1
   }
 done
-for shot in 00_home 03_books 05_write_picker 06_alphabet_apple 01_tutorial_read; do
+for shot in 00_home 03_books 04_book_reader 05_write_picker 06_alphabet_apple 07_home_voice; do
   [[ -f "$SHOTS/${shot}.png" ]] || {
     echo "missing $SHOTS/${shot}.png — run: godot --path game -s res://tools/capture_shots.gd"
     exit 1
@@ -72,17 +72,17 @@ mkdir -p "$WORK"
 
 ffmpeg -y -hide_banner -loglevel error \
   -i "$DEMO_VO/01_open.wav" -i "$DEMO_VO/02_read.wav" \
-  -i "$DEMO_VO/03_write.wav" -i "$DEMO_VO/04_alphabet.wav" \
-  -i "$DEMO_VO/05_menu.wav" -i "$DEMO_VO/06_close.wav" \
+  -i "$DEMO_VO/03_words.wav" -i "$DEMO_VO/04_write.wav" \
+  -i "$DEMO_VO/05_voice.wav" -i "$DEMO_VO/06_close.wav" \
   -filter_complex "[0:a][1:a][2:a][3:a][4:a][5:a]concat=n=6:v=0:a=1[a]" \
   -map "[a]" "$WORK/narration.wav"
 
 dur() { ffprobe -v error -show_entries format=duration -of csv=p=0 "$1"; }
 d0=$(dur "$DEMO_VO/01_open.wav")
 d1=$(dur "$DEMO_VO/02_read.wav")
-d2=$(dur "$DEMO_VO/03_write.wav")
-d3=$(dur "$DEMO_VO/04_alphabet.wav")
-d4=$(dur "$DEMO_VO/05_menu.wav")
+d2=$(dur "$DEMO_VO/03_words.wav")
+d3=$(dur "$DEMO_VO/04_write.wav")
+d4=$(dur "$DEMO_VO/05_voice.wav")
 d5=$(dur "$DEMO_VO/06_close.wav")
 
 # Ken Burns slide: upscale before zoompan (same recipe as Math Explorer).
@@ -105,9 +105,9 @@ format=yuv420p" \
 
 mkslide "$SHOTS/00_home.png"            "$d0" "$WORK/s0.mp4" in
 mkslide "$SHOTS/03_books.png"           "$d1" "$WORK/s1.mp4" out
-mkslide "$SHOTS/05_write_picker.png"    "$d2" "$WORK/s2.mp4" in
+mkslide "$SHOTS/04_book_reader.png"     "$d2" "$WORK/s2.mp4" in
 mkslide "$SHOTS/06_alphabet_apple.png"  "$d3" "$WORK/s3.mp4" out
-mkslide "$SHOTS/01_tutorial_read.png"   "$d4" "$WORK/s4.mp4" in
+mkslide "$SHOTS/07_home_voice.png"      "$d4" "$WORK/s4.mp4" in
 d5_pad=$(python3 -c "print(float('$d5') + 5 * float('$XFADE'))")
 mkslide "$SHOTS/00_home.png" "$d5_pad" "$WORK/s5.mp4" out
 

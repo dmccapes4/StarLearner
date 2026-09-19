@@ -6,9 +6,9 @@ const AdditionTutorial := preload("res://scripts/AdditionTutorial.gd")
 const TrainsScene := preload("res://scripts/TrainsScene.gd")
 const EggsScene := preload("res://scripts/EggsScene.gd")
 const EggsDragScene := preload("res://scripts/EggsDragScene.gd")
-const PracticeScene := preload("res://scripts/PracticeScene.gd")
 const BlockTutorial := preload("res://scripts/BlockTutorial.gd")
 const CoinsScene := preload("res://scripts/CoinsScene.gd")
+# PracticeScene references the Save autoload — load lazily in _run after the tree is up.
 
 func _init() -> void:
 	call_deferred("_run")
@@ -97,14 +97,15 @@ func _run() -> void:
 	await _shot(dir + "/08_eggs_drag_pack.png")
 
 	# 7) Practice mode: one frame per operation.
+	var PracticeSceneS: GDScript = load("res://scripts/PracticeScene.gd")
 	for op in ["add", "sub", "mul", "div"]:
 		await _reset_root()
-		var pr: PracticeScene = PracticeScene.new()
+		var pr: Control = PracticeSceneS.new()
 		get_root().add_child(pr)
-		pr.start(op)
-		await create_timer(0.8).timeout
+		pr.call("start", op)
+		await create_timer(3.5).timeout
 		await _shot(dir + "/09_practice_%s.png" % op)
-		pr.stop()
+		pr.call("stop")
 
 	# 8) Block tutorials mid-run (sub / mul / div).
 	for op in ["sub", "mul", "div"]:

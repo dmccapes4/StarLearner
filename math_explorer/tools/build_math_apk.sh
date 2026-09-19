@@ -46,8 +46,8 @@ cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
   -Pexport_package_name=com.dylan.math_explorer \
-  -Pexport_version_code=1 \
-  -Pexport_version_name=0.1 \
+  -Pexport_version_code=8 \
+  -Pexport_version_name=0.6 \
   -Pexport_enabled_abis=arm64-v8a \
   -Prelease_keystore_file="$KS" \
   -Prelease_keystore_alias=ants \

@@ -29,7 +29,7 @@ var _gen: int = 0
 var _skipping: bool = false
 
 var _eq: Label
-var _hint: Label
+var _skip_btn: Button
 var _groups: Array = []      # CubeGroup nodes
 var _bucket_panels: Array = []
 var _built := false
@@ -87,15 +87,7 @@ func _build() -> void:
 	_eq.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_eq)
 
-	_hint = Label.new()
-	_hint.add_theme_font_size_override("font_size", 18)
-	_hint.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
-	_hint.text = "tap to skip \u25B6"
-	_hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_hint.position = Vector2(-190, -40)
-	_hint.size = Vector2(170, 26)
-	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_hint)
+	_skip_btn = ChromeIcons.make_skip_button(self, _skip)
 
 func _clear() -> void:
 	for g in _groups: g.queue_free()
@@ -103,7 +95,7 @@ func _clear() -> void:
 	_groups.clear()
 	_bucket_panels.clear()
 	_eq.text = ""
-	_hint.text = "tap to skip \u25B6"
+	_skip_btn.visible = true
 
 # ---- choreography -------------------------------------------------------------
 
@@ -237,7 +229,7 @@ func _run_div(gen: int) -> void:
 	_finish()
 
 func _finish() -> void:
-	_hint.text = "\u2713 done"
+	_skip_btn.visible = false
 	finished.emit()
 
 # ---- helpers -------------------------------------------------------------------
@@ -315,7 +307,7 @@ func _skip() -> void:
 				g3.set_all_state(CubeGroup.HL.DONE)
 				groups2.append(g3)
 			_row(groups2, 300.0, 80.0)
-	_hint.text = "\u2713 done"
+	_skip_btn.visible = false
 	finished.emit()
 
 ## Await a timer but bail out if a newer run (or skip) superseded us.

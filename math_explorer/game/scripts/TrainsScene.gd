@@ -45,7 +45,7 @@ var _lbl_b: Label
 var _catch: Label
 var _end: Panel
 var _end_lbl: Label
-var _hint: Label
+var _skip_btn: Button
 var _ask: Label
 var _buttons: Array = []
 var _answering: bool = false
@@ -75,6 +75,7 @@ func start(seed: int = -1) -> void:
 	_catch.visible = false
 	_end.visible = false
 	_ask.visible = false
+	_skip_btn.visible = true
 	for b in _buttons:
 		(b as Button).visible = false
 	_eq.text = ""
@@ -160,12 +161,7 @@ func _build() -> void:
 	_end_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_end.add_child(_end_lbl)
 
-	_hint = _label(18, Color(1, 1, 1, 0.7))
-	_hint.text = "tap to skip \u25B6"
-	_hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_hint.position = Vector2(-190, -34)
-	_hint.size = Vector2(170, 26)
-	add_child(_hint)
+	_skip_btn = ChromeIcons.make_skip_button(self, _skip_race)
 
 	# She answers before the reveal: a question + three mile buttons.
 	_ask = _label(28, MathTheme.GOLD)
@@ -235,7 +231,7 @@ func _finish_sim() -> void:
 	var gap: int = _p["answer"]
 	_ask.text = "How many miles ahead is Blue?"
 	_ask.visible = true
-	_hint.text = ""
+	_skip_btn.visible = false
 	Narrator.speak(VO_ASK)
 	# Three choices: the answer plus two nearby mile counts.
 	var opts := [gap]
@@ -293,7 +289,7 @@ func _reveal() -> void:
 	_eq.text = "Blue %d  \u2212  Red %d  =  %d miles ahead" % [d_b, d_a, gap]
 	_end_lbl.text = "Blue is %d miles ahead of Red!" % gap
 	_end.visible = true
-	_hint.text = "\u2713 done"
+	_skip_btn.visible = false
 	Narrator.speak("After %d hours, the blue train is %d miles ahead of the red train." % [t, gap])
 	finished.emit()
 
@@ -316,9 +312,14 @@ func _on_input(event: InputEvent) -> void:
 			and event.button_index == MOUSE_BUTTON_LEFT) \
 		or (event is InputEventScreenTouch and event.pressed)
 	if tap and _running:
-		Narrator.stop()
-		_a_hours = _total_a
-		_finish_sim()
+		_skip_race()
+
+func _skip_race() -> void:
+	if not _running:
+		return
+	Narrator.stop()
+	_a_hours = _total_a
+	_finish_sim()
 
 func _draw() -> void:
 	# Two parallel rails from the station out to the right, with sleepers.

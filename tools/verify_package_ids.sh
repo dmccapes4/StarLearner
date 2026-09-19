@@ -23,7 +23,7 @@ check() {
 fail=0
 check "$ROOT/ant_explorer/tools/build/com.dylan.star_learner.apk" "$PKG_LAUNCHER" || fail=1
 check "$ROOT/ant_explorer/tools/build/com.dylan.ant_explorer.apk" "$PKG_ANT_EXPLORER" || fail=1
-check "$ROOT/garden_explorer/tools/build/com.dylan.antexplorer.garden.apk" "$PKG_GARDEN_EXPLORER" || fail=1
+check "$ROOT/garden_explorer/tools/build/com.dylan.garden_explorer.apk" "$PKG_GARDEN_EXPLORER" || fail=1
 check "$ROOT/solar_system_explorer/tools/build/com.dylan.solar_system_explorer.apk" "$PKG_SOLAR_EXPLORER" || fail=1
 check "$ROOT/math_explorer/tools/build/com.dylan.math_explorer.apk" "$PKG_MATH_EXPLORER" || fail=1
 check "$ROOT/language_explorer/tools/build/com.dylan.language_explorer.apk" "$PKG_LANGUAGE_EXPLORER" || fail=1

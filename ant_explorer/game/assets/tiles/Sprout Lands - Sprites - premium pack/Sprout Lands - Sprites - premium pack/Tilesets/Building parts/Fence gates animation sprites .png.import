@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dauvwnlm8kctb"
-path="res://.godot/imported/Fence gates animation sprites .png-40e33f1f9cd1b6db4b95f3b2a856c2f2.ctex"
+path="res://.godot/imported/Fence gates animation sprites .png-a263c589eae31e254c563a19e24f6978.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/Sprout Lands - Sprites - premium pack/Sprout Lands - Sprites - premium pack/Tilesets/Building parts/Fence gates animation sprites .png"
-dest_files=["res://.godot/imported/Fence gates animation sprites .png-40e33f1f9cd1b6db4b95f3b2a856c2f2.ctex"]
+source_file="res://assets/tiles/sprout_lands/Tilesets/Building parts/Fence gates animation sprites .png"
+dest_files=["res://.godot/imported/Fence gates animation sprites .png-a263c589eae31e254c563a19e24f6978.ctex"]
 
 [params]
 

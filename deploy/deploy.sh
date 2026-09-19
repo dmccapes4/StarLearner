@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
-# Deploy starlearner.dylanmccapes.systems — nginx vhost + bearer map + landing.
+# Deploy starlearner.dylanmccapes.systems — nginx vhost + bearer map + public portal.
+#
+# Public portal source: site/  →  /var/www/starlearner/
+#   No auth on / and /games/* (html, css, media).
+#   /ops/ and /logs/ keep basic auth; /api/asr keeps bearer.
+# Demo mp4s under site/media/demos/ are symlinks in the repo; publish with
+# rsync -L so nginx serves real files.
 #
 # Run:  sudo bash deploy/deploy.sh
 #
@@ -15,16 +21,17 @@ fi
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WWW=/var/www/starlearner
 SITE=starlearner.dylanmccapes.systems
+SITE_SRC="$ROOT/site"
 OWNER=dylanmccapes
 OWNER_HOME="$(getent passwd "$OWNER" | cut -d: -f6)"
-INDEX="$ROOT/deploy/www-index.html"
 NGINX_SRC="$ROOT/deploy/nginx-starlearner.conf"
 TOKEN_FILE="$ROOT/ant_explorer/tools/secrets/hub245/token.txt"
 TOKENS_DST=/etc/nginx/conf.d/starlearner-asr-tokens.conf
 
 HTPASSWD=/etc/nginx/nakatomi.htpasswd
 
-[[ -f "$INDEX" ]]     || { echo "Missing $INDEX" >&2; exit 1; }
+[[ -d "$SITE_SRC" ]]  || { echo "Missing public portal tree $SITE_SRC" >&2; exit 1; }
+[[ -f "$SITE_SRC/index.html" ]] || { echo "Missing $SITE_SRC/index.html" >&2; exit 1; }
 [[ -f "$NGINX_SRC" ]] || { echo "Missing $NGINX_SRC" >&2; exit 1; }
 [[ -f "$TOKEN_FILE" ]] || {
   echo "Missing hub bearer token at $TOKEN_FILE" >&2
@@ -46,9 +53,17 @@ chmod 640 "$HTPASSWD"
 TOKEN="$(tr -d ' \t\r\n' < "$TOKEN_FILE")"
 [[ ${#TOKEN} -ge 32 ]] || { echo "Token too short in $TOKEN_FILE" >&2; exit 1; }
 
-echo "▸ Publishing site → $WWW"
+echo "▸ Publishing public portal site/ → $WWW"
 install -d -m 755 -o www-data -g www-data "$WWW"
-install -m 644 -o www-data -g www-data "$INDEX" "$WWW/index.html"
+# -a archive, -L resolve symlinks (demo mp4s → real files for nginx)
+rsync -aL --delete \
+  --exclude 'BRIEF.md' \
+  --exclude '.git' \
+  --exclude '*.md' \
+  "$SITE_SRC/" "$WWW/"
+chown -R www-data:www-data "$WWW"
+find "$WWW" -type d -exec chmod 755 {} +
+find "$WWW" -type f -exec chmod 644 {} +
 
 echo "▸ Installing bearer map → $TOKENS_DST"
 # Do NOT set map_hash_bucket_size here — nakatomi-mcp-tokens.conf already does.
@@ -79,7 +94,7 @@ systemctl reload nginx
 
 echo ""
 echo "✓ nginx live for https://$SITE/"
-echo "  Static:  $WWW/index.html"
+echo "  Portal:  $WWW/  (from site/; no auth on / and /games/*)"
 echo "  Config:  /etc/nginx/sites-available/$SITE"
 echo "  Auth:    $TOKENS_DST"
 echo "  Proxy:   /api/asr/* → 127.0.0.1:8770"

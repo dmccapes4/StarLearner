@@ -137,6 +137,36 @@ func bed_ids() -> PackedStringArray:
 func bed_count() -> int:
 	return bed_polys.size()
 
+func nearest_bed_id(world_pos: Vector2, max_dist: float = 40.0) -> String:
+	## Mash forgiveness: nearest bed by poly edge / center within max_dist.
+	var best := ""
+	var best_d := max_dist
+	for id in bed_polys.keys():
+		var poly: PackedVector2Array = bed_polys[id]
+		if poly.size() >= 3 and IsoUtil.point_in_polygon(world_pos, poly):
+			return str(id)
+		var center: Vector2 = bed_centers.get(id, Vector2.ZERO)
+		var d := world_pos.distance_to(center)
+		## Prefer distance to poly rim when available (path-lip mash).
+		if poly.size() >= 2:
+			d = minf(d, _distance_to_poly(world_pos, poly))
+		if d < best_d:
+			best_d = d
+			best = str(id)
+	return best
+
+func _distance_to_poly(world_pos: Vector2, poly: PackedVector2Array) -> float:
+	var best := INF
+	var n := poly.size()
+	for i in n:
+		var a: Vector2 = poly[i]
+		var b: Vector2 = poly[(i + 1) % n]
+		var ab := b - a
+		var t := 0.0 if ab.length_squared() < 0.0001 \
+			else clampf((world_pos - a).dot(ab) / ab.length_squared(), 0.0, 1.0)
+		best = minf(best, world_pos.distance_to(a + ab * t))
+	return best
+
 func zone_at(world_pos: Vector2) -> Dictionary:
 	## Returns {id, kind} or empty. Animals win only when near a critter *inside* the fence.
 	if IsoUtil.point_in_polygon(world_pos, shed_poly):
@@ -453,8 +483,13 @@ func bed_face_panes(bed_id: String) -> Dictionary:
 		}
 	return out
 
-## Shared pane picker for beds (and door panes with one entry).
-## Opposite direction ⇒ opposite side: faces with outward·from_dir < 0 are skipped.
+## Bed pane pick — small farm, four lips only:
+##   1. Only panes facing the avatar (outward · (from − center) ≥ 0).
+##   2. Path lips win when they face you: if N or S is facing, pick the shorter
+##      of those (aisle / path). Side panes (E/W) only when neither N nor S faces.
+##   3. Among the final set, shortest A* path.
+## Example: NW of bed_1 → tap bed_2. W is most aligned, but N also faces and
+## is the path lip → N. From bed_1 west → bed_2/bed_3: S (or N) faces → that lip.
 func _pick_facing_pane(panes: Dictionary, center: Vector2, from: Vector2, tap: Vector2) -> String:
 	var from_dir := from - center
 	if from_dir.length_squared() < 1.0:
@@ -465,44 +500,43 @@ func _pick_facing_pane(panes: Dictionary, center: Vector2, from: Vector2, tap: V
 	if tap_off.length_squared() >= 400.0:
 		var tap_dir := tap_off.normalized()
 		if tap_dir.dot(from_dir) < -0.5:
-			return _face_from_dir(tap_dir, panes)
-	var best := ""
-	var best_dot := -INF
-	var best_d2 := INF
-	for key in _face_order(panes):
-		var outward: Vector2 = (panes[key] as Dictionary).get("outward", Vector2(0, 1))
-		var d := outward.dot(from_dir)
-		if d < 0.0:
-			continue
-		var stand: Vector2 = (panes[key] as Dictionary).get("stand", center)
-		var d2 := from.distance_squared_to(stand)
-		## Iso ties are common: standing straight below a bed scores S and E
-		## identically, and key order used to decide (kid saw a walk to the side).
-		if d > best_dot + FACE_TIE_EPS or (d > best_dot - FACE_TIE_EPS and d2 < best_d2):
-			best_dot = maxf(best_dot, d)
-			best_d2 = d2
-			best = str(key)
-	if best.is_empty():
-		return _face_from_dir(from_dir, panes)
-	return best
+			return _pick_among_facing(panes, from, tap_dir)
+	return _pick_among_facing(panes, from, from_dir)
 
-const FACE_TIE_EPS := 0.02
-
-func _face_order(panes: Dictionary) -> Array:
-	## Stable order so a tie never depends on Dictionary insertion order.
-	var out: Array = []
-	for key in ["S", "W", "E", "N"]:
-		if panes.has(key):
-			out.append(key)
+func _pick_among_facing(panes: Dictionary, from: Vector2, dir: Vector2) -> String:
+	var facing: Array = []
 	for key in panes.keys():
-		if not out.has(key):
-			out.append(key)
-	return out
+		var outward: Vector2 = (panes[key] as Dictionary).get("outward", Vector2(0, 1))
+		if outward.dot(dir) >= 0.0:
+			facing.append(str(key))
+	if facing.is_empty():
+		return _face_from_dir(dir, panes)
+	## Path-facing preference: N/S lips when either faces the avatar.
+	var lips: Array = []
+	for key in facing:
+		if key == "N" or key == "S":
+			lips.append(key)
+	if not lips.is_empty():
+		return _shortest_among(lips, panes, from)
+	return _shortest_among(facing, panes, from)
+
+func _shortest_among(keys: Array, panes: Dictionary, from: Vector2) -> String:
+	var best := str(keys[0])
+	var best_L := INF
+	for key in keys:
+		var stand: Vector2 = (panes[key] as Dictionary).get("stand", from)
+		var L := path_world_length(from, stand)
+		if _point_in_bed_top(stand):
+			L += 40.0
+		if L < best_L:
+			best_L = L
+			best = str(key)
+	return best
 
 func _face_from_dir(dir: Vector2, panes: Dictionary) -> String:
 	var best := ""
 	var best_dot := -INF
-	for key in _face_order(panes):
+	for key in panes.keys():
 		var outward: Vector2 = (panes[key] as Dictionary).get("outward", Vector2(0, 1))
 		var d := outward.dot(dir)
 		if d > best_dot:
@@ -514,7 +548,8 @@ func _face_from_dir(dir: Vector2, panes: Dictionary) -> String:
 	return best
 
 func _stand_clear_of_bed(bed_id: String, ideal: Vector2) -> Vector2:
-	## Push outward along the face normal until walkable — never sideways snap.
+	## Push outward along the face normal until walkable AND clear of the raised
+	## bed top — never sideways snap (that reads as a teleport onto the soil).
 	var center: Vector2 = bed_centers.get(bed_id, ideal)
 	var dir := ideal - center
 	if dir.length_squared() < 1.0:
@@ -522,10 +557,16 @@ func _stand_clear_of_bed(bed_id: String, ideal: Vector2) -> Vector2:
 	dir = dir.normalized()
 	var min_d := _bed_min_stand_dist(bed_id)
 	var p := ideal if ideal.distance_to(center) >= min_d * 0.85 else center + dir * min_d
-	for _i in 16:
+	var first_walkable := Vector2.INF
+	for _i in 20:
 		if not is_blocked(p) and _nav_id_at_world(p) >= 0:
-			return p
+			if first_walkable == Vector2.INF:
+				first_walkable = p
+			if not _point_in_bed_top(p):
+				return p
 		p += dir * 6.0
+	if first_walkable != Vector2.INF:
+		return first_walkable
 	return p
 
 func _bed_min_stand_dist(bed_id: String) -> float:
@@ -538,7 +579,8 @@ func _bed_min_stand_dist(bed_id: String) -> float:
 func path_world_length(from_world: Vector2, to_world: Vector2) -> float:
 	var pts := find_path(from_world, to_world)
 	if pts.is_empty():
-		return from_world.distance_to(to_world) * 12.0
+		## Crow-flies only — never inflate (that made empty routes "win" face picks).
+		return from_world.distance_to(to_world)
 	var L := from_world.distance_to(pts[0])
 	for i in range(1, pts.size()):
 		L += pts[i - 1].distance_to(pts[i])

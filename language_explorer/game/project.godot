@@ -22,6 +22,7 @@ general/text_to_speech=true
 driver/enable_input=true
 
 [autoload]
+IdleGuard="*res://scripts/IdleGuard.gd"
 
 Save="*res://scripts/Save.gd"
 MicOwner="*res://scripts/MicOwner.gd"

@@ -78,24 +78,21 @@ func _build() -> void:
 	add_child(case_row)
 
 	_case_upper = Button.new()
-	_case_upper.text = "A"
 	_case_upper.custom_minimum_size = Vector2(64, 44)
 	_case_upper.focus_mode = Control.FOCUS_NONE
-	_case_upper.add_theme_font_size_override("font_size", 26)
+	ChromeIcons.apply_button(_case_upper, "case_upper", 40)
 	_case_upper.pressed.connect(func() -> void: set_case(true))
 	case_row.add_child(_case_upper)
 
-	var sep := Label.new()
-	sep.text = "|"
-	sep.add_theme_font_size_override("font_size", 26)
-	sep.add_theme_color_override("font_color", LangTheme.TEXT_DIM)
+	var sep := Control.new()
+	sep.custom_minimum_size = Vector2(8, 44)
+	sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	case_row.add_child(sep)
 
 	_case_lower = Button.new()
-	_case_lower.text = "a"
 	_case_lower.custom_minimum_size = Vector2(64, 44)
 	_case_lower.focus_mode = Control.FOCUS_NONE
-	_case_lower.add_theme_font_size_override("font_size", 26)
+	ChromeIcons.apply_button(_case_lower, "case_lower", 40)
 	_case_lower.pressed.connect(func() -> void: set_case(false))
 	case_row.add_child(_case_lower)
 
@@ -195,5 +192,8 @@ func _refresh_case_chrome() -> void:
 	else:
 		LangTheme.style_primary(_case_lower)
 		LangTheme.style_secondary(_case_upper)
+	ChromeIcons.apply_button(_case_upper, "case_upper", 40)
+	ChromeIcons.apply_button(_case_lower, "case_lower", 40)
 	if show_clear_hint:
 		LangTheme.style_primary(_clear_btn)
+		ChromeIcons.apply_button(_clear_btn, "hear", 32)

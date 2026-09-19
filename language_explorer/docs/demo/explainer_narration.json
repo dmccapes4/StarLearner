@@ -2,27 +2,27 @@
   "lines": [
     {
       "key": "01_open",
-      "text": "This is Language Explorer, a Star Learner game for reading and writing in English and Spanish. Big picture buttons lead the way, and every step is spoken out loud."
+      "text": "This is Language Explorer, a Star Learner game for reading and writing in English and Spanish. Three big picture tiles lead the way — Read, Write, and Voice — and every step is spoken out loud."
     },
     {
       "key": "02_read",
-      "text": "The Read tile opens sentences and books. Match pictures to red words, or open a cover twice to read a story one page at a time."
+      "text": "The Read tile opens story covers. Tap a cover to hear the book title, then tap again to open. Inside, words glow gold as they are spoken."
     },
     {
-      "key": "03_write",
-      "text": "The Write tile practices letters. Choose a picture or hear the word first, then tap alphabet tiles or trace the grey outlines with a finger."
+      "key": "03_words",
+      "text": "Tap a word to hear it. Double-tap to spell it letter by letter. Press and hold for a kid-friendly meaning when we know one."
     },
     {
-      "key": "04_alphabet",
-      "text": "Alphabet tiles follow the word’s capital and small letters. After three tries or three hints, the right letter glows gold so she can finish the word."
+      "key": "04_write",
+      "text": "The Write tile practices letters with pictures. Pick a picture, hear the letters, then tap alphabet tiles. The right letter glows gold after a few tries."
     },
     {
-      "key": "05_menu",
-      "text": "The menu holds picture tutorials, English or Spanish, and letter-input choices. Nothing on the chrome asks her to read a button label."
+      "key": "05_voice",
+      "text": "The Voice tile lets her say an idea out loud. We write it letter by letter while she keeps her pencil on paper — say next to move along."
     },
     {
       "key": "06_close",
-      "text": "Language Explorer. Words she can hear, tap, and write. Ready to play on the Star Learner console."
+      "text": "Language Explorer. Words she can hear, tap, spell, and write. Ready to play on the Star Learner console."
     }
   ]
 }

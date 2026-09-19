@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bmpn72a4ee71n"
-path="res://.godot/imported/Darker_Grass_Tile_Layers2.png-1969d94c79533c01aabfe2e0c0f734e1.ctex"
+path="res://.godot/imported/Darker_Grass_Tile_Layers2.png-6f6e6150d903e9123fc0d55d8fc99f9d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/Sprout Lands - Sprites - premium pack/Sprout Lands - Sprites - premium pack/Tilesets/ground tiles/New tiles/Darker_Grass_Tile_Layers2.png"
-dest_files=["res://.godot/imported/Darker_Grass_Tile_Layers2.png-1969d94c79533c01aabfe2e0c0f734e1.ctex"]
+source_file="res://assets/tiles/sprout_lands/Tilesets/ground tiles/New tiles/Darker_Grass_Tile_Layers2.png"
+dest_files=["res://.godot/imported/Darker_Grass_Tile_Layers2.png-6f6e6150d903e9123fc0d55d8fc99f9d.ctex"]
 
 [params]
 

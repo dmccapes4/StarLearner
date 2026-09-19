@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Remove pre-rename / stray packages that are NOT the current canonical IDs.
-# Garden Explorer intentionally keeps com.dylan.antexplorer.garden (her installs).
 set -euo pipefail
 SERIAL="${1:-${ADB_SERIAL:-}}"
 ADB_BIN="${ADB:-adb}"
@@ -11,18 +10,18 @@ ADB=("$ADB_BIN")
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/packages.sh"
 
 STRAY=(
-  # Old Ant Phone launcher / games (except garden — see KEEP)
+  # Old Ant Phone launcher / games
   com.dylan.antexplorer
   com.dylan.antexplorer.colony
   com.dylan.antexplorer.solar
   com.dylan.antexplorer.math
   com.dylan.antexplorer.language
-  # Mis-renamed garden APK that briefly shipped as garden_explorer
-  com.dylan.garden_explorer
+  # Legacy garden id (superseded by com.dylan.garden_explorer)
+  com.dylan.antexplorer.garden
 )
 
 KEEP=(
-  "$PKG_GARDEN_EXPLORER"   # com.dylan.antexplorer.garden
+  "$PKG_GARDEN_EXPLORER"   # com.dylan.garden_explorer
 )
 
 if ! "${ADB[@]}" devices | tr -d '\r' | awk 'NR>1 && $2=="device" {found=1} END{exit !found}'; then

@@ -44,6 +44,11 @@
 		reverse_proxy localhost:11434
 	}
 
+	# Language Explorer Voice-to-Writing: ASR + cleanup (WSL/service on :8765).
+	handle_path /api/asr/* {
+		reverse_proxy localhost:8765
+	}
+
 	handle {
 		respond 404
 	}

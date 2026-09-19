@@ -89,6 +89,16 @@ around the middle beds then between beds and the southern fence.
 WALK_CLIP_SET=routing WALK_TARGET_S=10 REVIEW=1 ./qa/run_walk_video_suite.sh
 ```
 
+### Mash clip set (latest-wins taps)
+
+Kid mash: bed↔bed retarget, ground navigate while walking to a bed, cancellable
+water VO, path-dirt bed near-miss. See [`docs/REPORT_TAP_MASHING.md`](../docs/REPORT_TAP_MASHING.md).
+
+```bash
+./qa/run_mash_video_suite.sh             # WALK_CLIP_SET=mash, 10s clips + review
+REVIEW=0 ./qa/run_mash_video_suite.sh    # capture only
+```
+
 Each stamp also writes:
 - `mechanics/` — full `FarmMap` / `Player` / `World` / `IsoUtil` / suite sources
 - `nav_diagnostics.json` — probe path_quality (detour_ratio, south-fence-loop flag)

@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://coda62kh5k6i8"
-path="res://.godot/imported/Grass_tiles_v2_Flat_North.png-115dda39e26a27bdd18ff508e40ab577.ctex"
+path="res://.godot/imported/Grass_tiles_v2_Flat_North.png-3bcd77d5659266d954a072f01954d105.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/Sprout Lands - Sprites - premium pack/Sprout Lands - Sprites - premium pack/Tilesets/ground tiles/New tiles/simpel versions/Grass tiles v2 simple cutout/Grass_tiles_v2_Flat_North.png"
-dest_files=["res://.godot/imported/Grass_tiles_v2_Flat_North.png-115dda39e26a27bdd18ff508e40ab577.ctex"]
+source_file="res://assets/tiles/sprout_lands/Tilesets/ground tiles/New tiles/simpel versions/Grass tiles v2 simple cutout/Grass_tiles_v2_Flat_North.png"
+dest_files=["res://.godot/imported/Grass_tiles_v2_Flat_North.png-3bcd77d5659266d954a072f01954d105.ctex"]
 
 [params]
 

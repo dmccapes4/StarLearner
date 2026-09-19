@@ -73,8 +73,8 @@ cd "$BUILD"
 chmod +x gradlew
 ./gradlew assembleRelease --no-daemon \
   -Pexport_package_name=com.dylan.language_explorer \
-  -Pexport_version_code=1 \
-  -Pexport_version_name=1.0 \
+  -Pexport_version_code=8 \
+  -Pexport_version_name=1.7 \
   -Pexport_enabled_abis=arm64-v8a \
   -Prelease_keystore_file="$KS" \
   -Prelease_keystore_alias=ants \

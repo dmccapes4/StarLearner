@@ -58,3 +58,4 @@ solar_system_explorer/game/docs/screenshots/debug/
 solar_system_explorer/game/docs/screenshots/probe/
 # Fogona deliver queue (staged APKs + job state)
 deploy/queue/
+deploy/known_hosts_245

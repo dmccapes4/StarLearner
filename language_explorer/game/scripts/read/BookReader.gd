@@ -1,8 +1,8 @@
 class_name BookReader
 extends Control
-## Books companion: one sentence at a time, gold word-follow narration,
-## next-sentence tile anytime, tap-to-spell, long-press definition when known.
-## Optional page image on entry + corner replay tile.
+## Books companion: one sentence at a time, gold outline word-follow narration,
+## next-sentence tile anytime, tap-to-hear word, double-tap-to-spell,
+## long-press definition when known. Optional page image on entry + corner replay.
 
 signal finished()
 signal request_back()
@@ -273,11 +273,24 @@ func _show_sentence() -> void:
 		wl.setup(str(tok), 32)
 		wl.mouse_filter = Control.MOUSE_FILTER_STOP
 		var captured := wl
-		wl.tapped.connect(func() -> void: _spell_word(captured))
+		wl.tapped.connect(func() -> void: _speak_word(captured))
+		wl.double_tapped.connect(func() -> void: _spell_word(captured))
 		wl.long_pressed.connect(func() -> void: _on_word_long_press(captured))
 		_flow.add_child(wl)
 		_words.append(wl)
 	_narrate_sentence()
+
+func _speak_word(wl: WordLabel) -> void:
+	if wl == null:
+		return
+	_gen += 1
+	var gen := _gen
+	_busy = true
+	Narrator.stop()
+	await wl.speak_word(_lang)
+	if gen != _gen:
+		return
+	_busy = false
 
 func _spell_word(wl: WordLabel) -> void:
 	if wl == null:

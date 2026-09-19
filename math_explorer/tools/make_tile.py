@@ -2,8 +2,8 @@
 """Install the Math Explorer kiosk tile (512×512) into the launcher drawable.
 
 Source art lives at tools/tile_math_source.png (generated illustration: the
-Star Learner girl packing eggs into a carton, with a hen and the knowledge
-star). Re-run after replacing the source:
+Star Learner girl stacking numbered cubes with + − × badges, chalkboard
+equation, and the knowledge star). Re-run after replacing the source:
 
   python3 tools/make_tile.py
 

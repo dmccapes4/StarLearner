@@ -6,6 +6,8 @@
 #   systemctl --user daemon-reload
 #
 # Needs: SSH key auth dylanmccapes@104.53.183.230:2222, adb on 245, fogona USB.
+# Host keys for :2222 live in deploy/known_hosts_245 (refreshed on each Deliver now;
+# Mac Studio :22 key on the same IP is never touched).
 
 [Unit]
 Description=Star Learner fogona APK deliver (one-shot → Pop 245)

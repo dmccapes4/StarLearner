@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://da0dpgvgftwkl"
-path="res://.godot/imported/Bush_Tiles.png-48bf83b51ef07ae4233a3395df03d571.ctex"
+path="res://.godot/imported/Bush_Tiles.png-60f2cbb69ea80274f1802a24b69f0127.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/Sprout Lands - Sprites - premium pack/Sprout Lands - Sprites - premium pack/Tilesets/ground tiles/New tiles/Bush_Tiles.png"
-dest_files=["res://.godot/imported/Bush_Tiles.png-48bf83b51ef07ae4233a3395df03d571.ctex"]
+source_file="res://assets/tiles/sprout_lands/Tilesets/ground tiles/New tiles/Bush_Tiles.png"
+dest_files=["res://.godot/imported/Bush_Tiles.png-60f2cbb69ea80274f1802a24b69f0127.ctex"]
 
 [params]
 

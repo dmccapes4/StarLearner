@@ -6,7 +6,7 @@
     },
     {
       "key": "02_tabs",
-      "text": "Number tiles sit across the bottom: addition, subtraction, multiplication, and division. Story games stack on the right: chickens and eggs, two trains, and the coin counter. The menu holds every tutorial."
+      "text": "Operation tiles sit across the bottom: addition, subtraction, multiplication, and division. Story games stack on the right: chickens and eggs, two trains, and the coin counter. The menu tile holds every tutorial, and the help tile is always there if you need a reminder."
     },
     {
       "key": "03_tutorial",
@@ -14,11 +14,11 @@
     },
     {
       "key": "04_stories",
-      "text": "The games are little movies she can play. Hens lay their eggs and she drags them into nests and cartons. Two trains race, and she answers how far ahead the fast one gets. Pennies, nickels, and dimes make the amount."
+      "text": "The games are little movies she can play. Hens lay eggs into hatch beds, then she packs the cartons. Two trains race, and she answers how far ahead the fast one gets. Pennies, nickels, and dimes make the amount."
     },
     {
       "key": "05_practice",
-      "text": "Practice mode asks fresh questions forever, with blocks to count and three big answers to choose from. A wrong answer is never just wrong. The blocks slowly count themselves out, so she sees exactly why."
+      "text": "Practice mode asks fresh questions forever. She can tap the blocks to count them, then choose from three big answers. A wrong answer is never just wrong. The blocks slowly count themselves out, so she sees exactly why."
     },
     {
       "key": "06_close",

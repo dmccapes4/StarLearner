@@ -7,11 +7,26 @@ const H := 200
 
 static func texture_for(book: Dictionary) -> Texture2D:
 	var path := str(book.get("cover", ""))
-	if not path.is_empty() and FileAccess.file_exists(path):
+	if not path.is_empty():
+		var tex := _load_png(path)
+		if tex != null:
+			return tex
+	return _placeholder(str(book.get("cover_motif", book.get("id", "book"))), str(book.get("title", "")))
+
+static func _load_png(path: String) -> Texture2D:
+	# Prefer imported Texture2D when the editor has scanned the PNG.
+	if ResourceLoader.exists(path):
 		var res: Resource = load(path)
 		if res is Texture2D:
 			return res as Texture2D
-	return _placeholder(str(book.get("cover_motif", book.get("id", "book"))), str(book.get("title", "")))
+	var abs_path := ProjectSettings.globalize_path(path)
+	if not FileAccess.file_exists(abs_path) and not FileAccess.file_exists(path):
+		return null
+	var img := Image.new()
+	var err := img.load(abs_path if FileAccess.file_exists(abs_path) else path)
+	if err != OK:
+		return null
+	return ImageTexture.create_from_image(img)
 
 static func _placeholder(motif: String, title: String) -> Texture2D:
 	var img := Image.create(W, H, false, Image.FORMAT_RGBA8)

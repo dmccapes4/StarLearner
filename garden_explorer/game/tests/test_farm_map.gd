@@ -36,6 +36,15 @@ func run() -> TestAssert:
 			beds_hit += 1
 	t.eq(beds_hit, 6, "all bed centers resolve as beds")
 
+	## Mash near-miss: path dirt beside a bed still resolves to that bed.
+	if farm.has_method("nearest_bed_id"):
+		var c0: Vector2 = farm.bed_centers["bed_0"]
+		var lip := farm.nearest_walkable(Vector2(c0.x, c0.y + 28.0))
+		t.eq(farm.nearest_bed_id(lip, 40.0), "bed_0", "path lip near-miss → bed_0")
+		t.eq(farm.nearest_bed_id(c0, 40.0), "bed_0", "center is nearest bed")
+		var far := farm.spawn_world
+		t.eq(farm.nearest_bed_id(far, 40.0), "", "spawn is not a bed near-miss")
+
 	t.ok(farm.is_blocked(farm.shed_center), "shed is solid")
 	t.ok(farm.coop_world != Vector2.ZERO and farm.coop_poly.size() >= 3, "coop footprint set")
 	t.ok(farm.is_blocked(farm.coop_world), "coop is solid")
@@ -90,14 +99,36 @@ func run() -> TestAssert:
 	var coop_apron := farm.coop_approach_world()
 	t.ok(not farm.is_blocked(coop_apron), "coop apron stand is walkable")
 
-	## Straight below a bed in screen space, S and E face-dots tie exactly; the
-	## nearer stand must win instead of Dictionary key order walking us sideways.
+	## Path-lip rule: among facing panes, N/S win over E/W; shorter lip wins.
 	for bid in ["bed_0", "bed_1", "bed_2"]:
 		var c: Vector2 = farm.bed_centers[bid]
 		var below := farm.nearest_walkable(Vector2(c.x, c.y + 32.0))
 		var panes: Dictionary = farm.bed_face_panes(bid)
 		var picked := farm._pick_facing_pane(panes, c, Vector2(c.x, below.y), c)
 		t.ok(picked == "S", "%s from due south picks S (got %s)" % [bid, picked])
+	## NW of bed_1 → bed_2: W is most aligned, but N/S path lip must win.
+	if farm.bed_centers.has("bed_1") and farm.bed_centers.has("bed_2"):
+		var nw := farm.nearest_walkable(farm.bed_centers["bed_1"] + Vector2(-70, -40))
+		var panes2: Dictionary = farm.bed_face_panes("bed_2")
+		var pick2 := farm._pick_facing_pane(
+			panes2, farm.bed_centers["bed_2"], nw, farm.bed_centers["bed_2"])
+		t.ok(pick2 == "N" or pick2 == "S",
+			"NW of bed_1 → bed_2 picks path lip (got %s)" % pick2)
+		## From bed_1 west pane → bed_2 / bed_3: still N or S, not W between beds.
+		var west1: Vector2 = farm.bed_face_panes("bed_1")["W"]["stand"]
+		for bid23 in ["bed_2", "bed_3"]:
+			var p23: Dictionary = farm.bed_face_panes(bid23)
+			var pick23 := farm._pick_facing_pane(
+				p23, farm.bed_centers[bid23], west1, farm.bed_centers[bid23])
+			t.ok(pick23 == "N" or pick23 == "S",
+				"bed_1 west → %s picks path lip (got %s)" % [bid23, pick23])
+	## Stands stay off raised bed tops.
+	for bid in farm.bed_centers.keys():
+		var panes_all: Dictionary = farm.bed_face_panes(str(bid))
+		for face in panes_all.keys():
+			var st: Vector2 = (panes_all[face] as Dictionary).get("stand", Vector2.ZERO)
+			t.ok(not farm._point_in_bed_top(st),
+				"%s %s stand clear of raised top" % [bid, face])
 
 	# Left → middle → right ordering in world X (iso: left is often higher x-y mix;
 	# shed tile x=-7 should be left of beds at x=0..6 which left of fence x=12).

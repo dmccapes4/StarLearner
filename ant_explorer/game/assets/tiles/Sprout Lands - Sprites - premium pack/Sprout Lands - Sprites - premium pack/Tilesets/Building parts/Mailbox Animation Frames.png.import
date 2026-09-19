@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bde7u7irfjud0"
-path="res://.godot/imported/Mailbox Animation Frames.png-9f30c609c4378d99f5ba78d93502409b.ctex"
+path="res://.godot/imported/Mailbox Animation Frames.png-07a7188eacc55b4e5fa3effff438aa45.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/Sprout Lands - Sprites - premium pack/Sprout Lands - Sprites - premium pack/Tilesets/Building parts/Mailbox Animation Frames.png"
-dest_files=["res://.godot/imported/Mailbox Animation Frames.png-9f30c609c4378d99f5ba78d93502409b.ctex"]
+source_file="res://assets/tiles/sprout_lands/Tilesets/Building parts/Mailbox Animation Frames.png"
+dest_files=["res://.godot/imported/Mailbox Animation Frames.png-07a7188eacc55b4e5fa3effff438aa45.ctex"]
 
 [params]
 

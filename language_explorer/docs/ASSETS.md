@@ -7,7 +7,10 @@ Provenance and packing notes for art, books, video, and VO.
 | Need | Source | License |
 |------|--------|---------|
 | Mode tile icons (read/write/sentences/books/images/narration/read_slowly) | Agent-generated flat icons in `game/images/ui/` | original |
-| Alphabet / sketch / chrome (back, next, menu, …) | Agent-painted PNGs in `game/images/ui/` (letter-free) | original |
+| Home cinematic tiles (`home_read` / `home_write` / `home_voice`) | Agent-generated PNGs in `game/images/ui/` | original |
+| Case toggles (`case_upper` / `case_lower`) | Agent-generated letter tiles in `game/images/ui/` | original |
+| Alphabet / sketch / chrome (back, next, menu, …) | Agent-painted PNGs in `game/images/ui/` (letter-free except case) | original |
+| Book covers | Agent-generated storybook covers in `game/books/<id>/cover.png` (+ `images/covers/`) | original |
 | Theme colors | Fork of Math Explorer `MathTheme` | original |
 
 `ChromeIcons.gd` loads `res://images/ui/<id>.png` first, then falls back to procedural draw.

@@ -55,6 +55,7 @@ var _grid_after_video: String = ""
 ## Pending interactable: walk once to a fixed approach, then show ActionPrompt /
 ## RevealTile on arrive. No chase / repath onto moving animals or bugs.
 var _pending: Dictionary = {}
+var _intent_seq: int = 0 ## Latest-wins: arrive/stall no-op if pending.seq != this.
 var _pending_stall: float = 0.0 ## Seconds the pending interact has sat un-walked.
 var _animal_sfx_played: bool = false
 ## After first animal meet: single tap = SFX; second tap within window = reveal.
@@ -272,8 +273,8 @@ func _process(delta: float) -> void:
 
 func _tick_pending_walk(delta: float) -> void:
 	## Tap -> navigate -> arrive -> face -> act. If the walk dies on the way
-	## (soft collision, dropped route), resume it instead of parking the avatar
-	## short of the pane with the action still pending.
+	## (soft collision, dropped route), resume it — never park short of the pane
+	## without facing + interacting.
 	if _pending.is_empty() or player == null \
 			or bool(_pending.get("deferred_path", false)) \
 			or NarratorScript.blocks_movement():
@@ -283,16 +284,22 @@ func _tick_pending_walk(delta: float) -> void:
 	if approach == Vector2.ZERO or bool(player.get("moving")):
 		_pending_stall = 0.0
 		return
+	## Idle + near the pane: the arrive signal was missed — finish the tap.
 	if player.global_position.distance_to(approach) <= Config.get_interact_arrive_eps():
 		_pending_stall = 0.0
+		_on_player_arrived()
 		return
 	_pending_stall += delta
 	if _pending_stall < 0.35:
 		return
 	_pending_stall = 0.0
+	if not _intent_is_current():
+		_pending_stall = 0.0
+		return
 	var nudges := int(_pending.get("nudges", 0))
-	if nudges >= 3:
-		_pending.clear()
+	if nudges >= 4:
+		## Last resort: face + act from here rather than abandon the tap.
+		_on_player_arrived()
 		return
 	_pending["nudges"] = nudges + 1
 	Events.player_path_requested.emit(approach)
@@ -375,7 +382,7 @@ func _can_interact_animal(animal_id: String) -> bool:
 
 func _on_world_tapped(world_pos: Vector2) -> void:
 	_show_ripple(world_pos)
-	## Shed tool-pickup VO (and similar): tap cancels so kids can act immediately.
+	## Short success / shed-pickup VO: mash cancels so the next walk starts now.
 	if NarratorScript.is_tap_cancellable():
 		NarratorScript.stop()
 	## Action chip is non-blocking: tap elsewhere cancels and navigates.
@@ -392,17 +399,20 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 	if season_card and season_card.has_method("is_open") and bool(season_card.call("is_open")):
 		return
 	## Beds / shed win over nearby animals — Buddy must not steal gardening taps.
+	## Near-miss: mash on path dirt beside a bed (empty zone only) still counts.
 	var zone := farm_map.zone_at(world_pos)
 	var zone_kind := str(zone.get("kind", ""))
+	if zone.is_empty():
+		var near_bed := _bed_near_miss(world_pos)
+		if not near_bed.is_empty():
+			zone = {"id": near_bed, "kind": "bed"}
+			zone_kind = "bed"
 	if zone_kind == "bed" or zone_kind == "shed":
 		var zid0 := str(zone.get("id", ""))
 		Events.zone_tapped.emit(zid0, zone_kind)
 		_queue_interact(zone_kind, zid0, world_pos)
 		return
-	## While walking to a gardening / interact goal, ignore distraction taps
-	## (ground spam, Buddy, bugs). Retargeting another bed/shed is handled above.
-	if _interact_pending_active() and player and bool(player.get("moving")):
-		return
+	## Latest-wins: never ignore ground / animal / bug / coop while walking.
 	## Roaming bugs: same side of the fence only; one walk to tap spot, no chase.
 	if bug_spawner and bug_spawner.has_method("bug_at") and player:
 		var bug: Node2D = bug_spawner.bug_at(world_pos, 34.0)
@@ -423,15 +433,16 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 		_queue_interact("coop", "coop", coop_goal)
 		return
 	if zone.is_empty():
-		## Tap = navigate. Do not clear an in-flight interact if somehow still set.
-		if _interact_pending_active() and player and bool(player.get("moving")):
-			return
+		## Ground navigate — replaces any in-flight interact (latest tap wins).
+		_intent_seq += 1
 		_pending.clear()
 		_animal_sfx_played = false
-		if not farm_map.is_blocked(world_pos):
-			Events.player_path_requested.emit(world_pos)
+		var goal := world_pos if not farm_map.is_blocked(world_pos) \
+			else farm_map.nearest_walkable(world_pos)
+		if NarratorScript.blocks_movement():
+			_pending = {"kind": "nav", "approach": goal, "deferred_path": true, "seq": _intent_seq}
 		else:
-			Events.player_path_requested.emit(farm_map.nearest_walkable(world_pos))
+			Events.player_path_requested.emit(goal)
 		return
 	var kind := zone_kind
 	var zid := str(zone.get("id", ""))
@@ -442,6 +453,21 @@ func _on_world_tapped(world_pos: Vector2) -> void:
 	Events.zone_tapped.emit(zid, kind)
 	## Walk to the interactable first; action tile opens on arrive.
 	_queue_interact(kind, zid, world_pos)
+
+func _bed_near_miss(world_pos: Vector2) -> String:
+	## Mash on the path lip / rim still means that bed (~40px of center or poly).
+	if farm_map == null:
+		return ""
+	if farm_map.has_method("nearest_bed_id"):
+		return str(farm_map.nearest_bed_id(world_pos, 40.0))
+	var best := ""
+	var best_d := 40.0 * 40.0
+	for id in farm_map.bed_centers.keys():
+		var d: float = world_pos.distance_squared_to(farm_map.bed_centers[id] as Vector2)
+		if d < best_d:
+			best_d = d
+			best = str(id)
+	return best
 
 func _interact_pending_active() -> bool:
 	var k := str(_pending.get("kind", ""))
@@ -512,10 +538,11 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 			else:
 				## Enter / walk the pen via the gate.
 				approach = farm_map.nearest_walkable(world_pos)
+				_intent_seq += 1
 				_pending.clear()
 				_animal_sfx_played = false
 				if NarratorScript.blocks_movement():
-					_pending = {"kind": "nav", "approach": approach, "deferred_path": true}
+					_pending = {"kind": "nav", "approach": approach, "deferred_path": true, "seq": _intent_seq}
 				else:
 					Events.player_path_requested.emit(approach)
 				return
@@ -523,10 +550,11 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 			## Refuse cross-zone animal interact; fall back to gate navigate.
 			if not _can_interact_animal(zid):
 				approach = farm_map.nearest_walkable(world_pos)
+				_intent_seq += 1
 				_pending.clear()
 				_animal_sfx_played = false
 				if NarratorScript.blocks_movement():
-					_pending = {"kind": "nav", "approach": approach, "deferred_path": true}
+					_pending = {"kind": "nav", "approach": approach, "deferred_path": true, "seq": _intent_seq}
 				else:
 					Events.player_path_requested.emit(approach)
 				return
@@ -540,14 +568,17 @@ func _queue_interact(kind: String, zid: String, world_pos: Vector2) -> void:
 				approach = farm_map.nearest_walkable(animal_pos)
 		_:
 			approach = farm_map.nearest_walkable(world_pos)
+	_intent_seq += 1
 	_pending = {
 		"kind": kind,
 		"id": zid,
 		"slot": slot,
 		"approach": approach,
 		"tap": world_pos,
+		"seq": _intent_seq,
 	}
 	_animal_sfx_played = false
+	_pending_stall = 0.0
 	## Already close enough → prompt immediately.
 	if player and player.global_position.distance_to(approach) <= Config.get_interact_arrive_eps():
 		_open_pending_prompt()
@@ -566,6 +597,7 @@ func _queue_bug_interact(bug: Node2D) -> void:
 		Events.player_path_requested.emit(farm_map.nearest_walkable(bug.global_position))
 		return
 	var approach := farm_map.nearest_walkable(bug.global_position)
+	_intent_seq += 1
 	_pending = {
 		"kind": "bug",
 		"id": str(bug.bug_id),
@@ -573,13 +605,21 @@ func _queue_bug_interact(bug: Node2D) -> void:
 		"slot": -1,
 		"approach": approach,
 		"tap": bug.global_position,
+		"seq": _intent_seq,
 	}
+	_pending_stall = 0.0
 	if player and player.global_position.distance_to(bug.global_position) <= Config.get_interact_arrive_eps() * 1.4:
 		_open_pending_prompt()
 	elif NarratorScript.blocks_movement():
 		_pending["deferred_path"] = true
 	else:
 		Events.player_path_requested.emit(approach)
+
+func _intent_is_current() -> bool:
+	## Late arrive / stall from an older walk must not act after retarget.
+	if _pending.is_empty():
+		return false
+	return int(_pending.get("seq", -1)) == _intent_seq
 
 func _pending_bug_node() -> Node2D:
 	var iid := int(_pending.get("bug_iid", 0))
@@ -617,7 +657,7 @@ func _prepare_interact_pose() -> void:
 		IsoUtil.apply_depth(player, player.global_position.y, IsoUtil.BIAS_PLAYER)
 
 func _on_player_arrived() -> void:
-	if _pending.is_empty():
+	if not _intent_is_current():
 		return
 	## Gate / ground navigate — no interaction on arrive.
 	if str(_pending.get("kind", "")) == "nav":
@@ -638,11 +678,18 @@ func _on_player_arrived() -> void:
 				and pane_dir.normalized().dot(feet_dir.normalized()) < 0.0:
 			close_enough = false
 	if not close_enough:
+		if not _intent_is_current():
+			return
 		var attempts := int(_pending.get("repaths", 0))
-		if attempts < 2:
+		if attempts < 3:
 			_pending["repaths"] = attempts + 1
 			Events.player_path_requested.emit(approach)
 			return
+		## Still short after repaths: face + act anyway — a tap must never die
+		## with the avatar idle and the interactable unacknowledged.
+		if player == null or player.global_position.distance_to(approach) > 120.0:
+			return
+	if not _intent_is_current():
 		return
 	if kind == "bug":
 		var bug := _pending_bug_node()
@@ -652,10 +699,12 @@ func _on_player_arrived() -> void:
 	_open_pending_prompt()
 
 func _open_pending_prompt() -> void:
-	if _pending.is_empty():
+	if not _intent_is_current():
 		return
 	## Stand on the approach and face the interactable before UI / tools.
 	_prepare_interact_pose()
+	if not _intent_is_current():
+		return
 	## Animals: first meet → reveal; later → SFX. Buddy is bark-only (no video).
 	if str(_pending.get("kind", "")) == "animal":
 		var aid := str(_pending.get("id", ""))
@@ -1087,7 +1136,7 @@ func _do_plant_bed(bed_id: String, plant_id: String) -> void:
 		GardenSfxScript.plant()
 		Events.plant_planted.emit(bed_id, 0, plant_id)
 		var pname := seed_db.display_name(plant_id)
-		SpeakScript.line("You planted %s seeds!" % pname)
+		SpeakScript.line("You planted %s seeds!" % pname, true)
 		print("Garden Explorer: planted %s in %s (bed)" % [plant_id, bed_id])
 	else:
 		SpeakScript.line("This garden box is full.")
@@ -1098,7 +1147,7 @@ func _do_water_bed(bed_id: String) -> void:
 		GardenSfxScript.water()
 		_play_water_anim(bed_id)
 		Events.plant_watered.emit(bed_id, 0, str(result.plant_id), str(result.stage))
-		SpeakScript.line("You watered the bed.")
+		SpeakScript.line("You watered the bed.", true)
 		print("Garden Explorer: watered bed %s → %s" % [bed_id, result.stage])
 	elif bool(result.get("not_thirsty", false)):
 		if not NarratorScript.blocks_movement():
@@ -1115,7 +1164,7 @@ func _do_uproot_bed(bed_id: String) -> void:
 		return
 	GardenSfxScript.uproot()
 	Events.plant_uprooted.emit(bed_id, 0, removed)
-	SpeakScript.line("You uprooted the %s." % seed_db.display_name(removed))
+	SpeakScript.line("You uprooted the %s." % seed_db.display_name(removed), true)
 	print("Garden Explorer: uprooted bed %s (%s)" % [bed_id, removed])
 
 func _play_water_anim(bed_id: String) -> void:
@@ -1203,7 +1252,7 @@ func _do_harvest_bed(bed_id: String) -> void:
 		save.set_flag("harvest_first:%s" % pid, true)
 		_run_first_harvest_ceremony(pid)
 	else:
-		SpeakScript.line("You harvested the %s!" % seed_db.display_name(pid))
+		SpeakScript.line("You harvested the %s!" % seed_db.display_name(pid), true)
 	if shed_ui and shed_ui.has_method("set_harvest_totals"):
 		shed_ui.call("set_harvest_totals", harvest_totals)
 
@@ -1211,7 +1260,7 @@ func _run_first_harvest_ceremony(pid: String) -> void:
 	## Freeze (narration lock + fullscreen panels) → celebrate → plant grid
 	## gold unlock → real harvest video / educational slides → resume.
 	var pname := seed_db.display_name(pid)
-	var dur := SpeakScript.line("You harvested your first %s!" % pname)
+	var dur := SpeakScript.line("You harvested your first %s!" % pname, true)
 	await get_tree().create_timer(maxf(dur, 1.0)).timeout
 	var save := _save()
 	if save and save.has_method("set_harvest_totals"):
@@ -1224,7 +1273,7 @@ func _run_first_harvest_ceremony(pid: String) -> void:
 func _speak_harvest(plant_id: String, total: int) -> void:
 	var pname := seed_db.display_name(plant_id)
 	var noun := pname if total == 1 else _plural_plant(pname)
-	SpeakScript.line("You have %d %s." % [total, noun])
+	SpeakScript.line("You have %d %s." % [total, noun], true)
 	var save := _save()
 	if save and save.has_method("set_harvest_totals"):
 		save.set_harvest_totals(harvest_totals)

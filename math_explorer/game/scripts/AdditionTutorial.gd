@@ -25,7 +25,7 @@ var _eq: Label
 var _plus: Label
 var _red: CubeGroup
 var _blue: CubeGroup
-var _hint: Label
+var _skip_btn: Button
 var _built: bool = false
 
 func start(a: int = 7, b: int = 4) -> void:
@@ -34,6 +34,7 @@ func start(a: int = 7, b: int = 4) -> void:
 	_build()
 	_gen += 1
 	_skipping = false
+	_skip_btn.visible = true
 	_run(_gen)
 
 ## Every narration line this tutorial can speak for `a + b` — enumerated by
@@ -84,12 +85,7 @@ func _build() -> void:
 	_blue.columns = 12
 	add_child(_blue)
 
-	_hint = _make_label(18, Color(1, 1, 1, 0.7))
-	_hint.text = "tap to skip \u25B6"
-	_hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_hint.position = Vector2(-190, -40)
-	_hint.size = Vector2(170, 26)
-	add_child(_hint)
+	_skip_btn = ChromeIcons.make_skip_button(self, _skip_to_end)
 
 func _make_label(font_size: int, color: Color) -> Label:
 	var l := Label.new()
@@ -148,7 +144,7 @@ func _run(gen: int) -> void:
 	_join_groups()
 	d = Narrator.speak("%s plus %s equals %s! Great counting." % [_a, _b, total])
 	if not await _wait(gen, maxf(2.6, d)): return
-	_hint.text = "\u2713 done"
+	_skip_btn.visible = false
 	finished.emit()
 
 ## Highlight-count `n` cubes in `grp`, speaking a running label that starts at
@@ -219,7 +215,7 @@ func _skip_to_end() -> void:
 	_blue.set_all_state(CubeGroup.HL.DONE)
 	_layout_groups()
 	_join_groups()
-	_hint.text = "\u2713 done"
+	_skip_btn.visible = false
 	finished.emit()
 
 ## Await a timer but bail out if a newer run (or skip) superseded us.

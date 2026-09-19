@@ -15,6 +15,7 @@ var _player: VideoStreamPlayer
 var _back: Button
 var _fallback: Label
 var _title: Label
+var _skip_armed_ms: int = 0
 
 func _ready() -> void:
 	add_to_group("video_panel")
@@ -60,6 +61,7 @@ func _open_clip(id: String, file_name: String, topic: String) -> bool:
 		_speak(topic)
 
 	_dim.modulate.a = 0.85
+	_skip_armed_ms = Time.get_ticks_msec() + 400
 	get_tree().paused = true
 	clip_started.emit(id)
 	return true
@@ -81,6 +83,7 @@ func _build() -> void:
 	_player.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_player.expand = true
 	_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	_player.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_player.finished.connect(_close)
 	root.add_child(_player)
 
@@ -91,6 +94,7 @@ func _build() -> void:
 	_title.add_theme_font_size_override("font_size", 26)
 	_title.add_theme_color_override("font_color", Color(1, 0.95, 0.75, 1))
 	_title.process_mode = Node.PROCESS_MODE_ALWAYS
+	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_title)
 
 	_fallback = Label.new()
@@ -103,6 +107,7 @@ func _build() -> void:
 	_fallback.add_theme_color_override("font_color", Color(1, 0.98, 0.9, 1))
 	_fallback.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_fallback.process_mode = Node.PROCESS_MODE_ALWAYS
+	_fallback.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_fallback.visible = false
 	root.add_child(_fallback)
 
@@ -131,16 +136,20 @@ func _style_back(btn: Button) -> void:
 func _on_dim_input(event: InputEvent) -> void:
 	if not _open:
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		## While a real clip plays, only ◀ closes (avoids accidental skip).
-		## Fallback / "video coming soon" card: tap anywhere to dismiss.
-		if _fallback.visible:
-			_close()
+	var pressed: bool = (event is InputEventMouseButton and event.pressed \
+			and event.button_index == MOUSE_BUTTON_LEFT) \
+		or (event is InputEventScreenTouch and event.pressed)
+	if not pressed:
+		return
+	## Fallback card: dismiss anytime. Real clip: after 0.4s arm (mash-safe).
+	if _fallback.visible or Time.get_ticks_msec() >= _skip_armed_ms:
+		_close()
 
 func _close() -> void:
 	if not _open:
 		return
 	_open = false
+	_skip_armed_ms = 0
 	_player.stop()
 	_player.stream = null
 	visible = false

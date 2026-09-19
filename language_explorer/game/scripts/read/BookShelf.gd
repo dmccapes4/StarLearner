@@ -129,9 +129,17 @@ func _speak_arm(book_id: String) -> void:
 	_busy = true
 	var book := LangData.book_by_id(book_id)
 	var lang := str(book.get("lang", Save.get_lang()))
+	var title := str(book.get("title", ""))
+	# Title first — gold outline stays on the cover while the title is spoken.
+	_highlight(book_id, true)
+	if not title.is_empty():
+		var d0 := Narrator.speak(title)
+		if not await _wait(gen, maxf(1.0, d0)):
+			return
 	var parts: Array = []
-	parts.append(str(book.get("title", "")))
-	parts.append(str(book.get("description", "")))
+	var desc := str(book.get("description", ""))
+	if not desc.is_empty():
+		parts.append(desc)
 	var bm := Save.get_bookmark(book_id)
 	if bm > 0:
 		parts.append(LangVo.page_saved_line(bm + 1, lang))

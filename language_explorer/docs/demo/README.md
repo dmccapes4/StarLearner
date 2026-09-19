@@ -11,10 +11,12 @@ Language Explorer follows the same two-cut pattern as the other Star Learner tit
 
 | File | What it is |
 |------|------------|
-| [`language_explorer_playthrough.mp4`](language_explorer_playthrough.mp4) | Automated in-engine tour: home icons → Read / books → Write / alphabet word → narration picker → home |
+| [`language_explorer_playthrough.mp4`](language_explorer_playthrough.mp4) | Automated in-engine tour: home → book covers → reader → Write / Apple → home |
 | [`language_explorer_explainer.mp4`](language_explorer_explainer.mp4) | Short overview cut — screenshot stills + dedicated VO (kiosk enter video) |
 
 Explainer script: [`explainer_narration.json`](explainer_narration.json) · WAVs in [`vo/`](vo/).
+
+**Word mechanics (books):** tap → hear word · double-tap → spell letter-by-letter · long-press → definition when known. Spoken words use **bold + gold outline**.
 
 ```bash
 # Both videos (playthrough needs a display / GPU; DISPLAY=:1 works)

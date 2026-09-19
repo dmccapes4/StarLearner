@@ -199,13 +199,12 @@ func _on_path_requested(world_pos: Vector2) -> void:
 	if farm:
 		_waypoints = farm.find_path(global_position, world_pos)
 		if _waypoints.is_empty():
-			target = farm.nearest_walkable(world_pos)
-			_wp_i = 0
-		else:
-			_wp_i = 0
-			target = _waypoints[0]
+			## Walk toward the goal itself — never snap/teleport to a far cell.
+			_waypoints = PackedVector2Array([world_pos])
+		_wp_i = 0
+		target = _waypoints[0]
 	else:
-		_waypoints = PackedVector2Array()
+		_waypoints = PackedVector2Array([world_pos])
 		target = world_pos
 		_wp_i = 0
 	moving = true
@@ -251,10 +250,7 @@ func _process(delta: float) -> void:
 		moving = false
 		_waypoints = PackedVector2Array()
 		_wp_i = 0
-		## Nudge out if we somehow ended inside a collider.
-		var farm := _farm()
-		if farm and farm.is_blocked(global_position):
-			global_position = farm.nearest_walkable(global_position)
+		## Stay put — never teleport out of a collider. World repaths if needed.
 		_apply_player_depth()
 		Events.player_arrived.emit()
 		return
@@ -262,14 +258,13 @@ func _process(delta: float) -> void:
 	var next := global_position + step
 	## Soft collision: don't stride into solid tiles mid-segment,
 	## and never cut through the pen fence away from the gate.
+	## Never nearest_walkable-snap — that teleports across the tiny farm.
 	var farm2 := _farm()
 	if farm2 and farm2.has_method("crossing_allowed") and not farm2.crossing_allowed(global_position, next):
 		if _wp_i + 1 < _waypoints.size():
 			_wp_i += 1
 			target = _waypoints[_wp_i]
 			return
-		## Soft-block at end of path — snap to last goal if possible, then arrive.
-		global_position = farm2.nearest_walkable(target)
 		moving = false
 		_waypoints = PackedVector2Array()
 		_wp_i = 0
@@ -277,12 +272,11 @@ func _process(delta: float) -> void:
 		Events.player_arrived.emit()
 		return
 	if farm2 and farm2.is_blocked(next):
-		## Skip toward next waypoint / repath remainder.
+		## Skip toward next waypoint; at end, arrive where we stand (World repaths).
 		if _wp_i + 1 < _waypoints.size():
 			_wp_i += 1
 			target = _waypoints[_wp_i]
 			return
-		global_position = farm2.nearest_walkable(target)
 		moving = false
 		_waypoints = PackedVector2Array()
 		_wp_i = 0

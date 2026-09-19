@@ -1,13 +1,15 @@
 class_name WordLabel
 extends Control
 ## One word as a row of letter Labels with the shared literacy grammar:
-##   normal | target_red (larger) | spelling_gold (bold + larger) | done_green
+##   normal | target_red (larger) | spelling_gold (bold + gold outline) | done_green
 ##
-## spell(lang) narrates letter-by-letter (gold/bold), then the full word.
+## Tap → speak the word. Double-tap → spell letter-by-letter then the word
+## (STRATEGY_LANGUAGE_EXPLORER). Long-press → definition (parent handles).
 
 signal spell_finished()
 signal letter_spoken(index: int, letter: String)
 signal tapped()
+signal double_tapped()
 signal long_pressed()
 
 enum State { NORMAL, TARGET_RED, SPELLING_GOLD, DONE_GREEN }
@@ -16,6 +18,7 @@ const BASE_SIZE := 42
 const TARGET_SIZE := 54
 const SPELL_SIZE := 56
 const LONG_PRESS_MS := 550
+const DOUBLE_TAP_MS := 420
 
 var word: String = ""
 var state: int = State.NORMAL
@@ -27,6 +30,9 @@ var _font_size: int = BASE_SIZE
 var _press_active: bool = false
 var _press_start_ms: int = 0
 var _long_emitted: bool = false
+var _last_tap_ms: int = -99999
+var _tap_pending: bool = false
+var _tap_token: int = 0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -78,6 +84,21 @@ func _end_press() -> void:
 	set_process(false)
 	if _long_emitted:
 		return
+	var now := Time.get_ticks_msec()
+	if _tap_pending and now - _last_tap_ms <= DOUBLE_TAP_MS:
+		_tap_pending = false
+		_tap_token += 1
+		_last_tap_ms = -99999
+		double_tapped.emit()
+		return
+	_last_tap_ms = now
+	_tap_pending = true
+	_tap_token += 1
+	var token := _tap_token
+	await get_tree().create_timer(float(DOUBLE_TAP_MS) / 1000.0).timeout
+	if token != _tap_token or not _tap_pending:
+		return
+	_tap_pending = false
 	tapped.emit()
 
 func setup(text: String, font_size: int = BASE_SIZE) -> void:
@@ -201,14 +222,19 @@ func _style_letter_at(display_index: int, s: int) -> void:
 	var color := LangTheme.TEXT
 	var size := _font_size
 	var bold_extra := 0
+	var outline := Color(0, 0, 0, 0.85)
+	var outline_size := 5
 	match s:
 		State.TARGET_RED:
 			color = LangTheme.RED
 			size = int(float(_font_size) * 1.28)
 		State.SPELLING_GOLD:
+			# Spoken / active word: gold fill + gold outline so mention is obvious.
 			color = LangTheme.GOLD
 			size = int(float(_font_size) * 1.33)
 			bold_extra = 2
+			outline = LangTheme.GOLD.lightened(0.15)
+			outline_size = 8
 		State.DONE_GREEN:
 			color = LangTheme.GREEN
 			size = _font_size
@@ -217,6 +243,8 @@ func _style_letter_at(display_index: int, s: int) -> void:
 			size = _font_size
 	lbl.add_theme_font_size_override("font_size", size + bold_extra)
 	lbl.add_theme_color_override("font_color", color)
+	lbl.add_theme_color_override("font_outline_color", outline)
+	lbl.add_theme_constant_override("outline_size", outline_size)
 
 func _wait(gen: int, secs: float) -> bool:
 	await get_tree().create_timer(secs).timeout

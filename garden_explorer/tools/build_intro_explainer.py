@@ -31,6 +31,7 @@ SCRIPT = [
     "Tap the shed to get your supplies — seeds, a watering can, or a spade.",
     "Pick a seed, then tap an empty garden bed. Four little plots fill at once.",
     "When you see a blue water drop, water the bed, and watch sprouts grow into big plants.",
+    "Changed your mind? Tap a new bed any time — the gardener always follows your latest tap.",
     "When a golden star floats above a bed, those plants are ready to harvest!",
     "Fill all six beds and grow a big, beautiful garden of your very own.",
     "As the seasons change, the trees and weather change too — spring flowers, summer sun, fall leaves, and winter rain.",

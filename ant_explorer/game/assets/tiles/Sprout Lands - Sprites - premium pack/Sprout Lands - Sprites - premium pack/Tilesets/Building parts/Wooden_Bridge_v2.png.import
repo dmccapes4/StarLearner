@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c501v7gwkhuhq"
-path="res://.godot/imported/Wooden_Bridge_v2.png-36107168f54e9e12869ca06b0dd2dc47.ctex"
+path="res://.godot/imported/Wooden_Bridge_v2.png-aa77052d1503fa5d9aaf5c99de2f5f9a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/Sprout Lands - Sprites - premium pack/Sprout Lands - Sprites - premium pack/Tilesets/Building parts/Wooden_Bridge_v2.png"
-dest_files=["res://.godot/imported/Wooden_Bridge_v2.png-36107168f54e9e12869ca06b0dd2dc47.ctex"]
+source_file="res://assets/tiles/sprout_lands/Tilesets/Building parts/Wooden_Bridge_v2.png"
+dest_files=["res://.godot/imported/Wooden_Bridge_v2.png-aa77052d1503fa5d9aaf5c99de2f5f9a.ctex"]
 
 [params]
 

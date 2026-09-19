@@ -12,6 +12,7 @@ const MAP := {
 	"chicken_white": "chicken_white.png",
 	"chicken_yellow": "chicken_yellow.png",
 	"egg": "egg.png",
+	"hatch_bed": "hatch_bed.png",
 	"carton": "carton_open.png",
 	"carton_open": "carton_open.png",
 	"carton_closed": "carton_closed.png",

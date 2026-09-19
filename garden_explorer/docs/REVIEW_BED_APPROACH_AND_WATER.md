@@ -15,13 +15,17 @@ Everything you walk *to* for an interact is a **pane** with an outward vector:
 | Coop | One door pane (apron, outward from coop body) |
 | Gate | Not a face pick — path goes through `gate_world` either way |
 
-**Pick:** `argmax outward · (player − center)` among panes with `outward · from_dir ≥ 0`.  
-Opposite direction ⇒ opposite side (rejected). Clear far-lip tap (`dot < -0.5` and far enough) may honor the far pane. **No** A\* length, tap soft scores, or adjacent-blocker face copy.
+**Pick (beds):**
+1. Only panes **facing** the avatar (`outward · (player − center) ≥ 0`). Opposite side rejected.
+2. **Path-lip preference:** if N or S is among the facing panes, pick the shorter A\* of those
+   (aisle / dirt path). E/W only when neither N nor S faces.
+3. Among that set, shortest A\* path. Stands clear of raised bed tops.
 
-**Ties (iso only has diagonals):** standing straight below a bed in screen space scores
-S and E *identically* (0.447 each), so the pick used to fall out of `Dictionary` key
-order and walk the kid around to the side. Within `FACE_TIE_EPS` the nearer stand wins,
-and faces are scanned in a fixed order (`S, W, E, N`).
+Example: NW of bed_1 → tap bed_2 — W is most aligned, but N also faces → N (path lip).  
+From bed_1 west pane → bed_2 / bed_3 → N or S (not W between beds).
+
+Clear far-lip tap (`dot < -0.5` and far enough) may honor the far pane. No adjacent-blocker
+face copy, tap soft scores, or Dictionary key-order ties.
 
 **Walk:** `find_path` around solids only.  
 **Arrive:** near `_pending.approach` (pane stand); beds also require same hemisphere as the pane.

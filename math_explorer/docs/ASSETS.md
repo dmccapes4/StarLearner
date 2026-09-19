@@ -49,7 +49,7 @@ generators in the tests. Contact sheet: `docs/screenshots/story_contact.png`.
 | File | Used by |
 |---|---|
 | `chicken_white.png`, `chicken_yellow.png` | `eggs_rate` |
-| `egg.png`, `carton_open.png`, `carton_closed.png` | `eggs_rate` (carton snaps shut) |
+| `egg.png`, `hatch_bed.png`, `carton_open.png`, `carton_closed.png` | `eggs_rate` (tap hen → lay into hatch; carton snaps shut) |
 | `doll.png`, `basket.png` | `share_dolls` |
 | `piggy_bank.png` | `coins_make` (source purse) |
 | `stone.png` | `paint_rate` (painted = same art, tinted at runtime) |
@@ -67,13 +67,23 @@ Drawn in-engine, mapped to `""` in `StorySprites.gd`: **coins** (penny/nickel/di
 
 ## Kiosk tile
 
-The Star Learner launcher tile is an illustration (the girl packing eggs into a
-carton, with a hen and the knowledge star), matching the ants/solar/garden/language
-set. Source art: `tools/tile_math_source.png` → `python3 tools/make_tile.py`, which
+The Star Learner launcher tile is an illustration (the girl stacking numbered
+cubes with `+ − ×` badges and a chalkboard equation, plus the knowledge star),
+matching the ants/solar/garden/language set while reading as math at a glance.
+Source art: `tools/tile_math_source.png` → `python3 tools/make_tile.py`, which
 writes the 512×512
 `../ant_explorer/kiosk_placeholder/app/src/main/res/drawable/tile_math.png`.
 The launcher resolves it by name from `catalog.json` (`"tile": "tile_math"`), so
 keep the filename; rebuild the kiosk APK to pick up a new tile.
+
+## Help tile
+
+In-game chrome tiles live under `game/images/ui/` (`back`, `menu`, `help`,
+`practice`, `skip`) and are wired by `ChromeIcons.gd`. Help stays bottom-right
+on every screen; Back and Menu top-left; Skip on tutorials/watch scenes; Practice
+appears after each practice round (with a short gold flash + “Practice again!”).
+Tap Help to replay the main intro (on home) or open the tutorial for the current
+activity.
 
 ## Optional video cutaways
 

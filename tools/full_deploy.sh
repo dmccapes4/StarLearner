@@ -54,7 +54,7 @@ done
 APKS=(
   "$ROOT/ant_explorer/tools/build/com.dylan.star_learner.apk"
   "$ROOT/ant_explorer/tools/build/com.dylan.ant_explorer.apk"
-  "$ROOT/garden_explorer/tools/build/com.dylan.antexplorer.garden.apk"
+  "$ROOT/garden_explorer/tools/build/com.dylan.garden_explorer.apk"
   "$ROOT/solar_system_explorer/tools/build/com.dylan.solar_system_explorer.apk"
   "$ROOT/math_explorer/tools/build/com.dylan.math_explorer.apk"
   "$ROOT/language_explorer/tools/build/com.dylan.language_explorer.apk"
@@ -112,7 +112,7 @@ import json, sys
 p = sys.argv[1]
 d = json.load(open(p))
 want = {
- "com.dylan.ant_explorer", "com.dylan.antexplorer.garden",
+ "com.dylan.ant_explorer", "com.dylan.garden_explorer",
  "com.dylan.solar_system_explorer", "com.dylan.math_explorer",
  "com.dylan.language_explorer",
 }

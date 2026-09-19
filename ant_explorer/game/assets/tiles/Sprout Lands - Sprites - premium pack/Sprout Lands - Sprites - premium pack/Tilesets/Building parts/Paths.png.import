@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bnqsq4vrakubm"
-path="res://.godot/imported/Paths.png-04c44a85a15c9409f8ca29adbb5808e4.ctex"
+path="res://.godot/imported/Paths.png-b5113ae647a084484ad76d6a4314589a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/tiles/Sprout Lands - Sprites - premium pack/Sprout Lands - Sprites - premium pack/Tilesets/Building parts/Paths.png"
-dest_files=["res://.godot/imported/Paths.png-04c44a85a15c9409f8ca29adbb5808e4.ctex"]
+source_file="res://assets/tiles/sprout_lands/Tilesets/Building parts/Paths.png"
+dest_files=["res://.godot/imported/Paths.png-b5113ae647a084484ad76d6a4314589a.ctex"]
 
 [params]
 

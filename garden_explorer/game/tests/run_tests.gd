@@ -7,6 +7,7 @@ const SUITES := [
 	"res://tests/test_iso_util.gd",
 	"res://tests/test_farm_map.gd",
 	"res://tests/test_player_walk.gd",
+	"res://tests/test_tap_mash.gd",
 	"res://tests/test_camera_follow.gd",
 	"res://tests/test_seed_db.gd",
 	"res://tests/test_farm_sprites.gd",

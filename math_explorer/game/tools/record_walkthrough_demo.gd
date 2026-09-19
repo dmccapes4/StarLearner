@@ -5,12 +5,8 @@ extends SceneTree
 ##     --write-movie /tmp/math_walkthrough.avi \
 ##     -s res://tools/record_walkthrough_demo.gd
 ##
-## Beats: card + tab tour → Addition tutorial (full) → two-trains story →
-## chickens & eggs (animated) → Practice (one right, one wrong with the
-## counting explanation) → back to the card.
-##
-## Baked ElevenLabs VO plays through the audio bus, so Godot embeds it in the
-## AVI. (Practice's dynamic equation lines use OS TTS and stay silent here.)
+## Beats: intro tour (incl. help tile) → Addition tutorial → Practice →
+## chickens & eggs watch → trains → coins → home.
 
 var _main: Node = null
 
@@ -19,8 +15,6 @@ func _init() -> void:
 
 func _run() -> void:
 	root.get_viewport().size = Vector2i(1280, 600)
-	# Wipe saved state so this recording always plays the launch tour + the
-	# first-time tutorials from a clean slate.
 	var save := root.get_node_or_null("/root/Save")
 	if save != null:
 		save.call("clear_all")
@@ -29,7 +23,6 @@ func _run() -> void:
 	root.add_child(_main)
 	await _sec(0.5)
 
-	# 1) Launch intro: gold-highlight tour of every tile + the ☰ menu.
 	print("DEMO: intro tour")
 	var intro_t := 0.0
 	while _main._intro_running and intro_t < 90.0:
@@ -37,72 +30,54 @@ func _run() -> void:
 		intro_t += 0.25
 	await _sec(1.0)
 
-	# 2) First tap on Addition → "this is a tutorial…" then the block lesson.
+	# First tap on Addition → tutorial.
 	print("DEMO: addition tutorial")
 	_main._tabs.select("add")
-	await _sec(3.0)  # first-time VO line
+	await _sec(3.0)
 	await _wait_signal_or(_main._tutorial.finished, 45.0)
 	await _sec(2.0)
-	_main._show_card()
+	_main._show_home()
 	await _sec(0.8)
 
-	# 3) First tap on Subtraction → same first-time line, then take-away.
-	print("DEMO: subtraction tutorial")
-	_main._tabs.select("sub")
-	await _sec(3.0)
-	await _wait_signal_or(_main._block_tut.finished, 45.0)
-	await _sec(2.0)
-	_main._show_card()
-	await _sec(0.8)
-
-	# 4) Practice: correct → Practice ▶ under cubes → wrong with coaching.
+	# Second tap on Addition → practice directly.
 	print("DEMO: practice")
 	_main._tabs.select("add")
-	await _sec(1.2)
-	_main._on_primary()
-	await _sec(5.0)              # "Let's practice!" then the equation
+	await _sec(5.0)
 	_press_practice_answer(true)
-	await _sec(3.5)              # praise + Practice ▶ appears
+	await _sec(3.5)
 	_main._practice._on_practice_again()
 	await _sec(2.5)
 	_press_practice_answer(false)
-	await _sec(16.0)             # coaching + Practice ▶ again
-	_main._show_card()
+	await _sec(16.0)
+	_main._show_home()
 	await _sec(1.0)
 
-	# 5) Chickens & eggs, animated walkthrough (its own tab now).
+	# First eggs tap → watch walkthrough.
 	print("DEMO: chickens and eggs")
 	_main._tabs.select("eggs")
-	await _sec(1.4)
-	_main._enter_scene(_main._eggs)
-	_main._eggs.start(-1)
-	await _wait_signal_or(_main._eggs.finished, 45.0)
+	await _sec(3.0)
+	await _wait_signal_or(_main._eggs.finished, 90.0)
 	await _sec(2.5)
-	_main._show_card()
+	_main._show_home()
 	await _sec(0.8)
 
-	# 6) Two trains: race, then answer the miles-ahead question.
 	print("DEMO: two trains")
 	_main._tabs.select("trains")
 	await _sec(1.4)
-	_main._launch_game("trains")
 	await _wait_trains_question(30.0)
 	await _sec(1.5)
 	_press_trains_answer(true)
 	await _wait_signal_or(_main._trains.finished, 12.0)
 	await _sec(2.5)
-	_main._show_card()
+	_main._show_home()
 	await _sec(0.8)
 
-	# 7) Coin counter: drop coins to make the target.
 	print("DEMO: coins")
 	_main._tabs.select("coins")
-	await _sec(1.4)
-	_main._launch_game("coins")
 	await _sec(3.0)
 	await _play_coins()
 	await _sec(3.0)
-	_main._show_card()
+	_main._show_home()
 	await _sec(1.5)
 
 	print("DEMO: done")
@@ -123,10 +98,8 @@ func _press_trains_answer(correct: bool) -> void:
 			tr._on_answer(i)
 			return
 
-## Move coins into the tray one by one until the total is exact.
 func _play_coins() -> void:
 	var co: Control = _main._coins
-	# Greedy: dimes, then nickels, then pennies.
 	for kind in ["dime", "nickel", "penny"]:
 		for c in co._coins:
 			if co._total >= co._target:
@@ -135,7 +108,6 @@ func _play_coins() -> void:
 				continue
 			if co._total + int(c.value) > co._target:
 				continue
-			# Simulate the drag: press on the coin, release over the tray.
 			co._begin_drag(c.position + c.size * 0.5)
 			var target: Vector2 = co._tray.position + Vector2(80 + co._total * 3.0, 80)
 			var steps := 10

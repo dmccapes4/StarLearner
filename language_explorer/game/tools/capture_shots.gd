@@ -13,7 +13,7 @@ func _run() -> void:
 	if save:
 		save.clear_all()
 		save.set_intro_done(true)
-		for tid in ["tut_read", "tut_books", "tut_write", "tut_alphabet"]:
+		for tid in ["tut_read", "tut_books", "tut_write", "tut_alphabet", "tut_voice"]:
 			save.mark_seen(tid)
 
 	_main = (load("res://scenes/Main.tscn") as PackedScene).instantiate()
@@ -27,16 +27,25 @@ func _run() -> void:
 	_main._tutorial.stop(true)
 
 	_main.call("_enter_books")
-	await _frames(4)
+	await _frames(6)
 	await _shot("03_books")
+
+	# Open Peter Rabbit so reader gold-outline words appear in demos.
+	_main.call("_enter_reader", "peter_rabbit")
+	await _frames(24)
+	await _shot("04_book_reader")
 
 	_main.call("_enter_write")
 	await _frames(4)
 	await _shot("05_write_picker")
 
 	_main._write_practice.call("_begin_word", "en_apple")
-	await _frames(8)
+	await _frames(10)
 	await _shot("06_alphabet_apple")
+
+	_main.call("_show_home")
+	await _frames(4)
+	await _shot("07_home_voice")
 
 	print("captured Language Explorer shots")
 	quit(0)

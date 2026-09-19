@@ -5,7 +5,7 @@ extends SceneTree
 ##     --write-movie /tmp/language_playthrough.avi \
 ##     -s res://tools/record_playthrough_demo.gd
 ##
-## Beats: home → books shelf → write picker → Apple practice → home.
+## Beats: home → books shelf (covers) → open reader → write Apple → home.
 
 var _main: Node
 
@@ -19,7 +19,7 @@ func _run() -> void:
 		save.clear_all()
 		save.set_intro_done(true)
 		save.set_letter_input("alphabet")
-		for tid in ["tut_read", "tut_books", "tut_write", "tut_alphabet"]:
+		for tid in ["tut_read", "tut_books", "tut_write", "tut_alphabet", "tut_voice"]:
 			save.mark_seen(tid)
 
 	_main = (load("res://scenes/Main.tscn") as PackedScene).instantiate()
@@ -27,10 +27,16 @@ func _run() -> void:
 	await _sec(1.2)
 	await _voice_idle()
 
-	print("DEMO: books")
+	print("DEMO: books shelf")
 	_main.call("_enter_books")
 	await _sec(0.6)
 	await _voice_idle()
+	await _sec(2.0)
+
+	print("DEMO: open peter rabbit")
+	_main.call("_enter_reader", "peter_rabbit")
+	await _sec(0.8)
+	await _voice_idle(25.0)
 	await _sec(2.0)
 
 	print("DEMO: write + apple")

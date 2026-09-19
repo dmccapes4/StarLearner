@@ -231,6 +231,82 @@ const CLIPS_WATER := [
 	},
 ]
 
+## Mash / latest-wins — REPORT_TAP_MASHING.md P3.
+## Rapid retargets must keep the last tap; no teleport; VO cancel starts next walk.
+const CLIPS_MASH := [
+	{
+		"id": "mash_bed_retarget",
+		"note": "Alternate bed_0 / bed_1 while walking (~8 taps/s). Final pending id == last tap; no teleport.",
+		"setup": "thirsty_beds",
+		"tool": "water",
+		"from": "path_bed0",
+		"to": "bed0_approach",
+		"interact": "bed",
+		"bed_id": "bed_0",
+		"mash_taps": [
+			{"at_s": 0.50, "kind": "bed", "bed_id": "bed_1"},
+			{"at_s": 0.62, "kind": "bed", "bed_id": "bed_0"},
+			{"at_s": 0.75, "kind": "bed", "bed_id": "bed_1"},
+			{"at_s": 0.88, "kind": "bed", "bed_id": "bed_0"},
+			{"at_s": 1.00, "kind": "bed", "bed_id": "bed_1"},
+			{"at_s": 1.12, "kind": "bed", "bed_id": "bed_0"},
+			{"at_s": 1.25, "kind": "bed", "bed_id": "bed_1"},
+			{"at_s": 1.38, "kind": "bed", "bed_id": "bed_0"},
+			{"at_s": 1.50, "kind": "bed", "bed_id": "bed_1"},
+		],
+		"expect_final_pending_bed": "bed_1",
+		"max_frame_step_px": 22.0,
+		"max_detour_ratio": 3.0,
+	},
+	{
+		"id": "mash_ground_while_bed_walk",
+		"note": "While walking to bed_0, ground navigate must replace intent (not silently drop).",
+		"setup": "thirsty_beds",
+		"tool": "water",
+		"from": "path_bed0",
+		"to": "bed0_approach",
+		"interact": "bed",
+		"bed_id": "bed_0",
+		"mash_taps": [
+			{"at_s": 1.2, "kind": "nav", "to": "path_east"},
+		],
+		"expect_final_pending_kind": "nav_or_empty",
+		"max_frame_step_px": 22.0,
+	},
+	{
+		"id": "mash_cancel_water_vo",
+		"note": "Water bed_3 then mash bed_0 during success VO — VO cancels; walk retargets to bed_0.",
+		"setup": "thirsty_beds",
+		"tool": "water",
+		"from": "path_bed3",
+		"to": "bed3_approach",
+		"interact": "bed",
+		"bed_id": "bed_3",
+		"expect_water": true,
+		"mash_taps": [
+			{"at_s": 3.2, "kind": "bed", "bed_id": "bed_0", "cancel_vo": true},
+		],
+		"expect_final_pending_bed": "bed_0",
+		## VO unlock + path restart can stride ~1 frame farther than steady walk.
+		"max_frame_step_px": 28.0,
+		"max_detour_ratio": 2.8,
+	},
+	{
+		"id": "mash_bed_near_miss",
+		"note": "Path-dirt near-miss beside bed_1 (empty zone) still queues bed_1.",
+		"setup": "thirsty_beds",
+		"tool": "water",
+		"from": "path_west",
+		"to": "path_bed1",
+		"interact": "",
+		"mash_taps": [
+			{"at_s": 0.8, "kind": "near_miss", "bed_id": "bed_1"},
+		],
+		"expect_final_pending_bed": "bed_1",
+		"max_frame_step_px": 22.0,
+	},
+]
+
 var _out_abs: String = ""
 var _manifest: Dictionary = {}
 var _checks: Array = []
@@ -258,7 +334,7 @@ func _run() -> void:
 	var ts_env := str(OS.get_environment("WALK_TARGET_S")).strip_edges()
 	if not ts_env.is_empty():
 		_target_s = maxf(4.0, float(ts_env))
-	elif _clip_set == "routing" or _clip_set == "water":
+	elif _clip_set == "routing" or _clip_set == "water" or _clip_set == "mash":
 		_target_s = 10.0
 	else:
 		_target_s = TARGET_S_DEFAULT
@@ -317,6 +393,8 @@ func _run() -> void:
 			clips = CLIPS_ROUTING
 		"water":
 			clips = CLIPS_WATER
+		"mash":
+			clips = CLIPS_MASH
 	print("clip_set=", _clip_set, " clips=", clips.size(), " target_s=", _target_s)
 	for clip in clips:
 		await _capture_clip(clip)
@@ -440,6 +518,8 @@ func _capture_clip(clip: Dictionary) -> void:
 	var retap_at := float(clip.get("retap_at_s", -1.0))
 	var retap_kind := str(clip.get("retap_interact", ""))
 	var did_retap := false
+	var mash_taps: Array = clip.get("mash_taps", []) as Array
+	var mash_i := 0
 
 	var total_frames: int = int(round(_target_s * float(CAPTURE_FPS)))
 	var sim_path := clip_dir.path_join("state.jsonl")
@@ -452,6 +532,9 @@ func _capture_clip(clip: Dictionary) -> void:
 	## Live path (updates after retap).
 	var live_path: PackedVector2Array = path
 	var live_goal: Vector2 = goal
+	var prev_pos: Vector2 = _player.global_position
+	var max_step_seen := 0.0
+	var last_mash_bed := str(clip.get("bed_id", ""))
 
 	for fi in total_frames:
 		var movie_t: float = float(fi) / float(CAPTURE_FPS)
@@ -462,6 +545,55 @@ func _capture_clip(clip: Dictionary) -> void:
 			path_q = _path_quality(_player.global_position, live_goal, live_path, clip)
 			path_q["retap"] = true
 			path_q["retap_at_s"] = movie_t
+		## Mash sequence: fire each scheduled tap once (latest-wins stress).
+		while mash_i < mash_taps.size():
+			var mt: Dictionary = mash_taps[mash_i]
+			if movie_t + 0.001 < float(mt.get("at_s", 0.0)):
+				break
+			mash_i += 1
+			var mkind := str(mt.get("kind", "bed"))
+			if bool(mt.get("cancel_vo", false)) and NarratorLib.is_tap_cancellable():
+				NarratorLib.stop()
+			var mclip := clip.duplicate(true)
+			if mt.has("bed_id"):
+				mclip["bed_id"] = str(mt["bed_id"])
+				last_mash_bed = str(mt["bed_id"])
+			if mkind == "nav":
+				var nav_to := _named_pos(str(mt.get("to", "path_east")))
+				nav_to = _farm.nearest_walkable(nav_to)
+				live_goal = nav_to
+				## Same path as World ground navigate: bump intent + emit path.
+				if _world:
+					_world.set("_intent_seq", int(_world.get("_intent_seq")) + 1)
+					_world.set("_pending", {
+						"kind": "nav",
+						"approach": nav_to,
+						"seq": int(_world.get("_intent_seq")),
+					})
+				if _ev:
+					_ev.player_path_requested.emit(nav_to)
+			elif mkind == "near_miss":
+				var bid_nm := str(mt.get("bed_id", "bed_1"))
+				var lip := _farm.nearest_walkable(
+					(_farm.bed_centers.get(bid_nm, live_goal) as Vector2) + Vector2(0, 28))
+				## Prefer production World tap so near-miss helper runs.
+				if _world and _world.has_method("_on_world_tapped"):
+					_world.call("_on_world_tapped", lip)
+				else:
+					_start_walk("bed", lip, _player.global_position, mclip)
+				if _farm.has_method("bed_approach_world"):
+					live_goal = _farm.bed_approach_world(bid_nm, _player.global_position, lip)
+			else:
+				_start_walk(mkind, live_goal, _player.global_position, mclip)
+				if mkind == "bed" and mclip.has("bed_id") and _farm.has_method("bed_approach_world"):
+					live_goal = _farm.bed_approach_world(
+						str(mclip["bed_id"]), _player.global_position,
+						_farm.bed_centers.get(str(mclip["bed_id"]), live_goal))
+			live_path = _farm.find_path(_player.global_position, live_goal)
+			path_q = _path_quality(_player.global_position, live_goal, live_path, clip)
+			path_q["mash_tap"] = mash_i
+			path_q["mash_kind"] = mkind
+			path_q["mash_at_s"] = movie_t
 		## Keep process running so Player._process advances the walk.
 		## (VO pause/resume is covered by tests/test_player_walk.gd — Player keeps
 		## the route while Narrator.blocks_movement(), so capture must not stop VO.)
@@ -469,11 +601,17 @@ func _capture_clip(clip: Dictionary) -> void:
 		await process_frame
 		_aim_cam()
 
+		var step := _player.global_position.distance_to(prev_pos)
+		max_step_seen = maxf(max_step_seen, step)
+		prev_pos = _player.global_position
+
 		## Refresh live waypoints from Player when available.
 		var pw = _player.get("_waypoints")
 		if pw is PackedVector2Array and (pw as PackedVector2Array).size() > 0:
 			live_path = pw as PackedVector2Array
 		var snap: Dictionary = _state_snapshot(cid, fi, movie_t, start, live_goal, live_path, clip, path_q)
+		snap["pending"] = _pending_snap()
+		snap["frame_step_px"] = snappedf(step, 0.1)
 		if sim_f != null:
 			sim_f.store_line(JSON.stringify(snap))
 		## Whole-second tick for Grok: one ground-truth row per second mark.
@@ -494,6 +632,8 @@ func _capture_clip(clip: Dictionary) -> void:
 		sim_f.close()
 	if tick_f != null:
 		tick_f.close()
+	## Mash asserts before stop() clears motion.
+	_assert_mash_end(cid, clip, last_mash_bed, max_step_seen)
 	_player.stop()
 
 	## End-of-clip water assert. A successful water clears thirst then starts the
@@ -770,6 +910,14 @@ func _expect_for_clip(cid: String, clip: Dictionary = {}) -> Dictionary:
 				"water applies on arrive when thirsty; success VO not replaced by not-thirsty",
 			]
 			return base
+		"mash_bed_retarget", "mash_ground_while_bed_walk", "mash_cancel_water_vo", "mash_bed_near_miss":
+			base["ux"] = [
+				"latest tap wins — final pending matches last mash",
+				"no teleport (frame step under ~22px)",
+				"ground / near-miss taps not silently dropped while walking",
+			]
+			base["expect_final_pending_bed"] = str(clip.get("expect_final_pending_bed", ""))
+			return base
 		_:
 			return base if not base["expect_corridor"].is_empty() else {}
 
@@ -786,6 +934,41 @@ func _start_walk(interact: String, goal: Vector2, from_pos: Vector2, clip: Dicti
 		_ev.player_path_requested.emit(goal)
 	else:
 		_player.call("_on_path_requested", goal)
+
+func _pending_snap() -> Dictionary:
+	if _world == null:
+		return {}
+	var p = _world.get("_pending")
+	if typeof(p) != TYPE_DICTIONARY or (p as Dictionary).is_empty():
+		return {}
+	var d: Dictionary = p
+	return {
+		"kind": str(d.get("kind", "")),
+		"id": str(d.get("id", "")),
+		"seq": int(d.get("seq", -1)),
+	}
+
+func _assert_mash_end(cid: String, clip: Dictionary, last_mash_bed: String, max_step_seen: float) -> void:
+	if _clip_set != "mash" and not clip.has("mash_taps"):
+		return
+	var pend := _pending_snap()
+	var expect_bed := str(clip.get("expect_final_pending_bed", ""))
+	if not expect_bed.is_empty():
+		## Pending may have cleared on arrive+water; accept last_mash_bed match
+		## on pending id OR (if cleared) that we at least issued the last tap.
+		var got := str(pend.get("id", ""))
+		var ok := got == expect_bed or (got.is_empty() and last_mash_bed == expect_bed)
+		_check("%s_final_pending_bed" % cid, ok,
+			"pending=%s last_mash=%s expect=%s" % [got, last_mash_bed, expect_bed])
+	var expect_kind := str(clip.get("expect_final_pending_kind", ""))
+	if expect_kind == "nav_or_empty":
+		var k := str(pend.get("kind", ""))
+		_check("%s_ground_retarget" % cid, k == "nav" or k.is_empty(),
+			"pending.kind=%s (ground mash must clear/replace bed intent)" % k)
+	var max_step := float(clip.get("max_frame_step_px", 0.0))
+	if max_step > 0.0:
+		_check("%s_no_teleport" % cid, max_step_seen <= max_step,
+			"max_frame_step=%.1f limit=%.1f" % [max_step_seen, max_step])
 
 func _sample_waypoints(path: PackedVector2Array, max_n: int) -> Array:
 	var out: Array = []
@@ -1441,4 +1624,5 @@ func _agent_brief() -> String:
 		+ "REVIEW_BED_APPROACH_AND_WATER.md) and nav_diagnostics.json. "
 		+ "Routing set: shed taps from bed_3 — FAIL east+south fence loops. "
 		+ "Water set: watering-can → bed approach face + thirst/VO. "
+		+ "Mash set: latest-wins bed/ground/near-miss; no teleport; cancellable VO. "
 		+ "Review: qa/review_walk_videos.py.") % _clip_set

@@ -17,7 +17,9 @@ echo ""
 echo "=== voice_smoke_test --remote ==="
 bash "$ROOT/language_explorer/tools/voice_smoke_test.sh" --remote
 
-if command -v "${GODOT:-$HOME/.local/bin/godot}" >/dev/null 2>&1; then
+if command -v "${GODOT:-$HOME/.local/bin/godot}" >/dev/null 2>&1 &&
+   [[ -f "$ROOT/language_explorer/game/data/hub_client.json" ||
+      -f "$ROOT/ant_explorer/tools/secrets/hub245/token.txt" ]]; then
   echo ""
   echo "=== voice_smoke_test --local (host unit tests + ASR) ==="
   bash "$ROOT/language_explorer/tools/voice_smoke_test.sh" --local

@@ -1,23 +1,19 @@
 class_name EggsScene
 extends Control
-## The flagship word problem, animated: white + yellow chickens lay eggs, the
-## rate equation builds, the eggs gather into a tray, then fly into 6-egg cartons
-## that SNAP SHUT when full. Ends on the worked equations:
-##   (white\u00D7w) + (yellow\u00D7y) = per-day  \u2192  \u00D7 days = total  \u2192  total \u00F7 6 = cartons
-##
-## Numbers come from MathProblemGen("eggs_rate"), clamped to stay countable on
-## screen. Auto-animated with tap-to-skip. (Drag-to-place is a Practice-mode
-## enhancement; here the goal is to make the whole idea legible.)
+## Watch walkthrough: hens lay into hatch beds (tap-to-lay mirrored as auto-play),
+## hatches are counted and summed, then eggs pack into cartons of 6.
 
 signal finished()
 
 const CARTON := 6
 const EGG := 30.0
+const HATCH_SIZE := 100.0
 const TRAY_Y := 250.0
 const CARTON_W := 150.0
+const NUMBER_WORDS := ["zero", "one", "two", "three", "four", "five", "six",
+	"seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen",
+	"fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"]
 
-## Fixed seed pool so every narration line can be baked ahead of time with
-## ElevenLabs (tools/dump_vo_lines.gd enumerates vo_lines() for each seed).
 const SEED_POOL: Array = [0, 5, 12, 21, 33, 47, 58, 66, 81, 94]
 
 var _p: Dictionary = {}
@@ -27,10 +23,10 @@ var _done: bool = false
 var _eq0: Label
 var _eq1: Label
 var _eq2: Label
-var _hint: Label
-var _chickens: Array = []      # TextureRect
-var _tray_eggs: Array = []     # TextureRect in the central tray
-var _cartons: Array = []       # {node, filled, slots:[Vector2], base:Vector2}
+var _skip_btn: Button
+var _hatches: Array = []       # {chicken, bed, ring, eggs, cap, white}
+var _tray_eggs: Array = []
+var _cartons: Array = []
 var _built := false
 
 func start(seed: int = -1) -> void:
@@ -54,24 +50,22 @@ func _build() -> void:
 	_eq1 = _eq_label(30, MathTheme.TEXT, 58)
 	_eq2 = _eq_label(34, MathTheme.GOLD, 98)
 	add_child(_eq0); add_child(_eq1); add_child(_eq2)
-	_hint = _label(18, Color(1, 1, 1, 0.7))
-	_hint.text = "tap to skip \u25B6"
-	_hint.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	_hint.position = Vector2(-190, -34)
-	_hint.size = Vector2(170, 26)
-	add_child(_hint)
+	_skip_btn = ChromeIcons.make_skip_button(self, _skip)
 
 func _reset() -> void:
-	for c in _chickens: c.queue_free()
+	for h in _hatches:
+		for k in ["chicken", "bed", "ring"]:
+			if h.has(k) and is_instance_valid(h[k]):
+				h[k].queue_free()
+		for e in h.get("eggs", []):
+			if is_instance_valid(e):
+				e.queue_free()
 	for e in _tray_eggs: e.queue_free()
 	for c in _cartons: c["node"].queue_free()
-	_chickens.clear(); _tray_eggs.clear(); _cartons.clear()
+	_hatches.clear(); _tray_eggs.clear(); _cartons.clear()
 	_eq0.text = ""; _eq1.text = ""; _eq2.text = ""
-	_hint.text = "tap to skip \u25B6"
+	_skip_btn.visible = true
 
-## Find a seed whose numbers stay small enough to draw (few chickens, <= 4
-## cartons) and whose two rates DIFFER — same-rate hens hide the whole idea.
-## Static + deterministic so the VO bake tool sees the exact same problem.
 static func _pick(seed: int) -> Dictionary:
 	for s in range(maxi(0, seed), maxi(0, seed) + 400):
 		var p := MathProblemGen.generate("eggs_rate", s)
@@ -83,23 +77,31 @@ static func _pick(seed: int) -> Dictionary:
 			return p
 	return MathProblemGen.generate("eggs_rate", 0)
 
-## Every narration line this scene can speak for `seed` — enumerated by
-## tools/dump_vo_lines.gd so each sentence gets a baked ElevenLabs clip.
 static func vo_lines(seed: int) -> Array:
 	var p := _pick(seed)
 	var q: Dictionary = p["params"]
 	var per_day: int = int(q["white"]) * int(q["w_eggs"]) + int(q["yellow"]) * int(q["y_eggs"])
 	var total: int = p["answer"]
-	return [
+	var lines: Array = [
 		"%d white chickens each lay %d eggs a day. %d yellow chickens each lay %d." % [q["white"], q["w_eggs"], q["yellow"], q["y_eggs"]],
+		"Bawk!",
+		"That hatch is full!",
 		"That is %d eggs every day." % per_day,
 		"For %d days, that is %d eggs in all." % [q["days"], total],
 		"Now pack them into cartons of %d." % CARTON,
 		_cartons_line(total),
 	]
+	var caps: Array = []
+	for _i in int(q["white"]):
+		caps.append(int(q["w_eggs"]))
+	for _j in int(q["yellow"]):
+		caps.append(int(q["y_eggs"]))
+	var running := 0
+	for c in caps:
+		running += int(c)
+		lines.append(_number_word(running))
+	return lines
 
-## The closing sentence. When the eggs don't divide evenly, spell out WHY there
-## is an extra carton (the leftover) — that is the whole division lesson.
 static func _cartons_line(total: int) -> String:
 	var cartons := int(ceil(float(total) / CARTON))
 	var rem := total % CARTON
@@ -109,7 +111,10 @@ static func _cartons_line(total: int) -> String:
 	return "It takes %d cartons, because %d is more than %d, leaving %d %s in the last carton." % [
 		cartons, total, filled, rem, "egg" if rem == 1 else "eggs"]
 
-# ---- choreography -----------------------------------------------------------
+static func _number_word(v: int) -> String:
+	if v >= 0 and v < NUMBER_WORDS.size():
+		return NUMBER_WORDS[v]
+	return str(v)
 
 func _run(gen: int) -> void:
 	var q: Dictionary = _p["params"]
@@ -122,35 +127,37 @@ func _run(gen: int) -> void:
 	var total: int = _p["answer"]
 	var cartons := int(ceil(float(total) / CARTON))
 
-	# 1) Chickens appear. Waits are paced by the actual spoken duration so a
-	# longer clip is never cut off by the next line.
 	var d := Narrator.speak("%d white chickens each lay %d eggs a day. %d yellow chickens each lay %d." % [white, w_eggs, yellow, y_eggs])
-	_lay_out_chickens(white, yellow)
+	_lay_out_hatches(white, yellow, w_eggs, y_eggs)
 	if not await _wait(gen, maxf(2.4, d)): return
 
-	# 2) Each chicken lays its eggs for the day (little pops under it).
-	for i in _chickens.size():
-		var meta = _chickens[i]
-		var n: int = w_eggs if meta["white"] else y_eggs
-		for k in n:
-			_spawn_egg_under(meta["node"], k, n)
-			if not await _wait(gen, 0.16): return
+	# Auto-lay into each hatch, count when full.
+	for hi in _hatches.size():
+		var h: Dictionary = _hatches[hi]
+		var cap: int = h["cap"]
+		for k in cap:
+			if not await _lay_one(gen, hi): return
+		if not await _count_hatch(gen, hi): return
+
+	# Sum hatch counts: 1, 2, 3, 5, 7…
+	var running := 0
+	for h2 in _hatches:
+		running += int(h2["cap"])
+		d = Narrator.speak(_number_word(running))
+		if not await _wait(gen, maxf(0.55, d)): return
+
 	_eq0.text = "(%d\u00D7%d) + (%d\u00D7%d) = %d eggs a day" % [white, w_eggs, yellow, y_eggs, per_day]
 	d = Narrator.speak("That is %d eggs every day." % per_day)
 	if not await _wait(gen, maxf(2.2, d)): return
 
-	# 3) Over `days` days -> gather `total` eggs into a tray.
 	Narrator.speak("For %d days, that is %d eggs in all." % [days, total])
-	_clear_under_eggs()
+	_clear_hatches()
 	_eq1.text = "%d \u00D7 %d days = %d eggs" % [per_day, days, total]
 	for i in total:
 		_spawn_tray_egg(i, total)
 		if not await _wait(gen, 0.08): return
 	if not await _wait(gen, 0.8): return
 
-	# 4) Cartons appear; eggs fly in one at a time. Each carton shows how full it
-	# is (carton_open_N), snapping shut only when a full six is reached — so the
-	# last, partly-filled carton stays open and the leftover is visible.
 	Narrator.speak("Now pack them into cartons of %d." % CARTON)
 	_lay_out_cartons(cartons)
 	if not await _wait(gen, 1.0): return
@@ -167,54 +174,112 @@ func _run(gen: int) -> void:
 			_set_carton_fill(carton_idx, count_in)
 			if not await _wait(gen, 0.12): return
 
-	# 5) The answer.
 	_eq2.text = "%d \u00F7 %d = %d cartons" % [total, CARTON, cartons]
 	Narrator.speak(_cartons_line(total))
-	_hint.text = "\u2713 done"
+	_skip_btn.visible = false
 	_done = true
 	finished.emit()
 
-# ---- layout / spawns --------------------------------------------------------
-
-func _lay_out_chickens(white: int, yellow: int) -> void:
+func _lay_out_hatches(white: int, yellow: int, w_eggs: int, y_eggs: int) -> void:
 	var n := white + yellow
-	var gap := 30.0
-	var cw := 96.0 * 1.1
+	var gap := 28.0
+	var cw := 100.0
 	var total_w := n * cw + (n - 1) * gap
-	var x := 640.0 - total_w * 0.5
+	var x0 := 640.0 - total_w * 0.5
 	for i in n:
 		var is_white := i < white
-		var tr := _sprite("chicken_white" if is_white else "chicken_yellow", 96.0)
-		if tr == null:
+		var cx := x0 + i * (cw + gap) + cw * 0.5
+		var chick := _sprite("chicken_white" if is_white else "chicken_yellow", 90.0)
+		if chick == null:
 			continue
-		tr.position = Vector2(x + i * (cw + gap) + (cw - tr.size.x) * 0.5, 150.0)
-		add_child(tr)
-		_chickens.append({"node": tr, "white": is_white})
+		chick.position = Vector2(cx - chick.size.x * 0.5, 150.0)
+		chick.pivot_offset = chick.size * 0.5
+		add_child(chick)
+		var cap := w_eggs if is_white else y_eggs
+		var bed := _sprite("hatch_bed", HATCH_SIZE)
+		if bed == null:
+			continue
+		bed.position = Vector2(cx - bed.size.x * 0.5, 275.0)
+		add_child(bed)
+		var ring := Panel.new()
+		ring.visible = false
+		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ring.position = bed.position - Vector2(6, 6)
+		ring.size = bed.size + Vector2(12, 12)
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = Color(1, 1, 1, 0)
+		sb.set_corner_radius_all(18)
+		sb.set_border_width_all(5)
+		sb.border_color = MathTheme.GOLD
+		ring.add_theme_stylebox_override("panel", sb)
+		add_child(ring)
+		var slots: Array = []
+		for s in cap:
+			var t := (float(s) + 0.5) / float(maxi(1, cap))
+			var ox := (t - 0.5) * (bed.size.x * 0.55)
+			var oy := 6.0 + (s % 2) * 8.0
+			slots.append(bed.position + Vector2(bed.size.x * 0.5 + ox - EGG * 0.5, bed.size.y * 0.42 + oy))
+		_hatches.append({"chicken": chick, "bed": bed, "ring": ring, "eggs": [],
+			"cap": cap, "slots": slots, "white": is_white})
 
-func _spawn_egg_under(chicken: TextureRect, k: int, n: int) -> void:
+func _lay_one(gen: int, hi: int) -> bool:
+	var h: Dictionary = _hatches[hi]
+	var chick: TextureRect = h["chicken"]
+	Narrator.speak("Bawk!")
+	var base := chick.position
+	var tw := create_tween()
+	tw.tween_property(chick, "position", base + Vector2(5, 0), 0.04)
+	tw.tween_property(chick, "position", base + Vector2(-5, 0), 0.04)
+	tw.tween_property(chick, "position", base, 0.04)
+	await tw.finished
+	if gen != _gen: return false
 	var e := _egg_sprite()
 	if e == null:
-		return
-	var cx := chicken.position.x + chicken.size.x * 0.5
-	var row_w := n * (EGG + 4.0)
-	e.position = Vector2(cx - row_w * 0.5 + k * (EGG + 4.0), 262.0)
+		return gen == _gen
+	var slot: Vector2 = h["slots"][h["eggs"].size()]
+	e.position = chick.position + Vector2(chick.size.x * 0.5 - EGG * 0.5, chick.size.y - 6.0)
 	e.scale = Vector2.ZERO
 	add_child(e)
-	e.set_meta("under", true)
-	var tw := create_tween()
-	tw.tween_property(e, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	h["eggs"].append(e)
+	var land := create_tween()
+	land.set_parallel(true)
+	land.tween_property(e, "position", slot, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	land.tween_property(e, "scale", Vector2.ONE, 0.22)
+	await land.finished
+	return gen == _gen and is_inside_tree()
 
-func _clear_under_eggs() -> void:
-	for c in get_children():
-		if c is TextureRect and c.has_meta("under"):
-			c.queue_free()
+func _count_hatch(gen: int, hi: int) -> bool:
+	var h: Dictionary = _hatches[hi]
+	var d := Narrator.speak("That hatch is full!")
+	if not await _wait(gen, maxf(0.6, d * 0.4)): return false
+	var n := 0
+	for e in h["eggs"]:
+		n += 1
+		var egg: TextureRect = e
+		egg.scale = Vector2(1.28, 1.28)
+		egg.modulate = Color(1.15, 1.05, 0.55)
+		d = Narrator.speak(_number_word(n))
+		if not await _wait(gen, maxf(0.45, d - 0.25)): return false
+		egg.scale = Vector2.ONE
+		egg.modulate = Color.WHITE
+	(h["ring"] as Panel).visible = true
+	return gen == _gen
+
+func _clear_hatches() -> void:
+	for h in _hatches:
+		for k in ["chicken", "bed", "ring"]:
+			if h.has(k) and is_instance_valid(h[k]):
+				h[k].queue_free()
+		for e in h.get("eggs", []):
+			if is_instance_valid(e):
+				e.queue_free()
+	_hatches.clear()
 
 func _spawn_tray_egg(i: int, total: int) -> void:
 	var e := _egg_sprite()
 	if e == null:
 		return
 	var cols := mini(12, total)
-	var rows := int(ceil(float(total) / cols))
 	var col := i % cols
 	var row := i / cols
 	var tw_all := cols * (EGG + 6.0)
@@ -237,15 +302,12 @@ func _lay_out_cartons(cartons: int) -> void:
 			continue
 		tr.position = Vector2(x + i * (CARTON_W + gap), y)
 		add_child(tr)
-		# Six slots: 2 rows of 3 across the carton cups.
 		var slots := []
 		for s in CARTON:
-			var sc := s % 3
-			var sr := s / 3
-			slots.append(tr.position + Vector2(24 + sc * 40, 44 + sr * 44))
+			slots.append(tr.position + Vector2(24 + (s % 3) * 40, 44 + (s / 3) * 44))
 		_cartons.append({"node": tr, "filled": 0, "slots": slots, "base": tr.position})
 
-func _fly_egg_to_carton(gen: int, egg: TextureRect, carton_idx: int, slot: int) -> void:
+func _fly_egg_to_carton(_gen: int, egg: TextureRect, carton_idx: int, slot: int) -> void:
 	if carton_idx >= _cartons.size():
 		return
 	var target: Vector2 = _cartons[carton_idx]["slots"][slot]
@@ -255,8 +317,6 @@ func _fly_egg_to_carton(gen: int, egg: TextureRect, carton_idx: int, slot: int) 
 	tw.tween_property(egg, "scale", Vector2(0.7, 0.7), 0.28)
 	await tw.finished
 
-## Show the open carton holding `n` eggs (n = 1..5). The loose flying eggs are
-## hidden by the caller; this sprite is what she now sees in the cups.
 func _set_carton_fill(carton_idx: int, n: int) -> void:
 	if carton_idx >= _cartons.size():
 		return
@@ -264,7 +324,6 @@ func _set_carton_fill(carton_idx: int, n: int) -> void:
 	if tex:
 		(_cartons[carton_idx]["node"] as TextureRect).texture = tex
 
-## A carton reached six eggs → snap the lid shut with a little bounce.
 func _close_carton(carton_idx: int) -> void:
 	if carton_idx >= _cartons.size():
 		return
@@ -275,8 +334,6 @@ func _close_carton(carton_idx: int) -> void:
 	var tw := create_tween()
 	tw.tween_property(node, "scale", Vector2(1.12, 1.12), 0.12)
 	tw.tween_property(node, "scale", Vector2.ONE, 0.12)
-
-# ---- input / helpers --------------------------------------------------------
 
 func _on_input(event: InputEvent) -> void:
 	var tap: bool = (event is InputEventMouseButton and event.pressed \
@@ -293,9 +350,7 @@ func _skip() -> void:
 	var total: int = _p["answer"]
 	var cartons := int(ceil(float(total) / CARTON))
 	_reset()
-	_lay_out_chickens(q["white"], q["yellow"])
 	_lay_out_cartons(cartons)
-	# Full cartons closed; a leftover last carton stays open showing its eggs.
 	var rem := total % CARTON
 	for idx in _cartons.size():
 		if rem > 0 and idx == cartons - 1:
@@ -305,7 +360,7 @@ func _skip() -> void:
 	_eq0.text = "(%d\u00D7%d) + (%d\u00D7%d) = %d eggs a day" % [q["white"], q["w_eggs"], q["yellow"], q["y_eggs"], per_day]
 	_eq1.text = "%d \u00D7 %d days = %d eggs" % [per_day, q["days"], total]
 	_eq2.text = "%d \u00F7 %d = %d cartons" % [total, CARTON, cartons]
-	_hint.text = "\u2713 done"
+	_skip_btn.visible = false
 	_done = true
 	finished.emit()
 

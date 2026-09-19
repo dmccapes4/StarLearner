@@ -14,7 +14,7 @@ finding it hard.
 ## The flow
 
 1. **Launch home** — no tile selected. An intro tour highlights each control in
-   gold while narrating: the four number tiles across the bottom, the three
+   gold while narrating: the four operation tiles across the bottom, the three
    story games stacked top-right (chickens, trains, coins), then the ☰ menu —
    ending with **"Tap a tile to begin!"**
 2. **Number tiles** (`+` `−` `×` `÷`) sit centred along the bottom; **story

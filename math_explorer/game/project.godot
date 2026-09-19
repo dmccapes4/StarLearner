@@ -12,6 +12,7 @@ config/features=PackedStringArray("4.3", "Mobile")
 config/icon="res://icon.svg"
 
 [autoload]
+IdleGuard="*res://scripts/IdleGuard.gd"
 
 Save="*res://scripts/Save.gd"
 
