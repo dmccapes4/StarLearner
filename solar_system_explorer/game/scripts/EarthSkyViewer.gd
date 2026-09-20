@@ -122,6 +122,13 @@ var _sun_alt: float = -90.0
 var _dark: float = 1.0
 var _true_dark: float = 1.0
 var _force_dark: bool = false
+
+## Exponent applied to the exposure weight when computing each tail dot's alpha.
+## The default (1.45) makes older samples fade quickly so the fresh end of the
+## trail reads as bright and the rest as history. Setting this below 1.0 gives a
+## more gradual, persistent fade — useful for recordings where the whole arc needs
+## to stay legible across the full frame sequence.
+var tail_alpha_exponent: float = 1.45
 var _sky_btn: Button
 var _back_btn: Button
 var _clock_row: Control
@@ -814,7 +821,7 @@ func _draw_tail(lon_deg: float) -> void:
 		# has ever seen it -- and the trail is the only way to look at the loop
 		# at all. It still dims a little, because a washed-out sky washes out
 		# everything drawn on it.
-		var a: float = pow(w, 1.45) * PointGlowScript.alpha_for(mag) * 0.55 \
+		var a: float = pow(w, tail_alpha_exponent) * PointGlowScript.alpha_for(mag) * 0.55 \
 			* lerpf(0.6, 1.0, _dark)
 		mat.albedo_color = Color(
 			tint.x + 0.10 * warm,
