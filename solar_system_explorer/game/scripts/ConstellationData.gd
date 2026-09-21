@@ -207,17 +207,59 @@ const _SPECS: Array = [
 		"napa": "From Napa, Taurus stands high in the south on winter evenings. Look for orange Aldebaran and the tiny dipper of the Pleiades.",
 		"culture": "The bull is one of the oldest sky pictures — painted in Ice Age caves and named by Babylonian, Greek, and many later sky cultures."},
 	{"id": "gemini", "name": "Gemini", "kind": "zodiac",
-		"stars": [[7.5765, 31.888, 1.15], [7.7553, 28.026, 1.20],
-			[6.6285, 16.399, 0.95], [7.3354, 21.982, 0.75],
-			[6.7322, 25.131, 0.80], [6.3827, 22.514, 0.80]],
-		"links": [[0, 4], [1, 3], [4, 5], [3, 2], [0, 1]],
+		## Positions (RA hours, Dec degrees) from the Yale BSC / Hipparcos.
+		## Index  Bayer          RA       Dec      Role
+		##   0    α Gem Castor   7.5765  +31.888   head of twin A
+		##   1    β Gem Pollux   7.7553  +28.026   head of twin B
+		##   2    γ Gem Alhena   6.6285  +16.399   foot of twin B
+		##   3    δ Gem Wasat    7.3354  +21.982   lower body of twin B
+		##   4    ε Gem Mebsuda  6.7322  +25.131   upper body of twin A
+		##   5    μ Gem           6.3827  +22.514   ankle of twin A
+		##   6    η Gem Tejat P  6.2477  +22.507   foot of twin A
+		##   7    ζ Gem Mekbuda  7.0679  +20.570   knee of twin B
+		##   8    κ Gem           7.7408  +24.398   shoulder of twin B
+		"stars": [
+			[7.5765, 31.888, 1.15],   ## 0 Castor
+			[7.7553, 28.026, 1.20],   ## 1 Pollux
+			[6.6285, 16.399, 0.95],   ## 2 Alhena
+			[7.3354, 21.982, 0.75],   ## 3 Wasat
+			[6.7322, 25.131, 0.80],   ## 4 Mebsuda
+			[6.3827, 22.514, 0.80],   ## 5 μ Gem
+			[6.2477, 22.507, 0.75],   ## 6 η Gem (Tejat Prior)
+			[7.0679, 20.570, 0.75],   ## 7 ζ Gem (Mekbuda)
+			[7.7408, 24.398, 0.70]],  ## 8 κ Gem
+		## Twin A (Castor): 0→4→5→6  body running SW to paired feet
+		## Twin B (Pollux): 1→8→3→7→2  body running SW to Alhena
+		## Heads joined: 0→1
+		## Cross-link 4↔3 (ε Gem Mebsuda ↔ δ Gem Wasat) ties the two bodies
+		## together at waist level — the classic "H" that makes the twins obvious.
+		## Cross-link 4↔8 (ε Gem ↔ κ Gem) ties the two shoulders.
+		"links": [[0, 1], [0, 4], [4, 5], [5, 6], [1, 8], [8, 3], [3, 7], [7, 2],
+				  [4, 3], [4, 8]],
 		"napa": "From Napa, Gemini rides high in the winter and early-spring south. The twin bright stars Castor and Pollux mark the two heads.",
 		"culture": "Greek myth called them Castor and Pollux, twin brothers. Many cultures saw a pair of figures standing side by side."},
 	{"id": "cancer", "name": "Cancer", "kind": "zodiac",
-		"stars": [[8.9748, 11.858, 0.70], [8.7448, 18.155, 0.75],
-			[8.7214, 21.469, 0.70], [8.2753, 9.186, 0.80],
-			[8.7783, 28.760, 0.70]],
-		"links": [[3, 1], [1, 2], [1, 0], [2, 4]],
+		## Positions from Yale BSC / Hipparcos.
+		## Index  Bayer           RA       Dec      Role
+		##   0    α Cnc Acubens   8.9748  +11.858   eastern claw tip
+		##   1    δ Cnc Asellus A 8.7448  +18.155   lower donkey (just south of Beehive)
+		##   2    γ Cnc Asellus B 8.7214  +21.469   upper donkey (just north of Beehive)
+		##   3    β Cnc Altarf    8.2753  + 9.186   western claw tip
+		##   4    ι Cnc            8.7783  +28.760   top of crab body
+		##   5    ζ Cnc            8.2035  +17.648   elbow of western arm
+		## Shape: ι→γ→δ spine (Beehive sits between γ and δ),
+		##        δ→α eastern claw,  δ→ζ→β western arm.
+		"stars": [
+			[8.9748, 11.858, 0.70],   ## 0 Acubens α
+			[8.7448, 18.155, 0.75],   ## 1 Asellus Australis δ
+			[8.7214, 21.469, 0.70],   ## 2 Asellus Borealis γ
+			[8.2753,  9.186, 0.80],   ## 3 Altarf β
+			[8.7783, 28.760, 0.70],   ## 4 ι Cnc
+			[8.2035, 17.648, 0.65]],  ## 5 ζ Cnc
+		## Shape: i-spine: i(4) -> g(2) -> d(1) -> a(0) eastern claw.
+		##         West arm: g(2) -> z(5) -> b(3) — branches from g (not d)
+		##         so the crab is symmetric around the Beehive at center.
+		"links": [[4, 2], [2, 1], [1, 0], [2, 5], [5, 3]],
 		"napa": "From Napa, Cancer is a faint spring pattern between Gemini and Leo, highest in the south late on spring evenings.",
 		"culture": "Greek storytellers said Hera sent a crab to pinch Hercules. In the middle sits the Beehive, a star cluster known since ancient times."},
 	{"id": "leo", "name": "Leo", "kind": "zodiac",
