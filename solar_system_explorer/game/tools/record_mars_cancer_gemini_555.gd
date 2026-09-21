@@ -62,10 +62,11 @@ func _run() -> void:
 	var cel_north   := Vector3(-sin(eps), cos(eps), 0.0)
 
 	## ── 5. Wide field centred on Castor–Pollux–Beehive corridor ───────
-	## RA 8.1h, Dec +24°: Cancer (east/left) and Gemini (west/right) both
-	## visible.  narrate_555.sh applies hflip so east ends up on the left.
-	var view_ra_h := 8.1
-	var view_dec  := 24.0
+	## Center RA 8.2h, Dec +22°: western station (7.85h) is just right of
+	## Pollux (7.76h), eastern station (9.19h) is past the Beehive (8.67h).
+	## This framing shows the arc spanning from near Pollux to past the Beehive.
+	var view_ra_h := 8.2
+	var view_dec  := 22.0
 	var alpha     := deg_to_rad(view_ra_h * 15.0)
 	var delta_r   := deg_to_rad(view_dec)
 	var eq_dir    := Vector3(cos(delta_r)*cos(alpha), cos(delta_r)*sin(alpha), sin(delta_r))

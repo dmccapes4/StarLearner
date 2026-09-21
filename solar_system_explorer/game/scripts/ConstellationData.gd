@@ -231,11 +231,9 @@ const _SPECS: Array = [
 		## Twin A (Castor): 0→4→5→6  body running SW to paired feet
 		## Twin B (Pollux): 1→8→3→7→2  body running SW to Alhena
 		## Heads joined: 0→1
-		## Cross-link 4↔3 (ε Gem Mebsuda ↔ δ Gem Wasat) ties the two bodies
-		## together at waist level — the classic "H" that makes the twins obvious.
-		## Cross-link 4↔8 (ε Gem ↔ κ Gem) ties the two shoulders.
-		"links": [[0, 1], [0, 4], [4, 5], [5, 6], [1, 8], [8, 3], [3, 7], [7, 2],
-				  [4, 3], [4, 8]],
+		## Two clean parallel diagonal chains — the classic side-by-side twins.
+		## Cross-links removed: they made the figure look like scaffolding.
+		"links": [[0, 1], [0, 4], [4, 5], [5, 6], [1, 8], [8, 3], [3, 7], [7, 2]],
 		"napa": "From Napa, Gemini rides high in the winter and early-spring south. The twin bright stars Castor and Pollux mark the two heads.",
 		"culture": "Greek myth called them Castor and Pollux, twin brothers. Many cultures saw a pair of figures standing side by side."},
 	{"id": "cancer", "name": "Cancer", "kind": "zodiac",
@@ -256,10 +254,14 @@ const _SPECS: Array = [
 			[8.2753,  9.186, 0.80],   ## 3 Altarf β
 			[8.7783, 28.760, 0.70],   ## 4 ι Cnc
 			[8.2035, 17.648, 0.65]],  ## 5 ζ Cnc
-		## Shape: i-spine: i(4) -> g(2) -> d(1) -> a(0) eastern claw.
-		##         West arm: g(2) -> z(5) -> b(3) — branches from g (not d)
-		##         so the crab is symmetric around the Beehive at center.
-		"links": [[4, 2], [2, 1], [1, 0], [2, 5], [5, 3]],
+		## Shape:
+		##   ι(4) fans out to BOTH γ(2) (V-left arm) AND δ(1) (V-right arm).
+		##   ζ(5) ↔ δ(1): nearly-horizontal crossbar (ζ is 30′ west of δ in RA,
+		##     same Dec row) — this breaks the chair by adding horizontal spread.
+		##   δ(1) → α(0): eastern claw going south-east.
+		##   ζ(5) → β(3): western claw going south-west.
+		##   Beehive (M44) sits just west of δ / just east of ζ at centre.
+		"links": [[4, 2], [4, 1], [5, 1], [1, 0], [5, 3]],
 		"napa": "From Napa, Cancer is a faint spring pattern between Gemini and Leo, highest in the south late on spring evenings.",
 		"culture": "Greek storytellers said Hera sent a crab to pinch Hercules. In the middle sits the Beehive, a star cluster known since ancient times."},
 	{"id": "leo", "name": "Leo", "kind": "zodiac",
