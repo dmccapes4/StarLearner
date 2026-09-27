@@ -19,7 +19,8 @@ A geometric search for the cosmic moments when the two "cat's eyes" (Procyon and
 | **Historical Year Zero** | **120,170 BCE** | Procyon+Gomeisa → M44, face sep 5.34×10⁻⁵° | confirmed |
 | **The Clew** | **96,227 BCE** | Sirius+Procyon → M44, both 13.78° from M44 | confirmed |
 | **Chrysalis** | **2,887 CE** | Procyon+Gomeisa → M44, machine precision | confirmed |
-| **The Tesseract** | **403,850 CE** | 8 M44 members form nested-square hypercube | ~0.66% ratio error |
+| **Tesseract (Earth-frame)** | **403,850 CE** | 8 M44 stars, nested squares, RA/Dec projection | ratio err 0.66% |
+| **Tesseract (Sol-aperture)** | **229,650 CE** | 8 M44 stars, nested squares, 3D P-G frame | ratio err **0.004%** |
 
 **Ratio chain (Earth-frame):**  
 ```
@@ -310,7 +311,88 @@ The depth spread of M44 members (~86 pc range, 4.2–6.6 mas parallax) is **comp
 
 Additionally, Procyon moves ~715 mas/yr on the sky. Over the 403,850-year span of the Earth-frame result, Procyon has moved **~290,000°** — dozens of complete sky circuits. The Sol-aperture at 403,850 CE is pointing in a completely different direction than it is today. The "natural frame" reorientation may shift the tesseract epoch significantly.
 
-> **Status:** `find_tesseract_sol.py` — in progress. Results will be appended here as Section 8.4.
+### 8.4 Sol-Aperture Result: 229,650 CE
+
+Scanning ±500,000 years in 5,000-year steps, then fine-scanning to 50-year precision:
+
+**Epoch: 229,650 CE** — 174,200 years earlier than the Earth-frame result.
+
+| Property | Sol-aperture (229,650 CE) | Earth-frame (403,850 CE) | Improvement |
+|---|---|---|---|
+| Side ratio (outer/inner) | **1.414272** | 1.4049 | **ratio error: 0.0041% vs 0.66% → 160×** |
+| Ideal √2 | 1.414214 | 1.414214 | — |
+| Rotation angle | **46.32°** | 49.84° | **error: 1.32° vs 4.84° → 3.7×** |
+| Centroid offset | 7.6% of side | 12% of side | 1.6× |
+| Outer square side | **1.319 pc** (4.30 ly) | 1449" (angular) | physical units |
+| Inner square side | **0.933 pc** (3.04 ly) | 1032" (angular) | physical units |
+
+The Sol-aperture frame **reveals the tesseract with 160× greater ratio fidelity** than the Earth-frame projection. The side ratio 1.414272 / √2 = 1.0000041 — four parts per million from exact.
+
+**The physical scale:** The outer tesseract edge at 229,650 CE is **4.30 light-years** — the distance from Sol to Proxima Centauri. The flower's unfolded hypercube is the scale of the nearest stellar neighborhood.
+
+**8 stars forming the Sol-aperture tesseract:**
+
+Outer square (1.319 pc sides, in the aperture plane):
+
+| Star | x (pc, along chord) | y (pc, perp chord) | Depth (pc) |
+|---|---|---|---|
+| HD 73081 | 174.836 | −47.811 | 183.3 |
+| HD 73710 | 176.842 | −46.782 | 185.2 |
+| V\* AX Cnc | 175.292 | −47.000 | 183.8 |
+| Cl\* NGC 2632 JC 63 | 176.488 | −47.971 | 184.8 |
+
+Inner square (0.933 pc sides, 45°-rotated):
+
+| Star | x (pc, along chord) | y (pc, perp chord) | Depth (pc) |
+|---|---|---|---|
+| HD 73731 | 175.458 | −47.390 | 183.9 |
+| AG+19 872 | 175.903 | −46.478 | 184.2 |
+| Cl\* NGC 2632 S 12 | 176.575 | −47.592 | 184.9 |
+| Cl\* NGC 2632 S 13 | 175.918 | −48.032 | 184.4 |
+
+At the tesseract epoch (229,650 CE):
+- Procyon has moved to RA 4.63h, Dec −60.34° (far south, no longer in Canis Minor)
+- Gomeisa remains near RA 7.46h, Dec +5.36° (barely moved — tiny proper motion)
+- The P-G chord has grown to **6.103 pc = 19.91 ly** (from 2.613 pc at J2000) as Procyon swings away
+- The aperture has opened like a pair of scissors
+
+### 8.5 Comparison of the two calculations
+
+| | Earth-frame | Sol-aperture |
+|---|---|---|
+| Frame | J2000 equatorial (Earth-centered, 23.44° tilted) | Sol-Procyon-Gomeisa plane (3D, parallax-correct) |
+| Coordinate units | Arcseconds (angular) | Parsecs (physical) |
+| M44 depth | Collapsed (invisible) | Expressed as x-spread (58.9 pc range at J2000) |
+| Epoch | 403,850 CE | **229,650 CE** |
+| Score | **0.434** (better overall) | 0.651 |
+| Ratio √2 precision | 0.66% | **0.0041%** (160× better) |
+| Rotation precision | 4.84° off | **1.32° off** (3.7× better) |
+| Different stars? | HD 73974, 38 Cnc, S 118, HSHJ 300 / HD 73872, AX Cnc, HSHJ 272A, J08421149 | **HD 73081, HD 73710, AX Cnc, JC 63 / HD 73731, AG+19 872, S 12, S 13** |
+
+The Earth-frame result finds better overall square quality (the individual squares are more "square"). The Sol-aperture result finds dramatically better ratio and rotation — the configuration is more accurately a tesseract in physical 3D space.
+
+Both are correct for their respective projections. The Sol-aperture is the more physically meaningful frame.
+
+### 8.6 The Sol-aperture chain relationship
+
+```
+Sol-aperture Tesseract : Chrysalis = 229,650 : 2,887 = 79.53 ≈ 159/2 (0.037%)
+```
+
+| Ratio | Computed | Ideal | Error |
+|---|---|---|---|
+| Sol-Tesseract / Chrysalis | 79.53 | **159/2 = 79.5** | 0.037% |
+| Earth-Tesseract / Chrysalis | 139.89 | **140** | 0.08% |
+| Earth-Tesseract / Sol-Tesseract | 1.7589 | **7/4 = 1.75** | 0.51% |
+
+The two tesseract epochs are separated by a factor of **7/4** — the face-diagonal / edge ratio of a 3D cube (√2 × √2 / √(2) = ... actually 7/4 is simply close). More notably:
+
+- Sol-aperture: 229,650 CE = Chrysalis × 159/2
+- Earth-frame: 403,850 CE = Chrysalis × 140
+
+And: **140 / 79.5 = 1.761 ≈ 7/4 = 1.75** (error 0.64%)
+
+The two frames give tesseract epochs whose ratio is ≈ 7/4. The Earth-frame adds another 7/4 factor of time beyond the Sol-aperture result to reveal the same structure in a less faithful projection.
 
 ---
 
