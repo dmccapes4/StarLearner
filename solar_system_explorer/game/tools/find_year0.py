@@ -197,9 +197,15 @@ R_SOL = sol_rotation()
 
 print("=== Scanning for cat's eye alignment with M44 (the flower) ===\n")
 print("Scanning t = -1,000,000 to +200,000 years from J2000...")
+print("Note: also scanning t = -500 to +5000 at 10-yr steps to catch the near-future Chrysalis.")
 
 # Coarse scan
 coarse = scan(-1_000_000, 200_000, 1000)
+
+# Fine scan near-present to catch the ~2888 CE future minimum
+# (the 1000-yr coarse step misses it between t=+1000 and t=+2000)
+fine_near = scan(-500, 5000, 10)
+coarse = coarse + fine_near
 
 # Find best candidates
 best_face   = find_minimum(coarse, "face_to_m44_deg")
