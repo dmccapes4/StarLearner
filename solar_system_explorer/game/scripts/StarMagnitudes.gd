@@ -21,9 +21,11 @@ const V: Dictionary = {
 		# Hamal, Sheratan, Mesarthim (gam Ari), Bharani
 	"taurus": [0.87, 1.65, 3.53, 3.65, 3.77, 2.85],
 		# Aldebaran, Elnath, Ain, Prima Hyadum, Secunda Hyadum, Alcyone
-	"gemini": [1.58, 1.16, 1.93, 3.50, 3.06, 2.87],
+	"gemini": [1.58, 1.16, 1.93, 3.50, 3.06, 2.87, 3.28, 3.93, 3.57],
+			# Castor, Pollux, Alhena, Wasat, Mebsuda, μ Gem, η Gem, ζ Gem, κ Gem
 		# Castor, Pollux, Alhena, Wasat, Mebsuta, Tejat
-	"cancer": [4.26, 3.94, 4.66, 3.53, 4.03],
+	"cancer": [4.26, 3.94, 4.66, 3.53, 4.03, 4.67],
+			# Acubens, δ Cnc, γ Cnc, Altarf, ι Cnc, ζ Cnc
 		# Acubens, Asellus Australis, Asellus Borealis, Tarf, 48Iot Cnc
 	"leo": [1.36, 2.14, 2.01, 2.56, 3.33, 3.43, 2.97],
 		# Regulus, Denebola, Algieba, Zosma, Chertan, Adhafera, Ras Elased Australis
