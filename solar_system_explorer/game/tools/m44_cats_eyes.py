@@ -141,12 +141,12 @@ PROCYON = dict(
 # Gomeisa β CMi — HIP 36188
 GOMEISA = dict(
     hip=36188, name="Gomeisa", bayer="β CMi",
-    ra_j2000=111.78768, dec_j2000=8.28930,
-    dist_pc=51.6,     # parallax 19.37 mas
+    ra_j2000=111.78780, dec_j2000=8.28941,
+    dist_pc=52.192,   # Hipparcos I/239 HIP 36188: plx=19.160 mas → 52.192 pc = 170.2 ly
     vmag=2.90,
-    mu_ra_star=0.85, mu_dec=-46.39,
+    mu_ra_star=-50.280, mu_dec=-38.450,   # Hipparcos I/239 direct
     role="cats_eye",
-    note="Western cat's eye. Small proper motion."
+    note="Western cat's eye. Corrected from Hipparcos I/239 HIP 36188: plx=19.160 mas, pmRA*=-50.280, pmDE=-38.450."
 )
 
 # M44 'the flower' — Hipparcos-confirmed members

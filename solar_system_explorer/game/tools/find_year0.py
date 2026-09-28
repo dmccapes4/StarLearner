@@ -31,11 +31,11 @@ PRO_DEC =   5.22499
 PRO_MU_RA  = -714.590  # mas/yr  (μα·cosδ)
 PRO_MU_DEC =-1036.800
 
-# Gomeisa β CMi (HIP 36188) — J2000
-GOM_RA  = 111.78768
-GOM_DEC =   8.28930
-GOM_MU_RA  =   0.85
-GOM_MU_DEC = -46.39
+# Gomeisa β CMi (HIP 36188) — J2000  [Hipparcos I/239 direct]
+GOM_RA  = 111.78780
+GOM_DEC =   8.28941
+GOM_MU_RA  = -50.280   # mas/yr  (μα* = μα·cosδ)
+GOM_MU_DEC = -38.450   # mas/yr
 
 # M44 "the flower" brightness-weighted aperture — J2000
 M44_RA  = 129.8673

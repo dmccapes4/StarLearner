@@ -30,7 +30,7 @@ import math, json
 SIR = dict(ra=101.2872, dec=-16.7161, mua=-546.01, mud=-1223.07, d_ly=8.601,  name="Sirius")
 PRO = dict(ra=114.8255, dec=5.2250,   mua=-714.59, mud=-1036.80, d_ly=11.46,  name="Procyon")
 POL = dict(ra=37.9546,  dec=89.2641,  mua=44.22,   mud=-11.74,   d_ly=433.0,  name="Polaris")
-GOM = dict(ra=111.7877, dec=8.2893,   mua=0.85,    mud=-46.39,   d_ly=162.0,  name="Gomeisa")
+GOM = dict(ra=111.78780, dec=8.28941, mua=-50.280, mud=-38.450, d_ly=170.2, name="Gomeisa")  # Hipparcos I/239 HIP 36188
 M44 = dict(ra=129.8673, dec=19.7373,  mua=-36.0,   mud=-12.9,    d_ly=1683.,  name="M44")
 
 # ── Math ─────────────────────────────────────────────────────────────────────
@@ -104,8 +104,8 @@ for (name,ra,dec) in [("Sirius",sir_ra,sir_dec),("M44",m_ra,m_dec),
 print()
 
 # ── Fractional structure ──────────────────────────────────────────────────────
-YZ_hist = 120170.0  # BCE
-YZ_chry = 2887.6    # CE
+YZ_hist = 116117.0  # BCE  [corrected: Hipparcos I/239 Gomeisa PM]
+YZ_chry = 2915.1    # CE   [corrected]
 
 print("═══ FRACTIONAL STRUCTURE ═══")
 print(f"Historical YZ: {YZ_hist:.0f} BCE")
@@ -137,7 +137,7 @@ records = [
      "sirius_procyon_sep": round(d_sir_pro,4),
      "clew_div_histyz": round(abs(yr_clew)/YZ_hist,6),
      "clew_div_chrysalis": round(abs(yr_clew)/YZ_chry,6),
-     "note": "Sirius-Procyon equidistant from M44. Clew = 4/5 × 120170 BCE = 100/3 × 2887 CE"},
+     "note": "Sirius-Procyon equidistant from M44. Clew ≈ 4/5 × 116117 BCE = 33 × 2915 CE (corrected Gomeisa PM)"},
 ]
 with open("game/docs/video/clew_alignment.jsonl","w") as f:
     for r in records:

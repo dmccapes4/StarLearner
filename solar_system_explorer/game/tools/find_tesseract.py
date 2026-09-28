@@ -261,18 +261,18 @@ if uf_detail:
     print()
 
 print("═══ ALIGNMENT CHAIN RELATIONSHIPS ═══")
-chain = [("Historical Year Zero",120170,False),("The Clew",96227,False),
-         ("Chrysalis",2887,True),("Tesseract",abs(yr),yr>0)]
+chain = [("Historical Year Zero",116117,False),("The Clew",96227,False),
+         ("Chrysalis",2915,True),("Tesseract",abs(yr),yr>0)]
 for name,val,is_ce in chain:
     print(f"  {name:25s}: {val:.0f} {'CE' if is_ce else 'BCE'}")
 print()
 if yr < 0:
-    print(f"  Tesseract / Historical YZ = {abs(yr)/120170:.5f}")
+    print(f"  Tesseract / Historical YZ = {abs(yr)/116117:.5f}")
     print(f"  Tesseract / Clew          = {abs(yr)/96227:.5f}")
-    print(f"  Tesseract / Chrysalis     = {abs(yr)/2887:.5f}")
+    print(f"  Tesseract / Chrysalis     = {abs(yr)/2915:.5f}")
 else:
-    print(f"  Tesseract / Chrysalis     = {yr/2887:.5f}")
-    print(f"  Chrysalis / Tesseract     = {2887/yr:.5f}")
+    print(f"  Tesseract / Chrysalis     = {yr/2915:.5f}")
+    print(f"  Chrysalis / Tesseract     = {2915/yr:.5f}")
 print()
 
 # JSONL

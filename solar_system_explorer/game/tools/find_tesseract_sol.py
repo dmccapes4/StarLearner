@@ -67,8 +67,8 @@ def star_3d_at(ra0, dec0, plx_mas, mua_mas, mud_mas, dt_yr):
 
 PRO = dict(name="Procyon", ra=114.8255, dec=5.2250,
            plx=285.93, mua=-714.59, mud=-1036.80)   # 3.498 pc
-GOM = dict(name="Gomeisa", ra=111.7877, dec=8.2893,
-           plx=164.28, mua=0.85,    mud=-46.39)      # 6.087 pc
+GOM = dict(name="Gomeisa", ra=111.78780, dec=8.28941,
+           plx=19.160, mua=-50.280, mud=-38.450)      # Hipparcos I/239 HIP 36188: 52.192 pc = 170.2 ly
 
 # M44 members — from SIMBAD cone search (RA=130.054°, Dec=19.621°, r=2°)
 # pm selection: μα*∈[-45,-25], μδ∈[-20,-5], plx∈[4,7] mas (confirmed members)
@@ -101,7 +101,7 @@ N = len(MEMBERS)
 print("═══ SOL-APERTURE TESSERACT SEARCH ═══")
 print(f"M44 members: {N}")
 print(f"Procyon:  {PRO['plx']:.2f} mas → {1000/PRO['plx']:.3f} pc = {1000/PRO['plx']*3.2616:.2f} ly")
-print(f"Gomeisa:  {GOM['plx']:.2f} mas → {1000/GOM['plx']:.3f} pc = {1000/GOM['plx']*3.2616:.2f} ly")
+print(f"Gomeisa:  {GOM['plx']:.3f} mas → {1000/GOM['plx']:.3f} pc = {1000/GOM['plx']*3.2616:.2f} ly  [Hipparcos I/239 corrected]")
 print(f"M44 mean: 5.371 mas → 186.2 pc = 607 ly")
 print()
 
@@ -333,9 +333,9 @@ print()
 
 # ── Chain relationships ───────────────────────────────────────────────────────
 print("═══ SOL-APERTURE CHAIN RELATIONSHIPS ═══")
-YZ_hist = 120170.0  # BCE
+YZ_hist = 116117.0  # BCE  [corrected: Hipparcos I/239 Gomeisa PM]
 clew    = 96227.0   # BCE
-chry    = 2887.6    # CE
+chry    = 2915.1    # CE   [corrected]
 print(f"  Historical YZ: {YZ_hist:.0f} BCE")
 print(f"  The Clew:      {clew:.0f} BCE")
 print(f"  Chrysalis:     {chry:.0f} CE")
