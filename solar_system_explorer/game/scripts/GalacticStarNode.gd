@@ -35,17 +35,29 @@ func _ready() -> void:
 	add_child(_label)
 
 func _process(delta: float) -> void:
-	_ring_phase += delta * (0.5 + field_strength * 2.0)
+	# v0.0.3: ring pulse rate reflects galactic field mirror value.
+	# Nearby stars (field≈0.9) pulse fast. Distant stars (Rigel field≈0.2) pulse slowly.
+	# This is the mirror: the ring tells you the star's galactic field influence honestly.
+	_ring_phase += delta * (0.3 + field_strength * 1.8)
 	queue_redraw()
 
 func _draw() -> void:
-	# Outer glow ring (field strength)
-	var ring_r := _base_radius * (1.8 + 0.6 * sin(_ring_phase))
-	var ring_col := Color(_color.r, _color.g, _color.b, 0.15 + field_strength * 0.25)
+	# v0.0.3: outer ring radius and opacity scale with field_strength
+	# Distant stars (Rigel, M44) have smaller, dimmer rings — honest
+	var ring_r := _base_radius * (1.5 + 0.8 * sin(_ring_phase) * field_strength)
+	var ring_opacity := 0.08 + field_strength * 0.30
+	var ring_col := Color(_color.r, _color.g, _color.b, ring_opacity)
 	draw_circle(Vector2.ZERO, ring_r, ring_col)
 
-	# Core dot
-	draw_circle(Vector2.ZERO, _base_radius, _color)
+	# Second ring for high-field stars (field > 0.6 = within ~40pc)
+	if field_strength > 0.6:
+		var r2 := _base_radius * (1.1 + 0.4 * sin(_ring_phase * 1.3 + 1.0))
+		draw_circle(Vector2.ZERO, r2,
+			Color(_color.r, _color.g, _color.b, (field_strength - 0.6) * 0.35))
+
+	# Core dot — size reflects field (nearer = slightly larger apparent disk)
+	var core_r := _base_radius * (0.7 + field_strength * 0.5)
+	draw_circle(Vector2.ZERO, core_r, _color)
 
 	# Inner bright spot
-	draw_circle(Vector2.ZERO, _base_radius * 0.45, Color.WHITE.lerp(_color, 0.3))
+	draw_circle(Vector2.ZERO, core_r * 0.40, Color.WHITE.lerp(_color, 0.25))

@@ -114,9 +114,34 @@ def load_plefr_states(star_name):
 
 
 def state_to_vec4(state):
-    """4D vector: (x, y, z, field). Normalize to unit vector."""
-    v = np.array([state["xyz"][0], state["xyz"][1],
-                  state["xyz"][2], state["field"]], dtype=float)
+    """
+    4D vector: (unit_direction, field). Normalize to unit 4-sphere.
+
+    v0.0.3 FIX — mirror not oracle:
+    Previous: v = (x_pc, y_pc, z_pc, v_vel/max_v) — distant stars (Rigel 237pc,
+    M44 184pc) had field≈0 AND the raw parsec magnitudes dominated the norm,
+    collapsing the 4th dimension entirely. All candidates had cosine≈1.0000.
+    n(s) = sin(I,s) - cos(r,s) ≈ -1 for all s. Algorithm had nothing to displace.
+
+    Fix: normalize the spatial part to unit direction FIRST, then attach field.
+    field = 1 / sqrt(1 + dist_pc/10)  — galactic field mirror:
+       Sirius  2.6pc  → 0.891   Procyon  3.5pc  → 0.859
+       Pollux 10.0pc  → 0.707   Capella 13.0pc  → 0.660
+       Aldebaran 20pc → 0.577   Castor  52.0pc  → 0.400
+       Gomeisa 168pc  → 0.237   M44    184pc   → 0.227
+       Rigel   237pc  → 0.203
+
+    The 4D vector is now well-conditioned for all distances.
+    The field reflects actual galactic topology: nearer = stronger influence.
+    "ALGORITHM = mirror, not oracle."  — BUENAS_DIA_VOLARE
+    """
+    xyz = np.array(state["xyz"], dtype=float)
+    dist_pc = float(np.linalg.norm(xyz))
+    # spatial part: unit direction (prevents far-star collapse)
+    xyz_dir = xyz / (dist_pc + 1e-10)
+    # field: inverse-sqrt of distance — galactic field mirror
+    field = 1.0 / math.sqrt(1.0 + dist_pc / 10.0)
+    v = np.array([xyz_dir[0], xyz_dir[1], xyz_dir[2], field])
     norm = np.linalg.norm(v)
     if norm < 1e-10:
         return np.array([1.0, 0.0, 0.0, 0.0])
@@ -360,6 +385,7 @@ def player_step(player_xyz, decision_vector=None):
             field["stars"][star_name] = {
                 "xyz_pc": [new_state["x_pc"], new_state["y_pc"], new_state["z_pc"]],
                 "field": new_state["field"],
+                "n_score": new_state["n_score"],   ## v0.0.3: propagate for HUD mirror
                 "step": current_step,
             }
 
@@ -391,11 +417,74 @@ def report_ops(k=20):
 
 
 if __name__ == "__main__":
+    import sys
     report_ops()
-    print("\nSelf-test: one step for procyon...")
-    field = player_step([0.001, 0.0, 0.0])  # tiny player movement from Sol
-    if "procyon" in field["stars"]:
-        s = field["stars"]["procyon"]
-        print(f"  procyon new xyz_pc: {s['xyz_pc']}")
-        print(f"  field: {s['field']:.4f}  step: {s['step']}")
-    print("Done.")
+
+    if "--generate" in sys.argv:
+        # ── Generate galactic_journey.jsonl ─────────────────────────────────
+        # v0.0.3: 150 steps, distance-based field, honest 4D vectors
+        N_STEPS = 150
+        JOURNEY_OUT = "game/data/galactic_journey.jsonl"
+        SEED = 97718  # same seed as BeginningToNoww run 1
+
+        print(f"\n[v0.0.3] Generating {N_STEPS}-step galactic journey (seed {SEED})...")
+        random.seed(SEED)
+
+        # Reset per-star ledgers
+        import shutil
+        if os.path.exists(STAR_POSITIONS_DIR):
+            shutil.rmtree(STAR_POSITIONS_DIR)
+        os.makedirs(STAR_POSITIONS_DIR, exist_ok=True)
+
+        # Reset galactic field
+        if os.path.exists(GALACTIC_FIELD_FILE):
+            os.remove(GALACTIC_FIELD_FILE)
+
+        steps_written = 0
+        with open(JOURNEY_OUT, "w") as jf:
+            for step_i in range(N_STEPS):
+                # Player drifts slowly from origin — Sol steering through cosmos
+                t = step_i / max(1, N_STEPS - 1)
+                px = 0.001 + t * 0.5   # drift 0.5 pc over journey
+                py = math.sin(t * math.pi * 0.5) * 0.05   # small y excursion
+                pz = math.cos(t * math.pi * 0.3) * 0.03   # small z excursion
+                player_xyz = [px, py, pz]
+
+                field = player_step(player_xyz)
+                field["step"] = step_i + 1
+
+                line = json.dumps(field)
+                jf.write(line + "\n")
+                steps_written += 1
+
+                # Print progress every 10 steps
+                if (step_i + 1) % 10 == 0:
+                    # Sample n_score from one active star
+                    sample_star = None
+                    for sn in ARC_STARS:
+                        ledger = read_star_ledger(sn)
+                        if ledger:
+                            ns = ledger[-1].get("n_score", 0)
+                            sample_star = f"{sn} n={ns:.3f}"
+                            break
+                    print(f"  Step {step_i+1:3d}/{N_STEPS}  {sample_star or ''}")
+
+        print(f"\n[Done] {steps_written} steps → {JOURNEY_OUT}")
+        # Quick field stats
+        field_final = load_galactic_field()
+        for sn in ARC_STARS:
+            ledger = read_star_ledger(sn)
+            if ledger and len(ledger) >= 3:
+                scores = [s.get("n_score", 0) for s in ledger[-5:]]
+                print(f"  {sn:12s}  last-5 n_score: {[f'{x:.3f}' for x in scores]}")
+
+    else:
+        print("\nSelf-test: one step for procyon...")
+        field = player_step([0.001, 0.0, 0.0])
+        if "procyon" in field["stars"]:
+            s = field["stars"]["procyon"]
+            print(f"  procyon new xyz_pc: {s['xyz_pc']}")
+            print(f"  field: {s['field']:.4f}  step: {s['step']}")
+        print("Done.\n")
+        print("To regenerate galactic_journey.jsonl (150 steps, v0.0.3):")
+        print("  python3 game/tools/star_travel.py --generate")
