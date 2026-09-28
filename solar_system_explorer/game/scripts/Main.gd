@@ -37,6 +37,7 @@ const PropulsionChooser := preload("res://scripts/PropulsionChooser.gd")
 const BriefingSlideshow := preload("res://scripts/BriefingSlideshow.gd")
 const NavModes := preload("res://scripts/NavModes.gd")
 const ConstellationViewer := preload("res://scripts/ConstellationViewer.gd")
+const GalacticView := preload("res://scripts/GalacticView.gd")
 
 var _title: TitleView
 var _chooser: FlightChooser
@@ -55,6 +56,7 @@ var _night_sky: ConstellationViewer
 var _video: VideoPanel
 var _astro: AstronautIntro
 var _briefing: BriefingSlideshow
+var _galactic: GalacticView   ## v0.0.2 — Galactic Free Flight
 var _ship_at: String = "earth"
 var _pending_dest: String = ""
 var _last_route: Dictionary = {}
@@ -103,8 +105,13 @@ func _ready() -> void:
 	add_child(_astro)
 	add_child(_briefing)
 
+	_galactic = GalacticView.new()
+	add_child(_galactic)
+	_galactic.set_active(false)
+
 	_title.flight_pressed.connect(_on_flight)
 	_title.explainer_pressed.connect(_on_explainer)
+	_chooser.galactic_pressed.connect(_on_galactic_flight)
 	_chooser.mission_pressed.connect(_on_mission_flight)
 	_chooser.free_flight_pressed.connect(_on_free_flight)
 	_chooser.earth_ship_pressed.connect(_on_earth_ship)
@@ -137,6 +144,9 @@ func _ready() -> void:
 	_night_sky.closed.connect(_on_night_sky_closed)
 	_video.closed.connect(_on_video_closed)
 	_astro.finished.connect(_on_astro_finished)
+
+	_galactic.go_home.connect(_on_galactic_home)
+	_galactic.set_active(false)
 
 	_hide_all_views()
 	call_deferred("_boot_sequence")
@@ -212,6 +222,15 @@ func _on_explainer() -> void:
 	_set_view(_orrery)
 	_orrery.begin_tour()
 
+func _on_galactic_flight() -> void:
+	_hide_all_views()
+	_galactic.set_active(true)
+	Narrator.speak("You are Sol. Each step, the stars drift. Tap Next Step to move through the cosmos.")
+
+func _on_galactic_home() -> void:
+	_galactic.set_active(false)
+	_set_view(_chooser)
+
 func _show_title() -> void:
 	_orrery.stop_tour()
 	_fly.set_active(false)
@@ -221,6 +240,7 @@ func _show_title() -> void:
 	_earth_ship.set_active(false)
 	_sky_viewer.set_active(false)
 	_night_sky.set_active(false)
+	_galactic.set_active(false)
 	_in_playground = false
 	_in_zodiac = false
 	_zodiac_return_playground = false
@@ -426,4 +446,5 @@ func _hide_all_views() -> void:
 	_earth_ship.set_active(false)
 	_night_sky.set_active(false)
 	_sky_viewer.set_active(false)
+	_galactic.set_active(false)
 
