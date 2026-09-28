@@ -1,0 +1,20 @@
+{
+	"beds": {
+
+	},
+	"caught_bugs": [],
+	"flags": {
+		"shed_tools_intro": true
+	},
+	"harvest_totals": {
+
+	},
+	"intro_completed": true,
+	"season_elapsed": 0,
+	"season_id": "spring",
+	"selected_seed": "",
+	"stars_collected": [],
+	"tool_id": "",
+	"version": 2,
+	"year": 1
+}

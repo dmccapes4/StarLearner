@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Garden Explorer — Star Learner</title>
+  <meta name="description" content="Garden Explorer: plant, water, grow, and harvest in a seasonal offline garden with knowledge-star clips on the Star Learner console." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/site.css?v=2" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav-brand" href="/">Star <span>Learner</span></a>
+      <ul class="nav-links">
+        <li><a href="/">Star Learner</a></li>
+        <li><a href="/games/ant/">Ant Explorer</a></li>
+        <li><a href="/games/garden/" aria-current="page">Garden Explorer</a></li>
+        <li><a href="/games/solar/">Solar System Explorer</a></li>
+        <li><a href="/games/math/">Math Explorer</a></li>
+        <li><a href="/games/language/">Language Explorer</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <p class="eyebrow">Game 2 · Star Learner</p>
+    <h1>Garden Explorer</h1>
+    <p class="lede">
+      A calm isometric farm for a young gardener: pick seasonal seeds at the shed, tend six beds,
+      visit animals at the fence, and unlock knowledge stars with short offline gardening videos.
+      Plant, water, grow, harvest — and learn along the way.
+    </p>
+
+    <div class="media-block">
+      <video controls playsinline preload="metadata" src="../../media/demos/garden_explainer.mp4">
+        Your browser does not support the video tag.
+      </video>
+      <span class="cap">Short explainer: the farm layout, seasons, and how to play.</span>
+    </div>
+
+    <section class="prose" aria-labelledby="about-heading">
+      <h2 id="about-heading">On the farm</h2>
+      <p>
+        Garden Explorer is a wide-landscape 2D isometric garden built for one finger. The left side
+        holds the shed — seed store and harvest storage. The middle is a 2×3 grid of raised beds
+        (six beds, four plant slots each). The right is a fenced animal pen. Seasons advance on their
+        own clock; each season opens a different seed subset, so the garden keeps changing without
+        menus or reading.
+      </p>
+      <p>
+        Tap the shed to pick a seed, tap a bed slot to plant, then water when thirst icons appear.
+        Plants grow with water and time; harvest when ready and store the crop back at the shed.
+        Animals and bugs live on the farm too — tap a cow, chicken, butterfly, or ladybug for a short
+        spoken aside. Twelve knowledge stars live in the hamburger menu (top-left): some are always
+        visible (dim until collected); others reveal as the child plants, waters, sprouts, harvests,
+        or changes season. Tap a star for a short educational clip with baked ElevenLabs narration.
+      </p>
+      <p>
+        Built in Godot 4.3 (Mobile renderer), offline-first: clips and voice-over ship on the device.
+        On a Star Learner kiosk it is the garden tile in the curated landscape catalog — no store, no
+        browser, just the farm.
+      </p>
+      <ul>
+        <li><strong>Plant &amp; water</strong> — seasonal seeds from the shed into six raised beds.</li>
+        <li><strong>Grow &amp; harvest</strong> — thirst and harvest icons; store crops back at the shed.</li>
+        <li><strong>Animals &amp; bugs</strong> — tap the pen and garden visitors for spoken moments.</li>
+        <li><strong>Knowledge stars</strong> — 12 offline clips with ElevenLabs VO; one-finger landscape play.</li>
+      </ul>
+    </section>
+
+    <h2>Screenshots</h2>
+    <div class="shot-grid">
+      <figure>
+        <img src="../../media/screenshots/garden/farm_boot_current.png" alt="Current farm layout: raised beds, watering can, companion dog, Season Spring" loading="lazy" />
+        <figcaption>Current farm — raised beds, watering can, and dog companion (Spring).</figcaption>
+      </figure>
+      <figure>
+        <img src="../../media/screenshots/garden/pen_overview.png" alt="Animal pen with cow, pig, chicks, and garden beds beyond an open gate" loading="lazy" />
+        <figcaption>Animal pen overview — livestock at the fence, beds waiting beyond the open gate.</figcaption>
+      </figure>
+      <figure>
+        <img src="../../media/screenshots/garden/pen_gate_open.png" alt="Spring farm with open fence, animals, and empty raised beds" loading="lazy" />
+        <figcaption>Gate open in spring — dog, rabbit, pig, and cow share the yard beside the beds.</figcaption>
+      </figure>
+      <figure>
+        <img src="../../media/screenshots/garden/pen_gate_closed.png" alt="Spring farm with closed fence between beds and animal area" loading="lazy" />
+        <figcaption>Gate closed — the fence divides planting beds from the animal side of the farm.</figcaption>
+      </figure>
+      <figure>
+        <img src="../../media/screenshots/garden/shed_close.png" alt="Wooden shed with the gardener and dog nearby in winter snow" loading="lazy" />
+        <figcaption>The shed — tap for seasonal seeds and to store harvested crops.</figcaption>
+      </figure>
+      <figure>
+        <img src="../../media/screenshots/garden/beds_walk_now.png" alt="Six raised beds with a Bugs knowledge card over one bed" loading="lazy" />
+        <figcaption>Garden beds — tap bugs and plants for short lessons while you walk the rows.</figcaption>
+      </figure>
+      <figure>
+        <img src="../../media/screenshots/garden/gate_now.png" alt="Fall season view of beds, path, and animal pen with chicken coop" loading="lazy" />
+        <figcaption>Fall on the farm — seasons change the seed list and the feel of the yard.</figcaption>
+      </figure>
+    </div>
+
+    <h2>Walkthrough</h2>
+    <div class="media-block">
+      <video controls playsinline preload="metadata" src="../../media/demos/garden_walkthrough.mp4">
+        Your browser does not support the video tag.
+      </video>
+      <span class="cap">In-engine playthrough: shed, planting, watering, animals, and knowledge stars.</span>
+    </div>
+
+    <h2>Knowledge-star samples</h2>
+    <div class="prose">
+      <p>
+        Three in-game clips from the garden library — the same offline educational videos a child
+        finds through stars, plants, animals, and bugs.
+      </p>
+    </div>
+    <div class="clip-catalog">
+      <article class="clip-card">
+        <h3>What is a seed?</h3>
+        <video controls playsinline preload="metadata" src="../../media/clips/garden/01_seeds.mp4">
+          Your browser does not support the video tag.
+        </video>
+        <p class="cap">Sample clip — what a seed is and how planting starts.</p>
+      </article>
+      <article class="clip-card">
+        <h3>Butterfly</h3>
+        <video controls playsinline preload="metadata" src="../../media/clips/garden/bug_butterfly.mp4">
+          Your browser does not support the video tag.
+        </video>
+        <p class="cap">Sample clip — butterflies visiting the garden.</p>
+      </article>
+      <article class="clip-card">
+        <h3>Chicken</h3>
+        <video controls playsinline preload="metadata" src="../../media/clips/garden/animal_chicken.mp4">
+          Your browser does not support the video tag.
+        </video>
+        <p class="cap">Sample clip — chickens in the animal pen.</p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>
+      <a href="/">Star Learner</a>
+      ·
+      <a href="https://dylanmccapes.systems">dylanmccapes.systems</a>
+    </p>
+  </footer>
+</body>
+</html>

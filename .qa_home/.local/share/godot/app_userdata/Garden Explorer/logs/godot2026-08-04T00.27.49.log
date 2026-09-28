@@ -1,0 +1,108 @@
+Godot Engine v4.3.stable.official.77dcf97d8 - https://godotengine.org
+
+======== Garden Explorer DEPTH suite ========
+FarmSprites: Mana Seed crops ready (68 sheets)
+Garden Explorer Phase 6 — VO + save (6 beds, 12 stars, sprites=true).
+Hamburger ★ · shed · water/harvest · seasons · animals · ElevenLabs VO.
+OK   six_beds — beds=6
+OK   gate_world — gate=(177.6, 184.8)
+OK   coop_solid — coop blocked
+ shot 00_01_spawn.png — Spawn on path — baseline feet vs ground
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_01_spawn.png
+ shot 00_02_path_north_bed1.png — On path beside north bed_1 — feet must NOT sink under bed lip incorrectly; bed must NOT float over torso when south of bed
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_02_path_north_bed1.png
+ shot 00_03_path_south_bed4.png — On path beside south bed_4 — must NOT walk ON TOP of bed (player over soil). Bed lip may cover feet (behind).
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_03_path_south_bed4.png
+ shot 00_04_south_of_bed4.png — South of bed_4 (in front) — player draws in FRONT of bed walls/top
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_04_south_of_bed4.png
+ shot 00_05_north_of_bed1.png — North of bed_1 (behind) — bed should occlude player feet/body
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_05_north_of_bed1.png
+ shot 00_06_aisle_beds_01.png — Aisle between bed_0 and bed_1
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_06_aisle_beds_01.png
+ shot 00_07_bed4_approach.png — Nearest walkable to bed_4 slot — not inside solid
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_07_bed4_approach.png
+ shot 00_08_gate_closed.png — Outside gate — leaf rails level with fence; end post present (not a rail fork)
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_08_gate_closed.png
+ shot 00_09_gate_open.png — In open range — gate swings; depth vs posts OK
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_09_gate_open.png
+ shot 00_10_coop_door.png — Coop door apron — player in front of coop, not through body
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_10_coop_door.png
+ shot 00_11_coop_behind.png — Behind coop — path routes around; sprite occludes correctly
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_11_coop_behind.png
+ shot 00_12_shed_door.png — Shed door apron — in front of facade
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_12_shed_door.png
+ shot 00_13_pen_inside.png — Inside pen near gate — fence posts vs player
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_13_pen_inside.png
+ shot 00_walk_path_beds_t0.15.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_walk_path_beds_t0.15.png
+ shot 00_walk_path_beds_t0.40.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_walk_path_beds_t0.40.png
+Garden Explorer: bug_spawn:praying_mantis at bed
+ shot 00_walk_path_beds_t0.65.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_walk_path_beds_t0.65.png
+ shot 00_walk_path_beds_t0.90.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_walk_path_beds_t0.90.png
+ shot 00_walk_south_beds_t0.20.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_walk_south_beds_t0.20.png
+ shot 00_walk_south_beds_t0.50.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_walk_south_beds_t0.50.png
+ shot 00_walk_south_beds_t0.80.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_walk_south_beds_t0.80.png
+ shot 00_walk_gate_t0.00.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_walk_gate_t0.00.png
+ shot 00_walk_gate_t0.35.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_walk_gate_t0.35.png
+ shot 00_walk_gate_t0.70.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+WARN no image for 00_walk_gate_t0.70.png
+ shot 00_walk_gate_t1.00.png
+DEPTH suite done → /home/dylanmccapes/dev/star_learning/garden_explorer/qa/out/depth_suite/2026-08-04T00-27-48 (0 shots)
+USER WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2284)
+USER ERROR: 6 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:604)

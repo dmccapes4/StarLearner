@@ -1,0 +1,3773 @@
+Godot Engine v4.3.stable.official.77dcf97d8 - https://godotengine.org
+
+USER SCRIPT ERROR: Parse Error: The variable type is being inferred from a Variant value, so it will be typed as Variant. (Warning treated as error.)
+   at: GDScript::reload (res://scripts/system/IdleGuard.gd:208)
+USER SCRIPT ERROR: Parse Error: The variable type is being inferred from a Variant value, so it will be typed as Variant. (Warning treated as error.)
+   at: GDScript::reload (res://scripts/system/IdleGuard.gd:309)
+USER SCRIPT ERROR: Parse Error: The variable type is being inferred from a Variant value, so it will be typed as Variant. (Warning treated as error.)
+   at: GDScript::reload (res://scripts/system/IdleGuard.gd:323)
+ERROR: Failed to load script "res://scripts/system/IdleGuard.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript.cpp:2936)
+USER ERROR: Failed to instantiate an autoload, script 'res://scripts/system/IdleGuard.gd' does not inherit from 'Node'.
+   at: start (main/main.cpp:3678)
+======== Ant Explorer CHAMBER INTERACTION suite ========
+TerrainCatalog: outdoor=28 soil=6 stone=6 garden=14 variants
+Ant Explorer Phase 5 — 12 rooms, 97 living ants
+Outdoor surface: foragers cut leaves. Invasion clearing: soldiers fend without harm.
+Walk near yellow stars and stop beside them to unlock ant documentaries (12 clips, saved progress).
+Tap a glowing pheromone icon to join a job — nurse, forager, gardener, soldier, waste, or scout.
+While working, click anywhere to exit the trail and explore again.
+VO [entrance]: This is the nest doorway, busy with ants coming and going. They follow scent trails so everyone knows which way to walk.
+OK   chamber_count_12 — suite expects 12 chambers
+OK   star_placements_12 — got 12
+OK   trail_placements_7 — got 7
+OK   rail_layout_12 — rail ids
+OK   chamber_exists_nursery — NavGraph chamber
+OK   star_placement_nursery — star_placements key
+OK   chamber_exists_pupae — NavGraph chamber
+OK   star_placement_pupae — star_placements key
+OK   chamber_exists_queen — NavGraph chamber
+OK   star_placement_queen — star_placements key
+OK   chamber_exists_garden_a — NavGraph chamber
+OK   star_placement_garden_a — star_placements key
+OK   chamber_exists_garden_b — NavGraph chamber
+OK   star_placement_garden_b — star_placements key
+OK   chamber_exists_hygiene — NavGraph chamber
+OK   star_placement_hygiene — star_placements key
+OK   chamber_exists_entrance — NavGraph chamber
+OK   star_placement_entrance — star_placements key
+OK   chamber_exists_outpost — NavGraph chamber
+OK   star_placement_outpost — star_placements key
+OK   chamber_exists_dump — NavGraph chamber
+OK   star_placement_dump — star_placements key
+OK   chamber_exists_deep — NavGraph chamber
+OK   star_placement_deep — star_placements key
+OK   chamber_exists_surface — NavGraph chamber
+OK   star_placement_surface — star_placements key
+OK   chamber_exists_invasion — NavGraph chamber
+OK   star_placement_invasion — star_placements key
+OK   star_inside_nursery — star=(-299.975, 384.6664) center=(-450, 250)
+OK   star_id_nursery — 02_larvae
+OK   path_center_to_star_nursery — len=2
+OK   path_ends_in_nursery — end_chamber=nursery end=(-299.975, 384.6664)
+OK   path_star_short_nursery — len=201.6 (in-room walk)
+OK   star_clear_of_mouth_nursery — min_mouth=199.8
+VO [nursery]: This is the nursery, where baby ants grow. Nurse ants feed the larvae and tuck them carefully.
+Eclosion → nurse
+Eclosion → soldier
+Eclosion → forager
+Eclosion → nurse
+Eclosion → forager
+Eclosion → nurse
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → nurse
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → nurse
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → nurse
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → nurse
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → nurse
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → nurse
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → nurse
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × ant (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 2 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → soldier
+Eclosion → forager
+Invaders! 2 × ant (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × spider (soldiers will swarm — shake — they flee)
+Eclosion → forager
+Eclosion → forager
+Eclosion → forager
+Invaders! 1 × beetle (soldiers will swarm — shake — they flee)
+Eclosion → soldier
+Eclosion → soldier
+Eclosion → forager
+Eclosion → forager
+Invaders! 3 × ant (soldiers will swarm — shake — they flee)

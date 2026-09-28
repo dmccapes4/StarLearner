@@ -1,0 +1,84 @@
+Godot Engine v4.3.stable.official.77dcf97d8 - https://godotengine.org
+
+======== Garden Explorer BED APPROACH suite ========
+FarmSprites: Mana Seed crops ready (68 sheets)
+Garden Explorer Phase 6 — VO + save (6 beds, 12 stars, sprites=true).
+Hamburger ★ · shed · water/harvest · seasons · animals · ElevenLabs VO.
+OK   has_bed_approach — API present
+OK   path_to_bed1_short — len=114.4 (want <220)
+OK   path_beats_far_loop — chosen=114.4 naive_south=190.6
+OK   approach_not_deep_south — approach.y=77.5 bed3.y=102.4
+OK   approach_not_world_south_aisle — ap=(81.792, 77.504) (iso face, not pure +Y aisle)
+OK   bed1_from_path_stands_south — approach.y=77.5 bed1.y=52.8 (want path/south face)
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot A_path_bed0_to_bed1_start.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot A_path_bed0_to_bed1_approach.png
+OK   bed4_from_path_prefers_north — ap=(-86.4, 105.6) south=(-86.4, 231.6)
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot B_path_to_bed4_north_start.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot B_path_to_bed4_north_approach.png
+OK   bed4_from_south_short — len=30.8
+OK   bed4_from_south_face — approach.y=212.1 center.y=161.6
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot C_south_to_bed4_start.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot C_south_to_bed4_approach.png
+OK   bed2_gap_route — len=187.1
+OK   bed2_not_loop_south_meadow — max_path_y=136.7
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot D_gap_to_bed2_start.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot D_gap_to_bed2_approach.png
+OK   world_queue_uses_smart_approach — pending={ "kind": "bed", "id": "bed_1", "slot": 0, "approach": (81.792, 77.504), "tap": (131.2, 52.8) } len=114.4
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot E_live_tap_bed1_midwalk.png
+OK   stand_next_to_bed_1 — dist=55.2 blocked=false
+OK   stand_next_to_bed_4 — dist=51.2 blocked=false
+OK   interact_stand_next_to_bed — dist=55.2 pos=(81.792, 77.504)
+OK   interact_depth_in_front — player.z=2133 need.z=2124
+OK   face_bed_on_interact_pose — dir_row=1 to_bed=(49.408, -24.704)
+OK   interact_above_raised_corner — player.z=2133 deck.z=2123
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot F_interact_pose_bed1.png
+OK   opposite_side_gap_short — len=192.2
+OK   opposite_side_not_south_loop — max_y=62.8 bed4.y=161.6
+OK   opposite_side_stands_eastish — ap.x=180.6 center.x=131.2
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot G_west_tap_east_gap_start.png
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot G_west_tap_east_gap_approach.png
+OK   dog_present — yard dog node
+OK   dog_spawn_not_on_bed — pos=(-169.6184, 16.96647)
+OK   dog_depth_in_front_of_bed — dog.z=2165 expect=2165 bed.z=2123 stand.y=110.8
+OK   dog_stand_not_in_bed_poly — blocked=false
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot H_dog_at_bed1_rim.png
+OK   bug_spawner_present — BugSpawner
+OK   bug_spawned — force_spawn ladybug
+OK   bug_spawn_not_on_bed — pos=(131.2, 122.8)
+OK   bug_ejects_from_bed — pos=(96, 16) blocked=false
+OK   bug_depth_in_front_of_bed — bug.z=2176 bed.z=2123
+OK   bug_rim_clear_of_lip — dist=68.8
+USER ERROR: Parameter "t" is null.
+   at: texture_2d_get (servers/rendering/dummy/storage/texture_storage.h:106)
+ shot I_bug_at_bed1_rim.png
+BED APPROACH suite → /home/dylanmccapes/dev/star_learning/garden_explorer/qa/out/bed_approach/2026-08-04T00-27-49  fails=0
+USER WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2284)
+USER ERROR: 2 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:604)

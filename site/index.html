@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Star Learner — homemade educational console</title>
+  <meta name="description" content="Star Learner is a homemade educational Android kiosk: a locked-down Moto G Play that boots into narrated, offline games in the stars format." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;650;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/site.css?v=2" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav-brand" href="/" aria-current="page">Star <span>Learner</span></a>
+      <ul class="nav-links">
+        <li><a href="/" aria-current="page">Home</a></li>
+        <li><a href="/games/ant/">Ant Explorer</a></li>
+        <li><a href="/games/garden/">Garden Explorer</a></li>
+        <li><a href="/games/solar/">Solar System Explorer</a></li>
+        <li><a href="/games/math/">Math Explorer</a></li>
+        <li><a href="/games/language/">Language Explorer</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section class="kiosk-hero" aria-labelledby="hero-title">
+      <div class="copy">
+        <p class="eyebrow">Homemade educational console</p>
+        <h1 id="hero-title">Star Learner</h1>
+        <p class="lede">
+          An inexpensive Android phone, rooted and locked down so it no longer behaves like a phone —
+          it boots straight into a full-screen landscape home shell with a curated catalog of
+          educational games and nothing else.
+        </p>
+        <p>
+          Hardware target is a <strong>Moto G Play</strong> in landscape kiosk mode: one-finger
+          controls, baked narration, no browser, no store, no notifications. Every title uses the
+          <strong>stars</strong> format — short documentary clips hidden as glowing knowledge stars
+          inside an explorable world. Units play fully <strong>offline</strong>; the catalog grows
+          over the home network after a device is already in a child’s hands.
+        </p>
+        <div class="btn-row">
+          <a class="btn" href="#games">Browse the catalog</a>
+          <a class="btn ghost" href="https://github.com/dmccapes4/StarLearner">GitHub</a>
+        </div>
+      </div>
+      <img
+        src="media/kiosk/moto_farm.png"
+        alt="Garden Explorer on the Star Learner kiosk — current farm layout with raised beds, watering can, and companion dog"
+        width="1600"
+        height="720"
+      />
+    </section>
+
+    <section id="games" aria-labelledby="games-title">
+      <h2 id="games-title">Games</h2>
+      <p class="lede">Five titles on the console home screen — same landscape shell, own worlds.</p>
+      <div class="tile-grid">
+        <a class="tile-link" href="/games/ant/">
+          <img src="media/tiles/ants.png" alt="" />
+          <span class="label">Ant Explorer</span>
+        </a>
+        <a class="tile-link" href="/games/garden/">
+          <img src="media/tiles/garden.png" alt="" />
+          <span class="label">Garden Explorer</span>
+        </a>
+        <a class="tile-link" href="/games/solar/">
+          <img src="media/tiles/solar.png" alt="" />
+          <span class="label">Solar System Explorer</span>
+        </a>
+        <a class="tile-link" href="/games/math/">
+          <img src="media/tiles/math.png" alt="" />
+          <span class="label">Math Explorer</span>
+        </a>
+        <a class="tile-link" href="/games/language/">
+          <img src="media/tiles/language.png" alt="" />
+          <span class="label">Language Explorer</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="prose" aria-labelledby="catalog-title">
+      <h2 id="catalog-title">Catalog</h2>
+      <ul>
+        <li><strong>Ant Explorer</strong> — guide a worker through a living leaf-cutter nest and collect knowledge stars with short ant documentaries.</li>
+        <li><strong>Garden Explorer</strong> — plant, water, grow, and harvest in an offline seasonal garden while learning from stars along the way.</li>
+        <li><strong>Solar System Explorer</strong> — fly a spaceship or tour a narrated orrery, then watch clips from the Sun through the outer system.</li>
+        <li><strong>Math Explorer</strong> — addition through division with numbers made visible as countable cubes, narrated tutorials, and word problems.</li>
+        <li><strong>Language Explorer</strong> — bilingual EN/ES sentence matching, books, alphabet writing, and finger tracing.</li>
+      </ul>
+      <p>
+        Source and build notes live on
+        <a href="https://github.com/dmccapes4/StarLearner">GitHub</a>.
+        More from the same workshop:
+        <a href="https://dylanmccapes.systems">dylanmccapes.systems</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>
+      <a href="/">Star Learner</a>
+      ·
+      <a href="https://dylanmccapes.systems">dylanmccapes.systems</a>
+      ·
+      <a href="https://github.com/dmccapes4/StarLearner">GitHub</a>
+    </p>
+  </footer>
+</body>
+</html>
