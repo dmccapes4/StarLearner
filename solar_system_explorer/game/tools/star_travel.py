@@ -200,13 +200,22 @@ def capricornus_galactic_step(C_vec, candidates):
 # ── Candidate generation ───────────────────────────────────────────────────────
 def sample_candidates_from_ledger(plefr_states, current_step, n=20):
     """
-    Pull the next N states from the PLEFR ledger around current_step.
-    When ledger is exhausted: generate synthetic states using the
-    same Capricornus geometry — mirrored positions trailing (Andromeda mode).
+    v0.0.2: Sample N candidates SPREAD across the full ledger — not sequential.
+
+    Sequential sampling (v0.0.1) produced a tight cluster (cosine≈1.0000):
+    all 20 candidates were adjacent time steps, essentially identical vectors.
+    The CapricornusSortedae algorithm had zero displacement range → n_score→-1.
+
+    Spread sampling: step = ledger_size // n, offset by current_step.
+    Each candidate is one full screw-pitch apart in the PLEFR timeline.
+    Like the outer planets: same orbital body, different axial position per turn.
+    The pitch (interval) is the ρ — drift coupling, entropy, sideways movement.
     """
     total = len(plefr_states)
-    start = current_step % total  # wrap (no reflection: always forward)
-    indices = [(start + i) % total for i in range(1, n + 1)]
+    if total < n:
+        return [state_to_vec4(s) for s in plefr_states]
+    step = max(1, total // n)                      # ρ — the pitch of the thread
+    indices = [(current_step + 1 + i * step) % total for i in range(n)]
     return [state_to_vec4(plefr_states[j]) for j in indices]
 
 
