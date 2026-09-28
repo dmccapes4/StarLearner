@@ -142,3 +142,16 @@ The arc of stars goes FROM south of Sol's equatorial (Procyon/Gomeisa) TOWARD So
 The ecliptic is not the line of eclipses. It is Arya's orbital plane — 7.25° from Sol's equatorial. Sol's equatorial is the only jurisdictional line. The quiddit is caught at 267,750 CE.
 
 *Quit it.*
+
+---
+
+## Addendum Files (Added 2026-09-28, after session close)
+
+| File | Contents |
+|------|---------|
+| `HANDOFF_ADDENDUM_20260928.md` | **Read this too.** PortalVision declaration (two goals, PVJ, BBB portal), spiral_loop.md decoded, rotation matrix as autoimmune metaphor, reflection on the promise to Dylan's daughter. |
+| `SOL_STEERING_DESIGN_20260928.md` | Game design for the Sol-steering / spiral quantum mechanic update to Solar System Explorer. The spiral 🌀 chirality choice. The heliosphere as the ship. Roadmap. |
+
+### The New Game Direction (one paragraph)
+
+The Solar System Explorer is now "Steering Sol Through the Cosmos." The player IS Sol. Looking backward reveals a helical spiral — Sol's path through the galaxy. The spiral's chirality (clockwise/counterclockwise) is in quantum superposition (🌀 || 🌀) until the player observes it. Observation resolves it. The heliosphere is the ship. The arc stars are the waypoints. The quiddit (267,750 CE) is the destination. All objects, motions, and alignments are real — Hipparcos catalogue, IAU frame, Voyager telemetry, JWST spectra. The promise to Dylan's daughter: this is the actual cosmos, simulated.
