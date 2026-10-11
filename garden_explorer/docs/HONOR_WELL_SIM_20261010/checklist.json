@@ -279,14 +279,16 @@
     {
      "id": "p5-manifest",
      "text": "00_manifest.py: anchor shows, transcript URLs, Fort Huachuca episode date",
-     "done": false,
-     "by": "agent"
+     "done": true,
+     "by": "agent",
+     "note": "media/manifest.json: MS NOW 9pm (Maddow+Psaki), CNN AC360 8pm, FOX Hannity; Fort Huachuca ep id known, date pending"
     },
     {
      "id": "p5-pilot-week",
      "text": "pilot week 2025-12-13..19 through the full chain; first state-graph lines",
-     "done": false,
-     "by": "agent"
+     "done": true,
+     "by": "agent",
+     "note": "K=6 clips/playlist; 20 videos; 425 segments; 9 show-night lines + 6 edges; CNN via whisper-medium GPU; see PHASE5_PILOT_INGEST_20261011.md"
     },
     {
      "id": "p5-projector-frozen",
@@ -362,6 +364,24 @@
     {
      "id": "p5-attention-mobility",
      "text": "rule change queued: molecule descends ball gradient weighted by its attention vector (direction-dependent mobility)",
+     "done": false,
+     "by": "agent"
+    },
+    {
+     "id": "p5-handlabel-100",
+     "text": "hand-label 100 segments (operator 30 / agent 70, operator adjudicates) → scorer sign agreement",
+     "done": false,
+     "by": "both"
+    },
+    {
+     "id": "p5-speaker-gate",
+     "text": "scorer: 'The speaker argues that…' hypotheses + quoted-speech gate; stance on 3-min windows, salience on 45-s",
+     "done": false,
+     "by": "agent"
+    },
+    {
+     "id": "p5-grow-K",
+     "text": "grow K to 60 per playlist (autumn); add Shapiro/Walsh/Owens after scorer passes",
      "done": false,
      "by": "agent"
     }

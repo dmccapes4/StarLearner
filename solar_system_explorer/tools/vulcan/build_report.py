@@ -240,10 +240,27 @@ table(["Earth equinox", "Earth B0 (°)", "Mercury B (°)", "Luna B (°)"],
 p("""Mercury's nodes on Sol's equator sit at solar-equatorial longitudes 251.3° (ascending) and 73.3° (descending); Earth's at 180.0° and 0.0°
 (by construction of the frame). Mercury crosses the solar equator every 44 days; Earth every 183 days (≈ 6 June ascending, ≈ 8 December descending).""")
 h3("17.5 '42 Pis in a year'")
-p(f"""Sidereal months per year: 365.25636 / 27.321661 = {ft['sidereal_months_per_year']:.4f}. Times π: {ft['sidereal_months_times_pi']:.3f}. So 42/π = {ft['forty_two_over_pi']:.4f}
-reproduces Luna's sidereal month count to {ft['match_sidereal_percent']:.3f} %. The synodic count gives {ft['synodic_months_times_pi']:.1f}, so the mnemonic belongs to the sidereal
-month — Luna against the stars, which is also the count Mercury would make. It is a four-significant-figure coincidence with no mechanism
+p(f"""Luna's orbits per year, counted against the stars: 365.25636 / 27.321661 = {ft['sidereal_months_per_year']:.4f}. Times π: {ft['sidereal_months_times_pi']:.3f}. So 42/π = {ft['forty_two_over_pi']:.4f}
+reproduces Luna's star-fixed month count to {ft['match_sidereal_percent']:.3f} %. Counting against Sol instead gives {ft['synodic_months_times_pi']:.1f}, so the mnemonic belongs to the
+star-fixed month — Luna against the stars, which is also the count Mercury would make. It is a four-significant-figure coincidence with no mechanism
 offered; as a mnemonic it is exact enough to use.""")
+try:
+    PI = J("pis.json")
+    ch = PI["moons"]["charon"]; mz = PI["zecliptic"]["saturn_uranus_neptune_sums"]; pc = PI["zecliptic"]["pluto_charon_orbit_plane"]
+    h3("17.5b Charon is 180 Pis (added 2026-10-11)")
+    p(f"""Pis = orbits per year, counted against the stars, × π; the year's frame declared per row. Charon (period {ch['period_d']:.6f} d) makes {ch['orbits_per_earth_year']:.3f} orbits
+per Earth year; × π = {ch['pis_per_earth_year']:.2f}, i.e. **180 Pis** to {ch['near_earth_year_rel']*100:+.2f} %. The number it lands beside is 180/π = 57.296, one radian in degrees: Charon
+orbits Pluto once per Earth year for every degree in a radian. Pluto, locked to Charon, rotates 180 Pis a year as well. Pluto's year is so long that Charon's
+star-fixed and Sol-fixed counts differ by {ch['star_vs_sun_period_rel']*100:.3f} %, so the frame ambiguity that mattered for Luna (42 vs 38.9) does not arise.
+Per Pluto year Charon is {ch['pis_per_primary_year']:,.0f} Pis — nothing round. Charon's orbit plane (Pluto's equator) is tilted {pc['tilt_to_zecliptic_deg']:.1f}° to the Zecliptic.
+Other round hits in the full moon table at the 1 % level: Titan 72, Hydra 30, Kerberos 36 — expected at about that rate by chance for a table of this size.
+Five and seven Pis, in every frame where a Mercury moon is physical, fall outside the survival annulus (§19), which lives at
+{PI['vulcan']['annulus_in_pis']['mercury_year']['outer_prograde_pis']:.0f}–{PI['vulcan']['annulus_in_pis']['mercury_year']['inner_pis']:.0f} Pis per Mercury year;
+read as a clock from 2026-10-11, 5 Pis of Earth years is {5/3.141592653589793:.2f} yr (May 2028) and 7 Pis is {7/3.141592653589793:.2f} yr (end of 2028). The Saturn→Uranus→Neptune angle sums,
+the Uranus ({mz['uranus_node_minus_solar_node_deg']:+.2f}°) and Venus node coincidences with the solar equator's node, and the Mercury ↔ Pluto/Charon mirror (3:2 spin-orbit vs 3:2 Pluto:Neptune) are in
+`PIS_42_180_20261011.md` with `data/pis.json` (`tools/vulcan/pis.py`).""")
+except FileNotFoundError:
+    pass
 h3("17.6 Added deliverables")
 ul(["Video `video/luna_from_mercury.mp4` (1,440 frames, 48 s): Luna transiting Earth's disc as seen from Mercury, 2028-02-23 ± 6 h, solar-equator frame, with a Zecliptic top-down inset (Mercury-facing half of Luna's orbit in red) and the frame declaration on screen. Contact sheet `video/luna_from_mercury_sheet.png`.",
     "Images `img/luna_01_from_mercury_rates.png`, `img/luna_02_lunation_from_mercury.png`, `img/luna_03_transit_of_earth_2028.png`.",

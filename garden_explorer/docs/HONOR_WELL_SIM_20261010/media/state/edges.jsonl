@@ -1,2 +1,8 @@
 {"run": "20261011T013849", "date": "20261009", "a": "fox_9pm", "b": "msnow_9pm", "d_euclid": 0.48, "d_a_sees_b": 0.14, "d_b_sees_a": 0.104, "same_camp": false}
 {"run": "20261011T013849", "date": "20261010", "a": "fox_9pm", "b": "msnow_9pm", "d_euclid": 0.704, "d_a_sees_b": 0.21, "d_b_sees_a": 0.211, "same_camp": false}
+{"run": "20261011T015745", "date": "20261009", "a": "cnn_8pm", "b": "fox_9pm", "d_euclid": 0.183, "d_a_sees_b": 0.05, "d_b_sees_a": 0.053, "same_camp": false}
+{"run": "20261011T015745", "date": "20261009", "a": "cnn_8pm", "b": "msnow_9pm", "d_euclid": 0.438, "d_a_sees_b": 0.113, "d_b_sees_a": 0.124, "same_camp": false}
+{"run": "20261011T015745", "date": "20261010", "a": "cnn_8pm", "b": "fox_9pm", "d_euclid": 0.708, "d_a_sees_b": 0.206, "d_b_sees_a": 0.237, "same_camp": false}
+{"run": "20261011T015745", "date": "20261010", "a": "cnn_8pm", "b": "msnow_9pm", "d_euclid": 0.294, "d_a_sees_b": 0.106, "d_b_sees_a": 0.08, "same_camp": false}
+{"run": "20261011T015745", "date": "20261009", "a": "fox_9pm", "b": "msnow_9pm", "d_euclid": 0.48, "d_a_sees_b": 0.14, "d_b_sees_a": 0.104, "same_camp": false}
+{"run": "20261011T015745", "date": "20261010", "a": "fox_9pm", "b": "msnow_9pm", "d_euclid": 0.681, "d_a_sees_b": 0.203, "d_b_sees_a": 0.192, "same_camp": false}

@@ -362,10 +362,24 @@ Mercury's nodes on Sol's equator sit at solar-equatorial longitudes 251.3° (asc
 
 ### 17.5 '42 Pis in a year'
 
-Sidereal months per year: 365.25636 / 27.321661 = 13.3687. Times π: 41.999. So 42/π = 13.3690
-reproduces Luna's sidereal month count to 0.002 %. The synodic count gives 38.9, so the mnemonic belongs to the sidereal
-month — Luna against the stars, which is also the count Mercury would make. It is a four-significant-figure coincidence with no mechanism
+Luna's orbits per year, counted against the stars: 365.25636 / 27.321661 = 13.3687. Times π: 41.999. So 42/π = 13.3690
+reproduces Luna's star-fixed month count to 0.002 %. Counting against Sol instead gives 38.9, so the mnemonic belongs to the
+star-fixed month — Luna against the stars, which is also the count Mercury would make. It is a four-significant-figure coincidence with no mechanism
 offered; as a mnemonic it is exact enough to use.
+
+### 17.5b Charon is 180 Pis (added 2026-10-11)
+
+Pis = orbits per year, counted against the stars, × π; the year's frame declared per row. Charon (period 6.387221 d) makes 57.185 orbits
+per Earth year; × π = 179.65, i.e. **180 Pis** to -0.19 %. The number it lands beside is 180/π = 57.296, one radian in degrees: Charon
+orbits Pluto once per Earth year for every degree in a radian. Pluto, locked to Charon, rotates 180 Pis a year as well. Pluto's year is so long that Charon's
+star-fixed and Sol-fixed counts differ by 0.007 %, so the frame ambiguity that mattered for Luna (42 vs 38.9) does not arise.
+Per Pluto year Charon is 44,542 Pis — nothing round. Charon's orbit plane (Pluto's equator) is tilted 119.1° to the Zecliptic.
+Other round hits in the full moon table at the 1 % level: Titan 72, Hydra 30, Kerberos 36 — expected at about that rate by chance for a table of this size.
+Five and seven Pis, in every frame where a Mercury moon is physical, fall outside the survival annulus (§19), which lives at
+24–370 Pis per Mercury year;
+read as a clock from 2026-10-11, 5 Pis of Earth years is 1.59 yr (May 2028) and 7 Pis is 2.23 yr (end of 2028). The Saturn→Uranus→Neptune angle sums,
+the Uranus (-1.75°) and Venus node coincidences with the solar equator's node, and the Mercury ↔ Pluto/Charon mirror (3:2 spin-orbit vs 3:2 Pluto:Neptune) are in
+`PIS_42_180_20261011.md` with `data/pis.json` (`tools/vulcan/pis.py`).
 
 ### 17.6 Added deliverables
 

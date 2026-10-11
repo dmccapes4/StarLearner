@@ -1,0 +1,704 @@
+{
+ "definition": "Pis = (orbits per year, counted against the stars) x pi. Frame of the year is declared per row.",
+ "literals": {
+  "year_d": {
+   "value": 365.25636,
+   "why": "Earth star-fixed year; identical to report \u00a717.5"
+  },
+  "pluto_pole_radec": {
+   "value": [
+    132.993,
+    -6.163
+   ],
+   "why": "IAU WG Cartographic Coordinates 2015 report (Archinal et al. 2018), J2000"
+  },
+  "obliquity_j2000": {
+   "value": 23.439291,
+   "why": "to rotate the IAU pole from equatorial to ecliptic"
+  }
+ },
+ "planets_per_earth_year": {
+  "mercury": {
+   "period_d": 87.969,
+   "orbits_per_earth_year": 4.1521031272380045,
+   "pis": 13.04421668147812,
+   "near": 13,
+   "near_rel": 0.0034012831906247154
+  },
+  "venus": {
+   "period_d": 224.701,
+   "orbits_per_earth_year": 1.6255217377759779,
+   "pis": 5.106727149647526,
+   "near": null,
+   "near_rel": null
+  },
+  "earth": {
+   "period_d": 365.256,
+   "orbits_per_earth_year": 1.0000009856100927,
+   "pis": 3.1415957499752194,
+   "near": null,
+   "near_rel": null
+  },
+  "mars": {
+   "period_d": 686.98,
+   "orbits_per_earth_year": 0.531684124719788,
+   "pis": 1.6703349402500052,
+   "near": null,
+   "near_rel": null
+  },
+  "ceres": {
+   "period_d": 1680.1499999999999,
+   "orbits_per_earth_year": 0.21739508972413177,
+   "pis": 0.6829668168038263,
+   "near": null,
+   "near_rel": null
+  },
+  "jupiter": {
+   "period_d": 4332.59,
+   "orbits_per_earth_year": 0.08430439067624676,
+   "pis": 0.26485005441386067,
+   "near": null,
+   "near_rel": null
+  },
+  "saturn": {
+   "period_d": 10759.22,
+   "orbits_per_earth_year": 0.03394821929470724,
+   "pis": 0.10665147633870753,
+   "near": null,
+   "near_rel": null
+  },
+  "uranus": {
+   "period_d": 30688.5,
+   "orbits_per_earth_year": 0.011902059729214525,
+   "pis": 0.03739142340788727,
+   "near": null,
+   "near_rel": null
+  },
+  "neptune": {
+   "period_d": 60182.0,
+   "orbits_per_earth_year": 0.0060691961051477184,
+   "pis": 0.01906694189712786,
+   "near": null,
+   "near_rel": null
+  },
+  "pluto": {
+   "period_d": 90560.0,
+   "orbits_per_earth_year": 0.0040333078621908125,
+   "pis": 0.01267101034952461,
+   "near": null,
+   "near_rel": null
+  }
+ },
+ "moons": {
+  "luna": {
+   "primary": "earth",
+   "period_d": 27.3217,
+   "retrograde": false,
+   "orbits_per_earth_year": 13.368727421792933,
+   "pis_per_earth_year": 41.99909585614909,
+   "near_earth_year": 42,
+   "near_earth_year_rel": -2.1527234545515306e-05,
+   "orbits_per_primary_year": 13.368714245453246,
+   "pis_per_primary_year": 41.999054461457135,
+   "near_primary_year": 42,
+   "near_primary_year_rel": -2.251282244913888e-05,
+   "sun_synodic_d": 29.53063614791396,
+   "star_vs_sun_period_rel": 0.08084914730466841
+  },
+  "phobos": {
+   "primary": "mars",
+   "period_d": 0.31891,
+   "retrograde": false,
+   "orbits_per_earth_year": 1145.3273964441375,
+   "pis_per_earth_year": 3598.152134624027,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 2154.1500736885014,
+   "pis_per_primary_year": 6767.462046229707,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 0.31905811322438554,
+   "star_vs_sun_period_rel": 0.00046443581068489337
+  },
+  "deimos": {
+   "primary": "mars",
+   "period_d": 1.26244,
+   "retrograde": false,
+   "orbits_per_earth_year": 289.32571844998574,
+   "pis_per_earth_year": 908.9435515770641,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 544.1684357276386,
+   "pis_per_primary_year": 1709.5555599973989,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 1.2647642145842086,
+   "star_vs_sun_period_rel": 0.001841049542321782
+  },
+  "io": {
+   "primary": "jupiter",
+   "period_d": 1.769138,
+   "retrograde": false,
+   "orbits_per_earth_year": 206.46007264554825,
+   "pis_per_earth_year": 648.6134474828694,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 2448.98362931552,
+   "pis_per_primary_year": 7693.708978619306,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 1.7698606919244124,
+   "star_vs_sun_period_rel": 0.00040849946381360525
+  },
+  "europa": {
+   "primary": "jupiter",
+   "period_d": 3.551181,
+   "retrograde": false,
+   "orbits_per_earth_year": 102.85489813107245,
+   "pis_per_earth_year": 323.12819235430374,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 1220.0420085599692,
+   "pis_per_primary_year": 3832.8750111629347,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 3.5540940915711388,
+   "star_vs_sun_period_rel": 0.0008203162753852578
+  },
+  "ganymede": {
+   "primary": "jupiter",
+   "period_d": 7.154553,
+   "retrograde": false,
+   "orbits_per_earth_year": 51.052296348912364,
+   "pis_per_earth_year": 160.3855191586321,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 605.5710258907859,
+   "pis_per_primary_year": 1902.4574861653275,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 7.1663870983831615,
+   "star_vs_sun_period_rel": 0.001654065373918101
+  },
+  "callisto": {
+   "primary": "jupiter",
+   "period_d": 16.689018,
+   "retrograde": false,
+   "orbits_per_earth_year": 21.88603068197302,
+   "pis_per_earth_year": 68.75699320672724,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 259.6072459146488,
+   "pis_per_primary_year": 815.5802165841394,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 16.753552224247947,
+   "star_vs_sun_period_rel": 0.003866867675973884
+  },
+  "titan": {
+   "primary": "saturn",
+   "period_d": 15.945,
+   "retrograde": false,
+   "orbits_per_earth_year": 22.90726622765757,
+   "pis_per_earth_year": 71.96529929463459,
+   "near_earth_year": 72,
+   "near_earth_year_rel": -0.0004819542411862443,
+   "orbits_per_primary_year": 674.7707745374726,
+   "pis_per_primary_year": 2119.8549081440183,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 15.968665318536479,
+   "star_vs_sun_period_rel": 0.0014841842920336745
+  },
+  "rhea": {
+   "primary": "saturn",
+   "period_d": 4.518,
+   "retrograde": false,
+   "orbits_per_earth_year": 80.84470119521912,
+   "pis_per_earth_year": 253.98111935656235,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 2381.4121292607347,
+   "pis_per_primary_year": 7481.426850455151,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 4.51989799066492,
+   "star_vs_sun_period_rel": 0.00042009532202746946
+  },
+  "iapetus": {
+   "primary": "saturn",
+   "period_d": 79.32,
+   "retrograde": false,
+   "orbits_per_earth_year": 4.604845688350983,
+   "pis_per_earth_year": 14.466549385438084,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 135.64321734745334,
+   "pis_per_primary_year": 426.135735128043,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 79.9091124823266,
+   "star_vs_sun_period_rel": 0.007427035833668771
+  },
+  "dione": {
+   "primary": "saturn",
+   "period_d": 2.737,
+   "retrograde": false,
+   "orbits_per_earth_year": 133.4513554987212,
+   "pis_per_earth_year": 419.24979804638235,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 3931.02667153818,
+   "pis_per_primary_year": 12349.684512369882,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 2.737696432932586,
+   "star_vs_sun_period_rel": 0.0002544511993372023
+  },
+  "tethys": {
+   "primary": "saturn",
+   "period_d": 1.888,
+   "retrograde": false,
+   "orbits_per_earth_year": 193.46205508474577,
+   "pis_per_earth_year": 607.7789710026212,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 5698.739406779661,
+   "pis_per_primary_year": 17903.11785506164,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 1.8883313594857907,
+   "star_vs_sun_period_rel": 0.00017550820221967633
+  },
+  "enceladus": {
+   "primary": "saturn",
+   "period_d": 1.37,
+   "retrograde": false,
+   "orbits_per_earth_year": 266.61048175182475,
+   "pis_per_earth_year": 837.5815308415682,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 7853.445255474451,
+   "pis_per_primary_year": 24672.325919968152,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 1.3701744679466623,
+   "star_vs_sun_period_rel": 0.00012734886617682406
+  },
+  "mimas": {
+   "primary": "saturn",
+   "period_d": 0.942,
+   "retrograde": false,
+   "orbits_per_earth_year": 387.7456050955414,
+   "pis_per_earth_year": 1218.1387444298819,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 11421.67728237792,
+   "pis_per_primary_year": 35882.257441991904,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 0.9420824819734162,
+   "star_vs_sun_period_rel": 8.756048133351513e-05
+  },
+  "titania": {
+   "primary": "uranus",
+   "period_d": 8.706,
+   "retrograde": false,
+   "orbits_per_earth_year": 41.95455547898001,
+   "pis_per_earth_year": 131.804123277389,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 3524.9827705031016,
+   "pis_per_primary_year": 11074.05997584314,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 8.708470500160463,
+   "star_vs_sun_period_rel": 0.0002837698323527871
+  },
+  "oberon": {
+   "primary": "uranus",
+   "period_d": 13.463,
+   "retrograde": false,
+   "orbits_per_earth_year": 27.13038401544975,
+   "pis_per_earth_year": 85.23261511200688,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 2279.4696575800344,
+   "pis_per_primary_year": 7161.165130334278,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 13.468908790558263,
+   "star_vs_sun_period_rel": 0.00043889107615413536
+  },
+  "umbriel": {
+   "primary": "uranus",
+   "period_d": 4.144,
+   "retrograde": false,
+   "orbits_per_earth_year": 88.1410135135135,
+   "pis_per_earth_year": 276.90316053401267,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 7405.526061776061,
+   "pis_per_primary_year": 23265.146271643425,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 4.14455965769658,
+   "star_vs_sun_period_rel": 0.000135052532958424
+  },
+  "ariel": {
+   "primary": "uranus",
+   "period_d": 2.52,
+   "retrograde": false,
+   "orbits_per_earth_year": 144.94299999999998,
+   "pis_per_earth_year": 455.3518639892653,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 12177.97619047619,
+   "pis_per_primary_year": 38258.240535591416,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 2.5202069479286635,
+   "star_vs_sun_period_rel": 8.212219391401376e-05
+  },
+  "miranda": {
+   "primary": "uranus",
+   "period_d": 1.413,
+   "retrograde": false,
+   "orbits_per_earth_year": 258.49707006369425,
+   "pis_per_earth_year": 812.0924962865879,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 21718.68365180467,
+   "pis_per_primary_year": 68231.25700615029,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 1.413065062187232,
+   "star_vs_sun_period_rel": 4.604542620811891e-05
+  },
+  "triton": {
+   "primary": "neptune",
+   "period_d": 5.876854,
+   "retrograde": true,
+   "orbits_per_earth_year": 62.15168183521319,
+   "pis_per_earth_year": 195.25526706175594,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 10240.513036396685,
+   "pis_per_primary_year": 32171.520524134332,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 5.877427938817121,
+   "star_vs_sun_period_rel": 9.766089426777036e-05
+  },
+  "proteus": {
+   "primary": "neptune",
+   "period_d": 1.12231,
+   "retrograde": false,
+   "orbits_per_earth_year": 325.4505083265764,
+   "pis_per_earth_year": 1022.4329260658363,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 53623.33045237056,
+   "pis_per_primary_year": 168462.6610101852,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 1.1223309298997364,
+   "star_vs_sun_period_rel": 1.86489470257456e-05
+  },
+  "nereid": {
+   "primary": "neptune",
+   "period_d": 360.14,
+   "retrograde": false,
+   "orbits_per_earth_year": 1.0142065863275394,
+   "pis_per_earth_year": 3.18622396082898,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 167.10723607485977,
+   "pis_per_primary_year": 524.9828652144747,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 362.30811746742745,
+   "star_vs_sun_period_rel": 0.006020207328892857
+  },
+  "charon": {
+   "primary": "pluto",
+   "period_d": 6.387221,
+   "retrograde": false,
+   "orbits_per_earth_year": 57.18548958929086,
+   "pis_per_earth_year": 179.65351398565176,
+   "near_earth_year": 180,
+   "near_earth_year_rel": -0.0019249223019346395,
+   "orbits_per_primary_year": 14178.310097615222,
+   "pis_per_primary_year": 44542.47484298596,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 6.387671524179553,
+   "star_vs_sun_period_rel": 7.053524209554851e-05
+  },
+  "styx": {
+   "primary": "pluto",
+   "period_d": 20.16,
+   "retrograde": false,
+   "orbits_per_earth_year": 18.117874999999998,
+   "pis_per_earth_year": 56.918982998658166,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 4492.063492063492,
+   "pis_per_primary_year": 14112.233666125578,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 20.164488914493333,
+   "star_vs_sun_period_rel": 0.00022266440939144871
+  },
+  "nix": {
+   "primary": "pluto",
+   "period_d": 24.85,
+   "retrograde": false,
+   "orbits_per_earth_year": 14.698445070422533,
+   "pis_per_earth_year": 46.17652705243254,
+   "near_earth_year": null,
+   "near_earth_year_rel": null,
+   "orbits_per_primary_year": 3644.265593561368,
+   "pis_per_primary_year": 11448.79801646244,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 24.856820803853534,
+   "star_vs_sun_period_rel": 0.00027447902831112536
+  },
+  "kerberos": {
+   "primary": "pluto",
+   "period_d": 32.17,
+   "retrograde": false,
+   "orbits_per_earth_year": 11.353943425551755,
+   "pis_per_earth_year": 35.66946525498752,
+   "near_earth_year": 36,
+   "near_earth_year_rel": -0.009181520694791057,
+   "orbits_per_primary_year": 2815.045073049425,
+   "pis_per_primary_year": 8843.724921016215,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 32.1814319419785,
+   "star_vs_sun_period_rel": 0.00035536033504812714
+  },
+  "hydra": {
+   "primary": "pluto",
+   "period_d": 38.2,
+   "retrograde": false,
+   "orbits_per_earth_year": 9.561684816753925,
+   "pis_per_earth_year": 30.038918776255198,
+   "near_earth_year": 30,
+   "near_earth_year_rel": 0.0012972925418399672,
+   "orbits_per_primary_year": 2370.680628272251,
+   "pis_per_primary_year": 7447.712845787739,
+   "near_primary_year": null,
+   "near_primary_year_rel": null,
+   "sun_synodic_d": 38.216120315769246,
+   "star_vs_sun_period_rel": 0.00042199779500640133
+  }
+ },
+ "zecliptic": {
+  "mercury": {
+   "i_ecl_deg": 7.005,
+   "node_ecl_deg": 48.331,
+   "i_zecliptic_deg": 3.3798051595230327,
+   "node_zecliptic_deg": 252.34864443819697,
+   "node_minus_solar_node_ecl_deg": 332.571,
+   "obliquity_to_own_orbit_deg": 0.034
+  },
+  "venus": {
+   "i_ecl_deg": 3.395,
+   "node_ecl_deg": 76.68,
+   "i_zecliptic_deg": 3.8558209416344793,
+   "node_zecliptic_deg": 179.18982236339707,
+   "node_minus_solar_node_ecl_deg": 0.9200000000000017,
+   "obliquity_to_own_orbit_deg": 177.36
+  },
+  "earth": {
+   "i_ecl_deg": 0.0,
+   "node_ecl_deg": -11.26,
+   "i_zecliptic_deg": 7.250000000000011,
+   "node_zecliptic_deg": 180.0,
+   "node_minus_solar_node_ecl_deg": 272.98,
+   "obliquity_to_own_orbit_deg": 23.44
+  },
+  "mars": {
+   "i_ecl_deg": 1.85,
+   "node_ecl_deg": 49.558,
+   "i_zecliptic_deg": 5.649150021471895,
+   "node_zecliptic_deg": 188.32600168907408,
+   "node_minus_solar_node_ecl_deg": 333.798,
+   "obliquity_to_own_orbit_deg": 25.19
+  },
+  "jupiter": {
+   "i_ecl_deg": 1.304,
+   "node_ecl_deg": 100.464,
+   "i_zecliptic_deg": 6.089647708749477,
+   "node_zecliptic_deg": 174.85629426605547,
+   "node_minus_solar_node_ecl_deg": 24.703999999999994,
+   "obliquity_to_own_orbit_deg": 3.13
+  },
+  "saturn": {
+   "i_ecl_deg": 2.485,
+   "node_ecl_deg": 113.666,
+   "i_zecliptic_deg": 5.504083059021557,
+   "node_zecliptic_deg": 163.87602660213753,
+   "node_minus_solar_node_ecl_deg": 37.90599999999999,
+   "obliquity_to_own_orbit_deg": 26.73
+  },
+  "uranus": {
+   "i_ecl_deg": 0.772,
+   "node_ecl_deg": 74.006,
+   "i_zecliptic_deg": 6.478404579449672,
+   "node_zecliptic_deg": 180.2094231057234,
+   "node_minus_solar_node_ecl_deg": 358.246,
+   "obliquity_to_own_orbit_deg": 97.77
+  },
+  "neptune": {
+   "i_ecl_deg": 1.77,
+   "node_ecl_deg": 131.784,
+   "i_zecliptic_deg": 6.429706287668237,
+   "node_zecliptic_deg": 166.77772734738048,
+   "node_minus_solar_node_ecl_deg": 56.02399999999999,
+   "obliquity_to_own_orbit_deg": 28.32
+  },
+  "pluto": {
+   "i_ecl_deg": 17.16,
+   "node_ecl_deg": 110.299,
+   "i_zecliptic_deg": 11.897918003509988,
+   "node_zecliptic_deg": 54.22977737658363,
+   "node_minus_solar_node_ecl_deg": 34.539,
+   "obliquity_to_own_orbit_deg": 122.53
+  },
+  "pluto_charon_orbit_plane": {
+   "pole_radec_j2000": [
+    132.993,
+    -6.163
+   ],
+   "tilt_to_zecliptic_deg": 119.14239768780511,
+   "node_zecliptic_deg": 149.86099981994442,
+   "note": "Charon orbits in Pluto's equator (i 0.08 deg); this is the tilt of that plane to the solar equator"
+  },
+  "saturn_uranus_neptune_sums": {
+   "i_zecliptic_sum_deg": 18.412193926139466,
+   "i_ecliptic_sum_deg": 5.027,
+   "obliquity_sum_deg": 152.82,
+   "obliquity_sum_plus_pluto_deg": 275.35,
+   "node_ecl_sum_deg": 319.456,
+   "node_zecliptic_sum_deg": 150.8631770552414,
+   "saturn_plus_uranus_node_ecl_deg": 187.672,
+   "uranus_node_minus_solar_node_deg": -1.7540000000000049,
+   "pluto_minus_neptune_node_ecl_deg": -21.484999999999985
+  }
+ },
+ "vulcan": {
+  "frames_d": {
+   "earth_year": 365.25636,
+   "mercury_year": 87.969,
+   "mercury_spin": 58.646
+  },
+  "R_hill_perihelion_km": 175281.75843235035,
+  "annulus_km": {
+   "inner_km_10km_body": 13254.300424824072,
+   "outer_km_prograde_canonical": 87640.87921617518,
+   "outer_km_prograde_this_run": 81472.72224993045,
+   "outer_km_retrograde_this_run": 136456.72622884766
+  },
+  "targets": {
+   "earth_year": {
+    "5": {
+     "period_d": 229.49733945058972,
+     "a_km": 603149.2696820381,
+     "a_over_R_hill_peri": 3.441027035992581,
+     "inside_annulus": false,
+     "verdict": "outside Mercury's Hill sphere"
+    },
+    "7": {
+     "period_d": 163.9266710361355,
+     "a_km": 481954.58458411874,
+     "a_over_R_hill_peri": 2.749599210405732,
+     "inside_annulus": false,
+     "verdict": "outside Mercury's Hill sphere"
+    }
+   },
+   "mercury_year": {
+    "5": {
+     "period_d": 55.272552828728095,
+     "a_km": 233478.04698395033,
+     "a_over_R_hill_peri": 1.3320156590856014,
+     "inside_annulus": false,
+     "verdict": "outside Mercury's Hill sphere"
+    },
+    "7": {
+     "period_d": 39.480394877662924,
+     "a_km": 186563.79241407575,
+     "a_over_R_hill_peri": 1.0643651346416614,
+     "inside_annulus": false,
+     "verdict": "outside Mercury's Hill sphere"
+    }
+   },
+   "mercury_spin": {
+    "5": {
+     "period_d": 36.8483685524854,
+     "a_km": 178177.09713737597,
+     "a_over_R_hill_peri": 1.0165181975062343,
+     "inside_annulus": false,
+     "verdict": "outside Mercury's Hill sphere"
+    },
+    "7": {
+     "period_d": 26.320263251775284,
+     "a_km": 142374.82021410388,
+     "a_over_R_hill_peri": 0.8122626192676698,
+     "inside_annulus": false,
+     "verdict": "between annulus ceiling and Hill radius (escapes in the integrator)"
+    }
+   }
+  },
+  "annulus_in_pis": {
+   "earth_year": {
+    "inner_pis": 1534.8714168429256,
+    "outer_prograde_pis": 100.71377444738256,
+    "outer_retrograde_pis": 46.46380714652718,
+    "hill_pis": 31.915535200751023
+   },
+   "mercury_year": {
+    "inner_pis": 369.66119814657117,
+    "outer_prograde_pis": 24.256086942228187,
+    "outer_retrograde_pis": 11.190427049299975,
+    "hill_pis": 7.686595015278766
+   },
+   "mercury_spin": {
+    "inner_pis": 246.4407987643808,
+    "outer_prograde_pis": 16.170724628152126,
+    "outer_retrograde_pis": 7.460284699533318,
+    "hill_pis": 5.124396676852512
+   }
+  },
+  "heliocentric_per_earth_year": {
+   "5": {
+    "period_d": 229.49733945058972,
+    "a_au": 0.733589013959857
+   },
+   "7": {
+    "period_d": 163.9266710361355,
+    "a_au": 0.5861842271066338
+   }
+  },
+  "classical_vulcan_le_verrier": {
+   "a_au": 0.1427,
+   "period_d": 19.7,
+   "pis_per_earth_year": 58.24805569811922,
+   "source": "Le Verrier 1859 orbit for Lescarbault's object (literal)"
+  }
+ },
+ "mirror": {
+  "mercury_spin_orbit": 1.4999999999999998,
+  "pluto_over_neptune_period": 1.504768867767771,
+  "mercury_e": 0.20563,
+  "pluto_e": 0.2488,
+  "mercury_i_zecliptic_deg": 3.3798051595230327,
+  "pluto_i_zecliptic_deg": 11.897918003509988,
+  "mercury_pis_per_earth_year": 13.04421668147812,
+  "pluto_pis_per_earth_year": 0.01267101034952461,
+  "note": "3:2 at the inner end is spin:orbit; 2:3 at the outer end is orbit:orbit (Pluto:Neptune). Reciprocal ratios, different kinds of clock."
+ }
+}

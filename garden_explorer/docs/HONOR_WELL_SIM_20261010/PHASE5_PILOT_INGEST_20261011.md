@@ -24,7 +24,13 @@ Free throughout: YouTube captions, yt-dlp, whisper on the local 3060, the two Hu
 | fox_9pm | 2026-10-09 | 20 | economy | 0.07 | +0.01, +0.03, +0.02, −0.14, +0.01, −0.13, +0.03 | 370,301 |
 | fox_9pm | 2026-10-10 | 16 | immigration | 0.17 | **−0.18, −0.24, −0.20, −0.47, −0.27**, −0.12, +0.19 | 340,563 |
 
-Edges: 10-09 FOX↔MS NOW Euclid 0.48, FOX-sees-MS NOW 0.14, MS NOW-sees-FOX 0.10; 10-10 Euclid 0.70, 0.21 / 0.21. The asymmetric distance is smaller than the Euclidean one on both nights, as it must be (attention sums to 1), and the two directions differ on 10-09, which is the horseshoe weighting doing something.
+| cnn_8pm | 2026-10-08 | 58 | foreign_war | 0.23 | +0.02, +0.05, −0.03, −0.08, +0.05, −0.08, +0.05 | 19,482 |
+| cnn_8pm | 2026-10-09 | 58 | economy | 0.12 | +0.08, +0.05, −0.05, −0.10, +0.04, +0.01, +0.05 | 25,626 |
+| cnn_8pm | 2026-10-10 | 57 | guns | 0.34 | +0.08, +0.01, −0.01, 0, 0, 0, 0 | 15,098 |
+
+CNN rows came from whisper-medium on the GPU (43–44 min of audio each in roughly 3 minutes; 1,950 whisper segments → 173 45-s segments). CNN's view counts are an order of magnitude below the other two because the three items are a full-episode audio upload and two weekly compilations, not clips; \(w\) is not comparable across networks yet.
+
+Edges (Euclid / a-sees-b / b-sees-a): 10-09 FOX↔MS NOW 0.48 / 0.14 / 0.10; CNN↔FOX 0.18 / 0.05 / 0.05; CNN↔MS NOW 0.44 / 0.11 / 0.12. 10-10 FOX↔MS NOW 0.68 / 0.20 / 0.19; CNN↔FOX 0.71 / 0.21 / 0.24; CNN↔MS NOW 0.29 / 0.11 / 0.08. CNN sits near zero on every axis with the lowest stance magnitudes of the three, which is what a straight-news hour should look like under any scorer. The asymmetric distances are below the Euclidean on every edge, as they must be (attention sums to 1), and the two directions differ, which is the horseshoe weighting doing something.
 
 ## 3. Read honestly
 
