@@ -1,0 +1,6058 @@
+{
+"schema": "ZECLIPTIC_BODIES_v1",
+"generated": "2026-10-11",
+"epoch_jd": 2451545.0,
+"frames": {
+"zecliptic": {
+"i_deg": 7.25,
+"node_deg": 75.76,
+"why": "Sol's equator. The rule: everything from the Zecliptic unless a frame is named with a reason."
+},
+"ecliptic": {
+"i_deg": 0.0,
+"node_deg": 0.0,
+"why": "Earth's orbit plane. Named here only because the ephemeris is tabulated in it."
+},
+"invariable": {
+"i_deg": 1.5787,
+"node_deg": 107.5822,
+"why": "The system's total angular-momentum plane (Souami & Souchay 2012). Set by Jupiter and Saturn."
+}
+},
+"bodies": {
+"sol": {
+"id": "sol",
+"name": "Sol",
+"kind": "star",
+"parent": null,
+"radius_km": 695700.0,
+"r_eq_km": 695700.0,
+"mass_kg": 1.98892e+30,
+"gm_km3s2": 132712440018.0,
+"rot_d": 25.05,
+"rot_note": "sidereal, equator; 25.38 d Carrington; ~34 d near poles (differential)",
+"pole_radec_j2000": [
+286.13,
+63.87
+],
+"obliquity_deg": 7.25,
+"luminosity_W": 3.828e+26,
+"notes": "Holds 99.86% of system mass but only ~0.5% of its angular momentum."
+},
+"mercury": {
+"id": "mercury",
+"name": "Mercury",
+"kind": "planet",
+"parent": "sol",
+"radius_km": 2439.7,
+"r_eq_km": 2440.5,
+"mass_kg": 3.3011e+23,
+"gm_km3s2": 22031.87,
+"elements": {
+"a": 0.38709927,
+"a_dot": 3.7e-07,
+"e": 0.20563593,
+"e_dot": 1.906e-05,
+"i": 7.00497902,
+"i_dot": -0.00594749,
+"l": 252.2503235,
+"l_dot": 149472.67411175,
+"peri": 77.45779628,
+"peri_dot": 0.16047689,
+"node": 48.33076593,
+"node_dot": -0.12534081
+},
+"elements_source": "Standish 1800-2050 table (Ephemeris.gd for Mercury..Jupiter)",
+"period_d": 87.969,
+"rot_d": 58.646,
+"obliquity_deg": 0.034,
+"pole_radec_j2000": [
+281.0097,
+61.4143
+],
+"pole_right_hand_flipped": false,
+"spin_tilt_to_zecliptic_deg": 3.397891421217883,
+"i_solar_equator_deg": 3.38,
+"i_invariable_deg": 6.344,
+"hill_radius_km": 175284.10851056196,
+"rings": false,
+"n_moons": 0,
+"albedo_geom": 0.142,
+"notes": "Spin:orbit = 3:2 exactly (58.646 d x 1.5 = 87.969 d). GM known to 1e-6 from MESSENGER. Mariner 10 'moon' (1974) was the star 31 Crateris. No satellite found by MESSENGER 2011-15."
+},
+"venus": {
+"id": "venus",
+"name": "Venus",
+"kind": "planet",
+"parent": "sol",
+"radius_km": 6051.8,
+"r_eq_km": 6051.8,
+"mass_kg": 4.8675e+24,
+"gm_km3s2": 324858.6,
+"elements": {
+"a": 0.72333566,
+"a_dot": 3.9e-06,
+"e": 0.00677672,
+"e_dot": -4.107e-05,
+"i": 3.39467605,
+"i_dot": -0.0007889,
+"l": 181.9790995,
+"l_dot": 58517.81538729,
+"peri": 131.60246718,
+"peri_dot": 0.00268329,
+"node": 76.67984255,
+"node_dot": -0.27769418
+},
+"elements_source": "Standish 1800-2050 table (Ephemeris.gd for Mercury..Jupiter)",
+"period_d": 224.701,
+"rot_d": -243.025,
+"obliquity_deg": 177.36,
+"pole_radec_j2000": [
+272.76,
+67.16
+],
+"pole_right_hand_flipped": true,
+"spin_tilt_to_zecliptic_deg": 173.57632945146003,
+"i_solar_equator_deg": 3.856,
+"i_invariable_deg": 2.195,
+"hill_radius_km": 1004233.0457360842,
+"rings": false,
+"n_moons": 0,
+"albedo_geom": 0.689,
+"notes": "Retrograde spin; solar day 116.75 d. Node 76.68 deg is within 1 deg of the solar equator node 75.76 deg."
+},
+"earth": {
+"id": "earth",
+"name": "Earth",
+"kind": "planet",
+"parent": "sol",
+"radius_km": 6371.0,
+"r_eq_km": 6378.137,
+"mass_kg": 5.9722e+24,
+"gm_km3s2": 398600.435,
+"elements": {
+"a": 1.00000261,
+"a_dot": 5.62e-06,
+"e": 0.01671123,
+"e_dot": -4.392e-05,
+"i": -1.531e-05,
+"i_dot": -0.01294668,
+"l": 100.46457166,
+"l_dot": 35999.37244981,
+"peri": 102.93768193,
+"peri_dot": 0.32327364,
+"node": 0.0,
+"node_dot": 0.0
+},
+"elements_source": "Standish 1800-2050 table (Ephemeris.gd for Mercury..Jupiter)",
+"period_d": 365.256,
+"rot_d": 0.99727,
+"obliquity_deg": 23.44,
+"pole_radec_j2000": [
+0.0,
+90.0
+],
+"pole_right_hand_flipped": false,
+"spin_tilt_to_zecliptic_deg": 26.129808377668247,
+"i_solar_equator_deg": 7.25,
+"i_invariable_deg": 1.579,
+"hill_radius_km": 1471427.8067341384,
+"rings": false,
+"n_moons": 1,
+"albedo_geom": 0.434,
+"notes": "Defines the ecliptic. Earth-Luna barycenter 4671 km from Earth center (0.733 R_E, inside)."
+},
+"mars": {
+"id": "mars",
+"name": "Mars",
+"kind": "planet",
+"parent": "sol",
+"radius_km": 3389.5,
+"r_eq_km": 3396.2,
+"mass_kg": 6.4171e+23,
+"gm_km3s2": 42828.37,
+"elements": {
+"a": 1.52371034,
+"a_dot": 1.847e-05,
+"e": 0.0933941,
+"e_dot": 7.882e-05,
+"i": 1.84969142,
+"i_dot": -0.00813131,
+"l": -4.55343205,
+"l_dot": 19140.30268499,
+"peri": -23.94362959,
+"peri_dot": 0.44441088,
+"node": 49.55953891,
+"node_dot": -0.29257343
+},
+"elements_source": "Standish 1800-2050 table (Ephemeris.gd for Mercury..Jupiter)",
+"period_d": 686.98,
+"rot_d": 1.025957,
+"obliquity_deg": 25.19,
+"pole_radec_j2000": [
+317.68143,
+52.8865
+],
+"pole_right_hand_flipped": false,
+"spin_tilt_to_zecliptic_deg": 19.5436119173068,
+"i_solar_equator_deg": 5.649,
+"i_invariable_deg": 1.68,
+"hill_radius_km": 982737.5760396076,
+"rings": false,
+"n_moons": 2,
+"albedo_geom": 0.17,
+"notes": "Crustal remanent field only. Phobos inside synchronous orbit (decaying ~1.8 m/cy); Deimos outside."
+},
+"jupiter": {
+"id": "jupiter",
+"name": "Jupiter",
+"kind": "planet",
+"parent": "sol",
+"radius_km": 69911.0,
+"r_eq_km": 71492.0,
+"mass_kg": 1.89819e+27,
+"gm_km3s2": 126686531.9,
+"elements": {
+"a": 5.202887,
+"a_dot": -0.00011607,
+"e": 0.04838624,
+"e_dot": -0.00013253,
+"i": 1.30439695,
+"i_dot": -0.00183714,
+"l": 34.39644051,
+"l_dot": 3034.74612775,
+"peri": 14.72847983,
+"peri_dot": 0.21252668,
+"node": 100.47390909,
+"node_dot": 0.20469106
+},
+"elements_source": "Standish 1800-2050 table (Ephemeris.gd for Mercury..Jupiter)",
+"period_d": 4332.59,
+"rot_d": 0.41354,
+"obliquity_deg": 3.13,
+"pole_radec_j2000": [
+268.056595,
+64.495303
+],
+"pole_right_hand_flipped": false,
+"spin_tilt_to_zecliptic_deg": 7.8670498830931095,
+"i_solar_equator_deg": 6.09,
+"i_invariable_deg": 0.327,
+"hill_radius_km": 50562815.55419566,
+"rings": true,
+"n_moons": 95,
+"albedo_geom": 0.538,
+"notes": "Radiates 1.67x the sunlight it receives. System III rotation 9h 55m 29.7s. Galilean moons 1:2:4 Laplace resonance (Io:Europa:Ganymede)."
+},
+"saturn": {
+"id": "saturn",
+"name": "Saturn",
+"kind": "planet",
+"parent": "sol",
+"radius_km": 58232.0,
+"r_eq_km": 60268.0,
+"mass_kg": 5.6834e+26,
+"gm_km3s2": 37931206.2,
+"elements": {
+"a": 9.53667594,
+"a_dot": -0.0012506,
+"e": 0.05386179,
+"e_dot": -0.00050991,
+"i": 2.48599187,
+"i_dot": 0.00193609,
+"l": 49.95424423,
+"l_dot": 1222.49362201,
+"peri": 92.59887831,
+"peri_dot": -0.41897216,
+"node": 113.66242448,
+"node_dot": -0.28867794
+},
+"elements_source": "Standish 1800-2050 table (Ephemeris.gd for Mercury..Jupiter)",
+"period_d": 10759.22,
+"rot_d": 0.44401,
+"obliquity_deg": 26.73,
+"pole_radec_j2000": [
+40.589,
+83.537
+],
+"pole_right_hand_flipped": false,
+"spin_tilt_to_zecliptic_deg": 29.359070023175125,
+"i_solar_equator_deg": 5.504,
+"i_invariable_deg": 0.93,
+"hill_radius_km": 61645285.77434835,
+"rings": true,
+"n_moons": 274,
+"albedo_geom": 0.499,
+"notes": "Rings lie in the equatorial plane, tilted 26.73 deg to the orbit; ring-plane crossings every ~15 yr (next 2025 Mar 23, 2038-39). Ring mass / Saturn mass = 2.7e-8."
+},
+"uranus": {
+"id": "uranus",
+"name": "Uranus",
+"kind": "planet",
+"parent": "sol",
+"radius_km": 25362.0,
+"r_eq_km": 25559.0,
+"mass_kg": 8.6813e+25,
+"gm_km3s2": 5793951.3,
+"elements": {
+"a": 19.18916464,
+"a_dot": -0.00196176,
+"e": 0.04725744,
+"e_dot": -4.397e-05,
+"i": 0.77263783,
+"i_dot": -0.00242939,
+"l": 313.23810451,
+"l_dot": 428.48202785,
+"peri": 170.9542763,
+"peri_dot": 0.40805281,
+"node": 74.01692503,
+"node_dot": 0.04240589
+},
+"elements_source": "Standish 1800-2050 table (Ephemeris.gd for Mercury..Jupiter)",
+"period_d": 30688.5,
+"rot_d": -0.71833,
+"obliquity_deg": 97.77,
+"pole_radec_j2000": [
+257.311,
+-15.175
+],
+"pole_right_hand_flipped": true,
+"spin_tilt_to_zecliptic_deg": 97.89777658484331,
+"i_solar_equator_deg": 6.478,
+"i_invariable_deg": 1.028,
+"hill_radius_km": 66768641.64416798,
+"rings": true,
+"n_moons": 28,
+"albedo_geom": 0.488,
+"notes": "Node 74.006 deg is 1.75 deg from the solar-equator node (75.76 deg). Rolls on its side; ring plane = equatorial plane at 97.77 deg. Equinox 2007 Dec 7; next 2049."
+},
+"neptune": {
+"id": "neptune",
+"name": "Neptune",
+"kind": "planet",
+"parent": "sol",
+"radius_km": 24622.0,
+"r_eq_km": 24764.0,
+"mass_kg": 1.02409e+26,
+"gm_km3s2": 6835099.5,
+"elements": {
+"a": 30.06992276,
+"a_dot": 0.00026291,
+"e": 0.00859048,
+"e_dot": 5.105e-05,
+"i": 1.77004347,
+"i_dot": 0.00035372,
+"l": -55.12002969,
+"l_dot": 218.45945325,
+"peri": 44.96476227,
+"peri_dot": -0.32241464,
+"node": 131.78422574,
+"node_dot": -0.00508664
+},
+"elements_source": "Standish 1800-2050 table (Ephemeris.gd for Mercury..Jupiter)",
+"period_d": 60182.0,
+"rot_d": 0.67125,
+"obliquity_deg": 28.32,
+"pole_radec_j2000": [
+299.36,
+43.46
+],
+"pole_right_hand_flipped": false,
+"spin_tilt_to_zecliptic_deg": 21.762260774207228,
+"i_solar_equator_deg": 6.43,
+"i_invariable_deg": 0.726,
+"hill_radius_km": 115038752.93230867,
+"rings": true,
+"n_moons": 16,
+"albedo_geom": 0.442,
+"notes": "Radiates 2.61x received sunlight. Triton retrograde (i=157 deg) = captured KBO; Triton is 99.5% of Neptune's moon mass."
+},
+"pluto": {
+"id": "pluto",
+"name": "Pluto",
+"kind": "dwarf",
+"parent": "sol",
+"radius_km": 1188.3,
+"r_eq_km": 1188.3,
+"mass_kg": 1.303e+22,
+"gm_km3s2": 869.6,
+"elements": {
+"a": 39.48211675,
+"a_dot": -0.00031596,
+"e": 0.2488273,
+"e_dot": 5.17e-05,
+"i": 17.14001206,
+"i_dot": 4.818e-05,
+"l": 238.92903833,
+"l_dot": 145.20780515,
+"peri": 224.06891629,
+"peri_dot": -0.04062942,
+"node": 110.30393684,
+"node_dot": -0.01183482
+},
+"elements_source": "Standish 1800-2050 table (Ephemeris.gd for Mercury..Jupiter)",
+"period_d": 90560.0,
+"rot_d": -6.3872,
+"obliquity_deg": 122.53,
+"pole_radec_j2000": [
+132.993,
+-6.163
+],
+"pole_right_hand_flipped": false,
+"spin_tilt_to_zecliptic_deg": 119.14239768780511,
+"i_solar_equator_deg": 11.898,
+"i_invariable_deg": 15.583,
+"hill_radius_km": 5756370.658651432,
+"rings": false,
+"n_moons": 5,
+"albedo_geom": 0.52,
+"notes": "Pluto and Charon are mutually tidally locked (both 6.3872 d). Barycenter 2,126 km from Pluto center = 1.79 R_P, OUTSIDE Pluto. 3:2 resonance with Neptune (2 Pluto orbits = 3 Neptune orbits)."
+},
+"luna": {
+"id": "luna",
+"name": "Luna",
+"kind": "moon",
+"parent": "earth",
+"radius_km": 1737.4,
+"mass_kg": 7.346e+22,
+"gm_km3s2": 4902.8,
+"a_km": 384400.0,
+"e": 0.0549,
+"period_d": 27.3217,
+"retrograde": false,
+"i_deg": 5.145,
+"i_note": "to ecliptic",
+"rot_d": 27.3217,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 41.99909585614909,
+"hill_radius_km": 58146.857803457766,
+"notes": "Synchronous rotation. Recession 3.8 cm/yr (LLR). Mass ratio to Earth 0.01230."
+},
+"phobos": {
+"id": "phobos",
+"name": "Phobos",
+"kind": "moon",
+"parent": "mars",
+"radius_km": 11.08,
+"mass_kg": 1.0659e+16,
+"gm_km3s2": null,
+"a_km": 9376.0,
+"e": 0.0151,
+"period_d": 0.31891,
+"retrograde": false,
+"i_deg": 1.08,
+"i_note": "to Mars equator",
+"rot_d": 0.31891,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 3598.152134624027,
+"hill_radius_km": 16.33660729989652,
+"notes": "Orbits faster than Mars rotates: rises in the west."
+},
+"deimos": {
+"id": "deimos",
+"name": "Deimos",
+"kind": "moon",
+"parent": "mars",
+"radius_km": 6.2,
+"mass_kg": 1476200000000000.0,
+"gm_km3s2": null,
+"a_km": 23463.2,
+"e": 0.00033,
+"period_d": 1.26244,
+"retrograde": false,
+"i_deg": 1.79,
+"i_note": "to Mars equator",
+"rot_d": 1.26244,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 908.9435515770641,
+"hill_radius_km": 21.46869344926995,
+"notes": ""
+},
+"io": {
+"id": "io",
+"name": "Io",
+"kind": "moon",
+"parent": "jupiter",
+"radius_km": 1821.6,
+"mass_kg": 8.9319e+22,
+"gm_km3s2": null,
+"a_km": 421800.0,
+"e": 0.0041,
+"period_d": 1.769138,
+"retrograde": false,
+"i_deg": 0.05,
+"i_note": "to primary equator (assumed)",
+"rot_d": 1.769138,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 648.6134474828694,
+"hill_radius_km": 10515.177622845991,
+"notes": ""
+},
+"europa": {
+"id": "europa",
+"name": "Europa",
+"kind": "moon",
+"parent": "jupiter",
+"radius_km": 1560.8,
+"mass_kg": 4.7998e+22,
+"gm_km3s2": null,
+"a_km": 671100.0,
+"e": 0.0094,
+"period_d": 3.551181,
+"retrograde": false,
+"i_deg": 0.47,
+"i_note": "to primary equator (assumed)",
+"rot_d": 3.551181,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 323.12819235430374,
+"hill_radius_km": 13529.226397686813,
+"notes": ""
+},
+"ganymede": {
+"id": "ganymede",
+"name": "Ganymede",
+"kind": "moon",
+"parent": "jupiter",
+"radius_km": 2634.1,
+"mass_kg": 1.4819e+23,
+"gm_km3s2": null,
+"a_km": 1070400.0,
+"e": 0.0013,
+"period_d": 7.154553,
+"retrograde": false,
+"i_deg": 0.2,
+"i_note": "to primary equator (assumed)",
+"rot_d": 7.154553,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 160.3855191586321,
+"hill_radius_km": 31678.684431915328,
+"notes": "Only moon with intrinsic dipole field."
+},
+"callisto": {
+"id": "callisto",
+"name": "Callisto",
+"kind": "moon",
+"parent": "jupiter",
+"radius_km": 2410.3,
+"mass_kg": 1.0759e+23,
+"gm_km3s2": null,
+"a_km": 1882700.0,
+"e": 0.0074,
+"period_d": 16.689018,
+"retrograde": false,
+"i_deg": 0.19,
+"i_note": "to primary equator (assumed)",
+"rot_d": 16.689018,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 68.75699320672724,
+"hill_radius_km": 49772.83565213901,
+"notes": ""
+},
+"titan": {
+"id": "titan",
+"name": "Titan",
+"kind": "moon",
+"parent": "saturn",
+"radius_km": 2574.7,
+"mass_kg": 1.3452e+23,
+"gm_km3s2": null,
+"a_km": 1221870.0,
+"e": 0.0288,
+"period_d": 15.945,
+"retrograde": false,
+"i_deg": 0.35,
+"i_note": "to primary equator (assumed)",
+"rot_d": 15.945,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 71.96529929463459,
+"hill_radius_km": 50896.291130465426,
+"notes": ""
+},
+"rhea": {
+"id": "rhea",
+"name": "Rhea",
+"kind": "moon",
+"parent": "saturn",
+"radius_km": 763.8,
+"mass_kg": 2.306e+21,
+"gm_km3s2": null,
+"a_km": 527108.0,
+"e": 0.0013,
+"period_d": 4.518,
+"retrograde": false,
+"i_deg": 0.35,
+"i_note": "to primary equator (assumed)",
+"rot_d": 4.518,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 253.98111935656235,
+"hill_radius_km": 5821.629991125316,
+"notes": ""
+},
+"iapetus": {
+"id": "iapetus",
+"name": "Iapetus",
+"kind": "moon",
+"parent": "saturn",
+"radius_km": 734.5,
+"mass_kg": 1.805e+21,
+"gm_km3s2": null,
+"a_km": 3560820.0,
+"e": 0.0283,
+"period_d": 79.32,
+"retrograde": false,
+"i_deg": 15.47,
+"i_note": "to primary equator (assumed)",
+"rot_d": 79.32,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 14.466549385438084,
+"hill_radius_km": 35263.991338582906,
+"notes": ""
+},
+"dione": {
+"id": "dione",
+"name": "Dione",
+"kind": "moon",
+"parent": "saturn",
+"radius_km": 561.4,
+"mass_kg": 1.095e+21,
+"gm_km3s2": null,
+"a_km": 377396.0,
+"e": 0.0022,
+"period_d": 2.737,
+"retrograde": false,
+"i_deg": 0.02,
+"i_note": "to primary equator (assumed)",
+"rot_d": 2.737,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 419.24979804638235,
+"hill_radius_km": 3248.8949786801727,
+"notes": ""
+},
+"tethys": {
+"id": "tethys",
+"name": "Tethys",
+"kind": "moon",
+"parent": "saturn",
+"radius_km": 531.1,
+"mass_kg": 6.17e+20,
+"gm_km3s2": null,
+"a_km": 294619.0,
+"e": 0.0001,
+"period_d": 1.888,
+"retrograde": false,
+"i_deg": 1.09,
+"i_note": "to primary equator (assumed)",
+"rot_d": 1.888,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 607.7789710026212,
+"hill_radius_km": 2099.274425179231,
+"notes": ""
+},
+"enceladus": {
+"id": "enceladus",
+"name": "Enceladus",
+"kind": "moon",
+"parent": "saturn",
+"radius_km": 252.1,
+"mass_kg": 1.08e+20,
+"gm_km3s2": null,
+"a_km": 237948.0,
+"e": 0.0047,
+"period_d": 1.37,
+"retrograde": false,
+"i_deg": 0.02,
+"i_note": "to primary equator (assumed)",
+"rot_d": 1.37,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 837.5815308415682,
+"hill_radius_km": 944.0626634905346,
+"notes": ""
+},
+"mimas": {
+"id": "mimas",
+"name": "Mimas",
+"kind": "moon",
+"parent": "saturn",
+"radius_km": 198.2,
+"mass_kg": 3.75e+19,
+"gm_km3s2": null,
+"a_km": 185539.0,
+"e": 0.0196,
+"period_d": 0.942,
+"retrograde": false,
+"i_deg": 1.57,
+"i_note": "to primary equator (assumed)",
+"rot_d": 0.942,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 1218.1387444298819,
+"hill_radius_km": 509.65048771629847,
+"notes": ""
+},
+"titania": {
+"id": "titania",
+"name": "Titania",
+"kind": "moon",
+"parent": "uranus",
+"radius_km": 788.9,
+"mass_kg": 3.4e+21,
+"gm_km3s2": null,
+"a_km": 435910.0,
+"e": 0.0011,
+"period_d": 8.706,
+"retrograde": false,
+"i_deg": 0.08,
+"i_note": "to primary equator (assumed)",
+"rot_d": 8.706,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 131.804123277389,
+"hill_radius_km": 10252.81555226321,
+"notes": ""
+},
+"oberon": {
+"id": "oberon",
+"name": "Oberon",
+"kind": "moon",
+"parent": "uranus",
+"radius_km": 761.4,
+"mass_kg": 3.08e+21,
+"gm_km3s2": null,
+"a_km": 583520.0,
+"e": 0.0014,
+"period_d": 13.463,
+"retrograde": false,
+"i_deg": 0.07,
+"i_note": "to primary equator (assumed)",
+"rot_d": 13.463,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 85.23261511200688,
+"hill_radius_km": 13275.846026548807,
+"notes": ""
+},
+"umbriel": {
+"id": "umbriel",
+"name": "Umbriel",
+"kind": "moon",
+"parent": "uranus",
+"radius_km": 584.7,
+"mass_kg": 1.28e+21,
+"gm_km3s2": null,
+"a_km": 266000.0,
+"e": 0.0039,
+"period_d": 4.144,
+"retrograde": false,
+"i_deg": 0.13,
+"i_note": "to primary equator (assumed)",
+"rot_d": 4.144,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 276.90316053401267,
+"hill_radius_km": 4504.907661834004,
+"notes": ""
+},
+"ariel": {
+"id": "ariel",
+"name": "Ariel",
+"kind": "moon",
+"parent": "uranus",
+"radius_km": 578.9,
+"mass_kg": 1.25e+21,
+"gm_km3s2": null,
+"a_km": 190900.0,
+"e": 0.0012,
+"period_d": 2.52,
+"retrograde": false,
+"i_deg": 0.04,
+"i_note": "to primary equator (assumed)",
+"rot_d": 2.52,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 455.3518639892653,
+"hill_radius_km": 3216.2697052209624,
+"notes": ""
+},
+"miranda": {
+"id": "miranda",
+"name": "Miranda",
+"kind": "moon",
+"parent": "uranus",
+"radius_km": 235.8,
+"mass_kg": 6.4e+19,
+"gm_km3s2": null,
+"a_km": 129900.0,
+"e": 0.0013,
+"period_d": 1.413,
+"retrograde": false,
+"i_deg": 4.34,
+"i_note": "to primary equator (assumed)",
+"rot_d": 1.413,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 812.0924962865879,
+"hill_radius_km": 812.585096187562,
+"notes": ""
+},
+"triton": {
+"id": "triton",
+"name": "Triton",
+"kind": "moon",
+"parent": "neptune",
+"radius_km": 1353.4,
+"mass_kg": 2.139e+22,
+"gm_km3s2": null,
+"a_km": 354759.0,
+"e": 1.6e-05,
+"period_d": -5.876854,
+"retrograde": true,
+"i_deg": 156.9,
+"i_note": "retrograde, to Neptune equator",
+"rot_d": -5.876854,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 195.25526706175594,
+"hill_radius_km": 14594.087353879775,
+"notes": "Captured; spiralling inward; Roche disruption in ~3.6 Gyr."
+},
+"proteus": {
+"id": "proteus",
+"name": "Proteus",
+"kind": "moon",
+"parent": "neptune",
+"radius_km": 210.0,
+"mass_kg": 4.4e+19,
+"gm_km3s2": null,
+"a_km": 117647.0,
+"e": 0.0005,
+"period_d": 1.12231,
+"retrograde": false,
+"i_deg": 0.08,
+"i_note": "to primary equator (assumed)",
+"rot_d": 1.12231,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 1022.4329260658363,
+"hill_radius_km": 615.2166601741822,
+"notes": ""
+},
+"nereid": {
+"id": "nereid",
+"name": "Nereid",
+"kind": "moon",
+"parent": "neptune",
+"radius_km": 178.5,
+"mass_kg": 3.1e+19,
+"gm_km3s2": null,
+"a_km": 5513800.0,
+"e": 0.7507,
+"period_d": 360.14,
+"retrograde": false,
+"i_deg": 7.09,
+"i_note": "to primary equator (assumed)",
+"rot_d": 0.48,
+"synchronous": false,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 3.18622396082898,
+"hill_radius_km": 6399.421638677124,
+"notes": "e = 0.75, the most eccentric known moon."
+},
+"charon": {
+"id": "charon",
+"name": "Charon",
+"kind": "moon",
+"parent": "pluto",
+"radius_km": 606.0,
+"mass_kg": 1.586e+21,
+"gm_km3s2": 105.88,
+"a_km": 19591.4,
+"e": 0.0002,
+"period_d": 6.387221,
+"retrograde": false,
+"i_deg": 0.08,
+"i_note": "to Pluto equator",
+"rot_d": 6.387221,
+"synchronous": true,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 179.65351398565176,
+"hill_radius_km": 6730.661896052796,
+"notes": "Mass ratio 0.1217; radius ratio 0.510; separation 16.49 R_P."
+},
+"styx": {
+"id": "styx",
+"name": "Styx",
+"kind": "moon",
+"parent": "pluto",
+"radius_km": 8.0,
+"mass_kg": 7500000000000000.0,
+"gm_km3s2": null,
+"a_km": 42656.0,
+"e": 0.0,
+"period_d": 20.16,
+"retrograde": false,
+"i_deg": 0.0,
+"i_note": "to primary equator (assumed)",
+"rot_d": 3.24,
+"synchronous": false,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 56.918982998658166,
+"hill_radius_km": 246.02467043770147,
+"notes": ""
+},
+"nix": {
+"id": "nix",
+"name": "Nix",
+"kind": "moon",
+"parent": "pluto",
+"radius_km": 24.5,
+"mass_kg": 2.6e+16,
+"gm_km3s2": null,
+"a_km": 48694.0,
+"e": 0.0,
+"period_d": 24.85,
+"retrograde": false,
+"i_deg": 0.0,
+"i_note": "to primary equator (assumed)",
+"rot_d": 1.83,
+"synchronous": false,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 46.17652705243254,
+"hill_radius_km": 425.0545576439691,
+"notes": ""
+},
+"kerberos": {
+"id": "kerberos",
+"name": "Kerberos",
+"kind": "moon",
+"parent": "pluto",
+"radius_km": 9.5,
+"mass_kg": 1.65e+16,
+"gm_km3s2": null,
+"a_km": 57783.0,
+"e": 0.0,
+"period_d": 32.17,
+"retrograde": false,
+"i_deg": 0.0,
+"i_note": "to primary equator (assumed)",
+"rot_d": 5.33,
+"synchronous": false,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 35.66946525498752,
+"hill_radius_km": 433.45050228943967,
+"notes": ""
+},
+"hydra": {
+"id": "hydra",
+"name": "Hydra",
+"kind": "moon",
+"parent": "pluto",
+"radius_km": 25.5,
+"mass_kg": 4.8e+16,
+"gm_km3s2": null,
+"a_km": 64738.0,
+"e": 0.0,
+"period_d": 38.2,
+"retrograde": false,
+"i_deg": 0.0,
+"i_note": "to primary equator (assumed)",
+"rot_d": 0.43,
+"synchronous": false,
+"phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
+"pis_per_earth_year": 30.038918776255198,
+"hill_radius_km": 693.2413626797361,
+"notes": ""
+},
+"ceres": {
+"id": "ceres",
+"name": "Ceres",
+"kind": "asteroid",
+"parent": "sol",
+"radius_km": 469.7,
+"rot_d": 0.3780904166666667,
+"sbdb": {
+"epoch_jd": 2461200.5,
+"a": 2.765552595034094,
+"e": 0.07969229514816586,
+"i": 10.58802780183462,
+"node": 80.24862682043221,
+"w": 73.29421453021587,
+"ma": 274.4193463761342,
+"period_d": 1679.853119758983,
+"source": "NASA/JPL Small-Body Database (SBDB) API",
+"fullname": "1 Ceres (A801 AA)",
+"orbit_class": "Main-belt Asteroid"
+},
+"period_d": 1679.853119758983,
+"H_mag": 3.34
+},
+"eros": {
+"id": "eros",
+"name": "Eros",
+"kind": "asteroid",
+"parent": "sol",
+"radius_km": 8.42,
+"rot_d": 0.21958333333333332,
+"sbdb": {
+"epoch_jd": 2461200.5,
+"a": 1.458243716760167,
+"e": 0.2228779627700761,
+"i": 10.82854410314273,
+"node": 304.2679713350896,
+"w": 178.9181319135911,
+"ma": 62.51145501986792,
+"period_d": 643.1963890927677,
+"source": "NASA/JPL Small-Body Database (SBDB) API",
+"fullname": "433 Eros (A898 PA)",
+"orbit_class": "Amor"
+},
+"period_d": 643.1963890927677,
+"H_mag": 10.4
+},
+"hygiea": {
+"id": "hygiea",
+"name": "Hygiea",
+"kind": "asteroid",
+"parent": "sol",
+"radius_km": 203.56,
+"rot_d": 0.5761666666666666,
+"sbdb": {
+"epoch_jd": 2461200.5,
+"a": 3.150974033963701,
+"e": 0.1067092741240963,
+"i": 3.829529946447122,
+"node": 283.1198927508594,
+"w": 312.4242387344704,
+"ma": 252.0344242359649,
+"period_d": 2042.987283349627,
+"source": "NASA/JPL Small-Body Database (SBDB) API",
+"fullname": "10 Hygiea (A849 GA)",
+"orbit_class": "Main-belt Asteroid"
+},
+"period_d": 2042.987283349627,
+"H_mag": 5.65
+},
+"juno": {
+"id": "juno",
+"name": "Juno",
+"kind": "asteroid",
+"parent": "sol",
+"radius_km": 123.298,
+"rot_d": 0.30041666666666667,
+"sbdb": {
+"epoch_jd": 2461200.5,
+"a": 2.670989527103278,
+"e": 0.2556999836681878,
+"i": 12.98659236598085,
+"node": 169.8115953492418,
+"w": 247.8950743075613,
+"ma": 262.7322944883855,
+"period_d": 1594.434579527149,
+"source": "NASA/JPL Small-Body Database (SBDB) API",
+"fullname": "3 Juno (A804 RA)",
+"orbit_class": "Main-belt Asteroid"
+},
+"period_d": 1594.434579527149,
+"H_mag": 5.19
+},
+"pallas": {
+"id": "pallas",
+"name": "Pallas",
+"kind": "asteroid",
+"parent": "sol",
+"radius_km": 256.5,
+"rot_d": 0.3255508916666667,
+"sbdb": {
+"epoch_jd": 2461200.5,
+"a": 2.769559010737709,
+"e": 0.2307000995648547,
+"i": 34.93279321851542,
+"node": 172.8866193357694,
+"w": 310.9699161652136,
+"ma": 254.2496521742734,
+"period_d": 1683.504809564834,
+"source": "NASA/JPL Small-Body Database (SBDB) API",
+"fullname": "2 Pallas (A802 FA)",
+"orbit_class": "Main-belt Asteroid"
+},
+"period_d": 1683.504809564834,
+"H_mag": 4.12
+},
+"psyche": {
+"id": "psyche",
+"name": "Psyche",
+"kind": "asteroid",
+"parent": "sol",
+"radius_km": 111.0,
+"rot_d": 0.1748333333333333,
+"sbdb": {
+"epoch_jd": 2461200.5,
+"a": 2.925720466462538,
+"e": 0.1349324738201893,
+"i": 3.098749116151128,
+"node": 149.9753859305033,
+"w": 230.0326782748359,
+"ma": 79.76939505329617,
+"period_d": 1827.87996016922,
+"source": "NASA/JPL Small-Body Database (SBDB) API",
+"fullname": "16 Psyche (A852 FA)",
+"orbit_class": "Main-belt Asteroid"
+},
+"period_d": 1827.87996016922,
+"H_mag": 6.2
+},
+"vesta": {
+"id": "vesta",
+"name": "Vesta",
+"kind": "asteroid",
+"parent": "sol",
+"radius_km": 261.385,
+"rot_d": 0.2225886513416667,
+"sbdb": {
+"epoch_jd": 2461200.5,
+"a": 2.361365965127599,
+"e": 0.09020374382834395,
+"i": 7.143925545058711,
+"node": 103.701293265032,
+"w": 151.4686478221564,
+"ma": 81.19015607686903,
+"period_d": 1325.389042911101,
+"source": "NASA/JPL Small-Body Database (SBDB) API",
+"fullname": "4 Vesta (A807 FA)",
+"orbit_class": "Main-belt Asteroid"
+},
+"period_d": 1325.389042911101,
+"H_mag": 3.25
+}
+},
+"belt": {
+"sample_note": "600 representative main-belt orbits, seeded, Kirkwood gaps carved; NOT real objects",
+"a_inner_au": 2.06,
+"a_outer_au": 3.27,
+"kirkwood_gaps_au": [
+2.502,
+2.825,
+2.958,
+3.279
+],
+"resonances": [
+"3:1",
+"5:2",
+"7:3",
+"2:1"
+],
+"sample": [
+{
+"a": 2.65514,
+"e": 0.0026,
+"i": 7.476,
+"node": 248.19,
+"w": 253.94,
+"ma": 274.23
+},
+{
+"a": 3.20802,
+"e": 0.1879,
+"i": 8.186,
+"node": 169.95,
+"w": 9.48,
+"ma": 82.87
+},
+{
+"a": 3.13646,
+"e": 0.0789,
+"i": 8.483,
+"node": 219.59,
+"w": 5.82,
+"ma": 92.69
+},
+{
+"a": 2.56563,
+"e": 0.1151,
+"i": 8.861,
+"node": 109.59,
+"w": 305.81,
+"ma": 183.24
+},
+{
+"a": 2.89266,
+"e": 0.042,
+"i": 4.236,
+"node": 131.45,
+"w": 115.3,
+"ma": 314.84
+},
+{
+"a": 3.03781,
+"e": 0.0117,
+"i": 3.309,
+"node": 82.86,
+"w": 223.51,
+"ma": 88.07
+},
+{
+"a": 3.11299,
+"e": 0.2145,
+"i": 1.771,
+"node": 201.61,
+"w": 288.56,
+"ma": 77.88
+},
+{
+"a": 2.54235,
+"e": 0.1075,
+"i": 6.705,
+"node": 325.85,
+"w": 36.53,
+"ma": 223.12
+},
+{
+"a": 2.63825,
+"e": 0.2703,
+"i": 6.173,
+"node": 334.75,
+"w": 265.77,
+"ma": 259.73
+},
+{
+"a": 2.38737,
+"e": 0.1612,
+"i": 1.402,
+"node": 34.13,
+"w": 266.59,
+"ma": 218.37
+},
+{
+"a": 3.16308,
+"e": 0.1473,
+"i": 0.494,
+"node": 307.59,
+"w": 42.96,
+"ma": 308.91
+},
+{
+"a": 3.06049,
+"e": 0.1101,
+"i": 1.96,
+"node": 351.38,
+"w": 267.28,
+"ma": 159.31
+},
+{
+"a": 2.43608,
+"e": 0.0134,
+"i": 1.794,
+"node": 300.83,
+"w": 210.15,
+"ma": 274.43
+},
+{
+"a": 3.24942,
+"e": 0.1147,
+"i": 4.834,
+"node": 261.42,
+"w": 213.42,
+"ma": 17.12
+},
+{
+"a": 2.78403,
+"e": 0.0817,
+"i": 5.47,
+"node": 108.1,
+"w": 229.87,
+"ma": 10.42
+},
+{
+"a": 2.30889,
+"e": 0.2449,
+"i": 0.928,
+"node": 10.8,
+"w": 262.71,
+"ma": 117.82
+},
+{
+"a": 2.4696,
+"e": 0.0393,
+"i": 6.69,
+"node": 315.01,
+"w": 327.95,
+"ma": 47.14
+},
+{
+"a": 2.98948,
+"e": 0.1477,
+"i": 7.59,
+"node": 224.91,
+"w": 130.23,
+"ma": 236.32
+},
+{
+"a": 3.12849,
+"e": 0.0561,
+"i": 8.866,
+"node": 196.5,
+"w": 173.39,
+"ma": 181.42
+},
+{
+"a": 3.21806,
+"e": 0.1157,
+"i": 7.192,
+"node": 164.5,
+"w": 112.74,
+"ma": 30.4
+},
+{
+"a": 2.55428,
+"e": 0.2152,
+"i": 7.924,
+"node": 314.38,
+"w": 85.55,
+"ma": 268.84
+},
+{
+"a": 3.11047,
+"e": 0.0962,
+"i": 11.855,
+"node": 61.43,
+"w": 223.84,
+"ma": 62.16
+},
+{
+"a": 2.37352,
+"e": 0.1282,
+"i": 3.779,
+"node": 96.87,
+"w": 64.7,
+"ma": 205.3
+},
+{
+"a": 2.66603,
+"e": 0.1927,
+"i": 7.649,
+"node": 195.56,
+"w": 118.52,
+"ma": 77.65
+},
+{
+"a": 3.21122,
+"e": 0.0767,
+"i": 3.714,
+"node": 83.11,
+"w": 336.47,
+"ma": 247.52
+},
+{
+"a": 2.46123,
+"e": 0.0892,
+"i": 5.652,
+"node": 306.14,
+"w": 192.65,
+"ma": 356.75
+},
+{
+"a": 2.54098,
+"e": 0.0863,
+"i": 3.107,
+"node": 280.08,
+"w": 240.62,
+"ma": 226.89
+},
+{
+"a": 2.39353,
+"e": 0.1272,
+"i": 0.583,
+"node": 297.6,
+"w": 114.81,
+"ma": 168.49
+},
+{
+"a": 2.31962,
+"e": 0.0284,
+"i": 12.084,
+"node": 299.39,
+"w": 54.88,
+"ma": 218.92
+},
+{
+"a": 2.12257,
+"e": 0.135,
+"i": 3.744,
+"node": 152.92,
+"w": 302.91,
+"ma": 344.51
+},
+{
+"a": 3.18504,
+"e": 0.252,
+"i": 6.489,
+"node": 152.92,
+"w": 346.27,
+"ma": 215.96
+},
+{
+"a": 2.0855,
+"e": 0.1293,
+"i": 0.539,
+"node": 231.12,
+"w": 310.38,
+"ma": 112.5
+},
+{
+"a": 2.79376,
+"e": 0.0168,
+"i": 24.313,
+"node": 305.93,
+"w": 163.65,
+"ma": 5.07
+},
+{
+"a": 3.1998,
+"e": 0.1078,
+"i": 1.484,
+"node": 73.45,
+"w": 18.06,
+"ma": 201.95
+},
+{
+"a": 2.33126,
+"e": 0.0353,
+"i": 1.734,
+"node": 296.87,
+"w": 347.11,
+"ma": 316.11
+},
+{
+"a": 2.22891,
+"e": 0.2931,
+"i": 12.529,
+"node": 185.57,
+"w": 344.15,
+"ma": 179.09
+},
+{
+"a": 2.75889,
+"e": 0.0258,
+"i": 1.216,
+"node": 312.64,
+"w": 203.82,
+"ma": 270.59
+},
+{
+"a": 2.06536,
+"e": 0.1368,
+"i": 16.835,
+"node": 150.91,
+"w": 28.6,
+"ma": 47.26
+},
+{
+"a": 3.22173,
+"e": 0.2389,
+"i": 14.805,
+"node": 81.74,
+"w": 1.36,
+"ma": 46.52
+},
+{
+"a": 3.21841,
+"e": 0.0526,
+"i": 0.543,
+"node": 332.54,
+"w": 26.2,
+"ma": 328.86
+},
+{
+"a": 2.71275,
+"e": 0.0773,
+"i": 9.63,
+"node": 50.04,
+"w": 143.62,
+"ma": 213.5
+},
+{
+"a": 2.54508,
+"e": 0.0469,
+"i": 1.436,
+"node": 180.06,
+"w": 251.45,
+"ma": 97.0
+},
+{
+"a": 2.77482,
+"e": 0.0533,
+"i": 0.144,
+"node": 218.82,
+"w": 293.17,
+"ma": 73.71
+},
+{
+"a": 3.1408,
+"e": 0.0061,
+"i": 1.612,
+"node": 282.98,
+"w": 74.68,
+"ma": 213.78
+},
+{
+"a": 2.79772,
+"e": 0.2361,
+"i": 4.123,
+"node": 92.47,
+"w": 81.59,
+"ma": 93.8
+},
+{
+"a": 2.68618,
+"e": 0.0295,
+"i": 2.97,
+"node": 4.55,
+"w": 167.83,
+"ma": 210.79
+},
+{
+"a": 2.23046,
+"e": 0.0102,
+"i": 2.135,
+"node": 218.68,
+"w": 236.94,
+"ma": 128.98
+},
+{
+"a": 2.78698,
+"e": 0.0751,
+"i": 6.409,
+"node": 189.1,
+"w": 91.76,
+"ma": 77.54
+},
+{
+"a": 3.09557,
+"e": 0.1395,
+"i": 4.598,
+"node": 196.59,
+"w": 32.89,
+"ma": 292.92
+},
+{
+"a": 2.91942,
+"e": 0.1027,
+"i": 5.326,
+"node": 180.88,
+"w": 99.81,
+"ma": 102.27
+},
+{
+"a": 3.12109,
+"e": 0.0223,
+"i": 2.837,
+"node": 14.46,
+"w": 81.87,
+"ma": 206.22
+},
+{
+"a": 3.12105,
+"e": 0.0307,
+"i": 7.315,
+"node": 191.08,
+"w": 54.89,
+"ma": 118.52
+},
+{
+"a": 3.13612,
+"e": 0.2047,
+"i": 7.16,
+"node": 0.46,
+"w": 122.13,
+"ma": 110.41
+},
+{
+"a": 3.05678,
+"e": 0.0053,
+"i": 0.942,
+"node": 138.03,
+"w": 335.24,
+"ma": 33.06
+},
+{
+"a": 2.5445,
+"e": 0.0225,
+"i": 2.724,
+"node": 280.0,
+"w": 152.32,
+"ma": 184.63
+},
+{
+"a": 3.03172,
+"e": 0.1018,
+"i": 2.153,
+"node": 116.1,
+"w": 106.5,
+"ma": 240.3
+},
+{
+"a": 3.1129,
+"e": 0.131,
+"i": 9.346,
+"node": 13.41,
+"w": 31.76,
+"ma": 16.17
+},
+{
+"a": 2.67464,
+"e": 0.0864,
+"i": 6.41,
+"node": 215.23,
+"w": 8.06,
+"ma": 300.36
+},
+{
+"a": 2.32728,
+"e": 0.0529,
+"i": 6.426,
+"node": 149.49,
+"w": 94.22,
+"ma": 149.66
+},
+{
+"a": 3.11474,
+"e": 0.1521,
+"i": 8.003,
+"node": 165.26,
+"w": 66.4,
+"ma": 62.76
+},
+{
+"a": 2.90037,
+"e": 0.0114,
+"i": 4.218,
+"node": 136.55,
+"w": 53.28,
+"ma": 34.45
+},
+{
+"a": 2.75661,
+"e": 0.0512,
+"i": 0.976,
+"node": 218.6,
+"w": 117.88,
+"ma": 221.2
+},
+{
+"a": 3.07427,
+"e": 0.0605,
+"i": 1.984,
+"node": 235.11,
+"w": 154.21,
+"ma": 40.61
+},
+{
+"a": 2.59866,
+"e": 0.1583,
+"i": 10.697,
+"node": 83.11,
+"w": 8.11,
+"ma": 347.12
+},
+{
+"a": 2.07663,
+"e": 0.2644,
+"i": 12.582,
+"node": 102.87,
+"w": 175.61,
+"ma": 157.67
+},
+{
+"a": 2.07435,
+"e": 0.1911,
+"i": 18.655,
+"node": 149.58,
+"w": 171.72,
+"ma": 219.63
+},
+{
+"a": 2.58977,
+"e": 0.0565,
+"i": 7.199,
+"node": 158.27,
+"w": 167.81,
+"ma": 93.37
+},
+{
+"a": 2.41701,
+"e": 0.1596,
+"i": 10.731,
+"node": 38.88,
+"w": 48.75,
+"ma": 99.82
+},
+{
+"a": 2.1332,
+"e": 0.1481,
+"i": 1.035,
+"node": 309.52,
+"w": 81.63,
+"ma": 301.92
+},
+{
+"a": 2.15326,
+"e": 0.0222,
+"i": 3.244,
+"node": 331.85,
+"w": 212.94,
+"ma": 14.32
+},
+{
+"a": 2.25127,
+"e": 0.033,
+"i": 0.102,
+"node": 175.53,
+"w": 40.33,
+"ma": 216.33
+},
+{
+"a": 2.24577,
+"e": 0.1189,
+"i": 3.38,
+"node": 192.64,
+"w": 40.05,
+"ma": 276.22
+},
+{
+"a": 2.14162,
+"e": 0.145,
+"i": 13.379,
+"node": 346.36,
+"w": 337.47,
+"ma": 68.02
+},
+{
+"a": 2.2944,
+"e": 0.0428,
+"i": 7.658,
+"node": 83.19,
+"w": 1.0,
+"ma": 53.16
+},
+{
+"a": 2.57616,
+"e": 0.0623,
+"i": 3.435,
+"node": 196.49,
+"w": 105.85,
+"ma": 98.63
+},
+{
+"a": 2.16965,
+"e": 0.0476,
+"i": 6.489,
+"node": 298.7,
+"w": 354.8,
+"ma": 188.26
+},
+{
+"a": 2.75913,
+"e": 0.0275,
+"i": 7.677,
+"node": 300.7,
+"w": 11.13,
+"ma": 178.51
+},
+{
+"a": 2.36313,
+"e": 0.1803,
+"i": 2.027,
+"node": 301.19,
+"w": 135.45,
+"ma": 53.59
+},
+{
+"a": 2.98534,
+"e": 0.0616,
+"i": 10.594,
+"node": 145.01,
+"w": 291.65,
+"ma": 246.82
+},
+{
+"a": 2.54065,
+"e": 0.0189,
+"i": 10.002,
+"node": 195.7,
+"w": 260.96,
+"ma": 94.04
+},
+{
+"a": 2.75404,
+"e": 0.0913,
+"i": 7.054,
+"node": 24.57,
+"w": 232.93,
+"ma": 25.05
+},
+{
+"a": 3.09299,
+"e": 0.0293,
+"i": 4.883,
+"node": 259.84,
+"w": 137.76,
+"ma": 110.14
+},
+{
+"a": 2.8901,
+"e": 0.0751,
+"i": 10.659,
+"node": 211.29,
+"w": 160.58,
+"ma": 144.44
+},
+{
+"a": 2.36227,
+"e": 0.0982,
+"i": 0.305,
+"node": 357.67,
+"w": 67.65,
+"ma": 342.49
+},
+{
+"a": 2.66022,
+"e": 0.031,
+"i": 3.306,
+"node": 153.57,
+"w": 278.99,
+"ma": 345.4
+},
+{
+"a": 2.68365,
+"e": 0.0585,
+"i": 0.12,
+"node": 302.99,
+"w": 241.3,
+"ma": 38.26
+},
+{
+"a": 3.09162,
+"e": 0.1732,
+"i": 7.794,
+"node": 74.12,
+"w": 305.29,
+"ma": 339.25
+},
+{
+"a": 2.76017,
+"e": 0.1695,
+"i": 18.493,
+"node": 208.38,
+"w": 284.77,
+"ma": 250.58
+},
+{
+"a": 2.07287,
+"e": 0.0208,
+"i": 1.561,
+"node": 64.91,
+"w": 287.24,
+"ma": 266.84
+},
+{
+"a": 2.54988,
+"e": 0.0884,
+"i": 8.771,
+"node": 102.57,
+"w": 228.72,
+"ma": 231.26
+},
+{
+"a": 2.20482,
+"e": 0.1616,
+"i": 8.179,
+"node": 167.79,
+"w": 245.57,
+"ma": 344.31
+},
+{
+"a": 2.0793,
+"e": 0.024,
+"i": 10.553,
+"node": 123.4,
+"w": 50.68,
+"ma": 306.21
+},
+{
+"a": 2.68155,
+"e": 0.0653,
+"i": 4.326,
+"node": 89.55,
+"w": 29.42,
+"ma": 71.19
+},
+{
+"a": 3.18358,
+"e": 0.1713,
+"i": 3.997,
+"node": 358.37,
+"w": 121.25,
+"ma": 31.91
+},
+{
+"a": 2.78949,
+"e": 0.1359,
+"i": 0.885,
+"node": 247.1,
+"w": 14.66,
+"ma": 206.16
+},
+{
+"a": 2.89686,
+"e": 0.1234,
+"i": 11.819,
+"node": 256.55,
+"w": 38.19,
+"ma": 1.39
+},
+{
+"a": 3.20665,
+"e": 0.1684,
+"i": 11.739,
+"node": 356.22,
+"w": 230.14,
+"ma": 359.41
+},
+{
+"a": 3.19616,
+"e": 0.0461,
+"i": 2.936,
+"node": 30.14,
+"w": 136.43,
+"ma": 230.08
+},
+{
+"a": 2.57308,
+"e": 0.0102,
+"i": 5.13,
+"node": 161.37,
+"w": 167.13,
+"ma": 303.61
+},
+{
+"a": 2.23035,
+"e": 0.0268,
+"i": 14.826,
+"node": 322.6,
+"w": 202.97,
+"ma": 237.69
+},
+{
+"a": 2.15564,
+"e": 0.0606,
+"i": 10.061,
+"node": 209.68,
+"w": 267.2,
+"ma": 202.86
+},
+{
+"a": 3.0857,
+"e": 0.2132,
+"i": 2.838,
+"node": 315.06,
+"w": 360.0,
+"ma": 245.89
+},
+{
+"a": 2.78834,
+"e": 0.0317,
+"i": 2.963,
+"node": 133.8,
+"w": 312.35,
+"ma": 190.98
+},
+{
+"a": 3.08261,
+"e": 0.0119,
+"i": 10.687,
+"node": 176.1,
+"w": 63.93,
+"ma": 191.47
+},
+{
+"a": 2.70329,
+"e": 0.0519,
+"i": 6.038,
+"node": 57.15,
+"w": 234.97,
+"ma": 247.98
+},
+{
+"a": 2.25854,
+"e": 0.0399,
+"i": 9.715,
+"node": 130.95,
+"w": 45.26,
+"ma": 102.0
+},
+{
+"a": 2.23828,
+"e": 0.1707,
+"i": 6.877,
+"node": 122.11,
+"w": 181.73,
+"ma": 80.88
+},
+{
+"a": 3.17606,
+"e": 0.2574,
+"i": 6.538,
+"node": 211.56,
+"w": 352.79,
+"ma": 138.25
+},
+{
+"a": 2.75061,
+"e": 0.0276,
+"i": 4.08,
+"node": 278.19,
+"w": 1.39,
+"ma": 21.57
+},
+{
+"a": 2.12834,
+"e": 0.0123,
+"i": 6.482,
+"node": 86.25,
+"w": 354.36,
+"ma": 300.71
+},
+{
+"a": 2.5468,
+"e": 0.012,
+"i": 5.908,
+"node": 13.1,
+"w": 119.25,
+"ma": 252.68
+},
+{
+"a": 2.17332,
+"e": 0.1897,
+"i": 6.241,
+"node": 11.58,
+"w": 140.7,
+"ma": 325.09
+},
+{
+"a": 3.10903,
+"e": 0.0716,
+"i": 3.332,
+"node": 233.67,
+"w": 352.98,
+"ma": 202.5
+},
+{
+"a": 2.60888,
+"e": 0.1964,
+"i": 2.602,
+"node": 184.54,
+"w": 93.63,
+"ma": 346.14
+},
+{
+"a": 2.73964,
+"e": 0.0381,
+"i": 8.066,
+"node": 219.2,
+"w": 268.28,
+"ma": 170.91
+},
+{
+"a": 2.21518,
+"e": 0.087,
+"i": 2.838,
+"node": 136.6,
+"w": 328.34,
+"ma": 16.57
+},
+{
+"a": 2.88577,
+"e": 0.1468,
+"i": 13.491,
+"node": 156.99,
+"w": 285.05,
+"ma": 200.62
+},
+{
+"a": 2.37574,
+"e": 0.007,
+"i": 2.83,
+"node": 247.6,
+"w": 352.33,
+"ma": 46.97
+},
+{
+"a": 3.13112,
+"e": 0.0798,
+"i": 10.623,
+"node": 121.09,
+"w": 125.76,
+"ma": 303.41
+},
+{
+"a": 2.37839,
+"e": 0.1127,
+"i": 5.164,
+"node": 292.27,
+"w": 28.58,
+"ma": 122.68
+},
+{
+"a": 2.40801,
+"e": 0.2293,
+"i": 1.461,
+"node": 82.92,
+"w": 128.61,
+"ma": 248.35
+},
+{
+"a": 2.11691,
+"e": 0.2055,
+"i": 2.128,
+"node": 42.15,
+"w": 260.73,
+"ma": 96.39
+},
+{
+"a": 2.19087,
+"e": 0.082,
+"i": 9.415,
+"node": 276.38,
+"w": 325.91,
+"ma": 202.51
+},
+{
+"a": 2.17206,
+"e": 0.0675,
+"i": 3.92,
+"node": 1.25,
+"w": 345.21,
+"ma": 237.6
+},
+{
+"a": 2.56986,
+"e": 0.0613,
+"i": 0.296,
+"node": 116.55,
+"w": 180.84,
+"ma": 247.58
+},
+{
+"a": 2.86169,
+"e": 0.0295,
+"i": 5.664,
+"node": 299.24,
+"w": 219.97,
+"ma": 178.94
+},
+{
+"a": 2.64403,
+"e": 0.0523,
+"i": 3.117,
+"node": 340.57,
+"w": 292.19,
+"ma": 357.72
+},
+{
+"a": 2.30576,
+"e": 0.2309,
+"i": 0.522,
+"node": 190.45,
+"w": 4.6,
+"ma": 138.8
+},
+{
+"a": 3.16754,
+"e": 0.0854,
+"i": 2.752,
+"node": 222.34,
+"w": 272.1,
+"ma": 331.54
+},
+{
+"a": 2.18508,
+"e": 0.0167,
+"i": 1.037,
+"node": 323.94,
+"w": 280.43,
+"ma": 114.82
+},
+{
+"a": 2.29449,
+"e": 0.0433,
+"i": 2.809,
+"node": 99.02,
+"w": 84.39,
+"ma": 125.03
+},
+{
+"a": 2.09353,
+"e": 0.0598,
+"i": 13.973,
+"node": 262.3,
+"w": 258.29,
+"ma": 283.98
+},
+{
+"a": 2.78132,
+"e": 0.0775,
+"i": 5.626,
+"node": 44.45,
+"w": 274.22,
+"ma": 133.12
+},
+{
+"a": 2.68724,
+"e": 0.0845,
+"i": 0.486,
+"node": 89.65,
+"w": 321.41,
+"ma": 136.57
+},
+{
+"a": 2.58947,
+"e": 0.0112,
+"i": 5.763,
+"node": 125.62,
+"w": 299.83,
+"ma": 220.73
+},
+{
+"a": 3.17455,
+"e": 0.1449,
+"i": 2.964,
+"node": 147.98,
+"w": 304.66,
+"ma": 76.72
+},
+{
+"a": 2.65988,
+"e": 0.1138,
+"i": 4.343,
+"node": 298.98,
+"w": 319.22,
+"ma": 309.77
+},
+{
+"a": 2.71621,
+"e": 0.1335,
+"i": 7.767,
+"node": 286.81,
+"w": 357.54,
+"ma": 92.36
+},
+{
+"a": 3.21838,
+"e": 0.0587,
+"i": 2.827,
+"node": 194.16,
+"w": 345.75,
+"ma": 82.31
+},
+{
+"a": 2.88699,
+"e": 0.1582,
+"i": 16.044,
+"node": 326.13,
+"w": 347.59,
+"ma": 14.71
+},
+{
+"a": 3.07874,
+"e": 0.0443,
+"i": 3.898,
+"node": 302.63,
+"w": 359.02,
+"ma": 164.62
+},
+{
+"a": 2.40525,
+"e": 0.0326,
+"i": 6.047,
+"node": 312.92,
+"w": 96.64,
+"ma": 111.54
+},
+{
+"a": 3.07786,
+"e": 0.163,
+"i": 8.982,
+"node": 29.82,
+"w": 183.73,
+"ma": 45.94
+},
+{
+"a": 3.20766,
+"e": 0.0499,
+"i": 7.021,
+"node": 85.91,
+"w": 39.49,
+"ma": 101.85
+},
+{
+"a": 2.31419,
+"e": 0.0925,
+"i": 3.878,
+"node": 78.44,
+"w": 253.29,
+"ma": 98.79
+},
+{
+"a": 2.18347,
+"e": 0.1429,
+"i": 2.874,
+"node": 246.23,
+"w": 68.27,
+"ma": 253.32
+},
+{
+"a": 2.07202,
+"e": 0.072,
+"i": 5.729,
+"node": 59.75,
+"w": 215.54,
+"ma": 46.48
+},
+{
+"a": 2.89401,
+"e": 0.075,
+"i": 12.204,
+"node": 15.09,
+"w": 200.93,
+"ma": 334.9
+},
+{
+"a": 2.44649,
+"e": 0.0439,
+"i": 3.734,
+"node": 27.88,
+"w": 205.61,
+"ma": 46.59
+},
+{
+"a": 2.30003,
+"e": 0.073,
+"i": 15.097,
+"node": 249.39,
+"w": 314.29,
+"ma": 92.36
+},
+{
+"a": 2.09777,
+"e": 0.0315,
+"i": 1.048,
+"node": 299.31,
+"w": 140.9,
+"ma": 199.47
+},
+{
+"a": 3.11346,
+"e": 0.0738,
+"i": 8.179,
+"node": 112.92,
+"w": 146.74,
+"ma": 89.19
+},
+{
+"a": 2.57566,
+"e": 0.0548,
+"i": 5.838,
+"node": 141.8,
+"w": 306.44,
+"ma": 41.11
+},
+{
+"a": 3.20779,
+"e": 0.1827,
+"i": 1.885,
+"node": 38.14,
+"w": 98.02,
+"ma": 203.11
+},
+{
+"a": 2.72916,
+"e": 0.216,
+"i": 7.334,
+"node": 6.07,
+"w": 320.91,
+"ma": 297.18
+},
+{
+"a": 2.68969,
+"e": 0.0098,
+"i": 0.161,
+"node": 253.61,
+"w": 309.01,
+"ma": 337.37
+},
+{
+"a": 2.63674,
+"e": 0.0941,
+"i": 0.531,
+"node": 354.47,
+"w": 138.99,
+"ma": 51.97
+},
+{
+"a": 3.04182,
+"e": 0.153,
+"i": 5.259,
+"node": 262.65,
+"w": 114.37,
+"ma": 199.96
+},
+{
+"a": 2.56886,
+"e": 0.1963,
+"i": 12.438,
+"node": 225.05,
+"w": 238.7,
+"ma": 73.95
+},
+{
+"a": 2.92319,
+"e": 0.0553,
+"i": 12.902,
+"node": 200.91,
+"w": 19.6,
+"ma": 153.38
+},
+{
+"a": 2.15052,
+"e": 0.0646,
+"i": 7.385,
+"node": 291.87,
+"w": 114.51,
+"ma": 165.92
+},
+{
+"a": 2.60907,
+"e": 0.0344,
+"i": 12.938,
+"node": 185.9,
+"w": 34.52,
+"ma": 162.16
+},
+{
+"a": 3.12127,
+"e": 0.025,
+"i": 9.221,
+"node": 71.22,
+"w": 18.92,
+"ma": 84.89
+},
+{
+"a": 2.3936,
+"e": 0.1544,
+"i": 11.834,
+"node": 303.45,
+"w": 116.24,
+"ma": 352.65
+},
+{
+"a": 2.0959,
+"e": 0.0219,
+"i": 7.319,
+"node": 131.45,
+"w": 166.73,
+"ma": 199.78
+},
+{
+"a": 2.46121,
+"e": 0.006,
+"i": 7.861,
+"node": 44.02,
+"w": 0.8,
+"ma": 353.81
+},
+{
+"a": 2.72883,
+"e": 0.0537,
+"i": 5.756,
+"node": 120.66,
+"w": 32.11,
+"ma": 158.58
+},
+{
+"a": 2.52841,
+"e": 0.1286,
+"i": 2.248,
+"node": 202.74,
+"w": 70.53,
+"ma": 160.17
+},
+{
+"a": 2.77865,
+"e": 0.0632,
+"i": 3.858,
+"node": 92.77,
+"w": 18.05,
+"ma": 256.92
+},
+{
+"a": 3.22868,
+"e": 0.1599,
+"i": 3.712,
+"node": 59.86,
+"w": 228.73,
+"ma": 158.83
+},
+{
+"a": 2.74179,
+"e": 0.0255,
+"i": 10.045,
+"node": 177.98,
+"w": 64.04,
+"ma": 144.63
+},
+{
+"a": 3.02102,
+"e": 0.107,
+"i": 6.767,
+"node": 194.61,
+"w": 146.6,
+"ma": 212.62
+},
+{
+"a": 3.05853,
+"e": 0.0428,
+"i": 9.689,
+"node": 126.7,
+"w": 99.97,
+"ma": 203.29
+},
+{
+"a": 2.98593,
+"e": 0.033,
+"i": 1.127,
+"node": 279.72,
+"w": 261.59,
+"ma": 299.71
+},
+{
+"a": 2.6298,
+"e": 0.0058,
+"i": 6.113,
+"node": 26.87,
+"w": 82.8,
+"ma": 231.53
+},
+{
+"a": 2.15135,
+"e": 0.0795,
+"i": 3.75,
+"node": 247.22,
+"w": 79.31,
+"ma": 142.07
+},
+{
+"a": 3.24304,
+"e": 0.0593,
+"i": 7.132,
+"node": 37.4,
+"w": 299.87,
+"ma": 187.55
+},
+{
+"a": 2.46245,
+"e": 0.0617,
+"i": 3.39,
+"node": 305.53,
+"w": 196.81,
+"ma": 95.09
+},
+{
+"a": 3.23439,
+"e": 0.0106,
+"i": 8.022,
+"node": 198.91,
+"w": 54.96,
+"ma": 294.29
+},
+{
+"a": 2.20729,
+"e": 0.055,
+"i": 3.165,
+"node": 51.19,
+"w": 15.75,
+"ma": 28.8
+},
+{
+"a": 2.45852,
+"e": 0.35,
+"i": 5.355,
+"node": 176.37,
+"w": 158.16,
+"ma": 206.53
+},
+{
+"a": 3.21905,
+"e": 0.2161,
+"i": 8.621,
+"node": 147.29,
+"w": 97.9,
+"ma": 32.0
+},
+{
+"a": 3.03507,
+"e": 0.1082,
+"i": 0.404,
+"node": 87.72,
+"w": 315.02,
+"ma": 184.54
+},
+{
+"a": 2.57991,
+"e": 0.06,
+"i": 1.284,
+"node": 111.32,
+"w": 140.86,
+"ma": 285.71
+},
+{
+"a": 2.74362,
+"e": 0.1909,
+"i": 1.838,
+"node": 49.76,
+"w": 141.97,
+"ma": 228.82
+},
+{
+"a": 2.64807,
+"e": 0.0358,
+"i": 0.085,
+"node": 134.23,
+"w": 210.35,
+"ma": 33.53
+},
+{
+"a": 2.32165,
+"e": 0.1308,
+"i": 1.469,
+"node": 274.44,
+"w": 27.31,
+"ma": 274.96
+},
+{
+"a": 3.11757,
+"e": 0.1781,
+"i": 0.523,
+"node": 95.38,
+"w": 340.34,
+"ma": 224.3
+},
+{
+"a": 3.00089,
+"e": 0.0215,
+"i": 0.279,
+"node": 128.05,
+"w": 121.77,
+"ma": 335.32
+},
+{
+"a": 3.15809,
+"e": 0.0267,
+"i": 2.22,
+"node": 99.32,
+"w": 15.47,
+"ma": 125.57
+},
+{
+"a": 2.27281,
+"e": 0.0612,
+"i": 1.882,
+"node": 86.7,
+"w": 288.84,
+"ma": 291.45
+},
+{
+"a": 2.42894,
+"e": 0.1164,
+"i": 1.522,
+"node": 99.62,
+"w": 217.76,
+"ma": 198.55
+},
+{
+"a": 2.0774,
+"e": 0.1491,
+"i": 10.008,
+"node": 199.93,
+"w": 285.26,
+"ma": 338.3
+},
+{
+"a": 2.58808,
+"e": 0.1831,
+"i": 3.744,
+"node": 187.35,
+"w": 334.1,
+"ma": 145.95
+},
+{
+"a": 2.55052,
+"e": 0.0371,
+"i": 5.456,
+"node": 158.17,
+"w": 264.51,
+"ma": 260.03
+},
+{
+"a": 2.79781,
+"e": 0.019,
+"i": 4.581,
+"node": 203.5,
+"w": 302.96,
+"ma": 140.27
+},
+{
+"a": 2.18686,
+"e": 0.0114,
+"i": 4.546,
+"node": 359.28,
+"w": 279.06,
+"ma": 87.45
+},
+{
+"a": 2.7819,
+"e": 0.124,
+"i": 5.289,
+"node": 4.46,
+"w": 84.14,
+"ma": 112.21
+},
+{
+"a": 2.23089,
+"e": 0.0222,
+"i": 3.382,
+"node": 168.76,
+"w": 140.27,
+"ma": 118.45
+},
+{
+"a": 2.27031,
+"e": 0.0854,
+"i": 12.58,
+"node": 260.06,
+"w": 48.51,
+"ma": 27.09
+},
+{
+"a": 2.29947,
+"e": 0.0086,
+"i": 7.121,
+"node": 272.21,
+"w": 294.2,
+"ma": 264.16
+},
+{
+"a": 2.28563,
+"e": 0.007,
+"i": 19.93,
+"node": 231.13,
+"w": 146.16,
+"ma": 323.2
+},
+{
+"a": 2.92311,
+"e": 0.192,
+"i": 10.555,
+"node": 26.45,
+"w": 52.08,
+"ma": 227.09
+},
+{
+"a": 2.85282,
+"e": 0.1598,
+"i": 12.144,
+"node": 235.07,
+"w": 233.63,
+"ma": 1.35
+},
+{
+"a": 2.99016,
+"e": 0.0013,
+"i": 2.109,
+"node": 245.18,
+"w": 259.68,
+"ma": 123.14
+},
+{
+"a": 2.28852,
+"e": 0.0555,
+"i": 5.028,
+"node": 254.86,
+"w": 293.89,
+"ma": 189.31
+},
+{
+"a": 3.17515,
+"e": 0.0152,
+"i": 3.87,
+"node": 120.92,
+"w": 153.07,
+"ma": 287.25
+},
+{
+"a": 2.24438,
+"e": 0.0151,
+"i": 2.65,
+"node": 41.54,
+"w": 328.7,
+"ma": 187.03
+},
+{
+"a": 3.15241,
+"e": 0.0695,
+"i": 14.546,
+"node": 20.85,
+"w": 246.3,
+"ma": 192.21
+},
+{
+"a": 3.24558,
+"e": 0.2103,
+"i": 2.771,
+"node": 31.71,
+"w": 53.36,
+"ma": 224.62
+},
+{
+"a": 2.2585,
+"e": 0.0268,
+"i": 4.242,
+"node": 112.34,
+"w": 236.63,
+"ma": 107.4
+},
+{
+"a": 2.30427,
+"e": 0.098,
+"i": 13.531,
+"node": 131.35,
+"w": 317.62,
+"ma": 356.96
+},
+{
+"a": 2.44811,
+"e": 0.1668,
+"i": 4.797,
+"node": 358.44,
+"w": 95.22,
+"ma": 72.92
+},
+{
+"a": 2.11548,
+"e": 0.0266,
+"i": 0.862,
+"node": 8.05,
+"w": 95.34,
+"ma": 48.19
+},
+{
+"a": 2.35865,
+"e": 0.1835,
+"i": 6.009,
+"node": 30.45,
+"w": 228.32,
+"ma": 242.17
+},
+{
+"a": 2.16661,
+"e": 0.117,
+"i": 2.545,
+"node": 269.28,
+"w": 147.64,
+"ma": 333.07
+},
+{
+"a": 2.58222,
+"e": 0.0398,
+"i": 4.61,
+"node": 324.94,
+"w": 328.11,
+"ma": 85.22
+},
+{
+"a": 2.53782,
+"e": 0.1064,
+"i": 11.616,
+"node": 47.57,
+"w": 4.48,
+"ma": 350.78
+},
+{
+"a": 2.06364,
+"e": 0.0187,
+"i": 17.894,
+"node": 354.66,
+"w": 109.27,
+"ma": 175.47
+},
+{
+"a": 2.22176,
+"e": 0.0905,
+"i": 5.689,
+"node": 280.13,
+"w": 319.9,
+"ma": 126.86
+},
+{
+"a": 2.17917,
+"e": 0.0478,
+"i": 9.99,
+"node": 282.4,
+"w": 274.76,
+"ma": 259.24
+},
+{
+"a": 3.18294,
+"e": 0.0025,
+"i": 3.536,
+"node": 104.18,
+"w": 252.31,
+"ma": 181.07
+},
+{
+"a": 3.00772,
+"e": 0.0507,
+"i": 6.003,
+"node": 239.52,
+"w": 128.85,
+"ma": 255.33
+},
+{
+"a": 2.19785,
+"e": 0.2193,
+"i": 2.685,
+"node": 266.51,
+"w": 338.53,
+"ma": 133.01
+},
+{
+"a": 3.05254,
+"e": 0.1784,
+"i": 4.543,
+"node": 170.06,
+"w": 48.84,
+"ma": 81.17
+},
+{
+"a": 3.15189,
+"e": 0.131,
+"i": 4.028,
+"node": 142.54,
+"w": 357.37,
+"ma": 220.51
+},
+{
+"a": 2.31492,
+"e": 0.1774,
+"i": 4.659,
+"node": 359.13,
+"w": 145.86,
+"ma": 296.34
+},
+{
+"a": 3.10349,
+"e": 0.0829,
+"i": 4.972,
+"node": 19.22,
+"w": 281.41,
+"ma": 341.87
+},
+{
+"a": 2.41968,
+"e": 0.1704,
+"i": 4.764,
+"node": 161.38,
+"w": 124.72,
+"ma": 280.99
+},
+{
+"a": 2.85542,
+"e": 0.0598,
+"i": 9.092,
+"node": 68.22,
+"w": 195.21,
+"ma": 323.72
+},
+{
+"a": 3.05402,
+"e": 0.219,
+"i": 4.381,
+"node": 185.54,
+"w": 214.58,
+"ma": 22.69
+},
+{
+"a": 2.73401,
+"e": 0.1452,
+"i": 1.907,
+"node": 99.02,
+"w": 140.51,
+"ma": 334.33
+},
+{
+"a": 2.76534,
+"e": 0.1637,
+"i": 2.146,
+"node": 169.85,
+"w": 176.85,
+"ma": 309.84
+},
+{
+"a": 3.23202,
+"e": 0.1294,
+"i": 6.251,
+"node": 217.74,
+"w": 245.0,
+"ma": 169.84
+},
+{
+"a": 3.10254,
+"e": 0.0312,
+"i": 7.619,
+"node": 337.16,
+"w": 124.87,
+"ma": 167.35
+},
+{
+"a": 3.14255,
+"e": 0.0573,
+"i": 1.008,
+"node": 114.48,
+"w": 102.94,
+"ma": 228.4
+},
+{
+"a": 2.67253,
+"e": 0.1535,
+"i": 0.705,
+"node": 2.21,
+"w": 59.86,
+"ma": 209.61
+},
+{
+"a": 3.11837,
+"e": 0.0008,
+"i": 1.251,
+"node": 221.63,
+"w": 60.13,
+"ma": 65.52
+},
+{
+"a": 2.67309,
+"e": 0.2193,
+"i": 9.122,
+"node": 227.27,
+"w": 194.0,
+"ma": 300.79
+},
+{
+"a": 3.23518,
+"e": 0.0242,
+"i": 0.195,
+"node": 2.51,
+"w": 124.09,
+"ma": 202.61
+},
+{
+"a": 2.33631,
+"e": 0.1358,
+"i": 5.759,
+"node": 269.53,
+"w": 303.5,
+"ma": 284.31
+},
+{
+"a": 3.0256,
+"e": 0.0229,
+"i": 0.736,
+"node": 114.19,
+"w": 301.29,
+"ma": 169.13
+},
+{
+"a": 3.05852,
+"e": 0.3008,
+"i": 3.329,
+"node": 123.28,
+"w": 160.25,
+"ma": 348.65
+},
+{
+"a": 2.08565,
+"e": 0.0349,
+"i": 11.883,
+"node": 169.78,
+"w": 233.19,
+"ma": 177.55
+},
+{
+"a": 3.11453,
+"e": 0.0508,
+"i": 5.196,
+"node": 134.46,
+"w": 12.72,
+"ma": 189.9
+},
+{
+"a": 2.13743,
+"e": 0.0289,
+"i": 3.638,
+"node": 313.99,
+"w": 5.66,
+"ma": 74.21
+},
+{
+"a": 2.70676,
+"e": 0.1711,
+"i": 8.204,
+"node": 112.44,
+"w": 294.45,
+"ma": 351.34
+},
+{
+"a": 2.70134,
+"e": 0.0817,
+"i": 3.518,
+"node": 152.4,
+"w": 38.53,
+"ma": 190.46
+},
+{
+"a": 2.09075,
+"e": 0.089,
+"i": 3.332,
+"node": 124.88,
+"w": 201.0,
+"ma": 316.6
+},
+{
+"a": 3.10504,
+"e": 0.0845,
+"i": 2.937,
+"node": 243.13,
+"w": 199.76,
+"ma": 351.44
+},
+{
+"a": 2.13449,
+"e": 0.0369,
+"i": 0.809,
+"node": 90.56,
+"w": 316.46,
+"ma": 146.21
+},
+{
+"a": 2.37026,
+"e": 0.0872,
+"i": 4.616,
+"node": 8.37,
+"w": 1.87,
+"ma": 303.77
+},
+{
+"a": 2.35014,
+"e": 0.1014,
+"i": 2.614,
+"node": 121.65,
+"w": 261.79,
+"ma": 349.14
+},
+{
+"a": 2.33218,
+"e": 0.1419,
+"i": 9.728,
+"node": 135.23,
+"w": 25.65,
+"ma": 252.49
+},
+{
+"a": 3.09868,
+"e": 0.1196,
+"i": 11.904,
+"node": 27.35,
+"w": 94.93,
+"ma": 178.75
+},
+{
+"a": 2.42515,
+"e": 0.1267,
+"i": 3.332,
+"node": 152.59,
+"w": 209.9,
+"ma": 3.76
+},
+{
+"a": 3.05562,
+"e": 0.1338,
+"i": 8.12,
+"node": 273.98,
+"w": 312.62,
+"ma": 15.28
+},
+{
+"a": 3.05263,
+"e": 0.2146,
+"i": 9.351,
+"node": 125.94,
+"w": 62.61,
+"ma": 262.43
+},
+{
+"a": 2.61747,
+"e": 0.0483,
+"i": 0.17,
+"node": 341.36,
+"w": 315.83,
+"ma": 171.64
+},
+{
+"a": 2.11804,
+"e": 0.1022,
+"i": 3.777,
+"node": 159.04,
+"w": 171.51,
+"ma": 235.96
+},
+{
+"a": 3.14902,
+"e": 0.1397,
+"i": 3.396,
+"node": 325.25,
+"w": 57.61,
+"ma": 246.51
+},
+{
+"a": 2.44881,
+"e": 0.0493,
+"i": 3.103,
+"node": 47.83,
+"w": 57.31,
+"ma": 61.06
+},
+{
+"a": 2.93237,
+"e": 0.1337,
+"i": 3.565,
+"node": 223.1,
+"w": 254.82,
+"ma": 252.1
+},
+{
+"a": 2.41403,
+"e": 0.026,
+"i": 2.743,
+"node": 136.22,
+"w": 22.88,
+"ma": 347.25
+},
+{
+"a": 2.65138,
+"e": 0.03,
+"i": 12.29,
+"node": 1.51,
+"w": 263.71,
+"ma": 113.36
+},
+{
+"a": 2.55747,
+"e": 0.0174,
+"i": 2.156,
+"node": 294.3,
+"w": 188.0,
+"ma": 156.78
+},
+{
+"a": 2.20207,
+"e": 0.1768,
+"i": 2.092,
+"node": 308.63,
+"w": 100.02,
+"ma": 76.43
+},
+{
+"a": 2.42974,
+"e": 0.0305,
+"i": 2.698,
+"node": 116.88,
+"w": 185.26,
+"ma": 343.66
+},
+{
+"a": 3.24305,
+"e": 0.1135,
+"i": 1.537,
+"node": 318.37,
+"w": 277.94,
+"ma": 316.23
+},
+{
+"a": 3.16748,
+"e": 0.0597,
+"i": 1.583,
+"node": 255.99,
+"w": 351.65,
+"ma": 236.11
+},
+{
+"a": 3.07514,
+"e": 0.0887,
+"i": 0.516,
+"node": 326.89,
+"w": 318.29,
+"ma": 192.37
+},
+{
+"a": 2.53052,
+"e": 0.0563,
+"i": 2.837,
+"node": 325.26,
+"w": 90.52,
+"ma": 282.91
+},
+{
+"a": 2.52855,
+"e": 0.0017,
+"i": 8.099,
+"node": 295.14,
+"w": 69.55,
+"ma": 329.14
+},
+{
+"a": 2.36432,
+"e": 0.0165,
+"i": 10.358,
+"node": 291.11,
+"w": 216.02,
+"ma": 235.96
+},
+{
+"a": 2.29719,
+"e": 0.1318,
+"i": 2.831,
+"node": 31.2,
+"w": 77.11,
+"ma": 315.88
+},
+{
+"a": 2.16259,
+"e": 0.2835,
+"i": 4.695,
+"node": 328.35,
+"w": 235.21,
+"ma": 300.46
+},
+{
+"a": 3.18794,
+"e": 0.0058,
+"i": 9.222,
+"node": 269.29,
+"w": 174.42,
+"ma": 197.0
+},
+{
+"a": 3.12379,
+"e": 0.1785,
+"i": 19.923,
+"node": 342.3,
+"w": 196.16,
+"ma": 80.1
+},
+{
+"a": 2.39306,
+"e": 0.1307,
+"i": 5.718,
+"node": 25.97,
+"w": 55.61,
+"ma": 216.14
+},
+{
+"a": 2.34218,
+"e": 0.1162,
+"i": 10.611,
+"node": 102.64,
+"w": 314.19,
+"ma": 232.36
+},
+{
+"a": 3.20065,
+"e": 0.1006,
+"i": 1.747,
+"node": 157.5,
+"w": 269.14,
+"ma": 145.44
+},
+{
+"a": 3.19008,
+"e": 0.034,
+"i": 11.408,
+"node": 33.84,
+"w": 156.23,
+"ma": 330.64
+},
+{
+"a": 2.63094,
+"e": 0.0649,
+"i": 2.403,
+"node": 115.52,
+"w": 26.91,
+"ma": 224.91
+},
+{
+"a": 2.07103,
+"e": 0.3068,
+"i": 0.809,
+"node": 214.06,
+"w": 16.84,
+"ma": 8.08
+},
+{
+"a": 2.11565,
+"e": 0.0972,
+"i": 2.558,
+"node": 61.8,
+"w": 130.81,
+"ma": 183.08
+},
+{
+"a": 3.03679,
+"e": 0.004,
+"i": 8.51,
+"node": 9.81,
+"w": 335.11,
+"ma": 202.6
+},
+{
+"a": 2.62825,
+"e": 0.0802,
+"i": 0.004,
+"node": 149.54,
+"w": 300.31,
+"ma": 217.86
+},
+{
+"a": 2.1866,
+"e": 0.0307,
+"i": 7.802,
+"node": 139.36,
+"w": 150.69,
+"ma": 302.4
+},
+{
+"a": 2.29455,
+"e": 0.0884,
+"i": 0.739,
+"node": 341.75,
+"w": 42.6,
+"ma": 282.32
+},
+{
+"a": 2.79408,
+"e": 0.0204,
+"i": 10.698,
+"node": 245.56,
+"w": 64.1,
+"ma": 34.56
+},
+{
+"a": 3.11336,
+"e": 0.1853,
+"i": 3.997,
+"node": 289.97,
+"w": 39.72,
+"ma": 66.11
+},
+{
+"a": 2.269,
+"e": 0.1207,
+"i": 8.254,
+"node": 204.02,
+"w": 324.83,
+"ma": 78.24
+},
+{
+"a": 2.19985,
+"e": 0.0388,
+"i": 2.988,
+"node": 228.43,
+"w": 130.03,
+"ma": 24.15
+},
+{
+"a": 2.32356,
+"e": 0.0581,
+"i": 7.086,
+"node": 95.58,
+"w": 198.62,
+"ma": 202.97
+},
+{
+"a": 2.19259,
+"e": 0.0873,
+"i": 0.782,
+"node": 179.88,
+"w": 186.07,
+"ma": 347.7
+},
+{
+"a": 2.32613,
+"e": 0.2531,
+"i": 3.254,
+"node": 282.25,
+"w": 95.64,
+"ma": 127.8
+},
+{
+"a": 2.41042,
+"e": 0.1254,
+"i": 17.071,
+"node": 96.71,
+"w": 18.38,
+"ma": 67.6
+},
+{
+"a": 3.16313,
+"e": 0.0063,
+"i": 2.563,
+"node": 139.21,
+"w": 286.87,
+"ma": 290.08
+},
+{
+"a": 3.17763,
+"e": 0.1658,
+"i": 0.422,
+"node": 340.78,
+"w": 183.88,
+"ma": 275.05
+},
+{
+"a": 3.03678,
+"e": 0.0734,
+"i": 3.013,
+"node": 148.25,
+"w": 236.21,
+"ma": 292.84
+},
+{
+"a": 2.09646,
+"e": 0.1202,
+"i": 2.454,
+"node": 262.38,
+"w": 277.01,
+"ma": 220.48
+},
+{
+"a": 2.17433,
+"e": 0.1299,
+"i": 11.656,
+"node": 76.3,
+"w": 63.79,
+"ma": 201.03
+},
+{
+"a": 2.35504,
+"e": 0.0985,
+"i": 4.641,
+"node": 53.86,
+"w": 81.01,
+"ma": 167.84
+},
+{
+"a": 3.052,
+"e": 0.1516,
+"i": 5.997,
+"node": 26.13,
+"w": 73.96,
+"ma": 321.31
+},
+{
+"a": 2.13931,
+"e": 0.2042,
+"i": 1.252,
+"node": 346.23,
+"w": 33.63,
+"ma": 121.14
+},
+{
+"a": 2.58638,
+"e": 0.0263,
+"i": 9.021,
+"node": 55.46,
+"w": 87.97,
+"ma": 310.63
+},
+{
+"a": 2.70597,
+"e": 0.1609,
+"i": 2.012,
+"node": 30.94,
+"w": 138.97,
+"ma": 273.04
+},
+{
+"a": 2.33327,
+"e": 0.0863,
+"i": 8.267,
+"node": 177.49,
+"w": 108.95,
+"ma": 56.01
+},
+{
+"a": 3.10727,
+"e": 0.054,
+"i": 0.842,
+"node": 42.68,
+"w": 130.93,
+"ma": 158.79
+},
+{
+"a": 3.17646,
+"e": 0.1582,
+"i": 6.882,
+"node": 239.25,
+"w": 156.03,
+"ma": 328.37
+},
+{
+"a": 3.171,
+"e": 0.0831,
+"i": 0.742,
+"node": 210.17,
+"w": 291.59,
+"ma": 311.78
+},
+{
+"a": 2.85505,
+"e": 0.1548,
+"i": 4.851,
+"node": 130.8,
+"w": 48.85,
+"ma": 129.47
+},
+{
+"a": 2.12044,
+"e": 0.0881,
+"i": 8.289,
+"node": 248.98,
+"w": 5.41,
+"ma": 34.86
+},
+{
+"a": 2.6829,
+"e": 0.0498,
+"i": 2.291,
+"node": 345.25,
+"w": 181.4,
+"ma": 146.73
+},
+{
+"a": 2.78,
+"e": 0.0806,
+"i": 1.541,
+"node": 16.11,
+"w": 256.15,
+"ma": 284.29
+},
+{
+"a": 2.55717,
+"e": 0.0157,
+"i": 3.201,
+"node": 203.99,
+"w": 47.5,
+"ma": 292.95
+},
+{
+"a": 2.56056,
+"e": 0.0252,
+"i": 10.191,
+"node": 226.02,
+"w": 342.81,
+"ma": 12.87
+},
+{
+"a": 2.25501,
+"e": 0.0513,
+"i": 8.288,
+"node": 59.69,
+"w": 238.53,
+"ma": 140.22
+},
+{
+"a": 2.35716,
+"e": 0.047,
+"i": 3.9,
+"node": 325.79,
+"w": 314.54,
+"ma": 150.38
+},
+{
+"a": 2.29506,
+"e": 0.0511,
+"i": 8.115,
+"node": 351.5,
+"w": 78.96,
+"ma": 84.17
+},
+{
+"a": 2.54644,
+"e": 0.0094,
+"i": 7.358,
+"node": 38.81,
+"w": 207.44,
+"ma": 109.19
+},
+{
+"a": 3.23201,
+"e": 0.0892,
+"i": 10.899,
+"node": 174.1,
+"w": 348.04,
+"ma": 20.9
+},
+{
+"a": 3.08951,
+"e": 0.0021,
+"i": 0.954,
+"node": 293.07,
+"w": 54.9,
+"ma": 209.21
+},
+{
+"a": 2.38793,
+"e": 0.0806,
+"i": 7.886,
+"node": 205.5,
+"w": 208.25,
+"ma": 324.93
+},
+{
+"a": 2.98346,
+"e": 0.1096,
+"i": 0.578,
+"node": 21.31,
+"w": 264.83,
+"ma": 166.46
+},
+{
+"a": 3.23626,
+"e": 0.1105,
+"i": 2.95,
+"node": 63.46,
+"w": 234.11,
+"ma": 46.88
+},
+{
+"a": 3.10742,
+"e": 0.0577,
+"i": 1.292,
+"node": 119.22,
+"w": 258.89,
+"ma": 215.88
+},
+{
+"a": 2.06471,
+"e": 0.1309,
+"i": 0.319,
+"node": 25.87,
+"w": 261.27,
+"ma": 13.49
+},
+{
+"a": 2.92474,
+"e": 0.1365,
+"i": 3.401,
+"node": 338.79,
+"w": 204.95,
+"ma": 288.71
+},
+{
+"a": 2.29504,
+"e": 0.0146,
+"i": 4.346,
+"node": 34.0,
+"w": 64.26,
+"ma": 105.66
+},
+{
+"a": 2.72692,
+"e": 0.1221,
+"i": 10.297,
+"node": 69.06,
+"w": 222.82,
+"ma": 335.72
+},
+{
+"a": 2.34715,
+"e": 0.0883,
+"i": 4.981,
+"node": 235.47,
+"w": 330.49,
+"ma": 318.59
+},
+{
+"a": 3.20506,
+"e": 0.1769,
+"i": 7.258,
+"node": 100.81,
+"w": 127.11,
+"ma": 271.49
+},
+{
+"a": 2.35307,
+"e": 0.0525,
+"i": 1.856,
+"node": 77.6,
+"w": 354.18,
+"ma": 156.83
+},
+{
+"a": 2.36109,
+"e": 0.0057,
+"i": 3.369,
+"node": 225.32,
+"w": 334.78,
+"ma": 117.41
+},
+{
+"a": 2.06838,
+"e": 0.0745,
+"i": 3.465,
+"node": 250.43,
+"w": 36.88,
+"ma": 351.39
+},
+{
+"a": 2.57444,
+"e": 0.0019,
+"i": 5.358,
+"node": 169.4,
+"w": 202.14,
+"ma": 242.6
+},
+{
+"a": 2.92251,
+"e": 0.077,
+"i": 0.601,
+"node": 332.68,
+"w": 301.96,
+"ma": 57.73
+},
+{
+"a": 2.76742,
+"e": 0.1347,
+"i": 2.942,
+"node": 308.62,
+"w": 102.48,
+"ma": 29.5
+},
+{
+"a": 2.33529,
+"e": 0.0256,
+"i": 10.521,
+"node": 130.76,
+"w": 149.78,
+"ma": 234.9
+},
+{
+"a": 2.92086,
+"e": 0.1095,
+"i": 14.212,
+"node": 2.91,
+"w": 56.62,
+"ma": 318.92
+},
+{
+"a": 2.69511,
+"e": 0.0098,
+"i": 2.768,
+"node": 199.85,
+"w": 117.05,
+"ma": 135.62
+},
+{
+"a": 2.23016,
+"e": 0.2607,
+"i": 2.509,
+"node": 337.02,
+"w": 47.64,
+"ma": 205.4
+},
+{
+"a": 2.1222,
+"e": 0.0032,
+"i": 16.811,
+"node": 279.93,
+"w": 10.29,
+"ma": 345.92
+},
+{
+"a": 3.1042,
+"e": 0.0024,
+"i": 2.566,
+"node": 48.05,
+"w": 144.91,
+"ma": 167.94
+},
+{
+"a": 2.67009,
+"e": 0.125,
+"i": 21.258,
+"node": 348.19,
+"w": 196.52,
+"ma": 124.81
+},
+{
+"a": 3.18975,
+"e": 0.0245,
+"i": 2.306,
+"node": 67.02,
+"w": 147.7,
+"ma": 329.98
+},
+{
+"a": 2.71128,
+"e": 0.0873,
+"i": 2.052,
+"node": 265.71,
+"w": 128.27,
+"ma": 9.55
+},
+{
+"a": 2.4339,
+"e": 0.0753,
+"i": 10.137,
+"node": 64.21,
+"w": 278.09,
+"ma": 190.68
+},
+{
+"a": 3.21073,
+"e": 0.1914,
+"i": 2.468,
+"node": 287.63,
+"w": 316.88,
+"ma": 80.69
+},
+{
+"a": 2.55008,
+"e": 0.2154,
+"i": 3.566,
+"node": 256.73,
+"w": 256.29,
+"ma": 219.9
+},
+{
+"a": 3.00844,
+"e": 0.0272,
+"i": 6.941,
+"node": 227.53,
+"w": 98.54,
+"ma": 165.64
+},
+{
+"a": 2.30029,
+"e": 0.0764,
+"i": 3.262,
+"node": 25.52,
+"w": 334.09,
+"ma": 97.96
+},
+{
+"a": 2.24364,
+"e": 0.1036,
+"i": 6.961,
+"node": 31.95,
+"w": 323.4,
+"ma": 285.4
+},
+{
+"a": 2.56165,
+"e": 0.1798,
+"i": 6.132,
+"node": 210.22,
+"w": 331.7,
+"ma": 304.94
+},
+{
+"a": 2.75619,
+"e": 0.0584,
+"i": 4.203,
+"node": 118.73,
+"w": 93.62,
+"ma": 243.14
+},
+{
+"a": 2.65427,
+"e": 0.0865,
+"i": 1.838,
+"node": 143.56,
+"w": 31.14,
+"ma": 189.07
+},
+{
+"a": 2.71389,
+"e": 0.0141,
+"i": 1.464,
+"node": 192.94,
+"w": 298.53,
+"ma": 65.65
+},
+{
+"a": 2.09203,
+"e": 0.0119,
+"i": 11.231,
+"node": 112.53,
+"w": 159.69,
+"ma": 132.79
+},
+{
+"a": 3.04811,
+"e": 0.1236,
+"i": 0.731,
+"node": 177.82,
+"w": 24.28,
+"ma": 192.47
+},
+{
+"a": 3.16235,
+"e": 0.119,
+"i": 5.12,
+"node": 315.06,
+"w": 186.53,
+"ma": 330.0
+},
+{
+"a": 2.36526,
+"e": 0.0508,
+"i": 3.508,
+"node": 303.22,
+"w": 92.75,
+"ma": 317.28
+},
+{
+"a": 2.42697,
+"e": 0.0724,
+"i": 1.733,
+"node": 83.37,
+"w": 105.94,
+"ma": 28.51
+},
+{
+"a": 2.85377,
+"e": 0.0202,
+"i": 18.484,
+"node": 13.57,
+"w": 84.92,
+"ma": 320.61
+},
+{
+"a": 2.28339,
+"e": 0.05,
+"i": 13.673,
+"node": 297.04,
+"w": 63.67,
+"ma": 34.84
+},
+{
+"a": 2.19555,
+"e": 0.1671,
+"i": 15.324,
+"node": 180.62,
+"w": 138.63,
+"ma": 295.07
+},
+{
+"a": 3.11284,
+"e": 0.0227,
+"i": 6.085,
+"node": 120.15,
+"w": 140.4,
+"ma": 256.99
+},
+{
+"a": 3.22238,
+"e": 0.1139,
+"i": 4.166,
+"node": 77.59,
+"w": 1.52,
+"ma": 321.28
+},
+{
+"a": 2.36539,
+"e": 0.1212,
+"i": 5.469,
+"node": 280.16,
+"w": 168.18,
+"ma": 311.44
+},
+{
+"a": 2.44136,
+"e": 0.0628,
+"i": 0.514,
+"node": 232.02,
+"w": 296.89,
+"ma": 34.72
+},
+{
+"a": 2.52838,
+"e": 0.1731,
+"i": 6.001,
+"node": 134.54,
+"w": 102.2,
+"ma": 143.44
+},
+{
+"a": 2.85003,
+"e": 0.1361,
+"i": 10.102,
+"node": 54.59,
+"w": 246.16,
+"ma": 313.33
+},
+{
+"a": 2.442,
+"e": 0.151,
+"i": 4.975,
+"node": 290.75,
+"w": 122.98,
+"ma": 221.68
+},
+{
+"a": 2.79593,
+"e": 0.1803,
+"i": 8.614,
+"node": 0.6,
+"w": 28.1,
+"ma": 233.46
+},
+{
+"a": 3.005,
+"e": 0.0332,
+"i": 3.519,
+"node": 146.19,
+"w": 174.72,
+"ma": 191.89
+},
+{
+"a": 3.10004,
+"e": 0.1136,
+"i": 6.325,
+"node": 315.22,
+"w": 221.69,
+"ma": 83.8
+},
+{
+"a": 2.54476,
+"e": 0.1157,
+"i": 13.541,
+"node": 105.9,
+"w": 268.03,
+"ma": 155.66
+},
+{
+"a": 3.04851,
+"e": 0.3102,
+"i": 9.167,
+"node": 242.46,
+"w": 180.39,
+"ma": 308.68
+},
+{
+"a": 2.63603,
+"e": 0.0849,
+"i": 2.439,
+"node": 155.31,
+"w": 80.97,
+"ma": 57.46
+},
+{
+"a": 2.35005,
+"e": 0.0016,
+"i": 3.228,
+"node": 1.32,
+"w": 67.64,
+"ma": 303.11
+},
+{
+"a": 2.99875,
+"e": 0.0265,
+"i": 3.298,
+"node": 245.87,
+"w": 130.21,
+"ma": 232.65
+},
+{
+"a": 3.13456,
+"e": 0.1947,
+"i": 5.716,
+"node": 283.57,
+"w": 94.53,
+"ma": 101.25
+},
+{
+"a": 2.149,
+"e": 0.2662,
+"i": 1.714,
+"node": 0.78,
+"w": 163.81,
+"ma": 23.39
+},
+{
+"a": 2.58531,
+"e": 0.0404,
+"i": 4.676,
+"node": 77.86,
+"w": 22.75,
+"ma": 216.26
+},
+{
+"a": 2.85217,
+"e": 0.0559,
+"i": 22.495,
+"node": 305.32,
+"w": 229.72,
+"ma": 69.79
+},
+{
+"a": 2.29786,
+"e": 0.0448,
+"i": 1.215,
+"node": 53.92,
+"w": 32.51,
+"ma": 25.81
+},
+{
+"a": 2.85792,
+"e": 0.1683,
+"i": 2.895,
+"node": 0.85,
+"w": 84.84,
+"ma": 109.63
+},
+{
+"a": 2.9893,
+"e": 0.1258,
+"i": 0.991,
+"node": 220.64,
+"w": 326.14,
+"ma": 144.29
+},
+{
+"a": 3.19806,
+"e": 0.1939,
+"i": 6.628,
+"node": 316.91,
+"w": 41.93,
+"ma": 25.91
+},
+{
+"a": 2.35618,
+"e": 0.0305,
+"i": 0.526,
+"node": 343.81,
+"w": 41.61,
+"ma": 236.0
+},
+{
+"a": 2.54657,
+"e": 0.04,
+"i": 7.032,
+"node": 335.02,
+"w": 176.29,
+"ma": 315.15
+},
+{
+"a": 2.5645,
+"e": 0.0397,
+"i": 3.766,
+"node": 185.28,
+"w": 322.26,
+"ma": 148.04
+},
+{
+"a": 2.43955,
+"e": 0.2172,
+"i": 5.151,
+"node": 344.24,
+"w": 277.11,
+"ma": 214.03
+},
+{
+"a": 2.07504,
+"e": 0.0604,
+"i": 3.065,
+"node": 162.31,
+"w": 10.13,
+"ma": 60.83
+},
+{
+"a": 3.09347,
+"e": 0.1994,
+"i": 13.923,
+"node": 230.27,
+"w": 63.18,
+"ma": 36.46
+},
+{
+"a": 3.23047,
+"e": 0.0234,
+"i": 2.199,
+"node": 248.98,
+"w": 53.71,
+"ma": 210.5
+},
+{
+"a": 2.11891,
+"e": 0.0824,
+"i": 1.414,
+"node": 87.07,
+"w": 353.81,
+"ma": 13.14
+},
+{
+"a": 2.98989,
+"e": 0.101,
+"i": 11.265,
+"node": 103.66,
+"w": 13.48,
+"ma": 208.07
+},
+{
+"a": 2.9085,
+"e": 0.1433,
+"i": 4.929,
+"node": 144.72,
+"w": 299.12,
+"ma": 316.7
+},
+{
+"a": 2.39484,
+"e": 0.0256,
+"i": 1.829,
+"node": 39.18,
+"w": 254.81,
+"ma": 164.4
+},
+{
+"a": 2.33715,
+"e": 0.2762,
+"i": 5.839,
+"node": 334.22,
+"w": 230.85,
+"ma": 163.76
+},
+{
+"a": 2.4007,
+"e": 0.0434,
+"i": 7.724,
+"node": 229.16,
+"w": 68.46,
+"ma": 161.86
+},
+{
+"a": 2.31208,
+"e": 0.0724,
+"i": 3.935,
+"node": 257.33,
+"w": 234.42,
+"ma": 301.14
+},
+{
+"a": 2.08153,
+"e": 0.0591,
+"i": 6.583,
+"node": 247.71,
+"w": 160.94,
+"ma": 114.07
+},
+{
+"a": 2.41189,
+"e": 0.0822,
+"i": 2.097,
+"node": 191.21,
+"w": 145.66,
+"ma": 174.1
+},
+{
+"a": 2.55305,
+"e": 0.0125,
+"i": 0.79,
+"node": 234.03,
+"w": 355.03,
+"ma": 146.57
+},
+{
+"a": 2.66988,
+"e": 0.0948,
+"i": 10.888,
+"node": 336.03,
+"w": 75.25,
+"ma": 264.26
+},
+{
+"a": 3.2289,
+"e": 0.3185,
+"i": 3.653,
+"node": 278.05,
+"w": 249.27,
+"ma": 71.16
+},
+{
+"a": 2.69523,
+"e": 0.005,
+"i": 8.962,
+"node": 22.04,
+"w": 317.67,
+"ma": 287.1
+},
+{
+"a": 2.13516,
+"e": 0.0656,
+"i": 16.817,
+"node": 95.17,
+"w": 349.46,
+"ma": 258.69
+},
+{
+"a": 2.27951,
+"e": 0.0936,
+"i": 15.944,
+"node": 271.14,
+"w": 349.18,
+"ma": 197.51
+},
+{
+"a": 2.71793,
+"e": 0.2104,
+"i": 4.722,
+"node": 85.63,
+"w": 105.26,
+"ma": 10.04
+},
+{
+"a": 2.57881,
+"e": 0.0225,
+"i": 5.86,
+"node": 225.66,
+"w": 56.24,
+"ma": 232.94
+},
+{
+"a": 2.72325,
+"e": 0.024,
+"i": 3.794,
+"node": 280.15,
+"w": 347.95,
+"ma": 200.55
+},
+{
+"a": 2.63511,
+"e": 0.1449,
+"i": 11.724,
+"node": 283.32,
+"w": 94.48,
+"ma": 147.15
+},
+{
+"a": 3.12386,
+"e": 0.003,
+"i": 6.181,
+"node": 165.27,
+"w": 241.79,
+"ma": 326.7
+},
+{
+"a": 3.18737,
+"e": 0.0903,
+"i": 7.697,
+"node": 202.22,
+"w": 187.79,
+"ma": 21.83
+},
+{
+"a": 2.67436,
+"e": 0.0157,
+"i": 3.082,
+"node": 350.4,
+"w": 130.49,
+"ma": 65.19
+},
+{
+"a": 2.29731,
+"e": 0.0415,
+"i": 8.755,
+"node": 346.66,
+"w": 139.72,
+"ma": 101.06
+},
+{
+"a": 3.07589,
+"e": 0.1511,
+"i": 4.731,
+"node": 91.41,
+"w": 206.63,
+"ma": 277.59
+},
+{
+"a": 2.75577,
+"e": 0.0478,
+"i": 4.144,
+"node": 108.23,
+"w": 176.8,
+"ma": 197.81
+},
+{
+"a": 2.20791,
+"e": 0.1461,
+"i": 0.866,
+"node": 183.04,
+"w": 292.13,
+"ma": 153.1
+},
+{
+"a": 3.01503,
+"e": 0.0036,
+"i": 1.558,
+"node": 126.04,
+"w": 265.36,
+"ma": 347.39
+},
+{
+"a": 2.07771,
+"e": 0.0202,
+"i": 17.093,
+"node": 112.0,
+"w": 11.17,
+"ma": 56.79
+},
+{
+"a": 2.92411,
+"e": 0.0908,
+"i": 0.834,
+"node": 327.29,
+"w": 272.1,
+"ma": 152.34
+},
+{
+"a": 2.69377,
+"e": 0.0715,
+"i": 8.461,
+"node": 308.49,
+"w": 271.07,
+"ma": 305.54
+},
+{
+"a": 2.74672,
+"e": 0.166,
+"i": 4.752,
+"node": 192.32,
+"w": 154.51,
+"ma": 98.52
+},
+{
+"a": 2.17115,
+"e": 0.0429,
+"i": 1.786,
+"node": 261.57,
+"w": 339.94,
+"ma": 166.2
+},
+{
+"a": 3.03464,
+"e": 0.0431,
+"i": 12.303,
+"node": 169.67,
+"w": 357.46,
+"ma": 306.66
+},
+{
+"a": 3.09583,
+"e": 0.081,
+"i": 0.036,
+"node": 101.02,
+"w": 15.43,
+"ma": 245.07
+},
+{
+"a": 2.71841,
+"e": 0.1213,
+"i": 0.869,
+"node": 163.49,
+"w": 59.31,
+"ma": 164.72
+},
+{
+"a": 2.41059,
+"e": 0.0095,
+"i": 0.537,
+"node": 306.78,
+"w": 130.62,
+"ma": 135.71
+},
+{
+"a": 2.74482,
+"e": 0.1022,
+"i": 14.964,
+"node": 317.04,
+"w": 302.92,
+"ma": 348.43
+},
+{
+"a": 2.22554,
+"e": 0.0656,
+"i": 1.211,
+"node": 108.12,
+"w": 335.94,
+"ma": 138.82
+},
+{
+"a": 3.10201,
+"e": 0.1269,
+"i": 3.033,
+"node": 43.08,
+"w": 313.83,
+"ma": 316.49
+},
+{
+"a": 2.52779,
+"e": 0.1414,
+"i": 1.708,
+"node": 202.34,
+"w": 358.83,
+"ma": 37.41
+},
+{
+"a": 2.10474,
+"e": 0.0087,
+"i": 2.209,
+"node": 45.05,
+"w": 264.72,
+"ma": 144.63
+},
+{
+"a": 2.38874,
+"e": 0.1243,
+"i": 2.179,
+"node": 258.1,
+"w": 46.09,
+"ma": 171.59
+},
+{
+"a": 2.42451,
+"e": 0.0812,
+"i": 8.518,
+"node": 29.59,
+"w": 105.14,
+"ma": 269.49
+},
+{
+"a": 2.98588,
+"e": 0.1555,
+"i": 3.147,
+"node": 19.99,
+"w": 356.29,
+"ma": 163.6
+},
+{
+"a": 2.47243,
+"e": 0.0385,
+"i": 7.834,
+"node": 275.62,
+"w": 114.22,
+"ma": 81.12
+},
+{
+"a": 2.67414,
+"e": 0.0536,
+"i": 12.741,
+"node": 96.72,
+"w": 255.75,
+"ma": 136.7
+},
+{
+"a": 2.68462,
+"e": 0.1368,
+"i": 14.468,
+"node": 183.76,
+"w": 58.44,
+"ma": 32.23
+},
+{
+"a": 2.23714,
+"e": 0.0526,
+"i": 5.68,
+"node": 10.86,
+"w": 274.85,
+"ma": 335.89
+},
+{
+"a": 2.71263,
+"e": 0.0463,
+"i": 7.53,
+"node": 161.57,
+"w": 300.09,
+"ma": 41.41
+},
+{
+"a": 2.60883,
+"e": 0.0171,
+"i": 6.695,
+"node": 274.52,
+"w": 354.48,
+"ma": 192.97
+},
+{
+"a": 2.61072,
+"e": 0.0614,
+"i": 0.226,
+"node": 99.39,
+"w": 155.02,
+"ma": 181.62
+},
+{
+"a": 3.00042,
+"e": 0.0875,
+"i": 5.943,
+"node": 19.4,
+"w": 265.16,
+"ma": 262.17
+},
+{
+"a": 2.30163,
+"e": 0.0322,
+"i": 9.959,
+"node": 66.99,
+"w": 14.2,
+"ma": 33.33
+},
+{
+"a": 2.32916,
+"e": 0.0081,
+"i": 2.031,
+"node": 321.94,
+"w": 31.76,
+"ma": 131.9
+},
+{
+"a": 3.19785,
+"e": 0.0287,
+"i": 0.3,
+"node": 348.42,
+"w": 126.66,
+"ma": 58.04
+},
+{
+"a": 3.14793,
+"e": 0.153,
+"i": 9.646,
+"node": 164.2,
+"w": 61.67,
+"ma": 152.63
+},
+{
+"a": 2.26297,
+"e": 0.1943,
+"i": 2.385,
+"node": 41.95,
+"w": 155.72,
+"ma": 358.44
+},
+{
+"a": 2.2438,
+"e": 0.0767,
+"i": 1.555,
+"node": 125.88,
+"w": 302.46,
+"ma": 82.88
+},
+{
+"a": 2.14857,
+"e": 0.0513,
+"i": 5.05,
+"node": 280.23,
+"w": 251.94,
+"ma": 86.48
+},
+{
+"a": 2.47319,
+"e": 0.2224,
+"i": 8.005,
+"node": 339.81,
+"w": 298.25,
+"ma": 158.49
+},
+{
+"a": 3.1128,
+"e": 0.0879,
+"i": 4.751,
+"node": 200.97,
+"w": 289.46,
+"ma": 201.59
+},
+{
+"a": 3.04812,
+"e": 0.1278,
+"i": 2.204,
+"node": 265.03,
+"w": 94.91,
+"ma": 37.81
+},
+{
+"a": 2.21175,
+"e": 0.1274,
+"i": 8.003,
+"node": 100.01,
+"w": 178.4,
+"ma": 272.94
+},
+{
+"a": 3.10994,
+"e": 0.0456,
+"i": 0.924,
+"node": 313.62,
+"w": 38.71,
+"ma": 288.02
+},
+{
+"a": 2.77293,
+"e": 0.0375,
+"i": 2.039,
+"node": 337.78,
+"w": 32.05,
+"ma": 121.51
+},
+{
+"a": 2.60345,
+"e": 0.1489,
+"i": 3.579,
+"node": 163.3,
+"w": 200.29,
+"ma": 7.29
+},
+{
+"a": 2.73353,
+"e": 0.1562,
+"i": 4.269,
+"node": 250.47,
+"w": 258.26,
+"ma": 89.65
+},
+{
+"a": 2.32601,
+"e": 0.0162,
+"i": 2.861,
+"node": 205.37,
+"w": 61.31,
+"ma": 89.18
+},
+{
+"a": 2.54145,
+"e": 0.0292,
+"i": 0.763,
+"node": 42.42,
+"w": 63.07,
+"ma": 224.8
+},
+{
+"a": 3.17641,
+"e": 0.2295,
+"i": 2.816,
+"node": 298.93,
+"w": 197.8,
+"ma": 13.79
+},
+{
+"a": 2.59302,
+"e": 0.0163,
+"i": 5.115,
+"node": 184.87,
+"w": 302.89,
+"ma": 183.81
+},
+{
+"a": 2.58202,
+"e": 0.2602,
+"i": 4.583,
+"node": 297.79,
+"w": 1.74,
+"ma": 324.84
+},
+{
+"a": 2.90196,
+"e": 0.1263,
+"i": 12.499,
+"node": 269.57,
+"w": 300.36,
+"ma": 115.62
+},
+{
+"a": 3.15645,
+"e": 0.1726,
+"i": 2.064,
+"node": 288.46,
+"w": 208.86,
+"ma": 31.32
+},
+{
+"a": 3.16724,
+"e": 0.2715,
+"i": 4.914,
+"node": 269.1,
+"w": 89.45,
+"ma": 250.84
+},
+{
+"a": 2.98433,
+"e": 0.1331,
+"i": 4.286,
+"node": 333.77,
+"w": 81.71,
+"ma": 73.32
+},
+{
+"a": 3.02483,
+"e": 0.0371,
+"i": 6.414,
+"node": 186.65,
+"w": 151.37,
+"ma": 3.34
+},
+{
+"a": 2.77151,
+"e": 0.0527,
+"i": 1.669,
+"node": 309.92,
+"w": 80.77,
+"ma": 196.56
+},
+{
+"a": 2.64593,
+"e": 0.1391,
+"i": 0.257,
+"node": 8.09,
+"w": 267.18,
+"ma": 189.28
+},
+{
+"a": 2.34074,
+"e": 0.04,
+"i": 2.642,
+"node": 344.55,
+"w": 17.45,
+"ma": 86.23
+},
+{
+"a": 3.16728,
+"e": 0.0424,
+"i": 10.703,
+"node": 38.34,
+"w": 163.92,
+"ma": 242.94
+},
+{
+"a": 2.18734,
+"e": 0.0168,
+"i": 7.48,
+"node": 106.98,
+"w": 74.77,
+"ma": 206.62
+},
+{
+"a": 3.16342,
+"e": 0.0378,
+"i": 4.212,
+"node": 153.97,
+"w": 134.86,
+"ma": 100.8
+},
+{
+"a": 2.11057,
+"e": 0.2021,
+"i": 11.312,
+"node": 86.69,
+"w": 213.32,
+"ma": 25.17
+},
+{
+"a": 2.54105,
+"e": 0.1378,
+"i": 3.782,
+"node": 125.24,
+"w": 272.74,
+"ma": 32.53
+},
+{
+"a": 2.99515,
+"e": 0.019,
+"i": 3.191,
+"node": 303.63,
+"w": 339.28,
+"ma": 313.5
+},
+{
+"a": 2.69413,
+"e": 0.3119,
+"i": 0.497,
+"node": 31.56,
+"w": 333.8,
+"ma": 197.08
+},
+{
+"a": 2.39919,
+"e": 0.2425,
+"i": 6.882,
+"node": 142.35,
+"w": 213.62,
+"ma": 211.03
+},
+{
+"a": 3.21394,
+"e": 0.0955,
+"i": 1.222,
+"node": 303.62,
+"w": 15.95,
+"ma": 145.2
+},
+{
+"a": 2.65765,
+"e": 0.0775,
+"i": 12.743,
+"node": 184.88,
+"w": 118.28,
+"ma": 189.01
+},
+{
+"a": 2.20115,
+"e": 0.1106,
+"i": 9.23,
+"node": 303.13,
+"w": 116.48,
+"ma": 91.67
+},
+{
+"a": 2.53927,
+"e": 0.1258,
+"i": 1.684,
+"node": 219.26,
+"w": 69.59,
+"ma": 115.94
+},
+{
+"a": 3.09872,
+"e": 0.1523,
+"i": 5.436,
+"node": 295.63,
+"w": 88.84,
+"ma": 128.46
+},
+{
+"a": 3.05355,
+"e": 0.0581,
+"i": 0.602,
+"node": 253.36,
+"w": 88.24,
+"ma": 214.98
+},
+{
+"a": 2.60649,
+"e": 0.0696,
+"i": 8.411,
+"node": 321.73,
+"w": 70.3,
+"ma": 123.86
+},
+{
+"a": 3.16261,
+"e": 0.0015,
+"i": 0.392,
+"node": 121.67,
+"w": 353.86,
+"ma": 194.14
+},
+{
+"a": 3.01902,
+"e": 0.0054,
+"i": 7.49,
+"node": 212.47,
+"w": 40.7,
+"ma": 162.78
+},
+{
+"a": 3.15296,
+"e": 0.0561,
+"i": 2.807,
+"node": 340.25,
+"w": 330.88,
+"ma": 302.29
+},
+{
+"a": 2.61393,
+"e": 0.1425,
+"i": 6.792,
+"node": 340.55,
+"w": 72.78,
+"ma": 5.09
+},
+{
+"a": 2.10211,
+"e": 0.1166,
+"i": 12.098,
+"node": 155.0,
+"w": 122.29,
+"ma": 12.71
+},
+{
+"a": 2.0963,
+"e": 0.2576,
+"i": 1.313,
+"node": 131.15,
+"w": 276.87,
+"ma": 204.39
+},
+{
+"a": 3.23398,
+"e": 0.1122,
+"i": 7.056,
+"node": 244.96,
+"w": 58.7,
+"ma": 175.7
+},
+{
+"a": 3.04904,
+"e": 0.2358,
+"i": 1.354,
+"node": 134.31,
+"w": 95.15,
+"ma": 201.09
+},
+{
+"a": 2.9112,
+"e": 0.054,
+"i": 11.989,
+"node": 184.19,
+"w": 234.12,
+"ma": 20.26
+},
+{
+"a": 2.59849,
+"e": 0.0831,
+"i": 0.553,
+"node": 350.46,
+"w": 122.33,
+"ma": 175.71
+},
+{
+"a": 2.36506,
+"e": 0.118,
+"i": 4.446,
+"node": 245.46,
+"w": 119.95,
+"ma": 253.31
+},
+{
+"a": 2.63624,
+"e": 0.0344,
+"i": 2.435,
+"node": 144.46,
+"w": 221.25,
+"ma": 218.0
+},
+{
+"a": 2.34803,
+"e": 0.1784,
+"i": 6.868,
+"node": 119.73,
+"w": 142.9,
+"ma": 31.08
+},
+{
+"a": 2.92085,
+"e": 0.1827,
+"i": 6.809,
+"node": 220.83,
+"w": 351.67,
+"ma": 172.1
+},
+{
+"a": 2.17208,
+"e": 0.1045,
+"i": 1.837,
+"node": 247.51,
+"w": 174.76,
+"ma": 151.81
+},
+{
+"a": 2.542,
+"e": 0.1446,
+"i": 2.004,
+"node": 300.88,
+"w": 212.02,
+"ma": 164.12
+},
+{
+"a": 2.60945,
+"e": 0.1964,
+"i": 10.972,
+"node": 75.08,
+"w": 255.43,
+"ma": 59.38
+},
+{
+"a": 2.69621,
+"e": 0.0183,
+"i": 4.046,
+"node": 1.67,
+"w": 195.52,
+"ma": 285.45
+},
+{
+"a": 3.25239,
+"e": 0.164,
+"i": 8.224,
+"node": 34.42,
+"w": 226.33,
+"ma": 90.28
+},
+{
+"a": 2.31581,
+"e": 0.0057,
+"i": 8.311,
+"node": 175.89,
+"w": 325.73,
+"ma": 110.28
+},
+{
+"a": 2.22587,
+"e": 0.0512,
+"i": 0.774,
+"node": 214.21,
+"w": 169.4,
+"ma": 104.29
+},
+{
+"a": 2.33462,
+"e": 0.0242,
+"i": 10.087,
+"node": 186.75,
+"w": 133.06,
+"ma": 14.02
+},
+{
+"a": 3.20332,
+"e": 0.0837,
+"i": 5.841,
+"node": 130.0,
+"w": 304.0,
+"ma": 88.29
+},
+{
+"a": 2.15657,
+"e": 0.0391,
+"i": 7.576,
+"node": 309.48,
+"w": 116.58,
+"ma": 285.65
+},
+{
+"a": 2.64972,
+"e": 0.0551,
+"i": 1.236,
+"node": 64.46,
+"w": 217.12,
+"ma": 44.76
+},
+{
+"a": 3.10292,
+"e": 0.022,
+"i": 4.1,
+"node": 59.37,
+"w": 189.9,
+"ma": 277.66
+},
+{
+"a": 2.66979,
+"e": 0.0074,
+"i": 13.151,
+"node": 161.97,
+"w": 180.03,
+"ma": 28.96
+},
+{
+"a": 3.00712,
+"e": 0.1049,
+"i": 15.227,
+"node": 180.76,
+"w": 342.36,
+"ma": 112.32
+},
+{
+"a": 2.53871,
+"e": 0.0104,
+"i": 0.292,
+"node": 271.09,
+"w": 350.29,
+"ma": 263.55
+},
+{
+"a": 2.70562,
+"e": 0.0947,
+"i": 4.467,
+"node": 70.06,
+"w": 273.53,
+"ma": 237.99
+},
+{
+"a": 2.35334,
+"e": 0.0581,
+"i": 1.916,
+"node": 136.92,
+"w": 5.52,
+"ma": 312.04
+},
+{
+"a": 2.29777,
+"e": 0.0603,
+"i": 3.926,
+"node": 249.84,
+"w": 12.12,
+"ma": 257.59
+},
+{
+"a": 2.09003,
+"e": 0.1954,
+"i": 4.729,
+"node": 139.46,
+"w": 31.66,
+"ma": 53.22
+},
+{
+"a": 2.89386,
+"e": 0.0497,
+"i": 3.447,
+"node": 56.49,
+"w": 282.89,
+"ma": 308.49
+},
+{
+"a": 2.12242,
+"e": 0.04,
+"i": 2.754,
+"node": 202.01,
+"w": 239.43,
+"ma": 209.15
+},
+{
+"a": 2.78338,
+"e": 0.0604,
+"i": 17.538,
+"node": 209.63,
+"w": 246.85,
+"ma": 172.13
+},
+{
+"a": 2.64171,
+"e": 0.0125,
+"i": 5.058,
+"node": 236.32,
+"w": 130.02,
+"ma": 194.48
+},
+{
+"a": 2.11398,
+"e": 0.1827,
+"i": 7.166,
+"node": 295.84,
+"w": 172.24,
+"ma": 52.84
+},
+{
+"a": 2.17422,
+"e": 0.1469,
+"i": 3.779,
+"node": 269.75,
+"w": 22.22,
+"ma": 36.08
+},
+{
+"a": 2.77412,
+"e": 0.0158,
+"i": 2.794,
+"node": 5.18,
+"w": 250.42,
+"ma": 313.37
+},
+{
+"a": 2.32359,
+"e": 0.1584,
+"i": 5.397,
+"node": 239.73,
+"w": 56.02,
+"ma": 331.18
+},
+{
+"a": 2.29709,
+"e": 0.0941,
+"i": 6.424,
+"node": 346.42,
+"w": 12.97,
+"ma": 239.53
+},
+{
+"a": 3.05589,
+"e": 0.0838,
+"i": 6.584,
+"node": 22.55,
+"w": 340.11,
+"ma": 123.01
+},
+{
+"a": 2.78773,
+"e": 0.0813,
+"i": 3.275,
+"node": 354.57,
+"w": 149.03,
+"ma": 301.07
+},
+{
+"a": 2.15484,
+"e": 0.1311,
+"i": 0.998,
+"node": 201.93,
+"w": 250.8,
+"ma": 7.2
+},
+{
+"a": 2.07927,
+"e": 0.0116,
+"i": 1.735,
+"node": 0.34,
+"w": 322.84,
+"ma": 320.05
+},
+{
+"a": 2.86034,
+"e": 0.0497,
+"i": 8.535,
+"node": 344.15,
+"w": 85.12,
+"ma": 354.01
+},
+{
+"a": 3.14599,
+"e": 0.2272,
+"i": 0.037,
+"node": 172.26,
+"w": 232.84,
+"ma": 125.87
+},
+{
+"a": 2.10613,
+"e": 0.096,
+"i": 14.522,
+"node": 252.4,
+"w": 9.49,
+"ma": 104.17
+},
+{
+"a": 3.04741,
+"e": 0.111,
+"i": 2.369,
+"node": 269.99,
+"w": 331.46,
+"ma": 73.21
+},
+{
+"a": 2.10398,
+"e": 0.0188,
+"i": 4.746,
+"node": 172.43,
+"w": 311.67,
+"ma": 229.35
+},
+{
+"a": 2.14457,
+"e": 0.0552,
+"i": 4.386,
+"node": 289.87,
+"w": 94.87,
+"ma": 295.15
+},
+{
+"a": 3.08627,
+"e": 0.2662,
+"i": 4.152,
+"node": 283.13,
+"w": 279.19,
+"ma": 49.76
+},
+{
+"a": 2.38688,
+"e": 0.0471,
+"i": 4.541,
+"node": 49.62,
+"w": 261.92,
+"ma": 152.86
+},
+{
+"a": 3.15405,
+"e": 0.1071,
+"i": 3.89,
+"node": 118.46,
+"w": 255.18,
+"ma": 56.09
+},
+{
+"a": 2.66821,
+"e": 0.0008,
+"i": 4.761,
+"node": 73.76,
+"w": 113.11,
+"ma": 205.08
+},
+{
+"a": 3.09236,
+"e": 0.1204,
+"i": 5.057,
+"node": 289.1,
+"w": 1.91,
+"ma": 247.09
+},
+{
+"a": 3.14511,
+"e": 0.2565,
+"i": 5.23,
+"node": 20.01,
+"w": 202.56,
+"ma": 239.52
+},
+{
+"a": 2.19909,
+"e": 0.1472,
+"i": 11.011,
+"node": 148.12,
+"w": 218.89,
+"ma": 31.1
+},
+{
+"a": 2.1727,
+"e": 0.0222,
+"i": 6.272,
+"node": 87.65,
+"w": 272.93,
+"ma": 136.81
+},
+{
+"a": 2.7127,
+"e": 0.0326,
+"i": 6.239,
+"node": 163.43,
+"w": 300.58,
+"ma": 95.22
+},
+{
+"a": 2.24035,
+"e": 0.2003,
+"i": 6.409,
+"node": 236.14,
+"w": 173.23,
+"ma": 297.17
+},
+{
+"a": 2.44529,
+"e": 0.148,
+"i": 9.843,
+"node": 96.87,
+"w": 91.27,
+"ma": 35.9
+},
+{
+"a": 2.21942,
+"e": 0.0413,
+"i": 5.538,
+"node": 109.43,
+"w": 175.19,
+"ma": 286.98
+},
+{
+"a": 3.0873,
+"e": 0.05,
+"i": 3.779,
+"node": 174.39,
+"w": 238.24,
+"ma": 57.74
+},
+{
+"a": 2.0754,
+"e": 0.0553,
+"i": 3.759,
+"node": 305.54,
+"w": 26.11,
+"ma": 163.35
+},
+{
+"a": 2.34718,
+"e": 0.0986,
+"i": 7.574,
+"node": 265.72,
+"w": 321.64,
+"ma": 305.33
+},
+{
+"a": 2.42164,
+"e": 0.1007,
+"i": 7.488,
+"node": 136.01,
+"w": 118.97,
+"ma": 216.64
+},
+{
+"a": 2.67812,
+"e": 0.0656,
+"i": 1.486,
+"node": 112.72,
+"w": 117.22,
+"ma": 155.89
+},
+{
+"a": 2.37821,
+"e": 0.1694,
+"i": 4.365,
+"node": 154.6,
+"w": 301.0,
+"ma": 235.11
+},
+{
+"a": 2.44742,
+"e": 0.0202,
+"i": 3.803,
+"node": 359.34,
+"w": 77.71,
+"ma": 251.07
+},
+{
+"a": 2.32517,
+"e": 0.1541,
+"i": 3.382,
+"node": 169.3,
+"w": 288.05,
+"ma": 103.42
+},
+{
+"a": 3.15954,
+"e": 0.1448,
+"i": 8.47,
+"node": 355.6,
+"w": 169.16,
+"ma": 244.17
+},
+{
+"a": 2.3625,
+"e": 0.0667,
+"i": 3.956,
+"node": 308.92,
+"w": 197.07,
+"ma": 195.85
+},
+{
+"a": 2.92334,
+"e": 0.2124,
+"i": 5.691,
+"node": 358.49,
+"w": 171.08,
+"ma": 27.65
+},
+{
+"a": 2.85944,
+"e": 0.057,
+"i": 3.284,
+"node": 179.31,
+"w": 162.88,
+"ma": 189.64
+},
+{
+"a": 2.59757,
+"e": 0.1644,
+"i": 7.815,
+"node": 73.58,
+"w": 166.39,
+"ma": 356.56
+},
+{
+"a": 2.75207,
+"e": 0.0077,
+"i": 0.125,
+"node": 246.57,
+"w": 99.01,
+"ma": 159.19
+},
+{
+"a": 2.15984,
+"e": 0.0906,
+"i": 1.554,
+"node": 88.64,
+"w": 202.53,
+"ma": 292.03
+},
+{
+"a": 3.0158,
+"e": 0.1963,
+"i": 5.33,
+"node": 7.03,
+"w": 252.17,
+"ma": 309.61
+},
+{
+"a": 2.06606,
+"e": 0.2578,
+"i": 1.42,
+"node": 183.24,
+"w": 135.5,
+"ma": 124.43
+},
+{
+"a": 3.01817,
+"e": 0.0746,
+"i": 9.528,
+"node": 144.16,
+"w": 66.27,
+"ma": 51.25
+},
+{
+"a": 2.4375,
+"e": 0.025,
+"i": 8.204,
+"node": 34.41,
+"w": 256.51,
+"ma": 189.26
+},
+{
+"a": 2.10768,
+"e": 0.0135,
+"i": 1.093,
+"node": 100.53,
+"w": 53.91,
+"ma": 347.21
+},
+{
+"a": 2.85842,
+"e": 0.0368,
+"i": 9.817,
+"node": 285.8,
+"w": 58.16,
+"ma": 143.62
+},
+{
+"a": 2.32271,
+"e": 0.0693,
+"i": 4.583,
+"node": 36.37,
+"w": 5.39,
+"ma": 80.82
+},
+{
+"a": 2.98596,
+"e": 0.0202,
+"i": 7.263,
+"node": 261.91,
+"w": 207.69,
+"ma": 280.61
+},
+{
+"a": 2.59993,
+"e": 0.0589,
+"i": 0.587,
+"node": 31.85,
+"w": 0.11,
+"ma": 201.62
+},
+{
+"a": 2.43508,
+"e": 0.0068,
+"i": 3.846,
+"node": 163.45,
+"w": 168.6,
+"ma": 299.2
+},
+{
+"a": 2.62666,
+"e": 0.0821,
+"i": 2.364,
+"node": 112.8,
+"w": 326.35,
+"ma": 275.65
+},
+{
+"a": 2.78841,
+"e": 0.0854,
+"i": 10.397,
+"node": 109.92,
+"w": 166.93,
+"ma": 358.53
+},
+{
+"a": 2.17504,
+"e": 0.0808,
+"i": 1.346,
+"node": 296.07,
+"w": 229.71,
+"ma": 12.46
+},
+{
+"a": 3.13115,
+"e": 0.0958,
+"i": 1.318,
+"node": 95.79,
+"w": 59.7,
+"ma": 261.35
+},
+{
+"a": 2.92846,
+"e": 0.0023,
+"i": 0.516,
+"node": 40.41,
+"w": 252.69,
+"ma": 219.76
+},
+{
+"a": 2.64479,
+"e": 0.0065,
+"i": 0.587,
+"node": 181.58,
+"w": 74.98,
+"ma": 306.6
+},
+{
+"a": 2.27822,
+"e": 0.0038,
+"i": 0.435,
+"node": 335.44,
+"w": 15.74,
+"ma": 119.45
+},
+{
+"a": 2.07295,
+"e": 0.2414,
+"i": 7.317,
+"node": 108.76,
+"w": 216.34,
+"ma": 229.21
+},
+{
+"a": 2.9268,
+"e": 0.0525,
+"i": 2.97,
+"node": 125.16,
+"w": 111.63,
+"ma": 197.98
+},
+{
+"a": 3.13751,
+"e": 0.0121,
+"i": 13.537,
+"node": 94.7,
+"w": 127.55,
+"ma": 142.13
+},
+{
+"a": 2.25175,
+"e": 0.0137,
+"i": 2.476,
+"node": 184.48,
+"w": 281.73,
+"ma": 37.81
+},
+{
+"a": 2.65055,
+"e": 0.011,
+"i": 12.599,
+"node": 266.3,
+"w": 129.56,
+"ma": 115.38
+},
+{
+"a": 2.86697,
+"e": 0.1378,
+"i": 1.378,
+"node": 308.62,
+"w": 245.53,
+"ma": 346.28
+},
+{
+"a": 3.06408,
+"e": 0.2862,
+"i": 3.289,
+"node": 70.16,
+"w": 244.09,
+"ma": 306.92
+},
+{
+"a": 2.25286,
+"e": 0.35,
+"i": 4.544,
+"node": 46.75,
+"w": 346.77,
+"ma": 283.89
+},
+{
+"a": 2.10542,
+"e": 0.0833,
+"i": 5.085,
+"node": 13.84,
+"w": 133.04,
+"ma": 278.02
+},
+{
+"a": 3.23515,
+"e": 0.1439,
+"i": 5.06,
+"node": 332.83,
+"w": 246.44,
+"ma": 200.16
+},
+{
+"a": 3.21445,
+"e": 0.0385,
+"i": 8.54,
+"node": 48.19,
+"w": 224.29,
+"ma": 281.25
+},
+{
+"a": 2.14064,
+"e": 0.2017,
+"i": 5.816,
+"node": 335.29,
+"w": 2.97,
+"ma": 156.05
+},
+{
+"a": 2.14899,
+"e": 0.1657,
+"i": 12.352,
+"node": 198.52,
+"w": 152.38,
+"ma": 107.89
+}
+]
+},
+"heliobarrier": {
+"name": "Heliobarrier (HB)",
+"kind": "boundary",
+"termination_shock_au": {
+"voyager1_2004_12": 94.0,
+"voyager2_2007_08": 84.0
+},
+"heliopause_au": {
+"voyager1_2012_08_25": 121.6,
+"voyager2_2018_11_05": 119.0
+},
+"bow_wave_au": 230.0,
+"nose_ecl_lon_deg": 255.7,
+"nose_ecl_lat_deg": 5.1,
+"nose_ra_deg": 259.2,
+"nose_dec_deg": -16.6,
+"ism_flow_speed_kms": 25.4,
+"ism_B_nT": 0.5,
+"solar_wind_1au_kms": 400.0,
+"plasma_density_inside_cm3": 0.002,
+"plasma_density_outside_cm3": 0.08,
+"ibex_ribbon_center_ecl": [
+221.0,
+39.0
+],
+"ibex_ribbon_radius_deg": 75.0,
+"ibex_ribbon_width_deg": 20.0,
+"shape_models": [
+"comet-tail (classical)",
+"croissant (Opher+2020)",
+"bubble (Dialynas+2017)"
+],
+"notes": "Not a sphere: a blunt nose toward (lambda 255.7, beta +5.1) with a tail downwind. The IBEX ribbon is a ~20 deg wide band of ENA emission, a 3-D structure on the HB.",
+"id": "heliobarrier"
+},
+"mercury_annulus_km": {
+"inner_km_10km_body": 13254.300424824072,
+"outer_km_prograde_canonical": 87640.87921617518,
+"outer_km_prograde_this_run": 81472.72224993045,
+"outer_km_retrograde_this_run": 136456.72622884766
+},
+"mercury_hill_perihelion_km": 175281.75843235035,
+"pis": {
+"luna_per_earth_year": 41.99909585614909,
+"charon_per_earth_year": 179.65351398565176,
+"definition": "Pis = (orbits per year, counted against the stars) x pi. Frame of the year is declared per row."
+},
+"events": [
+{
+"label": "Now-ish: BepiColombo Mercury orbit insertion",
+"date": "2026-11-21"
+},
+{
+"label": "Luna occults Mercury (geocentric), 2028-02-23",
+"date": "2028-02-23"
+},
+{
+"label": "Solar equinox, B0 = 0 (Earth on Sol's equator node line)",
+"date": "2026-06-06"
+},
+{
+"label": "Solar equinox, B0 = 0",
+"date": "2026-12-07"
+},
+{
+"label": "B0 most negative (-7.25)",
+"date": "2026-03-06"
+},
+{
+"label": "B0 most positive (+7.25)",
+"date": "2026-09-08"
+},
+{
+"label": "New Horizons at Pluto",
+"date": "2015-07-14"
+},
+{
+"label": "Pluto perihelion",
+"date": "1989-09-05"
+},
+{
+"label": "Voyager 1 crosses the heliopause",
+"date": "2012-08-25"
+},
+{
+"label": "Voyager 2 crosses the heliopause",
+"date": "2018-11-05"
+},
+{
+"label": "J2000 epoch",
+"date": "2000-01-01"
+}
+],
+"literals": {
+"standish_saturn_to_pluto": "typed from Standish Table 1 (1800-2050); asserted against bodies_metrics a/e/i/node",
+"frames": "solar equator node 75.76 (Carrington, J2000); invariable plane Souami & Souchay 2012",
+"events": "dates typed; B0 dates from bodies_metrics _solar_equator_view; heliopause dates from bodies_metrics heliobarrier",
+"belt_sample": "random seed 20261011; distributions e~|N(0,0.12)|, i~|N(0,6.75 deg)| from belt means in bodies_metrics"
+}
+}

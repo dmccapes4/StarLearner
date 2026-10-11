@@ -1145,6 +1145,7 @@ func _test_scripts_compile() -> void:
 		"res://scripts/ConstellationView.gd",
 		"res://scripts/EarthSkyViewer.gd", "res://scripts/EarthShipScene.gd",
 		"res://scripts/LunarCycleStrip.gd",
+		"res://scripts/ZeclipticBodies.gd", "res://scripts/ZeclipticFlight.gd",
 	]:
 		_ok(load(path) != null, "compiles: %s" % path)
 

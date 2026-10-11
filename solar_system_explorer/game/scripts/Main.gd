@@ -57,6 +57,7 @@ var _video: VideoPanel
 var _astro: AstronautIntro
 var _briefing: BriefingSlideshow
 var _galactic: GalacticView   ## v0.0.2 — Galactic Free Flight
+var _zecliptic: ZeclipticFlight   ## 2026-10-11 — Zecliptic Flight (real system, every control)
 var _ship_at: String = "earth"
 var _pending_dest: String = ""
 var _last_route: Dictionary = {}
@@ -109,9 +110,14 @@ func _ready() -> void:
 	add_child(_galactic)
 	_galactic.set_active(false)
 
+	_zecliptic = ZeclipticFlight.new()
+	add_child(_zecliptic)
+	_zecliptic.set_active(false)
+
 	_title.flight_pressed.connect(_on_flight)
 	_title.explainer_pressed.connect(_on_explainer)
 	_chooser.galactic_pressed.connect(_on_galactic_flight)
+	_chooser.zecliptic_pressed.connect(_on_zecliptic_flight)
 	_chooser.mission_pressed.connect(_on_mission_flight)
 	_chooser.free_flight_pressed.connect(_on_free_flight)
 	_chooser.earth_ship_pressed.connect(_on_earth_ship)
@@ -147,6 +153,7 @@ func _ready() -> void:
 
 	_galactic.go_home.connect(_on_galactic_home)
 	_galactic.set_active(false)
+	_zecliptic.go_home.connect(_on_zecliptic_home)
 
 	_hide_all_views()
 	call_deferred("_boot_sequence")
@@ -227,6 +234,15 @@ func _on_galactic_flight() -> void:
 	_galactic.set_active(true)
 	Narrator.speak("You are Sol. Each step, the stars drift. Tap Next Step to move through the cosmos.")
 
+func _on_zecliptic_flight() -> void:
+	_hide_all_views()
+	_zecliptic.set_active(true)
+	Narrator.speak("Zecliptic Flight. You are standing on Charon, facing Pluto, in Sol's equatorial frame. Tap any body to pause time and go there.")
+
+func _on_zecliptic_home() -> void:
+	_zecliptic.set_active(false)
+	_set_view(_chooser)
+
 func _on_galactic_home() -> void:
 	_galactic.set_active(false)
 	_set_view(_chooser)
@@ -237,10 +253,13 @@ func _show_title() -> void:
 	_playground.set_active(false)
 	_zodiac.set_active(false)
 	_earth_sky.set_active(false)
+	if _zecliptic != null:
+		_zecliptic.set_active(false)
 	_earth_ship.set_active(false)
 	_sky_viewer.set_active(false)
 	_night_sky.set_active(false)
 	_galactic.set_active(false)
+	_zecliptic.set_active(false)
 	_in_playground = false
 	_in_zodiac = false
 	_zodiac_return_playground = false

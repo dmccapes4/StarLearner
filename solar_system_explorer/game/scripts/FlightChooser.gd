@@ -10,6 +10,7 @@ signal free_flight_pressed()
 signal earth_ship_pressed()
 signal night_sky_pressed()
 signal galactic_pressed()
+signal zecliptic_pressed()
 signal go_home()
 
 const LINE_MISSION := "Mission Flight is realistic — we plot a course and fly you there."
@@ -24,21 +25,24 @@ const FREE_TEX := "res://images/tile_free_flight.png"
 const EARTH_TEX := "res://images/tile_earth_ship.png"
 const NIGHT_TEX := "res://images/tile_night_sky.png"
 const GALACTIC_TEX := "res://images/tile_solar.png"  ## reuse solar tile for now
+const ZECLIPTIC_TEX := "res://images/tile_solar.png"  ## reuse until a Zecliptic tile is drawn
 const GOLD := Color(1.0, 0.86, 0.28, 1.0)
 
-## Four across at 1280 wide: 4*270 + 3*26 = 1158, with margin to spare.
-const TILE_SIZE := Vector2(270, 250)
+## Six across at 1280 wide: 6*192 + 5*16 = 1232.
+const TILE_SIZE := Vector2(192, 180)
 
 var _mission_btn: Button
 var _free_btn: Button
 var _earth_btn: Button
 var _night_btn: Button
 var _galactic_btn: Button
+var _zecliptic_btn: Button
 var _mission_tint: Color = Color(0.16, 0.30, 0.52)
 var _free_tint: Color = Color(0.34, 0.20, 0.46)
 var _earth_tint: Color = Color(0.12, 0.34, 0.30)
 var _night_tint: Color = Color(0.18, 0.18, 0.42)
 var _galactic_tint: Color = Color(0.08, 0.10, 0.30)   ## deep space blue
+var _zecliptic_tint: Color = Color(0.36, 0.26, 0.06)  ## Sol-gold, the equatorial frame
 var _narr_gen: int = 0
 
 func _ready() -> void:
@@ -65,7 +69,7 @@ func _ready() -> void:
 
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 20)
+	row.add_theme_constant_override("separation", 16)
 	box.add_child(row)
 
 	var mission_col := _make_tile(
@@ -128,6 +132,18 @@ func _ready() -> void:
 	_galactic_btn = galactic_col.get_node("TileButton") as Button
 	row.add_child(galactic_col)
 
+	var zecl_col := _make_tile(
+		"Zecliptic Flight",
+		"Real system, every control",
+		ZECLIPTIC_TEX,
+		_zecliptic_tint,
+		func() -> void:
+			_narr_gen += 1
+			Narrator.stop()
+			zecliptic_pressed.emit())
+	_zecliptic_btn = zecl_col.get_node("TileButton") as Button
+	row.add_child(zecl_col)
+
 	var back := Button.new()
 	back.text = "\u25C0"
 	back.size = Vector2(84, 66)
@@ -157,6 +173,8 @@ func _clear_outlines() -> void:
 	_set_outline(_free_btn, _free_tint, false)
 	_set_outline(_earth_btn, _earth_tint, false)
 	_set_outline(_night_btn, _night_tint, false)
+	_set_outline(_galactic_btn, _galactic_tint, false)
+	_set_outline(_zecliptic_btn, _zecliptic_tint, false)
 
 ## Walk the gold outline across the four tiles, one narration line each.
 func _narrate(gen: int) -> void:
@@ -222,7 +240,7 @@ func _make_tile(label: String, hint: String, tex_path: String, tint: Color,
 
 	var name_lbl := Label.new()
 	name_lbl.text = label
-	name_lbl.add_theme_font_size_override("font_size", 32)
+	name_lbl.add_theme_font_size_override("font_size", 22)
 	name_lbl.add_theme_color_override("font_color", Color(1, 1, 1))
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -230,7 +248,7 @@ func _make_tile(label: String, hint: String, tex_path: String, tint: Color,
 
 	var hint_lbl := Label.new()
 	hint_lbl.text = hint
-	hint_lbl.add_theme_font_size_override("font_size", 18)
+	hint_lbl.add_theme_font_size_override("font_size", 14)
 	hint_lbl.add_theme_color_override("font_color", Color(0.72, 0.78, 0.95))
 	hint_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hint_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
