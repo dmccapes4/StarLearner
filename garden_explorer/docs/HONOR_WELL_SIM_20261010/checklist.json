@@ -1,0 +1,387 @@
+{
+ "objective": "Simulate an honor code as a ball on a fluid mattress with molecules, foam, waves, musical chairs, and the allostatic trap; every rule traceable to the 2026-10-10 derivation.",
+ "pattern": "TartarusLoop: requisite objective + HITL checklist + session.jsonl",
+ "phases": {
+  "phase0_hello_world": {
+   "items": [
+    {
+     "id": "p0-static-farfield",
+     "text": "static solver far field matches K0 shape (visual)",
+     "done": true,
+     "by": "agent"
+    },
+    {
+     "id": "p0-engraving-static",
+     "text": "engraving held as a load, not a free deformation",
+     "done": true,
+     "by": "agent"
+    },
+    {
+     "id": "p0-wave-rest",
+     "text": "wave equation rest state equals static solution (c^2 = T)",
+     "done": true,
+     "by": "agent"
+    },
+    {
+     "id": "p0-foam-no-wave",
+     "text": "foam does not sink without waves",
+     "done": true,
+     "by": "agent"
+    },
+    {
+     "id": "p0-mapping-approved",
+     "text": "user approves the term mapping (report section 8)",
+     "done": false,
+     "by": "user"
+    }
+   ]
+  },
+  "phase1_field": {
+   "items": [
+    {
+     "id": "p1-k0-numeric",
+     "text": "point-load profile within 2% of K0 beyond 2 lambda",
+     "done": true,
+     "by": "agent",
+     "note": "1.9% max in 2λ–6λ",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p1-edges",
+     "text": "non-periodic boundary with a real edge",
+     "done": true,
+     "by": "agent",
+     "note": "Dirichlet rim + sponge; edge well 40% smaller",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p1-T-sweep",
+     "text": "outcast fraction vs cohesion T reported",
+     "done": true,
+     "by": "agent",
+     "note": "ran; prediction failed: higher T = farther, shallower; capture needs w∝T",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p1-regional-T",
+     "text": "T(x,y) patches; wells follow high-T corridors",
+     "done": true,
+     "by": "agent",
+     "note": "corridor depth ×2.5 off-corridor",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p1-convergence",
+     "text": "dx and DT halved, curves unchanged",
+     "done": true,
+     "by": "agent",
+     "note": "|Δ| < 0.001",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p1-approve",
+     "text": "user approves Phase 1",
+     "done": false,
+     "by": "user"
+    }
+   ]
+  },
+  "phase2_ball": {
+   "items": [
+    {
+     "id": "p2-inertia",
+     "text": "ball inertia ~ w, drag ~ r",
+     "done": true,
+     "by": "agent",
+     "note": "holds in w; r-dependence is a decision (per-capita vs per-footprint push)",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p2-crowd-pushes-ball",
+     "text": "crowd force on the ball",
+     "done": true,
+     "by": "agent",
+     "note": "rolled 4.94 toward crowd",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p2-radius-process",
+     "text": "radius as a process (slow government, fast influencer)",
+     "done": true,
+     "by": "agent",
+     "note": "gov slow, influencer fast+retarget",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p2-two-balls",
+     "text": "two balls: repel or merge",
+     "done": true,
+     "by": "agent",
+     "note": "rivals 8→13.1; aligned merged w=10",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p2-approve",
+     "text": "user approves Phase 2",
+     "done": false,
+     "by": "user"
+    }
+   ]
+  },
+  "phase3_trap": {
+   "items": [
+    {
+     "id": "p3-delta-ratchet",
+     "text": "delta tracks insiders' mean depth; linear-then-exponential dose",
+     "done": true,
+     "by": "agent",
+     "note": "ratchet empties the inside; frozen-δ lock-out artifact; no exponential without digging (rule change queued)",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p3-eta-dist",
+     "text": "per-molecule tolerance rates",
+     "done": true,
+     "by": "agent",
+     "note": "weak, right sign (−0.29)",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p3-relapse",
+     "text": "gas-station (relapse) events counted by kind",
+     "done": true,
+     "by": "agent",
+     "note": "planners relapse most per head",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p3-belief-loss",
+     "text": "floor dwell drops anchors; planners become swimmers",
+     "done": true,
+     "by": "agent",
+     "note": "19/48 planners → swimmers",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p3-approve",
+     "text": "user approves Phase 3",
+     "done": false,
+     "by": "user"
+    }
+   ]
+  },
+  "phase4_foam": {
+   "items": [
+    {
+     "id": "p4-buoyancy",
+     "text": "foam buoyancy and dissolution timer",
+     "done": true,
+     "by": "agent",
+     "note": "0/5/10/26 dissolved vs splash 0/0.6/1.2/2.4",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p4-mass",
+     "text": "user decides: foam weightless or slight",
+     "done": false,
+     "by": "user"
+    },
+    {
+     "id": "p4-rafts",
+     "text": "foam rafts; edge rafts stable, centre rafts broken by splash",
+     "done": true,
+     "by": "agent",
+     "note": "edge rafts 3.5 vs centre 1.9 after jumps",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p4-refloat",
+     "text": "Aslama cycle: sunk molecule re-floats with one new conviction",
+     "done": true,
+     "by": "agent",
+     "note": "direction holds; rule over-fires (95 refloats) — tightened rule queued",
+     "run": "run_phases_1_4.py 2026-10-11"
+    },
+    {
+     "id": "p4-approve",
+     "text": "user approves Phase 4",
+     "done": false,
+     "by": "user"
+    }
+   ]
+  },
+  "phase5_measurement": {
+   "items": [
+    {
+     "id": "p5-observables",
+     "text": "stadium scramble, crowd surf, concert surge, spiral-of-silence observables defined",
+     "done": false,
+     "by": "agent"
+    },
+    {
+     "id": "p5-approve",
+     "text": "user approves Phase 5",
+     "done": false,
+     "by": "user"
+    },
+    {
+     "id": "p5-torch-infra",
+     "text": "PyTorch + GPU confirmed (torch 2.14 cu130, RTX 3060, .venv-stone); kernel_field.py self-test on GPU",
+     "done": true,
+     "by": "agent",
+     "note": "K_n recurrence 3e-15 vs scipy; n=2 kernel vs grid 1.8%; 10k mol x 8 balls x 100 steps 0.12-0.14 s at n=8/32",
+     "run": "kernel_field.py 2026-10-11"
+    },
+    {
+     "id": "p5-dims-fixed",
+     "text": "dimension ladder fixed: 384 stored -> 32 processing -> 8 state graph -> 2 physics base (nested PCA)",
+     "done": true,
+     "by": "agent",
+     "note": "8-D kernel is a spike (5 orders lost within 1 lambda) so 8-d measures, 2-d simulates"
+    },
+    {
+     "id": "p5-bias-statement",
+     "text": "operator bias statement recorded verbatim and operationalised as operator molecule",
+     "done": true,
+     "by": "agent",
+     "note": "OPERATOR_BIAS_STATEMENT_20261011.md"
+    },
+    {
+     "id": "p5-plan-approved",
+     "text": "user approves PHASE5_NEXT_STEPS_20261011.md (balls, event window, horseshoe numbers, pipeline)",
+     "done": false,
+     "by": "user"
+    },
+    {
+     "id": "p5-reference-balls",
+     "text": "user decides: include Carlson and Fuentes as reference balls in first pass",
+     "done": false,
+     "by": "user"
+    },
+    {
+     "id": "p5-molecules-source",
+     "text": "user decides: comments as measured molecules vs synthetic atlas molecules",
+     "done": false,
+     "by": "user"
+    },
+    {
+     "id": "p5-audience-proxy",
+     "text": "user accepts audience proxy (YouTube 7d views; Nielsen hour where published)",
+     "done": false,
+     "by": "user"
+    },
+    {
+     "id": "p5-whisper-size",
+     "text": "user picks whisper model (medium vs large-v3)",
+     "done": false,
+     "by": "user"
+    },
+    {
+     "id": "p5-manifest",
+     "text": "00_manifest.py: anchor shows, transcript URLs, Fort Huachuca episode date",
+     "done": false,
+     "by": "agent"
+    },
+    {
+     "id": "p5-pilot-week",
+     "text": "pilot week 2025-12-13..19 through the full chain; first state-graph lines",
+     "done": false,
+     "by": "agent"
+    },
+    {
+     "id": "p5-projector-frozen",
+     "text": "PCA projector fitted on atlas+pilot, axes named, frozen, logged",
+     "done": false,
+     "by": "agent"
+    },
+    {
+     "id": "p5-operator-molecule",
+     "text": "operator molecule placed; six distances for pilot week reported",
+     "done": false,
+     "by": "agent"
+    },
+    {
+     "id": "p5-horseshoe-numbers",
+     "text": "H(t), arc curvature, weight transfer over 2025-08..2026-10",
+     "done": false,
+     "by": "agent"
+    },
+    {
+     "id": "p5-physics-replay",
+     "text": "2-d replay with honor_well.py; 8-d cross-check with kernel_field.py; five predictions scored",
+     "done": false,
+     "by": "agent"
+    },
+    {
+     "id": "p5-axes-named",
+     "text": "8 stance axes chosen from stable polls (Pew 2026-10-08, Gallup 2026-02, AP-NORC 2025-12); scalar + salience procedure defined",
+     "done": true,
+     "by": "agent",
+     "note": "PHASE5_AXES_20261011.md"
+    },
+    {
+     "id": "p5-axes-approved",
+     "text": "user approves the SEVEN axes (trade -> extended), sign convention, and restates his positions as sentences",
+     "done": false,
+     "by": "user"
+    },
+    {
+     "id": "p5-hinge-swap",
+     "text": "user decides: swap trade for institutional trust (or Israel) in the eight",
+     "done": false,
+     "by": "user"
+    },
+    {
+     "id": "p5-calfire-reflection",
+     "text": "CalFire-to-citizenship reflection written with receipts; women clause disputed on record",
+     "done": true,
+     "by": "agent",
+     "note": "REFLECTION_CALFIRE_TO_CITIZENSHIP_20261011.md"
+    },
+    {
+     "id": "p5-axes-json",
+     "text": "media/axes.json pole-statement banks for 8 + 24 extended axes",
+     "done": true,
+     "by": "agent",
+     "note": "media/axes.json v1: 7 axes x 10 poles, extended_32 names, horseshoe weighting definition"
+    },
+    {
+     "id": "p5-seven-horseshoe",
+     "text": "v1 spec: seven axes; horseshoe = attention vector a on simplex, pillar, concentration h, asymmetric distance d_m",
+     "done": true,
+     "by": "agent",
+     "note": "PHASE5_AXES_20261011.md section 8"
+    },
+    {
+     "id": "p5-scorer-frozen",
+     "text": "scorer backend frozen after pilot: >=80% sign agreement on 100 hand-labelled segments",
+     "done": false,
+     "by": "agent",
+     "note": "hybrid 62/70 on pole banks; terse operator notes unreliable; NLI model cross-encoder/nli-deberta-v3-base cached"
+    },
+    {
+     "id": "p5-attention-mobility",
+     "text": "rule change queued: molecule descends ball gradient weighted by its attention vector (direction-dependent mobility)",
+     "done": false,
+     "by": "agent"
+    }
+   ]
+  },
+  "phase6_game": {
+   "items": [
+    {
+     "id": "p6-playable",
+     "text": "drag the ball, scroll radius, click to drop a ball; meters for reward and outcasts",
+     "done": false,
+     "by": "agent"
+    },
+    {
+     "id": "p6-approve",
+     "text": "user (and daughter) approve",
+     "done": false,
+     "by": "user"
+    }
+   ]
+  }
+ }
+}

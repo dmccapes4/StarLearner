@@ -59,3 +59,31 @@ solar_system_explorer/game/docs/screenshots/probe/
 # Fogona deliver queue (staged APKs + job state)
 deploy/queue/
 deploy/known_hosts_245
+# Render pipelines (2026-10, OurMercilessJourney / fables / ladder videos): frames, clips, plates,
+# generated stills, raw audio and finals stay on disk. Regenerable from script.jsonl / shots.json /
+# the tools; the small sources (scripts, json, md, storyboards, figures, TTS mp3 cache) are tracked.
+**/docs/**/*.mp4
+**/docs/**/*.wav
+**/docs/**/*.m4a
+**/docs/**/frames/
+**/docs/**/frames_sample/
+**/docs/**/clips/
+**/docs/**/video/images/
+**/docs/**/video/v1/
+**/docs/**/video/test/
+**/docs/**/video/audio/
+**/docs/**/video_part2/parts/
+**/docs/**/video_part2/preview/
+**/docs/**/video_part2/plates/
+**/docs/**/video_part2/audio/
+solar_system_explorer/docs/MERCURY_VULCAN_LADDER_20261010/video/*/
+**/docs/**/media/data/
+**/.venv/
+*.log
+# Personal data — never in a public repo (family phone numbers, private family text)
+garden_explorer/docs/nate&justinphonenumbers.txt
+garden_explorer/docs/phone_pipe_report_20261009/
+garden_explorer/docs/DIAMOND_SCREW_SIM_20261009/texttomomwhenaskedhowtwindied.md
+# Loose camera / Signal captures dropped at repo root
+/IMG_*.jpg
+/signal-*.png

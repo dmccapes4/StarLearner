@@ -1,0 +1,966 @@
+{
+  "meta": {
+    "title": "Winter Circle Star Pipe Analysis",
+    "date": "20261009",
+    "n": 14
+  },
+  "stars": [
+    {
+      "name": "Sirius",
+      "bayer": "\u03b1 CMa",
+      "ra_h": 6.7525,
+      "dec_d": -16.7161,
+      "dist_ly": 8.6,
+      "mag": -1.46,
+      "role": "prey",
+      "pipe": {
+        "ecl_lon": 104.0821,
+        "ecl_lat": -39.6052,
+        "L": 5,
+        "B": 4,
+        "E": 1,
+        "F": 10,
+        "G": 1,
+        "self_pipe": false
+      }
+    },
+    {
+      "name": "Rigel",
+      "bayer": "\u03b2 Ori",
+      "ra_h": 5.2423,
+      "dec_d": -8.2017,
+      "dist_ly": 860,
+      "mag": 0.13,
+      "role": "front_paw",
+      "pipe": {
+        "ecl_lon": 76.8296,
+        "ecl_lat": -31.1228,
+        "L": 4,
+        "B": 4,
+        "E": 0,
+        "F": 8,
+        "G": 7,
+        "self_pipe": true
+      }
+    },
+    {
+      "name": "Aldebaran",
+      "bayer": "\u03b1 Tau",
+      "ra_h": 4.5987,
+      "dec_d": 16.5093,
+      "dist_ly": 65.3,
+      "mag": 0.87,
+      "role": "rear_hip",
+      "pipe": {
+        "ecl_lon": 69.7895,
+        "ecl_lat": -5.4674,
+        "L": 7,
+        "B": 5,
+        "E": 2,
+        "F": 14,
+        "G": 7,
+        "self_pipe": false
+      }
+    },
+    {
+      "name": "Capella",
+      "bayer": "\u03b1 Aur",
+      "ra_h": 5.2782,
+      "dec_d": 45.998,
+      "dist_ly": 42.9,
+      "mag": 0.08,
+      "role": "spine_apex",
+      "pipe": {
+        "ecl_lon": 81.8584,
+        "ecl_lat": 22.8642,
+        "L": 0,
+        "B": 5,
+        "E": 5,
+        "F": 10,
+        "G": 8,
+        "self_pipe": false
+      }
+    },
+    {
+      "name": "Pollux",
+      "bayer": "\u03b2 Gem",
+      "ra_h": 7.7553,
+      "dec_d": 28.0262,
+      "dist_ly": 33.8,
+      "mag": 1.14,
+      "role": "haunch_E",
+      "pipe": {
+        "ecl_lon": 113.2161,
+        "ecl_lat": 6.6843,
+        "L": 5,
+        "B": 7,
+        "E": 2,
+        "F": 14,
+        "G": 1,
+        "self_pipe": false
+      }
+    },
+    {
+      "name": "Castor",
+      "bayer": "\u03b1 Gem",
+      "ra_h": 7.5766,
+      "dec_d": 31.8883,
+      "dist_ly": 51.5,
+      "mag": 1.58,
+      "role": "haunch_W",
+      "pipe": {
+        "ecl_lon": 110.2398,
+        "ecl_lat": 10.0957,
+        "L": 2,
+        "B": 1,
+        "E": 1,
+        "F": 4,
+        "G": 1,
+        "self_pipe": false
+      }
+    },
+    {
+      "name": "Procyon",
+      "bayer": "\u03b1 CMi",
+      "ra_h": 7.6551,
+      "dec_d": 5.225,
+      "dist_ly": 11.46,
+      "mag": 0.34,
+      "role": "right_eye",
+      "pipe": {
+        "ecl_lon": 115.7866,
+        "ecl_lat": -16.0194,
+        "L": 8,
+        "B": 7,
+        "E": 1,
+        "F": 16,
+        "G": 1,
+        "self_pipe": false
+      }
+    },
+    {
+      "name": "Gomeisa",
+      "bayer": "\u03b2 CMi",
+      "ra_h": 7.4525,
+      "dec_d": 8.2893,
+      "dist_ly": 170,
+      "mag": 2.89,
+      "role": "left_eye",
+      "pipe": {
+        "ecl_lon": 112.1915,
+        "ecl_lat": -13.4873,
+        "L": 4,
+        "B": 4,
+        "E": 0,
+        "F": 8,
+        "G": 1,
+        "self_pipe": true
+      }
+    },
+    {
+      "name": "Betelgeuse",
+      "bayer": "\u03b1 Ori",
+      "ra_h": 5.9195,
+      "dec_d": 7.4071,
+      "dist_ly": 700,
+      "mag": 0.5,
+      "role": "chest",
+      "pipe": {
+        "ecl_lon": 88.7541,
+        "ecl_lat": -16.027,
+        "L": 7,
+        "B": 7,
+        "E": 0,
+        "F": 14,
+        "G": 8,
+        "self_pipe": true
+      }
+    },
+    {
+      "name": "Alnilam",
+      "bayer": "\u03b5 Ori",
+      "ra_h": 5.6036,
+      "dec_d": -1.2019,
+      "dist_ly": 1340,
+      "mag": 1.69,
+      "role": "belt_C",
+      "pipe": {
+        "ecl_lon": 83.4643,
+        "ecl_lat": -24.5064,
+        "L": 1,
+        "B": 7,
+        "E": 6,
+        "F": 14,
+        "G": 8,
+        "self_pipe": false
+      }
+    },
+    {
+      "name": "Alnitak",
+      "bayer": "\u03b6 Ori",
+      "ra_h": 5.6793,
+      "dec_d": -1.9429,
+      "dist_ly": 800,
+      "mag": 1.74,
+      "role": "belt_E",
+      "pipe": {
+        "ecl_lon": 84.6811,
+        "ecl_lat": -25.2934,
+        "L": 3,
+        "B": 7,
+        "E": 4,
+        "F": 14,
+        "G": 8,
+        "self_pipe": false
+      }
+    },
+    {
+      "name": "Mintaka",
+      "bayer": "\u03b4 Ori",
+      "ra_h": 5.5334,
+      "dec_d": -0.2991,
+      "dist_ly": 900,
+      "mag": 2.23,
+      "role": "belt_W",
+      "pipe": {
+        "ecl_lon": 82.3614,
+        "ecl_lat": -23.553,
+        "L": 0,
+        "B": 6,
+        "E": 6,
+        "F": 12,
+        "G": 8,
+        "self_pipe": false
+      }
+    },
+    {
+      "name": "Mars_2008",
+      "bayer": "\u2014",
+      "ra_h": 5.9552,
+      "dec_d": 26.9513,
+      "dist_ly": null,
+      "mag": -1.38,
+      "role": "intruder_2008",
+      "pipe": {
+        "ecl_lon": 89.3999,
+        "ecl_lat": 3.5134,
+        "L": 7,
+        "B": 4,
+        "E": 3,
+        "F": 14,
+        "G": 8,
+        "self_pipe": false
+      }
+    },
+    {
+      "name": "Mars_2025",
+      "bayer": "\u2014",
+      "ra_h": 7.929,
+      "dec_d": 25.15,
+      "dist_ly": null,
+      "mag": -1.25,
+      "role": "intruder_2025",
+      "pipe": {
+        "ecl_lon": 116.0516,
+        "ecl_lat": 4.2898,
+        "L": 8,
+        "B": 4,
+        "E": 4,
+        "F": 16,
+        "G": 1,
+        "self_pipe": false
+      }
+    }
+  ],
+  "bonds": [
+    {
+      "pair": [
+        "Sirius",
+        "Capella"
+      ],
+      "F": 10,
+      "G_diff": 7,
+      "sep_deg": 65.828
+    },
+    {
+      "pair": [
+        "Rigel",
+        "Gomeisa"
+      ],
+      "F": 8,
+      "G_diff": 6,
+      "sep_deg": 36.925
+    },
+    {
+      "pair": [
+        "Aldebaran",
+        "Pollux"
+      ],
+      "F": 14,
+      "G_diff": 6,
+      "sep_deg": 45.013
+    },
+    {
+      "pair": [
+        "Aldebaran",
+        "Betelgeuse"
+      ],
+      "F": 14,
+      "G_diff": 1,
+      "sep_deg": 21.388
+    },
+    {
+      "pair": [
+        "Aldebaran",
+        "Alnilam"
+      ],
+      "F": 14,
+      "G_diff": 1,
+      "sep_deg": 23.129
+    },
+    {
+      "pair": [
+        "Aldebaran",
+        "Alnitak"
+      ],
+      "F": 14,
+      "G_diff": 1,
+      "sep_deg": 24.426
+    },
+    {
+      "pair": [
+        "Aldebaran",
+        "Mars_2008"
+      ],
+      "F": 14,
+      "G_diff": 1,
+      "sep_deg": 21.548
+    },
+    {
+      "pair": [
+        "Pollux",
+        "Betelgeuse"
+      ],
+      "F": 14,
+      "G_diff": 7,
+      "sep_deg": 33.199
+    },
+    {
+      "pair": [
+        "Pollux",
+        "Alnilam"
+      ],
+      "F": 14,
+      "G_diff": 7,
+      "sep_deg": 42.581
+    },
+    {
+      "pair": [
+        "Pollux",
+        "Alnitak"
+      ],
+      "F": 14,
+      "G_diff": 7,
+      "sep_deg": 42.339
+    },
+    {
+      "pair": [
+        "Pollux",
+        "Mars_2008"
+      ],
+      "F": 14,
+      "G_diff": 7,
+      "sep_deg": 23.929
+    },
+    {
+      "pair": [
+        "Procyon",
+        "Mars_2025"
+      ],
+      "F": 16,
+      "G_diff": 0,
+      "sep_deg": 20.311
+    },
+    {
+      "pair": [
+        "Betelgeuse",
+        "Alnilam"
+      ],
+      "F": 14,
+      "G_diff": 0,
+      "sep_deg": 9.821
+    },
+    {
+      "pair": [
+        "Betelgeuse",
+        "Alnitak"
+      ],
+      "F": 14,
+      "G_diff": 0,
+      "sep_deg": 10.017
+    },
+    {
+      "pair": [
+        "Betelgeuse",
+        "Mars_2008"
+      ],
+      "F": 14,
+      "G_diff": 0,
+      "sep_deg": 19.551
+    },
+    {
+      "pair": [
+        "Alnilam",
+        "Alnitak"
+      ],
+      "F": 14,
+      "G_diff": 0,
+      "sep_deg": 1.356
+    },
+    {
+      "pair": [
+        "Alnilam",
+        "Mars_2008"
+      ],
+      "F": 14,
+      "G_diff": 0,
+      "sep_deg": 28.608
+    },
+    {
+      "pair": [
+        "Alnitak",
+        "Mars_2008"
+      ],
+      "F": 14,
+      "G_diff": 0,
+      "sep_deg": 29.168
+    }
+  ],
+  "close_pairs": [
+    {
+      "stars": [
+        "Alnilam",
+        "Alnitak"
+      ],
+      "sep_deg": 1.356,
+      "F_diff": 0
+    },
+    {
+      "stars": [
+        "Alnilam",
+        "Mintaka"
+      ],
+      "sep_deg": 1.387,
+      "F_diff": 2
+    },
+    {
+      "stars": [
+        "Alnitak",
+        "Mintaka"
+      ],
+      "sep_deg": 2.737,
+      "F_diff": 2
+    },
+    {
+      "stars": [
+        "Pollux",
+        "Mars_2025"
+      ],
+      "sep_deg": 3.701,
+      "F_diff": 2
+    },
+    {
+      "stars": [
+        "Procyon",
+        "Gomeisa"
+      ],
+      "sep_deg": 4.301,
+      "F_diff": 8
+    },
+    {
+      "stars": [
+        "Pollux",
+        "Castor"
+      ],
+      "sep_deg": 4.506,
+      "F_diff": 10
+    },
+    {
+      "stars": [
+        "Castor",
+        "Mars_2025"
+      ],
+      "sep_deg": 8.181,
+      "F_diff": 12
+    },
+    {
+      "stars": [
+        "Rigel",
+        "Alnilam"
+      ],
+      "sep_deg": 8.839,
+      "F_diff": 6
+    },
+    {
+      "stars": [
+        "Rigel",
+        "Mintaka"
+      ],
+      "sep_deg": 9.021,
+      "F_diff": 4
+    },
+    {
+      "stars": [
+        "Rigel",
+        "Alnitak"
+      ],
+      "sep_deg": 9.042,
+      "F_diff": 6
+    },
+    {
+      "stars": [
+        "Betelgeuse",
+        "Mintaka"
+      ],
+      "sep_deg": 9.631,
+      "F_diff": 2
+    },
+    {
+      "stars": [
+        "Betelgeuse",
+        "Alnilam"
+      ],
+      "sep_deg": 9.821,
+      "F_diff": 0
+    },
+    {
+      "stars": [
+        "Betelgeuse",
+        "Alnitak"
+      ],
+      "sep_deg": 10.017,
+      "F_diff": 0
+    }
+  ],
+  "self_pipes": [
+    "Rigel",
+    "Gomeisa",
+    "Betelgeuse"
+  ],
+  "F_dist": {
+    "10": 2,
+    "8": 2,
+    "14": 6,
+    "4": 1,
+    "16": 2,
+    "12": 1
+  },
+  "G_dist": {
+    "1": 6,
+    "7": 2,
+    "8": 6
+  },
+  "mean_pairwise_sep": 30.525,
+  "ecl_lon_sequence": [
+    [
+      "Aldebaran",
+      69.7895
+    ],
+    [
+      "Rigel",
+      76.8296
+    ],
+    [
+      "Capella",
+      81.8584
+    ],
+    [
+      "Mintaka",
+      82.3614
+    ],
+    [
+      "Alnilam",
+      83.4643
+    ],
+    [
+      "Alnitak",
+      84.6811
+    ],
+    [
+      "Betelgeuse",
+      88.7541
+    ],
+    [
+      "Sirius",
+      104.0821
+    ],
+    [
+      "Castor",
+      110.2398
+    ],
+    [
+      "Gomeisa",
+      112.1915
+    ],
+    [
+      "Pollux",
+      113.2161
+    ],
+    [
+      "Procyon",
+      115.7866
+    ]
+  ],
+  "ecl_lon_gaps": [
+    {
+      "from": "Aldebaran",
+      "to": "Rigel",
+      "gap_deg": 7.04
+    },
+    {
+      "from": "Rigel",
+      "to": "Capella",
+      "gap_deg": 5.029
+    },
+    {
+      "from": "Capella",
+      "to": "Mintaka",
+      "gap_deg": 0.503
+    },
+    {
+      "from": "Mintaka",
+      "to": "Alnilam",
+      "gap_deg": 1.103
+    },
+    {
+      "from": "Alnilam",
+      "to": "Alnitak",
+      "gap_deg": 1.217
+    },
+    {
+      "from": "Alnitak",
+      "to": "Betelgeuse",
+      "gap_deg": 4.073
+    },
+    {
+      "from": "Betelgeuse",
+      "to": "Sirius",
+      "gap_deg": 15.328
+    },
+    {
+      "from": "Sirius",
+      "to": "Castor",
+      "gap_deg": 6.158
+    },
+    {
+      "from": "Castor",
+      "to": "Gomeisa",
+      "gap_deg": 1.952
+    },
+    {
+      "from": "Gomeisa",
+      "to": "Pollux",
+      "gap_deg": 1.025
+    },
+    {
+      "from": "Pollux",
+      "to": "Procyon",
+      "gap_deg": 2.571
+    },
+    {
+      "from": "Procyon",
+      "to": "Aldebaran",
+      "gap_deg": 314.003
+    }
+  ],
+  "mars_2025_near": [
+    {
+      "star": "Pollux",
+      "sep_deg": 3.701,
+      "role": "haunch_E"
+    },
+    {
+      "star": "Castor",
+      "sep_deg": 8.181,
+      "role": "haunch_W"
+    },
+    {
+      "star": "Gomeisa",
+      "sep_deg": 18.185,
+      "role": "left_eye"
+    },
+    {
+      "star": "Procyon",
+      "sep_deg": 20.311,
+      "role": "right_eye"
+    },
+    {
+      "star": "Betelgeuse",
+      "sep_deg": 33.793,
+      "role": "chest"
+    },
+    {
+      "star": "Capella",
+      "sep_deg": 37.9,
+      "role": "spine_apex"
+    }
+  ],
+  "mars_2008_near": [
+    {
+      "star": "Betelgeuse",
+      "sep_deg": 19.551,
+      "role": "chest"
+    },
+    {
+      "star": "Capella",
+      "sep_deg": 20.682,
+      "role": "spine_apex"
+    },
+    {
+      "star": "Aldebaran",
+      "sep_deg": 21.548,
+      "role": "rear_hip"
+    },
+    {
+      "star": "Castor",
+      "sep_deg": 21.702,
+      "role": "haunch_W"
+    },
+    {
+      "star": "Pollux",
+      "sep_deg": 23.929,
+      "role": "haunch_E"
+    },
+    {
+      "star": "Mintaka",
+      "sep_deg": 27.922,
+      "role": "belt_W"
+    }
+  ],
+  "seps": [
+    [
+      0.0,
+      23.673,
+      46.023,
+      65.828,
+      47.054,
+      50.029,
+      25.702,
+      27.077,
+      27.105,
+      22.99,
+      21.657,
+      24.375,
+      45.184,
+      45.259
+    ],
+    [
+      23.673,
+      0.0,
+      26.493,
+      54.202,
+      51.368,
+      52.198,
+      38.512,
+      36.925,
+      18.606,
+      8.839,
+      9.042,
+      9.021,
+      36.65,
+      51.489
+    ],
+    [
+      46.023,
+      26.493,
+      0.0,
+      30.69,
+      45.013,
+      43.191,
+      46.293,
+      42.522,
+      21.388,
+      23.129,
+      24.426,
+      21.765,
+      21.548,
+      47.222
+    ],
+    [
+      65.828,
+      54.202,
+      30.69,
+      0.0,
+      34.237,
+      29.976,
+      51.124,
+      46.942,
+      39.472,
+      47.396,
+      48.235,
+      46.42,
+      20.682,
+      37.9
+    ],
+    [
+      47.054,
+      51.368,
+      45.013,
+      34.237,
+      0.0,
+      4.506,
+      22.846,
+      20.197,
+      33.199,
+      42.581,
+      42.339,
+      42.685,
+      23.929,
+      3.701
+    ],
+    [
+      50.029,
+      52.198,
+      43.191,
+      29.976,
+      4.506,
+      0.0,
+      26.686,
+      23.662,
+      33.685,
+      43.359,
+      43.27,
+      43.305,
+      21.702,
+      8.181
+    ],
+    [
+      25.702,
+      38.512,
+      46.293,
+      51.124,
+      22.846,
+      26.686,
+      0.0,
+      4.301,
+      25.963,
+      31.402,
+      30.46,
+      32.259,
+      32.595,
+      20.311
+    ],
+    [
+      27.077,
+      36.925,
+      42.522,
+      46.942,
+      20.197,
+      23.662,
+      4.301,
+      0.0,
+      22.794,
+      29.231,
+      28.426,
+      29.946,
+      28.295,
+      18.185
+    ],
+    [
+      27.105,
+      18.606,
+      21.388,
+      39.472,
+      33.199,
+      33.685,
+      25.963,
+      22.794,
+      0.0,
+      9.821,
+      10.017,
+      9.631,
+      19.551,
+      33.793
+    ],
+    [
+      22.99,
+      8.839,
+      23.129,
+      47.396,
+      42.581,
+      43.359,
+      31.402,
+      29.231,
+      9.821,
+      0.0,
+      1.356,
+      1.387,
+      28.608,
+      42.82
+    ],
+    [
+      21.657,
+      9.042,
+      24.426,
+      48.235,
+      42.339,
+      43.27,
+      30.46,
+      28.426,
+      10.017,
+      1.356,
+      0.0,
+      2.737,
+      29.168,
+      42.452
+    ],
+    [
+      24.375,
+      9.021,
+      21.765,
+      46.42,
+      42.685,
+      43.305,
+      32.259,
+      29.946,
+      9.631,
+      1.387,
+      2.737,
+      0.0,
+      27.922,
+      43.055
+    ],
+    [
+      45.184,
+      36.65,
+      21.548,
+      20.682,
+      23.929,
+      21.702,
+      32.595,
+      28.295,
+      19.551,
+      28.608,
+      29.168,
+      27.922,
+      0.0,
+      26.6
+    ],
+    [
+      45.259,
+      51.489,
+      47.222,
+      37.9,
+      3.701,
+      8.181,
+      20.311,
+      18.185,
+      33.793,
+      42.82,
+      42.452,
+      43.055,
+      26.6,
+      0.0
+    ]
+  ]
+}

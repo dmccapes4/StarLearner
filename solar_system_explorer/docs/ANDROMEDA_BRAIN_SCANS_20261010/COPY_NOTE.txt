@@ -1,0 +1,3 @@
+SOURCE=/home/dylanmccapes/dev/NarrativeErosionAndHistoricalInversion/AndromedaBrainScans
+COPIED=/home/dylanmccapes/dev/star_learning/solar_system_explorer/docs/ANDROMEDA_BRAIN_SCANS_20261010
+NOTE=Slim working copy for review. Full 280M tree (corpus embeddings, sorts, all scan PNGs) remains at NarrativeErosionAndHistoricalInversion/AndromedaBrainScans — identical to Documents/.

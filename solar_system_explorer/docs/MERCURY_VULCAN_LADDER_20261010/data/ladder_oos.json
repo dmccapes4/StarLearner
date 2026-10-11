@@ -1,0 +1,1197 @@
+{
+ "method": "\nladder_oos.py \u2014 Game plan \u00a74. Out-of-sample test of the id/iv ladder.\n\nA proportion that is a LAW must hold in systems it was not written on. A\nproportion that is a COINCIDENCE holds only where it was found.\n\nMethod\n  1. Keep only the ladder lines that contain no Sol-system-specific construct\n     (no AB/HB belts, no Luna, no rings, no Mercury/Vulcan pair, no Planet X).\n     Three lines survive: 1, 3, 5.  (Lines 3 and 5 are permutations of each other.)\n  2. Map each Sol-system role to a body in another hierarchical system by a\n     rule fixed BEFORE looking at the numbers:\n        ordinal  \u2014 k-th body by distance from the primary \u2194 k-th planet from Sol\n                   (Mercury=1 \u2026 Neptune=8, Pluto=9); Sol \u2194 primary\n        massrank \u2014 k-th most massive \u2194 k-th most massive planet\n                   (Jupiter=1, Saturn=2, Neptune=3, Uranus=4, Earth=5, Venus=6,\n                    Mars=7, Mercury=8, Pluto=9); size rank where masses unknown\n  3. Compute the same four hypotheses (H1_id, H1_iv, H2_mirror_eq, H3_mirror_inv)\n     over the same metrics with the same 0.30-dex 'hold' threshold.\n  4. Null: random bijection of roles \u2192 bodies (primary fixed), 4000 trials per\n     system per mapping.  p = fraction of random mappings with hold-rate \u2265 the\n     rule-based mapping.\n  5. Recurrence: for every (line, metric, hypothesis) that HOLDS in the Sol\n     system, count the out-of-sample systems in which it also holds.\n\nSystems: Saturn (9 moons incl. Phoebe), Jupiter (9 moons incl. Himalia),\nTRAPPIST-1 (7, Agol+2021), Kepler-90 (8 incl. i), HD 10180 (6, m sin i).\nOutputs: data/ladder_oos.json, img/ladder_oos_01_recurrence.png, img/ladder_oos_02_null.png\n",
+ "roles": [
+  "jupiter",
+  "mars",
+  "neptune",
+  "pluto",
+  "saturn",
+  "venus"
+ ],
+ "lines": [
+  {
+   "id": [
+    "primary",
+    "jupiter",
+    "mars"
+   ],
+   "iv": [
+    "neptune",
+    "saturn",
+    "pluto"
+   ]
+  },
+  {
+   "id": [
+    "venus",
+    "primary",
+    "jupiter"
+   ],
+   "iv": [
+    "saturn",
+    "jupiter",
+    "neptune"
+   ]
+  },
+  {
+   "id": [
+    "primary",
+    "jupiter",
+    "venus"
+   ],
+   "iv": [
+    "neptune",
+    "jupiter",
+    "saturn"
+   ]
+  }
+ ],
+ "sol_in_sample": {
+  "holds": 8,
+  "tests": 54,
+  "rate": 0.14814814814814814,
+  "holding_tests": [
+   "L2|density|H1_iv",
+   "L2|density|H3_mirror_inv",
+   "L2|rot|H1_iv",
+   "L3|density|H1_iv",
+   "L3|density|H2_mirror_eq",
+   "L3|density|H3_mirror_inv",
+   "L3|radius|H1_id",
+   "L3|rot|H1_iv"
+  ]
+ },
+ "systems": {
+  "Saturn moons": {
+   "ordinal": {
+    "mapping": {
+     "jupiter": "Rhea",
+     "mars": "Dione",
+     "neptune": "Iapetus",
+     "pluto": "Phoebe",
+     "saturn": "Titan",
+     "venus": "Enceladus"
+    },
+    "holds": 10,
+    "tests": 54,
+    "rate": 0.18518518518518517,
+    "null_mean": 0.17213559596632286,
+    "null_p95": 0.2962962962962963,
+    "p_value": 0.40525,
+    "residuals": {
+     "L1|mass|H1_id": 5.068,
+     "L1|mass|H1_iv": -6.082,
+     "L1|mass|H2_mirror_eq": 7.264,
+     "L1|mass|H3_mirror_inv": 3.519,
+     "L1|radius|H1_id": 1.748,
+     "L1|radius|H1_iv": -1.928,
+     "L1|radius|H2_mirror_eq": 2.427,
+     "L1|radius|H3_mirror_inv": 1.337,
+     "L1|a|H1_iv": 1.49,
+     "L1|period|H1_iv": 2.235,
+     "L1|rot|H1_id": -1.225,
+     "L1|rot|H1_iv": -0.919,
+     "L1|rot|H2_mirror_eq": -1.704,
+     "L1|rot|H3_mirror_inv": -0.311,
+     "L1|density|H1_id": -0.177,
+     "L1|density|H1_iv": -0.298,
+     "L1|density|H2_mirror_eq": -0.017,
+     "L1|density|H3_mirror_inv": -0.493,
+     "L2|mass|H1_id": -12.113,
+     "L2|mass|H1_iv": 1.659,
+     "L2|mass|H2_mirror_eq": -8.487,
+     "L2|mass|H3_mirror_inv": -4.955,
+     "L2|radius|H1_id": -4.246,
+     "L2|radius|H1_iv": 0.511,
+     "L2|radius|H2_mirror_eq": -2.891,
+     "L2|radius|H3_mirror_inv": -1.836,
+     "L2|a|H1_iv": 1.195,
+     "L2|period|H1_iv": 1.792,
+     "L2|rot|H1_id": 1.497,
+     "L2|rot|H1_iv": 1.792,
+     "L2|rot|H2_mirror_eq": -0.058,
+     "L2|rot|H3_mirror_inv": 1.037,
+     "L2|density|H1_id": 0.625,
+     "L2|density|H1_iv": 0.127,
+     "L2|density|H2_mirror_eq": 0.187,
+     "L2|density|H3_mirror_inv": 0.552,
+     "L3|mass|H1_id": 4.062,
+     "L3|mass|H1_iv": 1.659,
+     "L3|mass|H2_mirror_eq": 5.498,
+     "L3|mass|H3_mirror_inv": 5.285,
+     "L3|radius|H1_id": 1.401,
+     "L3|radius|H1_iv": 0.511,
+     "L3|radius|H2_mirror_eq": 1.899,
+     "L3|radius|H3_mirror_inv": 1.865,
+     "L3|a|H1_iv": 1.195,
+     "L3|period|H1_iv": 1.792,
+     "L3|rot|H1_id": -1.526,
+     "L3|rot|H1_iv": 1.792,
+     "L3|rot|H2_mirror_eq": -2.252,
+     "L3|rot|H3_mirror_inv": 0.237,
+     "L3|density|H1_id": -0.14,
+     "L3|density|H1_iv": 0.127,
+     "L3|density|H2_mirror_eq": -0.2,
+     "L3|density|H3_mirror_inv": -0.31
+    }
+   },
+   "massrank": {
+    "mapping": {
+     "jupiter": "Titan",
+     "mars": "Mimas",
+     "neptune": "Iapetus",
+     "pluto": "Hyperion",
+     "saturn": "Rhea",
+     "venus": "Enceladus"
+    },
+    "holds": 11,
+    "tests": 53,
+    "rate": 0.20754716981132076,
+    "null_mean": 0.1706919010919932,
+    "null_p95": 0.2962962962962963,
+    "p_value": 0.25925,
+    "residuals": {
+     "L1|mass|H1_id": 0.071,
+     "L1|mass|H1_iv": -2.721,
+     "L1|mass|H2_mirror_eq": 3.732,
+     "L1|mass|H3_mirror_inv": 3.519,
+     "L1|radius|H1_id": 0.241,
+     "L1|radius|H1_iv": -0.77,
+     "L1|radius|H2_mirror_eq": 1.371,
+     "L1|radius|H3_mirror_inv": 1.337,
+     "L1|a|H1_iv": 1.278,
+     "L1|period|H1_iv": 1.917,
+     "L1|rot|H1_id": -2.784,
+     "L1|rot|H2_mirror_eq": -2.8,
+     "L1|rot|H3_mirror_inv": -0.311,
+     "L1|density|H1_id": -0.651,
+     "L1|density|H1_iv": -0.412,
+     "L1|density|H2_mirror_eq": -0.382,
+     "L1|density|H3_mirror_inv": -0.493,
+     "L2|mass|H1_id": -10.347,
+     "L2|mass|H1_iv": -3.638,
+     "L2|mass|H2_mirror_eq": -4.955,
+     "L2|mass|H3_mirror_inv": -8.487,
+     "L2|radius|H1_id": -3.718,
+     "L2|radius|H1_iv": -1.072,
+     "L2|radius|H2_mirror_eq": -1.836,
+     "L2|radius|H3_mirror_inv": -2.891,
+     "L2|a|H1_iv": 0.099,
+     "L2|period|H1_iv": 0.149,
+     "L2|rot|H1_id": 2.045,
+     "L2|rot|H1_iv": 0.149,
+     "L2|rot|H2_mirror_eq": 1.037,
+     "L2|rot|H3_mirror_inv": -0.058,
+     "L2|density|H1_id": 0.807,
+     "L2|density|H1_iv": -0.42,
+     "L2|density|H2_mirror_eq": 0.552,
+     "L2|density|H3_mirror_inv": 0.187,
+     "L3|mass|H1_id": 0.53,
+     "L3|mass|H1_iv": -3.638,
+     "L3|mass|H2_mirror_eq": 5.498,
+     "L3|mass|H3_mirror_inv": 1.754,
+     "L3|radius|H1_id": 0.345,
+     "L3|radius|H1_iv": -1.072,
+     "L3|radius|H2_mirror_eq": 1.899,
+     "L3|radius|H3_mirror_inv": 0.81,
+     "L3|a|H1_iv": 0.099,
+     "L3|period|H1_iv": 0.149,
+     "L3|rot|H1_id": -2.621,
+     "L3|rot|H1_iv": 0.149,
+     "L3|rot|H2_mirror_eq": -2.252,
+     "L3|rot|H3_mirror_inv": -0.858,
+     "L3|density|H1_id": -0.505,
+     "L3|density|H1_iv": -0.42,
+     "L3|density|H2_mirror_eq": -0.2,
+     "L3|density|H3_mirror_inv": -0.675
+    }
+   }
+  },
+  "Jupiter moons": {
+   "ordinal": {
+    "mapping": {
+     "jupiter": "Io",
+     "mars": "Thebe",
+     "neptune": "Callisto",
+     "pluto": "Himalia",
+     "saturn": "Europa",
+     "venus": "Adrastea"
+    },
+    "holds": 12,
+    "tests": 54,
+    "rate": 0.2222222222222222,
+    "null_mean": 0.1756712962962963,
+    "null_p95": 0.3148148148148148,
+    "p_value": 0.2565,
+    "residuals": {
+     "L1|mass|H1_id": -0.99,
+     "L1|mass|H1_iv": -3.707,
+     "L1|mass|H2_mirror_eq": 3.977,
+     "L1|mass|H3_mirror_inv": 4.678,
+     "L1|radius|H1_id": 0.016,
+     "L1|radius|H1_iv": -1.075,
+     "L1|radius|H2_mirror_eq": 1.395,
+     "L1|radius|H3_mirror_inv": 1.773,
+     "L1|a|H1_iv": 1.681,
+     "L1|period|H1_iv": 2.521,
+     "L1|rot|H1_id": -1.05,
+     "L1|rot|H1_iv": -0.369,
+     "L1|rot|H2_mirror_eq": -1.303,
+     "L1|rot|H3_mirror_inv": 0.041,
+     "L1|density|H1_id": -1.039,
+     "L1|density|H1_iv": -0.482,
+     "L1|density|H2_mirror_eq": -0.209,
+     "L1|density|H3_mirror_inv": -0.64,
+     "L2|mass|H1_id": -16.305,
+     "L2|mass|H1_iv": -0.189,
+     "L2|mass|H2_mirror_eq": -11.708,
+     "L2|mass|H3_mirror_inv": -12.247,
+     "L2|radius|H1_id": -5.515,
+     "L2|radius|H1_iv": 0.055,
+     "L2|radius|H2_mirror_eq": -3.864,
+     "L2|radius|H3_mirror_inv": -3.998,
+     "L2|a|H1_iv": 0.852,
+     "L2|period|H1_iv": 1.277,
+     "L2|rot|H1_id": 0.489,
+     "L2|rot|H1_iv": 1.277,
+     "L2|rot|H2_mirror_eq": -0.445,
+     "L2|rot|H3_mirror_inv": 0.16,
+     "L2|density|H1_id": 0.24,
+     "L2|density|H1_iv": -0.352,
+     "L2|density|H2_mirror_eq": -0.117,
+     "L2|density|H3_mirror_inv": -0.253,
+     "L3|mass|H1_id": -3.322,
+     "L3|mass|H1_iv": -0.189,
+     "L3|mass|H2_mirror_eq": 4.247,
+     "L3|mass|H3_mirror_inv": 4.408,
+     "L3|radius|H1_id": -0.763,
+     "L3|radius|H1_iv": 0.055,
+     "L3|radius|H2_mirror_eq": 1.462,
+     "L3|radius|H3_mirror_inv": 1.706,
+     "L3|a|H1_iv": 0.852,
+     "L3|period|H1_iv": 1.277,
+     "L3|rot|H1_id": -1.405,
+     "L3|rot|H1_iv": 1.277,
+     "L3|rot|H2_mirror_eq": -1.606,
+     "L3|rot|H3_mirror_inv": 0.343,
+     "L3|density|H1_id": -1.035,
+     "L3|density|H1_iv": -0.352,
+     "L3|density|H2_mirror_eq": -0.141,
+     "L3|density|H3_mirror_inv": -0.709
+    }
+   },
+   "massrank": {
+    "mapping": {
+     "jupiter": "Ganymede",
+     "mars": "Thebe",
+     "neptune": "Io",
+     "pluto": "Adrastea",
+     "saturn": "Callisto",
+     "venus": "Amalthea"
+    },
+    "holds": 19,
+    "tests": 54,
+    "rate": 0.35185185185185186,
+    "null_mean": 0.1759398148148148,
+    "null_p95": 0.3148148148148148,
+    "p_value": 0.02475,
+    "residuals": {
+     "L1|mass|H1_id": -1.43,
+     "L1|mass|H1_iv": -7.812,
+     "L1|mass|H2_mirror_eq": 4.188,
+     "L1|mass|H3_mirror_inv": 4.027,
+     "L1|radius|H1_id": -0.304,
+     "L1|radius|H1_iv": -2.59,
+     "L1|radius|H2_mirror_eq": 1.546,
+     "L1|radius|H3_mirror_inv": 1.302,
+     "L1|a|H1_iv": -1.814,
+     "L1|period|H1_iv": -2.723,
+     "L1|rot|H1_id": -2.263,
+     "L1|rot|H1_iv": -2.723,
+     "L1|rot|H2_mirror_eq": -0.263,
+     "L1|rot|H3_mirror_inv": -2.213,
+     "L1|density|H1_id": -0.518,
+     "L1|density|H1_iv": -0.042,
+     "L1|density|H2_mirror_eq": -0.448,
+     "L1|density|H3_mirror_inv": 0.12,
+     "L2|mass|H1_id": -13.068,
+     "L2|mass|H1_iv": -0.359,
+     "L2|mass|H2_mirror_eq": -8.821,
+     "L2|mass|H3_mirror_inv": -9.099,
+     "L2|radius|H1_id": -4.347,
+     "L2|radius|H1_iv": -0.199,
+     "L2|radius|H2_mirror_eq": -2.884,
+     "L2|radius|H3_mirror_inv": -2.961,
+     "L2|a|H1_iv": -0.159,
+     "L2|period|H1_iv": -0.239,
+     "L2|rot|H1_id": 1.319,
+     "L2|rot|H1_iv": -0.239,
+     "L2|rot|H2_mirror_eq": -0.287,
+     "L2|rot|H3_mirror_inv": 0.449,
+     "L2|density|H1_id": -0.027,
+     "L2|density|H1_iv": 0.237,
+     "L2|density|H2_mirror_eq": -0.168,
+     "L2|density|H3_mirror_inv": -0.215,
+     "L3|mass|H1_id": -0.745,
+     "L3|mass|H1_iv": -0.359,
+     "L3|mass|H2_mirror_eq": 4.327,
+     "L3|mass|H3_mirror_inv": 3.888,
+     "L3|radius|H1_id": -0.075,
+     "L3|radius|H1_iv": -0.199,
+     "L3|radius|H2_mirror_eq": 1.584,
+     "L3|radius|H3_mirror_inv": 1.264,
+     "L3|a|H1_iv": -0.159,
+     "L3|period|H1_iv": -0.239,
+     "L3|rot|H1_id": -2.395,
+     "L3|rot|H1_iv": -0.239,
+     "L3|rot|H2_mirror_eq": -0.631,
+     "L3|rot|H3_mirror_inv": -1.845,
+     "L3|density|H1_id": -0.52,
+     "L3|density|H1_iv": 0.237,
+     "L3|density|H2_mirror_eq": -0.425,
+     "L3|density|H3_mirror_inv": 0.096
+    }
+   }
+  },
+  "TRAPPIST-1": {
+   "ordinal": {
+    "mapping": {
+     "jupiter": "f",
+     "mars": "e",
+     "neptune": null,
+     "pluto": null,
+     "saturn": "g",
+     "venus": "c"
+    },
+    "holds": 0,
+    "tests": 15,
+    "rate": 0.0,
+    "null_mean": 0.1897797619047619,
+    "null_p95": 0.2857142857142857,
+    "p_value": 1.0,
+    "residuals": {
+     "L1|mass|H1_id": 4.283,
+     "L1|radius|H1_id": 1.04,
+     "L1|density|H1_id": 1.162,
+     "L2|mass|H1_id": -8.818,
+     "L2|mass|H2_mirror_eq": -4.463,
+     "L2|mass|H3_mirror_inv": -4.255,
+     "L2|radius|H1_id": -2.17,
+     "L2|radius|H2_mirror_eq": -1.108,
+     "L2|radius|H3_mirror_inv": -1.041,
+     "L2|density|H1_id": -2.309,
+     "L2|density|H2_mirror_eq": -1.14,
+     "L2|density|H3_mirror_inv": -1.133,
+     "L3|mass|H1_id": 4.559,
+     "L3|radius|H1_id": 1.116,
+     "L3|density|H1_id": 1.21
+    }
+   },
+   "massrank": {
+    "mapping": {
+     "jupiter": "b",
+     "mars": "h",
+     "neptune": "c",
+     "pluto": null,
+     "saturn": "g",
+     "venus": "d"
+    },
+    "holds": 6,
+    "tests": 37,
+    "rate": 0.16216216216216217,
+    "null_mean": 0.1910238095238095,
+    "null_p95": 0.2857142857142857,
+    "p_value": 0.6965,
+    "residuals": {
+     "L1|mass|H1_id": 3.713,
+     "L1|mass|H2_mirror_eq": 4.342,
+     "L1|mass|H3_mirror_inv": 4.333,
+     "L1|radius|H1_id": 0.897,
+     "L1|radius|H2_mirror_eq": 1.079,
+     "L1|radius|H3_mirror_inv": 1.054,
+     "L1|density|H1_id": 1.022,
+     "L1|density|H2_mirror_eq": 1.104,
+     "L1|density|H3_mirror_inv": 1.17,
+     "L2|mass|H1_id": -9.225,
+     "L2|mass|H1_iv": -0.038,
+     "L2|mass|H2_mirror_eq": -4.87,
+     "L2|mass|H3_mirror_inv": -4.904,
+     "L2|radius|H1_id": -2.285,
+     "L2|radius|H1_iv": -0.002,
+     "L2|radius|H2_mirror_eq": -1.223,
+     "L2|radius|H3_mirror_inv": -1.213,
+     "L2|a|H1_iv": 0.745,
+     "L2|period|H1_iv": 1.117,
+     "L2|density|H1_id": -2.37,
+     "L2|density|H1_iv": -0.031,
+     "L2|density|H2_mirror_eq": -1.201,
+     "L2|density|H3_mirror_inv": -1.265,
+     "L3|mass|H1_id": 3.789,
+     "L3|mass|H1_iv": -0.038,
+     "L3|mass|H2_mirror_eq": 4.359,
+     "L3|mass|H3_mirror_inv": 4.316,
+     "L3|radius|H1_id": 0.916,
+     "L3|radius|H1_iv": -0.002,
+     "L3|radius|H2_mirror_eq": 1.074,
+     "L3|radius|H3_mirror_inv": 1.059,
+     "L3|a|H1_iv": 0.745,
+     "L3|period|H1_iv": 1.117,
+     "L3|density|H1_id": 1.042,
+     "L3|density|H1_iv": -0.031,
+     "L3|density|H2_mirror_eq": 1.136,
+     "L3|density|H3_mirror_inv": 1.138
+    }
+   }
+  },
+  "Kepler-90": {
+   "ordinal": {
+    "mapping": {
+     "jupiter": "e",
+     "mars": "d",
+     "neptune": "h",
+     "pluto": null,
+     "saturn": "f",
+     "venus": "c"
+    },
+    "holds": 0,
+    "tests": 15,
+    "rate": 0.0,
+    "null_mean": 0.08452777777777779,
+    "null_p95": 0.3333333333333333,
+    "p_value": 1.0,
+    "residuals": {
+     "L1|radius|H1_id": 1.726,
+     "L1|radius|H2_mirror_eq": 1.098,
+     "L1|radius|H3_mirror_inv": 2.287,
+     "L2|radius|H1_id": -3.738,
+     "L2|radius|H1_iv": 0.663,
+     "L2|radius|H2_mirror_eq": -2.08,
+     "L2|radius|H3_mirror_inv": -2.011,
+     "L2|a|H1_iv": 0.439,
+     "L2|period|H1_iv": 0.69,
+     "L3|radius|H1_id": 1.34,
+     "L3|radius|H1_iv": 0.663,
+     "L3|radius|H2_mirror_eq": 1.064,
+     "L3|radius|H3_mirror_inv": 2.321,
+     "L3|a|H1_iv": 0.439,
+     "L3|period|H1_iv": 0.69
+    }
+   },
+   "massrank": {
+    "mapping": {
+     "jupiter": "h",
+     "mars": "b",
+     "neptune": "f",
+     "pluto": null,
+     "saturn": "g",
+     "venus": "i"
+    },
+    "holds": 2,
+    "tests": 15,
+    "rate": 0.13333333333333333,
+    "null_mean": 0.08593055555555555,
+    "null_p95": 0.3333333333333333,
+    "p_value": 0.21475,
+    "residuals": {
+     "L1|radius|H1_id": 0.127,
+     "L1|radius|H2_mirror_eq": 1.514,
+     "L1|radius|H3_mirror_inv": 0.613,
+     "L2|radius|H1_id": -3.06,
+     "L2|radius|H1_iv": -0.738,
+     "L2|radius|H2_mirror_eq": -1.853,
+     "L2|radius|H3_mirror_inv": -2.141,
+     "L2|a|H1_iv": -0.476,
+     "L2|period|H1_iv": -0.621,
+     "L3|radius|H1_id": 0.13,
+     "L3|radius|H1_iv": -0.738,
+     "L3|radius|H2_mirror_eq": 1.658,
+     "L3|radius|H3_mirror_inv": 0.469,
+     "L3|a|H1_iv": -0.476,
+     "L3|period|H1_iv": -0.621
+    }
+   }
+  },
+  "HD 10180": {
+   "ordinal": {
+    "mapping": {
+     "jupiter": "g",
+     "mars": "f",
+     "neptune": null,
+     "pluto": null,
+     "saturn": "h",
+     "venus": "d"
+    },
+    "holds": 0,
+    "tests": 5,
+    "rate": 0.0,
+    "null_mean": 0.09858333333333334,
+    "null_p95": 0.2777777777777778,
+    "p_value": 1.0,
+    "residuals": {
+     "L1|mass|H1_id": 4.26,
+     "L2|mass|H1_id": -8.69,
+     "L2|mass|H2_mirror_eq": -4.959,
+     "L2|mass|H3_mirror_inv": -3.985,
+     "L3|mass|H1_id": 3.963
+    }
+   },
+   "massrank": {
+    "mapping": {
+     "jupiter": "h",
+     "mars": null,
+     "neptune": "f",
+     "pluto": null,
+     "saturn": "e",
+     "venus": "d"
+    },
+    "holds": 0,
+    "tests": 14,
+    "rate": 0.0,
+    "null_mean": 0.10031944444444446,
+    "null_p95": 0.2777777777777778,
+    "p_value": 1.0,
+    "residuals": {
+     "L1|mass|H2_mirror_eq": 3.762,
+     "L1|mass|H3_mirror_inv": 3.698,
+     "L2|mass|H1_id": -8.202,
+     "L2|mass|H1_iv": -0.857,
+     "L2|mass|H2_mirror_eq": -4.06,
+     "L2|mass|H3_mirror_inv": -4.885,
+     "L2|a|H1_iv": -1.939,
+     "L2|period|H1_iv": -2.908,
+     "L3|mass|H1_id": 2.988,
+     "L3|mass|H1_iv": -0.857,
+     "L3|mass|H2_mirror_eq": 4.175,
+     "L3|mass|H3_mirror_inv": 3.286,
+     "L3|a|H1_iv": -1.939,
+     "L3|period|H1_iv": -2.908
+    }
+   }
+  }
+ },
+ "recurrence": [
+  {
+   "line": 2,
+   "metric": "density",
+   "hypothesis": "H1_iv",
+   "sol_residual": -0.194,
+   "oos_evaluable": 5,
+   "oos_holds": 3,
+   "detail": [
+    {
+     "system": "Saturn moons",
+     "rule": "ordinal",
+     "residual": 0.1271320403802929,
+     "holds": true
+    },
+    {
+     "system": "Saturn moons",
+     "rule": "massrank",
+     "residual": -0.4203629411921912,
+     "holds": false
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "ordinal",
+     "residual": -0.35222673869662335,
+     "holds": false
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "massrank",
+     "residual": 0.23720676522642492,
+     "holds": true
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "massrank",
+     "residual": -0.031179444733964168,
+     "holds": true
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    }
+   ]
+  },
+  {
+   "line": 2,
+   "metric": "density",
+   "hypothesis": "H3_mirror_inv",
+   "sol_residual": 0.285,
+   "oos_evaluable": 6,
+   "oos_holds": 3,
+   "detail": [
+    {
+     "system": "Saturn moons",
+     "rule": "ordinal",
+     "residual": 0.5520804418218539,
+     "holds": false
+    },
+    {
+     "system": "Saturn moons",
+     "rule": "massrank",
+     "residual": 0.18708378744019782,
+     "holds": true
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "ordinal",
+     "residual": -0.25340992556345343,
+     "holds": true
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "massrank",
+     "residual": -0.21506503552280076,
+     "holds": true
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "ordinal",
+     "residual": -1.1327451704948754,
+     "holds": false
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "massrank",
+     "residual": -1.2652074313363415,
+     "holds": false
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    }
+   ]
+  },
+  {
+   "line": 2,
+   "metric": "rot",
+   "hypothesis": "H1_iv",
+   "sol_residual": 0.241,
+   "oos_evaluable": 4,
+   "oos_holds": 2,
+   "detail": [
+    {
+     "system": "Saturn moons",
+     "rule": "ordinal",
+     "residual": 1.7921147759435547,
+     "holds": false
+    },
+    {
+     "system": "Saturn moons",
+     "rule": "massrank",
+     "residual": 0.14907988495965308,
+     "holds": true
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "ordinal",
+     "residual": 1.2773253211426598,
+     "holds": false
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "massrank",
+     "residual": -0.23906112862137674,
+     "holds": true
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    }
+   ]
+  },
+  {
+   "line": 3,
+   "metric": "density",
+   "hypothesis": "H1_iv",
+   "sol_residual": -0.194,
+   "oos_evaluable": 5,
+   "oos_holds": 3,
+   "detail": [
+    {
+     "system": "Saturn moons",
+     "rule": "ordinal",
+     "residual": 0.1271320403802929,
+     "holds": true
+    },
+    {
+     "system": "Saturn moons",
+     "rule": "massrank",
+     "residual": -0.4203629411921912,
+     "holds": false
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "ordinal",
+     "residual": -0.35222673869662335,
+     "holds": false
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "massrank",
+     "residual": 0.23720676522642492,
+     "holds": true
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "massrank",
+     "residual": -0.031179444733964168,
+     "holds": true
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    }
+   ]
+  },
+  {
+   "line": 3,
+   "metric": "density",
+   "hypothesis": "H2_mirror_eq",
+   "sol_residual": -0.065,
+   "oos_evaluable": 5,
+   "oos_holds": 3,
+   "detail": [
+    {
+     "system": "Saturn moons",
+     "rule": "ordinal",
+     "residual": -0.19961924177207502,
+     "holds": true
+    },
+    {
+     "system": "Saturn moons",
+     "rule": "massrank",
+     "residual": -0.19961924177207502,
+     "holds": true
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "ordinal",
+     "residual": -0.14085317899654903,
+     "holds": true
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "massrank",
+     "residual": -0.4247869798420876,
+     "holds": false
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "massrank",
+     "residual": 1.1362994861185403,
+     "holds": false
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    }
+   ]
+  },
+  {
+   "line": 3,
+   "metric": "density",
+   "hypothesis": "H3_mirror_inv",
+   "sol_residual": 0.118,
+   "oos_evaluable": 5,
+   "oos_holds": 1,
+   "detail": [
+    {
+     "system": "Saturn moons",
+     "rule": "ordinal",
+     "residual": -0.31035181539314527,
+     "holds": false
+    },
+    {
+     "system": "Saturn moons",
+     "rule": "massrank",
+     "residual": -0.6753484697748013,
+     "holds": false
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "ordinal",
+     "residual": -0.7087207806876261,
+     "holds": false
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "massrank",
+     "residual": 0.09635358622987589,
+     "holds": true
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "massrank",
+     "residual": 1.1382869108090672,
+     "holds": false
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    }
+   ]
+  },
+  {
+   "line": 3,
+   "metric": "radius",
+   "hypothesis": "H1_id",
+   "sol_residual": -0.065,
+   "oos_evaluable": 8,
+   "oos_holds": 2,
+   "detail": [
+    {
+     "system": "Saturn moons",
+     "rule": "ordinal",
+     "residual": 1.4007752439737855,
+     "holds": false
+    },
+    {
+     "system": "Saturn moons",
+     "rule": "massrank",
+     "residual": 0.3452812860200014,
+     "holds": false
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "ordinal",
+     "residual": -0.7625466685518871,
+     "holds": false
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "massrank",
+     "residual": -0.07503252690607098,
+     "holds": true
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "ordinal",
+     "residual": 1.1164647003603911,
+     "holds": false
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "massrank",
+     "residual": 0.9156884819662605,
+     "holds": false
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "ordinal",
+     "residual": 1.3395143783672245,
+     "holds": false
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "massrank",
+     "residual": 0.13027672182457684,
+     "holds": true
+    },
+    {
+     "system": "HD 10180",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    }
+   ]
+  },
+  {
+   "line": 3,
+   "metric": "rot",
+   "hypothesis": "H1_iv",
+   "sol_residual": 0.241,
+   "oos_evaluable": 4,
+   "oos_holds": 2,
+   "detail": [
+    {
+     "system": "Saturn moons",
+     "rule": "ordinal",
+     "residual": 1.7921147759435547,
+     "holds": false
+    },
+    {
+     "system": "Saturn moons",
+     "rule": "massrank",
+     "residual": 0.14907988495965308,
+     "holds": true
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "ordinal",
+     "residual": 1.2773253211426598,
+     "holds": false
+    },
+    {
+     "system": "Jupiter moons",
+     "rule": "massrank",
+     "residual": -0.23906112862137674,
+     "holds": true
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "TRAPPIST-1",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "Kepler-90",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "ordinal",
+     "residual": null,
+     "holds": null
+    },
+    {
+     "system": "HD 10180",
+     "rule": "massrank",
+     "residual": null,
+     "holds": null
+    }
+   ]
+  }
+ ],
+ "recurrence_total": {
+  "oos_evaluable": 42,
+  "oos_holds": 19,
+  "rate": 0.4523809523809524
+ },
+ "recurrence_excluding_density": {
+  "oos_evaluable": 16,
+  "oos_holds": 6,
+  "rate": 0.375
+ },
+ "metric_degeneracy_pairwise_lt_0p30dex": {
+  "Sol (in-sample)": {
+   "mass": 0.083,
+   "radius": 0.167,
+   "a": 0.167,
+   "period": 0.111,
+   "rot": 0.306,
+   "density": 0.389
+  },
+  "Saturn moons": {
+   "mass": 0.111,
+   "radius": 0.306,
+   "a": 0.222,
+   "period": 0.139,
+   "rot": 0.143,
+   "density": 0.806
+  },
+  "Jupiter moons": {
+   "mass": 0.111,
+   "radius": 0.25,
+   "a": 0.278,
+   "period": 0.111,
+   "rot": 0.194,
+   "density": 0.528
+  },
+  "TRAPPIST-1": {
+   "mass": 0.571,
+   "radius": 1.0,
+   "a": 0.524,
+   "period": 0.286,
+   "rot": null,
+   "density": 1.0
+  },
+  "Kepler-90": {
+   "mass": null,
+   "radius": 0.25,
+   "a": 0.321,
+   "period": 0.214,
+   "rot": null,
+   "density": null
+  },
+  "HD 10180": {
+   "mass": 0.6,
+   "radius": null,
+   "a": 0.067,
+   "period": 0.0,
+   "rot": null,
+   "density": null
+  }
+ },
+ "chance_rate_at_threshold": "\u2248 0.10\u20130.16 (ladder_null.json: random-triplet hold rate 0.107 mean, 0.164 p95)",
+ "n_mapping_tests": 10,
+ "n_mapping_tests_p_lt_0p05": 1
+}

@@ -1,0 +1,46 @@
+{"type": "meta", "title": "Winter Circle Star Pipe Analysis", "date": "20261009", "n": 14}
+{"type": "star", "name": "Sirius", "bayer": "\u03b1 CMa", "ra_h": 6.7525, "dec_d": -16.7161, "mag": -1.46, "role": "prey", "ecl_lon": 104.0821, "ecl_lat": -39.6052, "L": 5, "B": 4, "E": 1, "F": 10, "G": 1, "self_pipe": false}
+{"type": "star", "name": "Rigel", "bayer": "\u03b2 Ori", "ra_h": 5.2423, "dec_d": -8.2017, "mag": 0.13, "role": "front_paw", "ecl_lon": 76.8296, "ecl_lat": -31.1228, "L": 4, "B": 4, "E": 0, "F": 8, "G": 7, "self_pipe": true}
+{"type": "star", "name": "Aldebaran", "bayer": "\u03b1 Tau", "ra_h": 4.5987, "dec_d": 16.5093, "mag": 0.87, "role": "rear_hip", "ecl_lon": 69.7895, "ecl_lat": -5.4674, "L": 7, "B": 5, "E": 2, "F": 14, "G": 7, "self_pipe": false}
+{"type": "star", "name": "Capella", "bayer": "\u03b1 Aur", "ra_h": 5.2782, "dec_d": 45.998, "mag": 0.08, "role": "spine_apex", "ecl_lon": 81.8584, "ecl_lat": 22.8642, "L": 0, "B": 5, "E": 5, "F": 10, "G": 8, "self_pipe": false}
+{"type": "star", "name": "Pollux", "bayer": "\u03b2 Gem", "ra_h": 7.7553, "dec_d": 28.0262, "mag": 1.14, "role": "haunch_E", "ecl_lon": 113.2161, "ecl_lat": 6.6843, "L": 5, "B": 7, "E": 2, "F": 14, "G": 1, "self_pipe": false}
+{"type": "star", "name": "Castor", "bayer": "\u03b1 Gem", "ra_h": 7.5766, "dec_d": 31.8883, "mag": 1.58, "role": "haunch_W", "ecl_lon": 110.2398, "ecl_lat": 10.0957, "L": 2, "B": 1, "E": 1, "F": 4, "G": 1, "self_pipe": false}
+{"type": "star", "name": "Procyon", "bayer": "\u03b1 CMi", "ra_h": 7.6551, "dec_d": 5.225, "mag": 0.34, "role": "right_eye", "ecl_lon": 115.7866, "ecl_lat": -16.0194, "L": 8, "B": 7, "E": 1, "F": 16, "G": 1, "self_pipe": false}
+{"type": "star", "name": "Gomeisa", "bayer": "\u03b2 CMi", "ra_h": 7.4525, "dec_d": 8.2893, "mag": 2.89, "role": "left_eye", "ecl_lon": 112.1915, "ecl_lat": -13.4873, "L": 4, "B": 4, "E": 0, "F": 8, "G": 1, "self_pipe": true}
+{"type": "star", "name": "Betelgeuse", "bayer": "\u03b1 Ori", "ra_h": 5.9195, "dec_d": 7.4071, "mag": 0.5, "role": "chest", "ecl_lon": 88.7541, "ecl_lat": -16.027, "L": 7, "B": 7, "E": 0, "F": 14, "G": 8, "self_pipe": true}
+{"type": "star", "name": "Alnilam", "bayer": "\u03b5 Ori", "ra_h": 5.6036, "dec_d": -1.2019, "mag": 1.69, "role": "belt_C", "ecl_lon": 83.4643, "ecl_lat": -24.5064, "L": 1, "B": 7, "E": 6, "F": 14, "G": 8, "self_pipe": false}
+{"type": "star", "name": "Alnitak", "bayer": "\u03b6 Ori", "ra_h": 5.6793, "dec_d": -1.9429, "mag": 1.74, "role": "belt_E", "ecl_lon": 84.6811, "ecl_lat": -25.2934, "L": 3, "B": 7, "E": 4, "F": 14, "G": 8, "self_pipe": false}
+{"type": "star", "name": "Mintaka", "bayer": "\u03b4 Ori", "ra_h": 5.5334, "dec_d": -0.2991, "mag": 2.23, "role": "belt_W", "ecl_lon": 82.3614, "ecl_lat": -23.553, "L": 0, "B": 6, "E": 6, "F": 12, "G": 8, "self_pipe": false}
+{"type": "star", "name": "Mars_2008", "bayer": "\u2014", "ra_h": 5.9552, "dec_d": 26.9513, "mag": -1.38, "role": "intruder_2008", "ecl_lon": 89.3999, "ecl_lat": 3.5134, "L": 7, "B": 4, "E": 3, "F": 14, "G": 8, "self_pipe": false}
+{"type": "star", "name": "Mars_2025", "bayer": "\u2014", "ra_h": 7.929, "dec_d": 25.15, "mag": -1.25, "role": "intruder_2025", "ecl_lon": 116.0516, "ecl_lat": 4.2898, "L": 8, "B": 4, "E": 4, "F": 16, "G": 1, "self_pipe": false}
+{"type": "bond", "pair": ["Sirius", "Capella"], "F": 10, "G_diff": 7, "sep_deg": 65.828}
+{"type": "bond", "pair": ["Rigel", "Gomeisa"], "F": 8, "G_diff": 6, "sep_deg": 36.925}
+{"type": "bond", "pair": ["Aldebaran", "Pollux"], "F": 14, "G_diff": 6, "sep_deg": 45.013}
+{"type": "bond", "pair": ["Aldebaran", "Betelgeuse"], "F": 14, "G_diff": 1, "sep_deg": 21.388}
+{"type": "bond", "pair": ["Aldebaran", "Alnilam"], "F": 14, "G_diff": 1, "sep_deg": 23.129}
+{"type": "bond", "pair": ["Aldebaran", "Alnitak"], "F": 14, "G_diff": 1, "sep_deg": 24.426}
+{"type": "bond", "pair": ["Aldebaran", "Mars_2008"], "F": 14, "G_diff": 1, "sep_deg": 21.548}
+{"type": "bond", "pair": ["Pollux", "Betelgeuse"], "F": 14, "G_diff": 7, "sep_deg": 33.199}
+{"type": "bond", "pair": ["Pollux", "Alnilam"], "F": 14, "G_diff": 7, "sep_deg": 42.581}
+{"type": "bond", "pair": ["Pollux", "Alnitak"], "F": 14, "G_diff": 7, "sep_deg": 42.339}
+{"type": "bond", "pair": ["Pollux", "Mars_2008"], "F": 14, "G_diff": 7, "sep_deg": 23.929}
+{"type": "bond", "pair": ["Procyon", "Mars_2025"], "F": 16, "G_diff": 0, "sep_deg": 20.311}
+{"type": "bond", "pair": ["Betelgeuse", "Alnilam"], "F": 14, "G_diff": 0, "sep_deg": 9.821}
+{"type": "bond", "pair": ["Betelgeuse", "Alnitak"], "F": 14, "G_diff": 0, "sep_deg": 10.017}
+{"type": "bond", "pair": ["Betelgeuse", "Mars_2008"], "F": 14, "G_diff": 0, "sep_deg": 19.551}
+{"type": "bond", "pair": ["Alnilam", "Alnitak"], "F": 14, "G_diff": 0, "sep_deg": 1.356}
+{"type": "bond", "pair": ["Alnilam", "Mars_2008"], "F": 14, "G_diff": 0, "sep_deg": 28.608}
+{"type": "bond", "pair": ["Alnitak", "Mars_2008"], "F": 14, "G_diff": 0, "sep_deg": 29.168}
+{"type": "close_pair", "stars": ["Alnilam", "Alnitak"], "sep_deg": 1.356, "F_diff": 0}
+{"type": "close_pair", "stars": ["Alnilam", "Mintaka"], "sep_deg": 1.387, "F_diff": 2}
+{"type": "close_pair", "stars": ["Alnitak", "Mintaka"], "sep_deg": 2.737, "F_diff": 2}
+{"type": "close_pair", "stars": ["Pollux", "Mars_2025"], "sep_deg": 3.701, "F_diff": 2}
+{"type": "close_pair", "stars": ["Procyon", "Gomeisa"], "sep_deg": 4.301, "F_diff": 8}
+{"type": "close_pair", "stars": ["Pollux", "Castor"], "sep_deg": 4.506, "F_diff": 10}
+{"type": "close_pair", "stars": ["Castor", "Mars_2025"], "sep_deg": 8.181, "F_diff": 12}
+{"type": "close_pair", "stars": ["Rigel", "Alnilam"], "sep_deg": 8.839, "F_diff": 6}
+{"type": "close_pair", "stars": ["Rigel", "Mintaka"], "sep_deg": 9.021, "F_diff": 4}
+{"type": "close_pair", "stars": ["Rigel", "Alnitak"], "sep_deg": 9.042, "F_diff": 6}
+{"type": "close_pair", "stars": ["Betelgeuse", "Mintaka"], "sep_deg": 9.631, "F_diff": 2}
+{"type": "close_pair", "stars": ["Betelgeuse", "Alnilam"], "sep_deg": 9.821, "F_diff": 0}
+{"type": "close_pair", "stars": ["Betelgeuse", "Alnitak"], "sep_deg": 10.017, "F_diff": 0}

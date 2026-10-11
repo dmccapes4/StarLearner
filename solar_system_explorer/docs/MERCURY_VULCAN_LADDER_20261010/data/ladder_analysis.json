@@ -1,0 +1,1220 @@
+{
+ "method": "\nladder_analysis.py \u2014 quantitative test of the id/iv analogy ladder.\n\nThe user's derivation is a list of three-term proportions \"A is to B is to C\",\nin mirrored pairs (id = inner/direct, iv = outer/inverse; \"id -> iv are the\nsame backwards\"). We do not accept or reject a line by taste: for every line\nand every measurable metric m we compute\n\n  H1 geometric  : log m(A)/m(B)  ==  log m(B)/m(C)           (A:B :: B:C)\n  H2 mirror-eq  : log m(A)/m(B) [id]  ==  log m(A')/m(B') [iv]\n  H3 mirror-inv : log m(A)/m(B) [id]  == -log m(A')/m(B') [iv]   (\"same backwards\")\n\nResiduals are in dex (log10). |res| < 0.30 dex (factor 2) is counted as the\nline HOLDING in that metric; < 0.10 dex (26 %) is a STRONG hold.\n\nPlanet X is then solved from \"iv Planet X is to Saturn is to Neptune\"\n(mirror of \"id Mars is to Jupiter is to Sol\") under H1/H2/H3 for each\nmetric; the semi-major axis and period predicted independently are checked\nagainst Kepler III (T^2 = a^3 in yr/AU) \u2014 the ladder's own self-consistency\ntest \u2014 and against the Titius\u2013Bode slot, the Kuiper cliff and the\nPlanet-Nine estimates.\n\nOutputs: data/ladder_analysis.json, data/ladder_table.md, img/ladder_*.png\n",
+ "entities": {
+  "sol": {
+   "name": "Sol",
+   "mass_kg": 1.98892e+30,
+   "radius_km": 695700.0,
+   "a_au": null,
+   "period_yr": null,
+   "rot_d": 25.05,
+   "density": 1408.0,
+   "a_local_km": null,
+   "note": ""
+  },
+  "mercury": {
+   "name": "Mercury",
+   "mass_kg": 3.3011e+23,
+   "radius_km": 2439.7,
+   "a_au": 0.387098,
+   "period_yr": 0.2408459958932238,
+   "rot_d": 58.646,
+   "density": 5427.0,
+   "a_local_km": 57909036.55222859,
+   "note": ""
+  },
+  "venus": {
+   "name": "Venus",
+   "mass_kg": 4.8675e+24,
+   "radius_km": 6051.8,
+   "a_au": 0.723332,
+   "period_yr": 0.6151978097193703,
+   "rot_d": -243.025,
+   "density": 5243.0,
+   "a_local_km": 108208927.0091724,
+   "note": ""
+  },
+  "earth": {
+   "name": "Earth",
+   "mass_kg": 5.9722e+24,
+   "radius_km": 6371.0,
+   "a_au": 1.0,
+   "period_yr": 1.0000164271047227,
+   "rot_d": 0.99727,
+   "density": 5514.0,
+   "a_local_km": 149597870.7,
+   "note": ""
+  },
+  "mars": {
+   "name": "Mars",
+   "mass_kg": 6.4171e+23,
+   "radius_km": 3389.5,
+   "a_au": 1.523679,
+   "period_yr": 1.880848733744011,
+   "rot_d": 1.025957,
+   "density": 3934.0,
+   "a_local_km": 227939134.0303053,
+   "note": ""
+  },
+  "jupiter": {
+   "name": "Jupiter",
+   "mass_kg": 1.89819e+27,
+   "radius_km": 69911.0,
+   "a_au": 5.20289,
+   "period_yr": 11.86198494182067,
+   "rot_d": 0.41354,
+   "density": 1326.0,
+   "a_local_km": 778341265.486323,
+   "note": ""
+  },
+  "saturn": {
+   "name": "Saturn",
+   "mass_kg": 5.6834e+26,
+   "radius_km": 58232.0,
+   "a_au": 9.53667,
+   "period_yr": 29.457138945927444,
+   "rot_d": 0.44401,
+   "density": 687.0,
+   "a_local_km": 1426665525.568569,
+   "note": ""
+  },
+  "uranus": {
+   "name": "Uranus",
+   "mass_kg": 8.6813e+25,
+   "radius_km": 25362.0,
+   "a_au": 19.18916,
+   "period_yr": 84.02053388090349,
+   "rot_d": -0.71833,
+   "density": 1270.0,
+   "a_local_km": 2870657476.521612,
+   "note": ""
+  },
+  "neptune": {
+   "name": "Neptune",
+   "mass_kg": 1.02409e+26,
+   "radius_km": 24622.0,
+   "a_au": 30.06992,
+   "period_yr": 164.7693360711841,
+   "rot_d": 0.67125,
+   "density": 1638.0,
+   "a_local_km": 4498396004.119344,
+   "note": ""
+  },
+  "pluto": {
+   "name": "Pluto",
+   "mass_kg": 1.303e+22,
+   "radius_km": 1188.3,
+   "a_au": 39.482,
+   "period_yr": 247.9397672826831,
+   "rot_d": -6.3872,
+   "density": 1854.0,
+   "a_local_km": 5906423130.9774,
+   "note": ""
+  },
+  "luna": {
+   "name": "Luna",
+   "mass_kg": 7.346e+22,
+   "radius_km": 1737.4,
+   "a_au": 1.0,
+   "period_yr": 0.07480273785078713,
+   "rot_d": 27.3217,
+   "density": 3344.0,
+   "a_local_km": 384400.0,
+   "note": ""
+  },
+  "ab": {
+   "name": "Asteroid Belt",
+   "mass_kg": 2.39e+21,
+   "radius_km": 90506711.7735,
+   "a_au": 2.7,
+   "period_yr": 4.6,
+   "rot_d": 0.3780833333333333,
+   "density": 2162.0,
+   "a_local_km": 403914250.89,
+   "note": "radius = half the annulus width; rotation/density = Ceres"
+  },
+  "hb": {
+   "name": "Heliobarrier",
+   "mass_kg": null,
+   "radius_km": 18191101077.12,
+   "a_au": 121.6,
+   "period_yr": 1340.765611466558,
+   "rot_d": null,
+   "density": null,
+   "a_local_km": 18191101077.12,
+   "note": "heliopause radius (V1); period = Kepler at 121.6 AU; no mass"
+  },
+  "pluto_charon": {
+   "name": "Pluto/Charon",
+   "mass_kg": 1.4616e+22,
+   "radius_km": 1188.3,
+   "a_au": 39.482,
+   "period_yr": 247.9397672826831,
+   "rot_d": 6.387221,
+   "density": 1854.0,
+   "a_local_km": 5906423130.9774,
+   "note": "binary as one body; rot = mutual lock period"
+  },
+  "earth_luna": {
+   "name": "Earth/Luna",
+   "mass_kg": 6.04566e+24,
+   "radius_km": 6371.0,
+   "a_au": 1.0,
+   "period_yr": 1.0,
+   "rot_d": 27.3217,
+   "density": 5514.0,
+   "a_local_km": 149597870.7,
+   "note": "rot = lunar month"
+  },
+  "mercury_vulcan": {
+   "name": "Mercury/Vulcan",
+   "mass_kg": 3.3011e+23,
+   "radius_km": 2439.7,
+   "a_au": 0.387098,
+   "period_yr": 0.2408459958932238,
+   "rot_d": 58.646,
+   "density": 5427.0,
+   "a_local_km": 57909036.55222859,
+   "note": "Vulcan mass unknown -> Mercury alone; rot = Mercury spin (candidate lock period)"
+  },
+  "saturn_rings": {
+   "name": "Saturn rings",
+   "mass_kg": 1.54e+19,
+   "radius_km": 36640.0,
+   "a_au": 9.53667,
+   "period_yr": 29.457138945927444,
+   "rot_d": null,
+   "density": 400.0,
+   "a_local_km": 103540.0,
+   "note": "mass Iess+2019; radius = half ring span; local a = ring mid-radius"
+  },
+  "uranus_rings": {
+   "name": "Uranus rings",
+   "mass_kg": 1e+16,
+   "radius_km": 50.0,
+   "a_au": 19.18916,
+   "period_yr": 84.02053388090349,
+   "rot_d": null,
+   "density": 1000.0,
+   "a_local_km": 51149.0,
+   "note": "epsilon ring: a=51,149 km, width ~50 km; mass estimate only"
+  },
+  "mars_moons": {
+   "name": "Mars moons",
+   "mass_kg": 1.214e+16,
+   "radius_km": 11.08,
+   "a_au": 1.523679,
+   "period_yr": 1.880848733744011,
+   "rot_d": 0.31891,
+   "density": 1876.0,
+   "a_local_km": 9376.0,
+   "note": "Phobos+Deimos mass; Phobos geometry"
+  },
+  "sol_jupiter": {
+   "name": "Sol/Jupiter",
+   "mass_kg": 1.9908181899999998e+30,
+   "radius_km": 695700.0,
+   "a_au": 5.20289,
+   "period_yr": 11.86198494182067,
+   "rot_d": 25.05,
+   "density": 1408.0,
+   "a_local_km": 778341265.486323,
+   "note": ""
+  },
+  "planet_x": {
+   "name": "Planet X",
+   "mass_kg": null,
+   "radius_km": null,
+   "a_au": null,
+   "period_yr": null,
+   "rot_d": null,
+   "density": null,
+   "a_local_km": null,
+   "note": "unknown; solved below"
+  }
+ },
+ "ladder_results": [
+  {
+   "id": [
+    "sol",
+    "jupiter",
+    "mars"
+   ],
+   "iv": [
+    "neptune",
+    "saturn",
+    "pluto_charon"
+   ],
+   "metrics": {
+    "mass_kg": {
+     "id_AB": 3.0202776337937323,
+     "id_BC": 3.4710008740143685,
+     "iv_AB": -0.7442700975664494,
+     "iv_BC": 4.589779688597918,
+     "H1_id": -0.45072324022063626,
+     "H1_iv": -5.334049786164368,
+     "H2_mirror_eq": 3.7645477313601816,
+     "H3_mirror_inv": 2.276007536227283
+    },
+    "radius_km": {
+     "id_AB": 0.997876489079081,
+     "id_BC": 1.3144098760331078,
+     "iv_AB": -0.3738383793978466,
+     "iv_BC": 1.6902356092479827,
+     "H1_id": -0.3165333869540268,
+     "H1_iv": -2.0640739886458292,
+     "H2_mirror_eq": 1.3717148684769276,
+     "H3_mirror_inv": 0.6240381096812344
+    },
+    "a_au": {
+     "id_AB": null,
+     "id_BC": 0.5333511621414846,
+     "iv_AB": 0.49873551779263325,
+     "iv_BC": -0.6170023892902726,
+     "H1_id": null,
+     "H1_iv": 1.1157379070829059,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "period_yr": {
+     "id_AB": null,
+     "id_BC": 0.7998034993303558,
+     "iv_AB": 0.7476858284719303,
+     "iv_BC": -0.9251556259687126,
+     "H1_id": null,
+     "H1_iv": 1.672841454440643,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "rot_d": {
+     "id_AB": 1.7822902067884618,
+     "id_BC": -0.39461163555391526,
+     "iv_AB": 0.17949154729589145,
+     "iv_BC": -1.1579191917417282,
+     "H1_id": 2.176901842342377,
+     "H1_iv": 1.3374107390376198,
+     "H2_mirror_eq": 1.6027986594925703,
+     "H3_mirror_inv": 1.9617817540843534
+    },
+    "density": {
+     "id_AB": 0.026059130737338787,
+     "id_BC": -0.4722908315145635,
+     "iv_AB": 0.3773571603648489,
+     "iv_BC": -0.43115299274892793,
+     "H1_id": 0.4983499622519023,
+     "H1_iv": 0.8085101531137768,
+     "H2_mirror_eq": -0.3512980296275101,
+     "H3_mirror_inv": 0.4034162911021877
+    },
+    "a_local_km": {
+     "id_AB": null,
+     "id_BC": 0.5333511621414839,
+     "iv_AB": 0.4987355177926336,
+     "iv_BC": -0.6170023892902723,
+     "H1_id": null,
+     "H1_iv": 1.1157379070829059,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    }
+   }
+  },
+  {
+   "id": [
+    "mercury_vulcan",
+    "ab",
+    "earth_luna"
+   ],
+   "iv": [
+    "pluto_charon",
+    "hb",
+    "uranus"
+   ],
+   "metrics": {
+    "mass_kg": {
+     "id_AB": 2.1402607796349393,
+     "id_BC": -3.4030458184275894,
+     "iv_AB": null,
+     "iv_BC": null,
+     "H1_id": 5.543306598062529,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "radius_km": {
+     "id_AB": -4.569344360504811,
+     "id_BC": 4.152473181616107,
+     "iv_AB": -7.184932889858441,
+     "iv_BC": 5.855675488769733,
+     "H1_id": -8.721817542120917,
+     "H1_iv": -13.040608378628175,
+     "H2_mirror_eq": 2.61558852935363,
+     "H3_mirror_inv": -11.754277250363252
+    },
+    "a_au": {
+     "id_AB": -0.8435428366819533,
+     "id_BC": 0.43136376415898736,
+     "iv_AB": -0.4885344307627284,
+     "iv_BC": 0.8018776109020964,
+     "H1_id": -1.2749066008409407,
+     "H1_iv": -1.2904120416648248,
+     "H2_mirror_eq": -0.3550084059192249,
+     "H3_mirror_inv": -1.3320772674446817
+    },
+    "period_yr": {
+     "id_AB": -1.2810184011927697,
+     "id_BC": 0.6627578316815741,
+     "iv_AB": -0.733006673219402,
+     "iv_BC": 1.2029674256647918,
+     "H1_id": -1.9437762328743438,
+     "H1_iv": -1.9359740988841938,
+     "H2_mirror_eq": -0.5480117279733676,
+     "H3_mirror_inv": -2.0140250744121717
+    },
+    "rot_d": {
+     "id_AB": 2.1906508628210655,
+     "id_BC": -1.8589201851311334,
+     "iv_AB": null,
+     "iv_BC": null,
+     "H1_id": 4.049571047952199,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "density": {
+     "id_AB": 0.3997041319621846,
+     "id_BC": -0.4066110721524634,
+     "iv_AB": null,
+     "iv_BC": null,
+     "H1_id": 0.806315204114648,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "a_local_km": {
+     "id_AB": -0.8435428366819524,
+     "id_BC": 0.43136376415898603,
+     "iv_AB": -0.48853443076272995,
+     "iv_BC": 0.801877610902098,
+     "H1_id": -1.2749066008409384,
+     "H1_iv": -1.290412041664828,
+     "H2_mirror_eq": -0.35500840591922245,
+     "H3_mirror_inv": -1.3320772674446824
+    }
+   }
+  },
+  {
+   "id": [
+    "venus",
+    "sol",
+    "jupiter"
+   ],
+   "iv": [
+    "saturn",
+    "jupiter",
+    "neptune"
+   ],
+   "metrics": {
+    "mass_kg": {
+     "id_AB": -5.611311354728603,
+     "id_BC": 3.0202776337937323,
+     "iv_AB": -0.5237314581845425,
+     "iv_BC": 1.2680015557509918,
+     "H1_id": -8.631588988522335,
+     "H1_iv": -1.7917330139355343,
+     "H2_mirror_eq": -5.08757989654406,
+     "H3_mirror_inv": -6.135042812913145
+    },
+    "radius_km": {
+     "id_AB": -2.0605374363415345,
+     "id_BC": 0.997876489079081,
+     "iv_AB": -0.07938380790663135,
+     "iv_BC": 0.45322218730447794,
+     "H1_id": -3.0584139254206155,
+     "H1_iv": -0.5326059952111093,
+     "H2_mirror_eq": -1.9811536284349032,
+     "H3_mirror_inv": -2.139921244248166
+    },
+    "a_au": {
+     "id_AB": null,
+     "id_BC": null,
+     "iv_AB": 0.263152110786258,
+     "iv_BC": -0.7618876285788913,
+     "H1_id": null,
+     "H1_iv": 1.0250397393651491,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "period_yr": {
+     "id_AB": null,
+     "id_BC": null,
+     "iv_AB": 0.39503319488597444,
+     "iv_BC": -1.1427190233579048,
+     "H1_id": null,
+     "H1_iv": 1.5377522182438792,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "rot_d": {
+     "id_AB": 0.986843221599079,
+     "id_BC": 1.7822902067884618,
+     "iv_AB": 0.03087522799691772,
+     "iv_BC": -0.21036677529280917,
+     "H1_id": -0.7954469851893828,
+     "H1_iv": 0.2412420032897269,
+     "H2_mirror_eq": 0.9559679936021612,
+     "H3_mirror_inv": 1.0177184495959968
+    },
+    "density": {
+     "id_AB": 0.5709772029076299,
+     "id_BC": 0.026059130737338787,
+     "iv_AB": -0.2855867870092039,
+     "iv_BC": -0.09177037335564497,
+     "H1_id": 0.5449180721702911,
+     "H1_iv": -0.19381641365355895,
+     "H2_mirror_eq": 0.8565639899168338,
+     "H3_mirror_inv": 0.28539041589842595
+    },
+    "a_local_km": {
+     "id_AB": null,
+     "id_BC": null,
+     "iv_AB": 0.2631521107862582,
+     "iv_BC": -0.7618876285788918,
+     "H1_id": null,
+     "H1_iv": 1.02503973936515,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    }
+   }
+  },
+  {
+   "id": [
+    "earth",
+    "ab",
+    "luna"
+   ],
+   "iv": [
+    "uranus",
+    "hb",
+    "uranus_rings"
+   ],
+   "metrics": {
+    "mass_kg": {
+     "id_AB": 3.397736442217706,
+     "id_BC": -1.4876530230611387,
+     "iv_AB": null,
+     "iv_BC": null,
+     "H1_id": 4.885389465278845,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "radius_km": {
+     "id_AB": -4.152473181616107,
+     "id_BC": 4.71678096952118,
+     "iv_AB": -5.855675488769733,
+     "iv_BC": 8.560888982646377,
+     "H1_id": -8.869254151137287,
+     "H1_iv": -14.416564471416109,
+     "H2_mirror_eq": 1.7032023071536262,
+     "H3_mirror_inv": -10.00814867038584
+    },
+    "a_au": {
+     "id_AB": -0.43136376415898736,
+     "id_BC": 0.43136376415898736,
+     "iv_AB": -0.8018776109020964,
+     "iv_BC": 0.8018776109020964,
+     "H1_id": -0.8627275283179747,
+     "H1_iv": -1.6037552218041928,
+     "H2_mirror_eq": 0.37051384674310905,
+     "H3_mirror_inv": -1.2332413750610838
+    },
+    "period_yr": {
+     "id_AB": -0.6627506975392359,
+     "id_BC": 1.788840337938383,
+     "iv_AB": -1.2029674256647918,
+     "iv_BC": 1.2029674256647918,
+     "H1_id": -2.4515910354776187,
+     "H1_iv": -2.4059348513295835,
+     "H2_mirror_eq": 0.5402167281255559,
+     "H3_mirror_inv": -1.8657181232040276
+    },
+    "rot_d": {
+     "id_AB": 0.42122522151785063,
+     "id_BC": -1.8589201851311334,
+     "iv_AB": null,
+     "iv_BC": null,
+     "H1_id": 2.280145406648984,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "density": {
+     "id_AB": 0.4066110721524634,
+     "id_BC": -0.1894105791496874,
+     "iv_AB": null,
+     "iv_BC": null,
+     "H1_id": 0.5960216513021508,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "a_local_km": {
+     "id_AB": -0.43136376415898603,
+     "id_BC": 3.0215057972081576,
+     "iv_AB": -0.801877610902098,
+     "iv_BC": 5.551021839622922,
+     "H1_id": -3.4528695613671436,
+     "H1_iv": -6.35289945052502,
+     "H2_mirror_eq": 0.37051384674311194,
+     "H3_mirror_inv": -1.233241375061084
+    }
+   }
+  },
+  {
+   "id": [
+    "sol",
+    "jupiter",
+    "venus"
+   ],
+   "iv": [
+    "neptune",
+    "jupiter",
+    "saturn"
+   ],
+   "metrics": {
+    "mass_kg": {
+     "id_AB": 3.0202776337937323,
+     "id_BC": 2.5910337209348704,
+     "iv_AB": -1.2680015557509918,
+     "iv_BC": 0.5237314581845425,
+     "H1_id": 0.4292439128588619,
+     "H1_iv": -1.7917330139355343,
+     "H2_mirror_eq": 4.288279189544724,
+     "H3_mirror_inv": 1.7522760780427404
+    },
+    "radius_km": {
+     "id_AB": 0.997876489079081,
+     "id_BC": 1.0626609472624535,
+     "iv_AB": -0.45322218730447794,
+     "iv_BC": 0.07938380790663135,
+     "H1_id": -0.06478445818337253,
+     "H1_iv": -0.5326059952111093,
+     "H2_mirror_eq": 1.451098676383559,
+     "H3_mirror_inv": 0.5446543017746031
+    },
+    "a_au": {
+     "id_AB": null,
+     "id_BC": 0.8569069655121515,
+     "iv_AB": 0.7618876285788913,
+     "iv_BC": -0.263152110786258,
+     "H1_id": null,
+     "H1_iv": 1.0250397393651491,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "period_yr": {
+     "id_AB": null,
+     "id_BC": 1.2851425877999507,
+     "iv_AB": 1.1427190233579048,
+     "iv_BC": -0.39503319488597444,
+     "H1_id": null,
+     "H1_iv": 1.5377522182438792,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "rot_d": {
+     "id_AB": 1.7822902067884618,
+     "id_BC": -2.7691334283875406,
+     "iv_AB": 0.21036677529280917,
+     "iv_BC": -0.03087522799691772,
+     "H1_id": 4.551423635176002,
+     "H1_iv": 0.2412420032897269,
+     "H2_mirror_eq": 1.5719234314956527,
+     "H3_mirror_inv": 1.992656982081271
+    },
+    "density": {
+     "id_AB": 0.026059130737338787,
+     "id_BC": -0.5970363336449687,
+     "iv_AB": 0.09177037335564497,
+     "iv_BC": 0.2855867870092039,
+     "H1_id": 0.6230954643823075,
+     "H1_iv": -0.19381641365355895,
+     "H2_mirror_eq": -0.06571124261830619,
+     "H3_mirror_inv": 0.11782950409298376
+    },
+    "a_local_km": {
+     "id_AB": null,
+     "id_BC": 0.8569069655121506,
+     "iv_AB": 0.7618876285788918,
+     "iv_BC": -0.2631521107862582,
+     "H1_id": null,
+     "H1_iv": 1.02503973936515,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    }
+   }
+  },
+  {
+   "id": [
+    "ab",
+    "mars",
+    "mercury_vulcan"
+   ],
+   "iv": [
+    "hb",
+    "neptune",
+    "pluto_charon"
+   ],
+   "metrics": {
+    "mass_kg": {
+     "id_AB": -2.428940906164435,
+     "id_BC": 0.2886801265294956,
+     "iv_AB": null,
+     "iv_BC": 3.845509591031469,
+     "H1_id": -2.7176210326939305,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "radius_km": {
+     "id_AB": 4.4265451484526865,
+     "id_BC": 0.14279921205212398,
+     "iv_AB": 5.8685356600083045,
+     "iv_BC": 1.316397229850136,
+     "H1_id": 4.283745936400562,
+     "H1_iv": 4.552138430158168,
+     "H2_mirror_eq": -1.441990511555618,
+     "H3_mirror_inv": 10.295080808460991
+    },
+    "a_au": {
+     "id_AB": 0.248470282203015,
+     "id_BC": 0.5950725544789384,
+     "iv_AB": 0.6068013022603678,
+     "iv_BC": -0.11826687149763937,
+     "H1_id": -0.34660227227592333,
+     "H1_iv": 0.7250681737580071,
+     "H2_mirror_eq": -0.35833102005735273,
+     "H3_mirror_inv": 0.8552715844633828
+    },
+    "period_yr": {
+     "id_AB": 0.38840396262875493,
+     "id_BC": 0.8926144385640149,
+     "iv_AB": 0.9104764707161843,
+     "iv_BC": -0.17746979749678227,
+     "H1_id": -0.5042104759352599,
+     "H1_iv": 1.0879462682129666,
+     "H2_mirror_eq": -0.5220725080874293,
+     "H3_mirror_inv": 1.2988804333449393
+    },
+    "rot_d": {
+     "id_AB": -0.4335416257503263,
+     "id_BC": -1.7571092370707393,
+     "iv_AB": null,
+     "iv_BC": -0.9784276444458367,
+     "H1_id": 1.3235676113204131,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "density": {
+     "id_AB": -0.2599786659660266,
+     "id_BC": -0.13972546599615798,
+     "iv_AB": null,
+     "iv_BC": -0.053795832384079034,
+     "H1_id": -0.12025319996986861,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "a_local_km": {
+     "id_AB": 0.24847028220301404,
+     "id_BC": 0.5950725544789384,
+     "iv_AB": 0.6068013022603687,
+     "iv_BC": -0.1182668714976387,
+     "H1_id": -0.34660227227592433,
+     "H1_iv": 0.7250681737580074,
+     "H2_mirror_eq": -0.3583310200573546,
+     "H3_mirror_inv": 0.8552715844633827
+    }
+   }
+  },
+  {
+   "id": [
+    "mars",
+    "jupiter",
+    "sol"
+   ],
+   "iv": [
+    "planet_x",
+    "saturn",
+    "neptune"
+   ],
+   "metrics": {
+    "mass_kg": {
+     "id_AB": -3.4710008740143685,
+     "id_BC": -3.0202776337937323,
+     "iv_AB": null,
+     "iv_BC": 0.7442700975664494,
+     "H1_id": -0.45072324022063626,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "radius_km": {
+     "id_AB": -1.3144098760331078,
+     "id_BC": -0.997876489079081,
+     "iv_AB": null,
+     "iv_BC": 0.3738383793978466,
+     "H1_id": -0.3165333869540268,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "a_au": {
+     "id_AB": -0.5333511621414846,
+     "id_BC": null,
+     "iv_AB": null,
+     "iv_BC": -0.49873551779263325,
+     "H1_id": null,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "period_yr": {
+     "id_AB": -0.7998034993303558,
+     "id_BC": null,
+     "iv_AB": null,
+     "iv_BC": -0.7476858284719303,
+     "H1_id": null,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "rot_d": {
+     "id_AB": 0.39461163555391526,
+     "id_BC": -1.7822902067884618,
+     "iv_AB": null,
+     "iv_BC": -0.17949154729589145,
+     "H1_id": 2.176901842342377,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "density": {
+     "id_AB": 0.4722908315145635,
+     "id_BC": -0.026059130737338787,
+     "iv_AB": null,
+     "iv_BC": -0.3773571603648489,
+     "H1_id": 0.4983499622519023,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "a_local_km": {
+     "id_AB": -0.5333511621414839,
+     "id_BC": null,
+     "iv_AB": null,
+     "iv_BC": -0.4987355177926336,
+     "H1_id": null,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    }
+   }
+  },
+  {
+   "id": [
+    "earth",
+    "luna",
+    "mercury_vulcan"
+   ],
+   "iv": [
+    "uranus",
+    "uranus_rings",
+    "pluto_charon"
+   ],
+   "metrics": {
+    "mass_kg": {
+     "id_AB": 1.9100834191565674,
+     "id_BC": -0.6526077565738007,
+     "iv_AB": 9.938584764410596,
+     "iv_BC": -6.16482853434448,
+     "H1_id": 2.562691175730368,
+     "H1_iv": 16.103413298755076,
+     "H2_mirror_eq": -8.028501345254028,
+     "H3_mirror_inv": 11.848668183567163
+    },
+    "radius_km": {
+     "id_AB": 0.5643077879050735,
+     "id_BC": -0.14743660901636968,
+     "iv_AB": 2.705213493876644,
+     "iv_BC": -1.3759560927879364,
+     "H1_id": 0.7117443969214432,
+     "H1_iv": 4.081169586664581,
+     "H2_mirror_eq": -2.1409057059715706,
+     "H3_mirror_inv": 3.2695212817817176
+    },
+    "a_au": {
+     "id_AB": 0.0,
+     "id_BC": 0.412179072522966,
+     "iv_AB": 0.0,
+     "iv_BC": -0.313343180139368,
+     "H1_id": -0.412179072522966,
+     "H1_iv": 0.313343180139368,
+     "H2_mirror_eq": 0.0,
+     "H3_mirror_inv": 0.0
+    },
+    "period_yr": {
+     "id_AB": 1.1260896403991472,
+     "id_BC": -0.5078219367456133,
+     "iv_AB": 0.0,
+     "iv_BC": -0.4699607524453897,
+     "H1_id": 1.6339115771447603,
+     "H1_iv": 0.4699607524453897,
+     "H2_mirror_eq": 1.1260896403991472,
+     "H3_mirror_inv": 1.1260896403991472
+    },
+    "rot_d": {
+     "id_AB": -1.437694963613283,
+     "id_BC": -0.33173067768993203,
+     "iv_AB": null,
+     "iv_BC": null,
+     "H1_id": -1.105964285923351,
+     "H1_iv": null,
+     "H2_mirror_eq": null,
+     "H3_mirror_inv": null
+    },
+    "density": {
+     "id_AB": 0.217200493002776,
+     "id_BC": -0.21029355281249718,
+     "iv_AB": 0.1038037209559568,
+     "iv_BC": -0.26810972980847847,
+     "H1_id": 0.42749404581527317,
+     "H1_iv": 0.37191345076443527,
+     "H2_mirror_eq": 0.1133967720468192,
+     "H3_mirror_inv": 0.3210042139587328
+    },
+    "a_local_km": {
+     "id_AB": 2.5901420330491716,
+     "id_BC": -2.177962960526205,
+     "iv_AB": 4.749144228720824,
+     "iv_BC": -5.062487408860192,
+     "H1_id": 4.768104993575377,
+     "H1_iv": 9.811631637581016,
+     "H2_mirror_eq": -2.1590021956716523,
+     "H3_mirror_inv": 7.339286261769995
+    }
+   }
+  }
+ ],
+ "holds_summary": [
+  {
+   "id": "Venus : Sol : Jupiter",
+   "iv": "Saturn : Jupiter : Neptune",
+   "metric": "rotation",
+   "hypothesis": "H1_iv",
+   "residual_dex": 0.241,
+   "strong": false
+  },
+  {
+   "id": "Venus : Sol : Jupiter",
+   "iv": "Saturn : Jupiter : Neptune",
+   "metric": "density",
+   "hypothesis": "H1_iv",
+   "residual_dex": -0.194,
+   "strong": false
+  },
+  {
+   "id": "Venus : Sol : Jupiter",
+   "iv": "Saturn : Jupiter : Neptune",
+   "metric": "density",
+   "hypothesis": "H3_mirror_inv",
+   "residual_dex": 0.285,
+   "strong": false
+  },
+  {
+   "id": "Sol : Jupiter : Venus",
+   "iv": "Neptune : Jupiter : Saturn",
+   "metric": "radius",
+   "hypothesis": "H1_id",
+   "residual_dex": -0.065,
+   "strong": true
+  },
+  {
+   "id": "Sol : Jupiter : Venus",
+   "iv": "Neptune : Jupiter : Saturn",
+   "metric": "rotation",
+   "hypothesis": "H1_iv",
+   "residual_dex": 0.241,
+   "strong": false
+  },
+  {
+   "id": "Sol : Jupiter : Venus",
+   "iv": "Neptune : Jupiter : Saturn",
+   "metric": "density",
+   "hypothesis": "H1_iv",
+   "residual_dex": -0.194,
+   "strong": false
+  },
+  {
+   "id": "Sol : Jupiter : Venus",
+   "iv": "Neptune : Jupiter : Saturn",
+   "metric": "density",
+   "hypothesis": "H2_mirror_eq",
+   "residual_dex": -0.066,
+   "strong": true
+  },
+  {
+   "id": "Sol : Jupiter : Venus",
+   "iv": "Neptune : Jupiter : Saturn",
+   "metric": "density",
+   "hypothesis": "H3_mirror_inv",
+   "residual_dex": 0.118,
+   "strong": false
+  },
+  {
+   "id": "Asteroid Belt : Mars : Mercury/Vulcan",
+   "iv": "Heliobarrier : Neptune : Pluto/Charon",
+   "metric": "density",
+   "hypothesis": "H1_id",
+   "residual_dex": -0.12,
+   "strong": false
+  },
+  {
+   "id": "Earth : Luna : Mercury/Vulcan",
+   "iv": "Uranus : Uranus rings : Pluto/Charon",
+   "metric": "a (helio)",
+   "hypothesis": "H2_mirror_eq",
+   "residual_dex": 0.0,
+   "strong": true
+  },
+  {
+   "id": "Earth : Luna : Mercury/Vulcan",
+   "iv": "Uranus : Uranus rings : Pluto/Charon",
+   "metric": "a (helio)",
+   "hypothesis": "H3_mirror_inv",
+   "residual_dex": 0.0,
+   "strong": true
+  },
+  {
+   "id": "Earth : Luna : Mercury/Vulcan",
+   "iv": "Uranus : Uranus rings : Pluto/Charon",
+   "metric": "density",
+   "hypothesis": "H2_mirror_eq",
+   "residual_dex": 0.113,
+   "strong": false
+  }
+ ],
+ "singletons": [
+  {
+   "triple": "Asteroid Belt : Heliobarrier : Sol",
+   "metric": "radius",
+   "AB": -2.303178200284248,
+   "BC": 4.417436983624746,
+   "H1": -6.720615183908993
+  },
+  {
+   "triple": "Asteroid Belt : Heliobarrier : Sol",
+   "metric": "a (helio)",
+   "AB": -1.6535698107777286,
+   "BC": null,
+   "H1": null
+  },
+  {
+   "triple": "Asteroid Belt : Heliobarrier : Sol",
+   "metric": "T (helio)",
+   "AB": -2.4645950307756896,
+   "BC": null,
+   "H1": null
+  },
+  {
+   "triple": "Sol : Heliobarrier : Asteroid Belt",
+   "metric": "radius",
+   "AB": -4.417436983624746,
+   "BC": 2.303178200284248,
+   "H1": -6.720615183908993
+  },
+  {
+   "triple": "Sol : Heliobarrier : Asteroid Belt",
+   "metric": "a (helio)",
+   "AB": null,
+   "BC": 1.6535698107777286,
+   "H1": null
+  },
+  {
+   "triple": "Sol : Heliobarrier : Asteroid Belt",
+   "metric": "T (helio)",
+   "AB": null,
+   "BC": 2.4645950307756896,
+   "H1": null
+  }
+ ],
+ "planet_x_raw": {
+  "mass_kg": {
+   "H1_geometric": 3.154120786259021e+27,
+   "H2_mirror_eq": 1.921353823379114e+23,
+   "H3_mirror_inv": 1.681160188558695e+30
+  },
+  "radius_km": {
+   "H1_geometric": 137720.97408821378,
+   "H2_mirror_eq": 2823.2662098954384,
+   "H3_mirror_inv": 1201079.0240448443
+  },
+  "a_au": {
+   "H1_geometric": 3.024553264155675,
+   "H2_mirror_eq": 2.7928370211420965,
+   "H3_mirror_inv": 32.56476264114686
+  },
+  "period_yr": {
+   "H1_geometric": 5.26628956315512,
+   "H2_mirror_eq": 4.670754747869805,
+   "H3_mirror_inv": 185.7779056533462
+  },
+  "rot_d": {
+   "H1_geometric": 0.2936981454003724,
+   "H2_mirror_eq": 1.101550436644581,
+   "H3_mirror_inv": 0.17897036172081288
+  },
+  "density": {
+   "H1_geometric": 288.1373626373626,
+   "H2_mirror_eq": 2038.2036199095023,
+   "H3_mirror_inv": 231.56126080325367
+  },
+  "a_local_km": {
+   "H1_geometric": 452466728.1364235,
+   "H2_mirror_eq": 417802471.5749885,
+   "H3_mirror_inv": 4871619150.966477
+  }
+ },
+ "planet_x_kepler": {
+  "H1_geometric": {
+   "a_au": 3.024553264155675,
+   "T_yr": 5.26628956315512,
+   "T_from_a_kepler_yr": 5.259498743453338,
+   "a_from_T_kepler_au": 3.026935428339948,
+   "kepler_residual_dex": 0.0005603791084071821
+  },
+  "H2_mirror_eq": {
+   "a_au": 2.7928370211420965,
+   "T_yr": 4.670754747869805,
+   "T_from_a_kepler_yr": 4.666818267415213,
+   "a_from_T_kepler_au": 2.794203566364812,
+   "kepler_residual_dex": 0.00036617477325847253
+  },
+  "H3_mirror_inv": {
+   "a_au": 32.56476264114686,
+   "T_yr": 185.7779056533462,
+   "T_from_a_kepler_yr": 185.8122642728309,
+   "a_from_T_kepler_au": 32.558374057844844,
+   "kepler_residual_dex": -8.031299048360345e-05
+  }
+ },
+ "planet_x_candidates": {
+  "H1_geometric": {
+   "a_au": 3.024553264155675,
+   "T_kepler_yr": 5.259498743453338,
+   "mass_kg": 3.154120786259021e+27,
+   "mass_earth": 528.133817731995,
+   "radius_km": 137720.97408821378,
+   "density": 288.1373626373626,
+   "rot_d": 0.2936981454003724,
+   "beyond_neptune": false,
+   "inside_kuiper_cliff": true,
+   "titius_bode_slot_au": 77.2,
+   "planet_nine_2021": {
+    "mass_earth": 6.2,
+    "a_au": 380.0,
+    "source": "Brown & Batygin 2021"
+   },
+   "apparent_mag_estimate_V": -6.894998292101309,
+   "mag_note": "Pan-STARRS/ZTF/ATLAS complete to V~21-22 over most of the sky; LSST ~24.5"
+  },
+  "H2_mirror_eq": {
+   "a_au": 2.7928370211420965,
+   "T_kepler_yr": 4.666818267415213,
+   "mass_kg": 1.921353823379114e+23,
+   "mass_earth": 0.03217162558821061,
+   "radius_km": 2823.2662098954384,
+   "density": 2038.2036199095023,
+   "rot_d": 1.101550436644581,
+   "beyond_neptune": false,
+   "inside_kuiper_cliff": true,
+   "titius_bode_slot_au": 77.2,
+   "planet_nine_2021": {
+    "mass_earth": 6.2,
+    "a_au": 380.0,
+    "source": "Brown & Batygin 2021"
+   },
+   "apparent_mag_estimate_V": 1.1092227854325385,
+   "mag_note": "Pan-STARRS/ZTF/ATLAS complete to V~21-22 over most of the sky; LSST ~24.5"
+  },
+  "H3_mirror_inv": {
+   "a_au": 32.56476264114686,
+   "T_kepler_yr": 185.8122642728309,
+   "mass_kg": 1.681160188558695e+30,
+   "mass_earth": 281497.637145222,
+   "radius_km": 1201079.0240448443,
+   "density": 231.56126080325367,
+   "rot_d": 0.17897036172081288,
+   "beyond_neptune": true,
+   "inside_kuiper_cliff": true,
+   "titius_bode_slot_au": 77.2,
+   "planet_nine_2021": {
+    "mass_earth": 6.2,
+    "a_au": 380.0,
+    "source": "Brown & Batygin 2021"
+   },
+   "apparent_mag_estimate_V": -0.4730557718782933,
+   "mag_note": "Pan-STARRS/ZTF/ATLAS complete to V~21-22 over most of the sky; LSST ~24.5"
+  }
+ },
+ "final_chain": [
+  {
+   "pair": "Sol/Jupiter",
+   "mass_ratio": 0.000954382277819118,
+   "separation_primary_radii": 1118.7886524167357,
+   "secondary_period_d": 4332.59,
+   "log_q": -3.0202776337937336
+  },
+  {
+   "pair": "Pluto/Charon",
+   "mass_ratio": 0.12171910974673829,
+   "separation_primary_radii": 16.486914078936298,
+   "secondary_period_d": 6.387221,
+   "log_q": -0.9146412327309997
+  },
+  {
+   "pair": "Earth/Luna",
+   "mass_ratio": 0.012300324838418003,
+   "separation_primary_radii": 60.335897033432744,
+   "secondary_period_d": 27.3217,
+   "log_q": -1.9100834191565692
+  },
+  {
+   "pair": "Saturn rings",
+   "mass_ratio": 2.7096456346553117e-08,
+   "separation_primary_radii": 1.7780601731007006,
+   "secondary_period_d": 0.39338825868425537,
+   "log_q": -7.567087502105936
+  },
+  {
+   "pair": "Mercury/Vulcan",
+   "mass_ratio": null,
+   "separation_primary_radii": null,
+   "secondary_period_d": null,
+   "log_q": null,
+   "mass_ratio_interpolated": 2.2641030448163078e-08,
+   "vulcan_mass_kg_interpolated": 7474030561243114.0,
+   "separation_R_M_interpolated": 2.2177582697461946,
+   "separation_km_interpolated": 5410.664850699791
+  },
+  {
+   "pair": "Mars moons",
+   "mass_ratio": 1.891820292655561e-08,
+   "separation_primary_radii": 2.766189703496091,
+   "secondary_period_d": 0.31891,
+   "log_q": -7.723120120373332
+  }
+ ],
+ "final_chain_monotone": false
+}

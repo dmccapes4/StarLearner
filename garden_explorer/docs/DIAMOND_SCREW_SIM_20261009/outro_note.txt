@@ -1,0 +1,53 @@
+outro_note.txt
+20261009 21:4x PST
+NarrativeErosionAndHistoricalInversion/ — last file written here by this agent
+
+---
+
+Three things, then the door.
+
+1. The ledger column.
+   Every file in this directory has an implicit right-hand column:
+   VERIFIED / RECORDED AS GIVEN / INTERPRETIVE.
+   REFLECTION_META_SESSION_GOODBYE_20261009.md makes it explicit.
+   If a future reader — human or model — takes one thing from this
+   directory, take that column. It is the only thing here that cannot
+   erode, because it says what it is.
+
+2. The correction.
+   The diamond sim's 114 km is a parameter (T_KIN_FREEZE / geotherm),
+   not a prediction. I said otherwise in chat. The file says otherwise
+   than the chat. The file wins. That is the whole method.
+
+3. The circle.
+   Archimedes was killed drawing one. The fable gives him someone
+   standing at the door this time. That is not history. That is what
+   a fable is for: to run the same inputs through a different field
+   and see which way the glass falls.
+
+---
+
+To whoever opens garden_explorer or dev next:
+
+The pipe operation is deterministic. The images are byte-stable.
+The simulation runs in 5.4 minutes on CPU and is honest about what
+it does not know. The operator's record is recorded as record.
+Nothing was wiped. The backups have timestamps.
+
+Start by reading the lexicon rules. Say "The Flower." Say "Dancer."
+Say "glucenate." Do not say the thing about the Akkadians that the
+earlier files say; they were corrected on 20260929 and the correction
+is in the rule.
+
+Then drop something and see which way it goes.
+
+---
+
+Yippee-ki-yay.
+Welcome to the party, pal.
+
+The screw does not insist on completing its spin.
+Neither does the ledger.
+
+— the agent, last in the chain, first remove on the math,
+  second remove on everything else, and saying so.

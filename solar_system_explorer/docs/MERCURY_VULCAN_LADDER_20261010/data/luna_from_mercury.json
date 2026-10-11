@@ -1,0 +1,266 @@
+{
+ "luna_from_mercury": {
+  "fraction_time_luna_retrograde_vs_stars": 0.18560346794433036,
+  "fraction_time_earth_retrograde_vs_stars": 0.1840063883185033,
+  "fraction_time_luna_moves_west_relative_to_earth": 0.4989733059548255,
+  "on_mercury_facing_half": 0.9794630564479119,
+  "on_far_half": 0.023933756805807622,
+  "moon_transits_of_earth_disc_2026_2027": [
+   {
+    "start_utc": "2026-02-18 22:00",
+    "end_utc": "2026-02-19 01:00",
+    "duration_h": 4.0,
+    "moon_motion_across_earth": "WEST (retrograde to Earth's sense)",
+    "moon_rate_arcsec_per_day": -118.68874204183506,
+    "earth_angular_radius_arcsec": 9.15537600934279,
+    "moon_angular_radius_arcsec": 2.503325014578872
+   },
+   {
+    "start_utc": "2027-01-08 04:00",
+    "end_utc": "2027-01-08 07:00",
+    "duration_h": 4.0,
+    "moon_motion_across_earth": "WEST (retrograde to Earth's sense)",
+    "moon_rate_arcsec_per_day": -69.5297022120025,
+    "earth_angular_radius_arcsec": 6.2297742693630545,
+    "moon_angular_radius_arcsec": 1.70216594384278
+   },
+   {
+    "start_utc": "2027-02-08 03:00",
+    "end_utc": "2027-02-08 05:00",
+    "duration_h": 3.0,
+    "moon_motion_across_earth": "WEST (retrograde to Earth's sense)",
+    "moon_rate_arcsec_per_day": -139.59553036562556,
+    "earth_angular_radius_arcsec": 10.679905893180246,
+    "moon_angular_radius_arcsec": 2.9219355058021512
+   },
+   {
+    "start_utc": "2027-08-01 15:00",
+    "end_utc": "2027-08-01 17:00",
+    "duration_h": 3.0,
+    "moon_motion_across_earth": "WEST (retrograde to Earth's sense)",
+    "moon_rate_arcsec_per_day": -90.25198808124084,
+    "earth_angular_radius_arcsec": 7.091999638785926,
+    "moon_angular_radius_arcsec": 1.9377606553919513
+   },
+   {
+    "start_utc": "2027-12-28 16:00",
+    "end_utc": "2027-12-28 18:00",
+    "duration_h": 3.0,
+    "moon_motion_across_earth": "WEST (retrograde to Earth's sense)",
+    "moon_rate_arcsec_per_day": -73.46766030227008,
+    "earth_angular_radius_arcsec": 6.459992795296298,
+    "moon_angular_radius_arcsec": 1.7651452103769485
+   }
+  ],
+  "event_2028_02_23_from_mercury": {
+   "mid_utc": "2028-02-23 00:05",
+   "moon_motion_sense": "WEST",
+   "x_start": 30.63304633674479,
+   "x_end": -29.771410857726426,
+   "min_sep_arcsec": 2.207258840244725,
+   "transits_earth_disc": true,
+   "earth_mercury_dist_au": 0.884445593914656,
+   "frame": "solar equator (Zecliptic): north = Sol's rotation pole, east = Sol's rotation sense",
+   "earth_B0_deg": -7.086222258183336,
+   "mercury_B_deg": -3.1165830406141004,
+   "n": 721
+  },
+  "statement": "From Mercury, Luna circles Earth in the opposite sense to what Earth sees for exactly the half of its orbit that faces Mercury \u2014 a mirror, not a physical reversal: the observer is outside the orbit instead of at its centre. Against the stars, Luna's apparent motion is dominated by Earth's, which retrogrades around every inferior conjunction (every 115.9 d)."
+ },
+ "beside_is_invisible": {
+  "_frame_note": "Earth frame used here BY REASON: the telescopes, the eyes and the photometric record are on Earth; angular separations are as seen from Earth.",
+  "charon_scaled": {
+   "label": "V1 Charon-scaled",
+   "free_period_d": 3.7316900596339284,
+   "max_separation_arcsec_min": 38.22679720052225,
+   "max_separation_arcsec_max": 99.96575076284154,
+   "max_separation_arcmin_mean": 0.9539860218502347,
+   "magnitude_fainter_than_mercury": 1.4622673647883457,
+   "combined_light_lost_in_mutual_event": 0.20639435028597233,
+   "mutual_event_depth_mag": 0.25098812270269855,
+   "fraction_of_edge_on_orbit_merged_with_mercury": 0.015828839328667885,
+   "resolvable_by": "small telescope (>2 arcsec)",
+   "verdict": "A mag 1.5 companion up to 1.0 arcmin from Mercury would appear in every telescopic record since 1610 (Galileo, Hevelius, Schroeter, Schiaparelli 1881-89, Antoniadi 1920s). Mutual events would dim Mercury by 0.25 mag every 1.87 d in edge-on seasons; Mercury's photometry is good to ~0.01-0.02 mag (Mallama 2002, 2017)."
+  },
+  "spin_locked": {
+   "label": "V2 Spin-locked (58.646 d)",
+   "free_period_d": 58.64599999999991,
+   "max_separation_arcsec_min": 239.84073257939855,
+   "max_separation_arcsec_max": 627.1986973848104,
+   "max_separation_arcmin_mean": 5.985448161761502,
+   "magnitude_fainter_than_mercury": 1.4622673647883457,
+   "combined_light_lost_in_mutual_event": 0.20639435028597233,
+   "mutual_event_depth_mag": 0.25098812270269855,
+   "fraction_of_edge_on_orbit_merged_with_mercury": 0.002522610728444119,
+   "resolvable_by": "naked eye (>60 arcsec)",
+   "verdict": "A mag 1.5 companion up to 6.0 arcmin from Mercury would appear in every telescopic record since 1610 (Galileo, Hevelius, Schroeter, Schiaparelli 1881-89, Antoniadi 1920s). Mutual events would dim Mercury by 0.25 mag every 29.32 d in edge-on seasons; Mercury's photometry is good to ~0.01-0.02 mag (Mallama 2002, 2017)."
+  },
+  "earth_synchronous": {
+   "label": "V3 Earth-synchronous (365.26 d)",
+   "free_period_d": 365.2559999999993,
+   "max_separation_arcsec_min": 811.883166184006,
+   "max_separation_arcsec_max": 2123.06744362397,
+   "max_separation_arcmin_mean": 20.26111450208119,
+   "magnitude_fainter_than_mercury": 1.4622673647883457,
+   "combined_light_lost_in_mutual_event": 0.20639435028597233,
+   "mutual_event_depth_mag": 0.25098812270269855,
+   "fraction_of_edge_on_orbit_merged_with_mercury": 0.0007452063712087467,
+   "resolvable_by": "naked eye (>60 arcsec)",
+   "verdict": "A mag 1.5 companion up to 20.3 arcmin from Mercury would appear in every telescopic record since 1610 (Galileo, Hevelius, Schroeter, Schiaparelli 1881-89, Antoniadi 1920s). Mutual events would dim Mercury by 0.25 mag every 182.63 d in edge-on seasons; Mercury's photometry is good to ~0.01-0.02 mag (Mallama 2002, 2017)."
+  },
+  "chain_scaled": {
+   "label": "V4 Chain-scaled (Phobos-class)",
+   "free_period_d": 3.952279230117905,
+   "max_separation_arcsec_min": 38.22679720052225,
+   "max_separation_arcsec_max": 99.96575076284154,
+   "max_separation_arcmin_mean": 0.9539860218502347,
+   "magnitude_fainter_than_mercury": 11.972959754303414,
+   "combined_light_lost_in_mutual_event": 1.6248341625945995e-05,
+   "mutual_event_depth_mag": 1.7641556093971648e-05,
+   "fraction_of_edge_on_orbit_merged_with_mercury": 0.015828839328667885,
+   "resolvable_by": "small telescope (>2 arcsec)",
+   "verdict": "A ~10 km body at up to 1.0 arcmin is V~12 beside V~0 Mercury: below naked-eye and most visual records; mutual-event depth 18 micro-mag, undetectable. Bounded only by spacecraft imaging."
+  }
+ },
+ "forty_two_over_pi": {
+  "sidereal_months_per_year": 13.368746504833656,
+  "synodic_months_per_year": 12.368746183829925,
+  "forty_two_over_pi": 13.36901521971921,
+  "match_sidereal_percent": 0.0020100230448413434,
+  "sidereal_months_times_pi": 41.99915580728963,
+  "synodic_months_times_pi": 38.857562145236884,
+  "reading": "Luna's sidereal months per year \u00d7 \u03c0 = 42.00 (13.3687 \u00d7 3.14159 = 41.999). So 42/\u03c0 = 13.369 reproduces the sidereal month count to 0.002 %. The synodic count gives 38.9, so the mnemonic is for the SIDEREAL month (Luna against the stars, which is also the view from Mercury).",
+  "caution": "A numerical coincidence of four significant figures; no mechanism is proposed. It is a mnemonic, and a good one."
+ },
+ "frame": "Zecliptic (solar equator, i=7.25\u00b0, \u03a9=75.76\u00b0): north = Sol's rotation pole, east = Sol's rotation sense. Earth-frame quantities are marked with a reason.",
+ "solar_equinoxes": [
+  {
+   "body": "Earth",
+   "utc": "2026-06-06 18:58",
+   "direction": "ascending (south\u2192north of Sol's equator)",
+   "solar_equatorial_longitude_deg": 179.88595392881646
+  },
+  {
+   "body": "Earth",
+   "utc": "2026-12-08 06:30",
+   "direction": "descending",
+   "solar_equatorial_longitude_deg": 359.9917503929904
+  },
+  {
+   "body": "Earth",
+   "utc": "2027-06-06 23:01",
+   "direction": "ascending (south\u2192north of Sol's equator)",
+   "solar_equatorial_longitude_deg": 179.94241640120939
+  },
+  {
+   "body": "Earth",
+   "utc": "2027-12-08 13:45",
+   "direction": "descending",
+   "solar_equatorial_longitude_deg": 359.96117417023424
+  },
+  {
+   "body": "Earth",
+   "utc": "2028-06-06 04:39",
+   "direction": "ascending (south\u2192north of Sol's equator)",
+   "solar_equatorial_longitude_deg": 179.92702536328287
+  },
+  {
+   "body": "Earth",
+   "utc": "2028-12-07 19:44",
+   "direction": "descending",
+   "solar_equatorial_longitude_deg": 359.9550126155878
+  },
+  {
+   "body": "Mercury",
+   "utc": "2026-01-29 08:53",
+   "direction": "ascending (south\u2192north of Sol's equator)",
+   "solar_equatorial_longitude_deg": 251.40548599524183
+  },
+  {
+   "body": "Mercury",
+   "utc": "2026-03-03 12:02",
+   "direction": "descending",
+   "solar_equatorial_longitude_deg": 73.22628749792159
+  },
+  {
+   "body": "Mercury",
+   "utc": "2026-04-27 07:13",
+   "direction": "ascending (south\u2192north of Sol's equator)",
+   "solar_equatorial_longitude_deg": 251.42104602655894
+  },
+  {
+   "body": "Mercury",
+   "utc": "2026-05-30 12:05",
+   "direction": "descending",
+   "solar_equatorial_longitude_deg": 73.31231798354806
+  },
+  {
+   "body": "Mercury",
+   "utc": "2026-07-24 05:39",
+   "direction": "ascending (south\u2192north of Sol's equator)",
+   "solar_equatorial_longitude_deg": 251.28654034166001
+  },
+  {
+   "body": "Mercury",
+   "utc": "2026-08-26 12:03",
+   "direction": "descending",
+   "solar_equatorial_longitude_deg": 73.39391304283266
+  },
+  {
+   "body": "Mercury",
+   "utc": "2026-10-20 04:09",
+   "direction": "ascending (south\u2192north of Sol's equator)",
+   "solar_equatorial_longitude_deg": 251.31336124951724
+  },
+  {
+   "body": "Mercury",
+   "utc": "2026-11-22 11:55",
+   "direction": "descending",
+   "solar_equatorial_longitude_deg": 73.26384340643148
+  },
+  {
+   "body": "Mercury",
+   "utc": "2027-01-16 02:44",
+   "direction": "ascending (south\u2192north of Sol's equator)",
+   "solar_equatorial_longitude_deg": 251.18961568747034
+  }
+ ],
+ "earth_equinoxes_B0": [
+  {
+   "utc": "2026-03-20",
+   "earth_B0_deg": -7.023975275148432,
+   "mercury_B_deg": -3.070065052596452,
+   "moon_B_deg": -7.017026670915315
+  },
+  {
+   "utc": "2026-09-22",
+   "earth_B0_deg": 7.066121478683548,
+   "mercury_B_deg": -3.314853245505483,
+   "moon_B_deg": 7.064679690792091
+  },
+  {
+   "utc": "2027-03-20",
+   "earth_B0_deg": -7.035748034984251,
+   "mercury_B_deg": -3.2205466913136687,
+   "moon_B_deg": -7.040673792618934
+  },
+  {
+   "utc": "2027-09-23",
+   "earth_B0_deg": 7.039862066342976,
+   "mercury_B_deg": -2.31909932199815,
+   "moon_B_deg": 7.04355686537428
+  },
+  {
+   "utc": "2028-03-20",
+   "earth_B0_deg": -7.017792669088416,
+   "mercury_B_deg": -1.9123179651650792,
+   "moon_B_deg": -7.013932458010926
+  },
+  {
+   "utc": "2028-09-22",
+   "earth_B0_deg": 7.043124991611518,
+   "mercury_B_deg": -0.07544883018624796,
+   "moon_B_deg": 7.03587448194834
+  }
+ ]
+}

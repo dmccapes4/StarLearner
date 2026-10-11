@@ -1,0 +1,1712 @@
+{
+ "history_b2n": {
+  "n_concepts": 3765,
+  "min_cluster_size": 15,
+  "hdbscan_clusters": 2,
+  "noise_frac": 0.439,
+  "ganglia": 1,
+  "ganglion_concepts": 46,
+  "load_by_layer": {
+   "A_strong": 46
+  },
+  "load_by_structure": {
+   "UB-20": {
+    "name": "caudate nucleus",
+    "load": 9.2
+   },
+   "BS-13": {
+    "name": "dorsal medulla (NTS, DMV, area postrema, XII)",
+    "load": 9.2
+   },
+   "BS-14": {
+    "name": "ventrolateral medulla (ambiguus, preB\u00f6tzinger, RVLM, RTN)",
+    "load": 9.2
+   },
+   "BS-15": {
+    "name": "ventral medulla (inferior olive, pyramids)",
+    "load": 9.2
+   },
+   "BS-03b": {
+    "name": "substantia nigra (pars compacta + pars reticulata)",
+    "load": 9.2
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 1,
+    "n": 46,
+    "mean_C": 1.095,
+    "angular_sd_deg": 18.3,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "to engrave, to write (root \u2192 'to scratch, to mark')",
+     "Writing \u2014 creation and transmission of literary works",
+     "Writing as recording and transmitting knowledge"
+    ]
+   }
+  ]
+ },
+ "six_a": {
+  "n_concepts": 12768,
+  "min_cluster_size": 51,
+  "hdbscan_clusters": 7,
+  "noise_frac": 0.905,
+  "ganglia": 4,
+  "ganglion_concepts": 498,
+  "load_by_layer": {
+   "A_weak": 55,
+   "A_strong": 63,
+   "B_weak": 283,
+   "B_strong": 97
+  },
+  "load_by_structure": {
+   "BS-05": {
+    "name": "pontine tegmentum (locus coeruleus, parabrachial, V/VI/VII nuclei)",
+    "load": 94.3
+   },
+   "BS-06": {
+    "name": "basilar pons (pontine nuclei)",
+    "load": 94.3
+   },
+   "BS-16": {
+    "name": "raphe nuclei",
+    "load": 94.3
+   },
+   "UB-10": {
+    "name": "cortex layers II-III",
+    "load": 32.3
+   },
+   "UB-16": {
+    "name": "cingulate gyrus",
+    "load": 32.3
+   },
+   "UB-26": {
+    "name": "insula",
+    "load": 32.3
+   },
+   "UB-22": {
+    "name": "putamen",
+    "load": 13.8
+   },
+   "UB-23": {
+    "name": "globus pallidus externus (GPe)",
+    "load": 13.8
+   },
+   "UB-24": {
+    "name": "globus pallidus internus (GPi)",
+    "load": 13.8
+   },
+   "UB-29": {
+    "name": "thalamus",
+    "load": 13.8
+   },
+   "UB-20": {
+    "name": "caudate nucleus",
+    "load": 12.6
+   },
+   "BS-13": {
+    "name": "dorsal medulla (NTS, DMV, area postrema, XII)",
+    "load": 12.6
+   },
+   "BS-14": {
+    "name": "ventrolateral medulla (ambiguus, preB\u00f6tzinger, RVLM, RTN)",
+    "load": 12.6
+   },
+   "BS-15": {
+    "name": "ventral medulla (inferior olive, pyramids)",
+    "load": 12.6
+   },
+   "BS-03b": {
+    "name": "substantia nigra (pars compacta + pars reticulata)",
+    "load": 12.6
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 5,
+    "n": 283,
+    "mean_C": -0.626,
+    "angular_sd_deg": 13.1,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "B_weak",
+    "central": [
+     "conflict between peoples or groups arising from organized armed struggle \u2014 war",
+     "War",
+     "War or organized armed conflict"
+    ]
+   },
+   {
+    "id": 6,
+    "n": 97,
+    "mean_C": -0.893,
+    "angular_sd_deg": 13.0,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "B_strong",
+    "central": [
+     "Rebellion \u2014 Organized Resistance against Rule",
+     "rebellion",
+     "rebellion"
+    ]
+   },
+   {
+    "id": 2,
+    "n": 63,
+    "mean_C": 1.114,
+    "angular_sd_deg": 12.5,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "Agriculture\u2014subsistence farming",
+     "Agriculture or Cultivated Land Existence",
+     "Agriculture"
+    ]
+   },
+   {
+    "id": 1,
+    "n": 55,
+    "mean_C": 0.612,
+    "angular_sd_deg": 16.2,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "Population movement motivated by settlement abroad",
+     "Migration and Settling of New Peoples",
+     "Migration of peoples"
+    ]
+   }
+  ]
+ },
+ "six_b": {
+  "n_concepts": 12447,
+  "min_cluster_size": 49,
+  "hdbscan_clusters": 8,
+  "noise_frac": 0.855,
+  "ganglia": 5,
+  "ganglion_concepts": 1196,
+  "load_by_layer": {
+   "A_strong": 281,
+   "A_weak": 807,
+   "B_strong": 108
+  },
+  "load_by_structure": {
+   "UB-22": {
+    "name": "putamen",
+    "load": 201.8
+   },
+   "UB-23": {
+    "name": "globus pallidus externus (GPe)",
+    "load": 201.8
+   },
+   "UB-24": {
+    "name": "globus pallidus internus (GPi)",
+    "load": 201.8
+   },
+   "UB-29": {
+    "name": "thalamus",
+    "load": 201.8
+   },
+   "UB-20": {
+    "name": "caudate nucleus",
+    "load": 56.2
+   },
+   "BS-13": {
+    "name": "dorsal medulla (NTS, DMV, area postrema, XII)",
+    "load": 56.2
+   },
+   "BS-14": {
+    "name": "ventrolateral medulla (ambiguus, preB\u00f6tzinger, RVLM, RTN)",
+    "load": 56.2
+   },
+   "BS-15": {
+    "name": "ventral medulla (inferior olive, pyramids)",
+    "load": 56.2
+   },
+   "BS-03b": {
+    "name": "substantia nigra (pars compacta + pars reticulata)",
+    "load": 56.2
+   },
+   "UB-10": {
+    "name": "cortex layers II-III",
+    "load": 36.0
+   },
+   "UB-16": {
+    "name": "cingulate gyrus",
+    "load": 36.0
+   },
+   "UB-26": {
+    "name": "insula",
+    "load": 36.0
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 3,
+    "n": 807,
+    "mean_C": 0.239,
+    "angular_sd_deg": 16.0,
+    "sign_agreement": [
+     0.85,
+     0.53,
+     0.85
+    ],
+    "layer": "A_weak",
+    "central": [
+     "Kingship \u2014 the status and power held by a king or ruler",
+     "Kingship-governing (Kingship)",
+     "Rule of the King over People"
+    ]
+   },
+   {
+    "id": 2,
+    "n": 119,
+    "mean_C": 1.066,
+    "angular_sd_deg": 17.6,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "Migration\u2014organised movement of people to new land for permanent settlement",
+     "Migration",
+     "Migration for settlement"
+    ]
+   },
+   {
+    "id": 7,
+    "n": 108,
+    "mean_C": -0.881,
+    "angular_sd_deg": 11.4,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "B_strong",
+    "central": [
+     "Rebellion",
+     "Rebellion",
+     "re-turn, turn back, rise-against, rebellion"
+    ]
+   },
+   {
+    "id": 4,
+    "n": 106,
+    "mean_C": 0.697,
+    "angular_sd_deg": 29.8,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "Death as a result of violence",
+     "Death",
+     "Death"
+    ]
+   },
+   {
+    "id": 0,
+    "n": 56,
+    "mean_C": 1.088,
+    "angular_sd_deg": 18.1,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "Agriculture",
+     "Agriculture",
+     "Agriculture"
+    ]
+   }
+  ]
+ },
+ "mythology": {
+  "n_concepts": 1979,
+  "min_cluster_size": 8,
+  "hdbscan_clusters": 3,
+  "noise_frac": 0.217,
+  "ganglia": 1,
+  "ganglion_concepts": 8,
+  "load_by_layer": {
+   "A_weak": 8
+  },
+  "load_by_structure": {
+   "UB-22": {
+    "name": "putamen",
+    "load": 2.0
+   },
+   "UB-23": {
+    "name": "globus pallidus externus (GPe)",
+    "load": 2.0
+   },
+   "UB-24": {
+    "name": "globus pallidus internus (GPi)",
+    "load": 2.0
+   },
+   "UB-29": {
+    "name": "thalamus",
+    "load": 2.0
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 2,
+    "n": 8,
+    "mean_C": 0.89,
+    "angular_sd_deg": 18.2,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "Ritual Purification Through Cleansing",
+     "Ritual Bathing or Purification",
+     "ritual purification by water"
+    ]
+   }
+  ]
+ },
+ "sports": {
+  "n_concepts": 1670,
+  "min_cluster_size": 8,
+  "hdbscan_clusters": 2,
+  "noise_frac": 0.405,
+  "ganglia": 1,
+  "ganglion_concepts": 8,
+  "load_by_layer": {
+   "A_weak": 8
+  },
+  "load_by_structure": {
+   "UB-22": {
+    "name": "putamen",
+    "load": 2.0
+   },
+   "UB-23": {
+    "name": "globus pallidus externus (GPe)",
+    "load": 2.0
+   },
+   "UB-24": {
+    "name": "globus pallidus internus (GPi)",
+    "load": 2.0
+   },
+   "UB-29": {
+    "name": "thalamus",
+    "load": 2.0
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 1,
+    "n": 8,
+    "mean_C": 1.099,
+    "angular_sd_deg": 18.7,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "Written language as method for recording events",
+     "Historical record and historiography",
+     "Writing and Text Preservation"
+    ]
+   }
+  ]
+ },
+ "warfare": {
+  "n_concepts": 1529,
+  "min_cluster_size": 8,
+  "hdbscan_clusters": 3,
+  "noise_frac": 0.616,
+  "ganglia": 2,
+  "ganglion_concepts": 21,
+  "load_by_layer": {
+   "A_strong": 21
+  },
+  "load_by_structure": {
+   "UB-20": {
+    "name": "caudate nucleus",
+    "load": 4.2
+   },
+   "BS-13": {
+    "name": "dorsal medulla (NTS, DMV, area postrema, XII)",
+    "load": 4.2
+   },
+   "BS-14": {
+    "name": "ventrolateral medulla (ambiguus, preB\u00f6tzinger, RVLM, RTN)",
+    "load": 4.2
+   },
+   "BS-15": {
+    "name": "ventral medulla (inferior olive, pyramids)",
+    "load": 4.2
+   },
+   "BS-03b": {
+    "name": "substantia nigra (pars compacta + pars reticulata)",
+    "load": 4.2
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 2,
+    "n": 13,
+    "mean_C": 1.355,
+    "angular_sd_deg": 8.4,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "Kingship",
+     "Kingship and Monarchy",
+     "Kingship \u2014 authority of the king over his domain"
+    ]
+   },
+   {
+    "id": 0,
+    "n": 8,
+    "mean_C": 1.154,
+    "angular_sd_deg": 15.8,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "Experimentation as process of testing and investigating by trial",
+     "Experiment",
+     "Experiment - structured testing or trial"
+    ]
+   }
+  ]
+ },
+ "childhood": {
+  "n_concepts": 681,
+  "min_cluster_size": 8,
+  "hdbscan_clusters": 8,
+  "noise_frac": 0.651,
+  "ganglia": 3,
+  "ganglion_concepts": 36,
+  "load_by_layer": {
+   "balanced": 21,
+   "A_strong": 15
+  },
+  "load_by_structure": {
+   "UB-09": {
+    "name": "cortex layer I (molecular)",
+    "load": 4.2
+   },
+   "UB-10": {
+    "name": "cortex layers II-III",
+    "load": 4.2
+   },
+   "UB-11": {
+    "name": "cortex layer IV (granular)",
+    "load": 4.2
+   },
+   "UB-12": {
+    "name": "cortex layer V",
+    "load": 4.2
+   },
+   "UB-13": {
+    "name": "cortex layer VI",
+    "load": 4.2
+   },
+   "UB-20": {
+    "name": "caudate nucleus",
+    "load": 3.0
+   },
+   "BS-13": {
+    "name": "dorsal medulla (NTS, DMV, area postrema, XII)",
+    "load": 3.0
+   },
+   "BS-14": {
+    "name": "ventrolateral medulla (ambiguus, preB\u00f6tzinger, RVLM, RTN)",
+    "load": 3.0
+   },
+   "BS-15": {
+    "name": "ventral medulla (inferior olive, pyramids)",
+    "load": 3.0
+   },
+   "BS-03b": {
+    "name": "substantia nigra (pars compacta + pars reticulata)",
+    "load": 3.0
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 3,
+    "n": 15,
+    "mean_C": 0.899,
+    "angular_sd_deg": 22.1,
+    "sign_agreement": [
+     0.93,
+     0.93
+    ],
+    "layer": "A_strong",
+    "central": [
+     "Carefulness\u2014cautiousness to avoid harm",
+     "caution or careful behavior",
+     "Danger or Risk Perception \u2014 awareness of potential threat or harm"
+    ]
+   },
+   {
+    "id": 2,
+    "n": 11,
+    "mean_C": 0.185,
+    "angular_sd_deg": 12.5,
+    "sign_agreement": [
+     0.8,
+     0.8
+    ],
+    "layer": "balanced",
+    "central": [
+     "Water consumption to maintain hydration",
+     "drinking for nourishment",
+     "Consumption of liquid for physiological balance"
+    ]
+   },
+   {
+    "id": 7,
+    "n": 10,
+    "mean_C": 0.084,
+    "angular_sd_deg": 5.2,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "balanced",
+    "central": [
+     "video weblog self-recording",
+     "Modern Technology \u2014 video blogging (vlogging)",
+     "recording-or-sharing-personal-experience-using-images-or-video"
+    ]
+   }
+  ]
+ },
+ "family": {
+  "n_concepts": 366,
+  "min_cluster_size": 8,
+  "hdbscan_clusters": 4,
+  "noise_frac": 0.792,
+  "ganglia": 4,
+  "ganglion_concepts": 76,
+  "load_by_layer": {
+   "A_weak": 36,
+   "B_weak": 28,
+   "A_strong": 12
+  },
+  "load_by_structure": {
+   "BS-05": {
+    "name": "pontine tegmentum (locus coeruleus, parabrachial, V/VI/VII nuclei)",
+    "load": 9.3
+   },
+   "BS-06": {
+    "name": "basilar pons (pontine nuclei)",
+    "load": 9.3
+   },
+   "BS-16": {
+    "name": "raphe nuclei",
+    "load": 9.3
+   },
+   "UB-22": {
+    "name": "putamen",
+    "load": 9.0
+   },
+   "UB-23": {
+    "name": "globus pallidus externus (GPe)",
+    "load": 9.0
+   },
+   "UB-24": {
+    "name": "globus pallidus internus (GPi)",
+    "load": 9.0
+   },
+   "UB-29": {
+    "name": "thalamus",
+    "load": 9.0
+   },
+   "UB-20": {
+    "name": "caudate nucleus",
+    "load": 2.4
+   },
+   "BS-13": {
+    "name": "dorsal medulla (NTS, DMV, area postrema, XII)",
+    "load": 2.4
+   },
+   "BS-14": {
+    "name": "ventrolateral medulla (ambiguus, preB\u00f6tzinger, RVLM, RTN)",
+    "load": 2.4
+   },
+   "BS-15": {
+    "name": "ventral medulla (inferior olive, pyramids)",
+    "load": 2.4
+   },
+   "BS-03b": {
+    "name": "substantia nigra (pars compacta + pars reticulata)",
+    "load": 2.4
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 2,
+    "n": 28,
+    "mean_C": -0.493,
+    "angular_sd_deg": 18.4,
+    "sign_agreement": [
+     0.83,
+     0.83,
+     0.88
+    ],
+    "layer": "B_weak",
+    "central": [
+     "communal ritual meal",
+     "Ritual gathering with food and specific dish preparation",
+     "Feasting \u2014 ritual gathering for shared meal on significant occasion"
+    ]
+   },
+   {
+    "id": 0,
+    "n": 20,
+    "mean_C": 0.562,
+    "angular_sd_deg": 11.5,
+    "sign_agreement": [
+     0.82,
+     1.0,
+     0.89
+    ],
+    "layer": "A_weak",
+    "central": [
+     "collective journey for recreation and temporary habitation outdoors",
+     "planned movement from one place to another for temporary stay in nature",
+     "Temporary human habitation outside of permanent shelter"
+    ]
+   },
+   {
+    "id": 1,
+    "n": 16,
+    "mean_C": 0.334,
+    "angular_sd_deg": 12.3,
+    "sign_agreement": [
+     1.0,
+     0.89,
+     0.9
+    ],
+    "layer": "A_weak",
+    "central": [
+     "Food Preparation and Cooking",
+     "Cooking Process\u2014stepwise combination, manipulation, and transformation of raw food ingredients for consumption",
+     "Cooking and food preparation"
+    ]
+   },
+   {
+    "id": 3,
+    "n": 12,
+    "mean_C": 1.269,
+    "angular_sd_deg": 24.2,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "Kinship parental relationship",
+     "kinship_family_relationships_parent_offspring",
+     "Family relationship and kinship"
+    ]
+   }
+  ]
+ },
+ "islam_origin": {
+  "n_concepts": 329,
+  "min_cluster_size": 8,
+  "hdbscan_clusters": 2,
+  "noise_frac": 0.198,
+  "ganglia": 1,
+  "ganglion_concepts": 11,
+  "load_by_layer": {
+   "A_weak": 11
+  },
+  "load_by_structure": {
+   "UB-22": {
+    "name": "putamen",
+    "load": 2.8
+   },
+   "UB-23": {
+    "name": "globus pallidus externus (GPe)",
+    "load": 2.8
+   },
+   "UB-24": {
+    "name": "globus pallidus internus (GPi)",
+    "load": 2.8
+   },
+   "UB-29": {
+    "name": "thalamus",
+    "load": 2.8
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 1,
+    "n": 11,
+    "mean_C": 0.905,
+    "angular_sd_deg": 11.9,
+    "sign_agreement": [
+     0.88,
+     0.88
+    ],
+    "layer": "A_weak",
+    "central": [
+     "Teaching of language\u2014organized skill transmission and guided knowledge in language",
+     "Education \u2014 systematic instruction, training, or study",
+     "Education\u2014organized transmission of knowledge"
+    ]
+   }
+  ]
+ },
+ "leper_king": {
+  "n_concepts": 765,
+  "min_cluster_size": 8,
+  "hdbscan_clusters": 2,
+  "noise_frac": 0.475,
+  "ganglia": 1,
+  "ganglion_concepts": 10,
+  "load_by_layer": {
+   "A_weak": 10
+  },
+  "load_by_structure": {
+   "UB-22": {
+    "name": "putamen",
+    "load": 2.5
+   },
+   "UB-23": {
+    "name": "globus pallidus externus (GPe)",
+    "load": 2.5
+   },
+   "UB-24": {
+    "name": "globus pallidus internus (GPi)",
+    "load": 2.5
+   },
+   "UB-29": {
+    "name": "thalamus",
+    "load": 2.5
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 0,
+    "n": 10,
+    "mean_C": 0.519,
+    "angular_sd_deg": 17.0,
+    "sign_agreement": [
+     0.86,
+     0.86
+    ],
+    "layer": "A_weak",
+    "central": [
+     "fortification and architecture for defense",
+     "Architecture - the construction of fortresses",
+     "Architecture of defensive stonework for military purposes"
+    ]
+   }
+  ]
+ },
+ "sacred": {
+  "n_concepts": 10007,
+  "min_cluster_size": 40,
+  "hdbscan_clusters": 57,
+  "noise_frac": 0.463,
+  "ganglia": 44,
+  "ganglion_concepts": 4146,
+  "load_by_layer": {
+   "A_strong": 200,
+   "A_weak": 2132,
+   "B_strong": 43,
+   "B_weak": 553,
+   "balanced": 1218
+  },
+  "load_by_structure": {
+   "UB-22": {
+    "name": "putamen",
+    "load": 533.0
+   },
+   "UB-23": {
+    "name": "globus pallidus externus (GPe)",
+    "load": 533.0
+   },
+   "UB-24": {
+    "name": "globus pallidus internus (GPi)",
+    "load": 533.0
+   },
+   "UB-29": {
+    "name": "thalamus",
+    "load": 533.0
+   },
+   "UB-10": {
+    "name": "cortex layers II-III",
+    "load": 257.9
+   },
+   "UB-09": {
+    "name": "cortex layer I (molecular)",
+    "load": 243.6
+   },
+   "UB-11": {
+    "name": "cortex layer IV (granular)",
+    "load": 243.6
+   },
+   "UB-12": {
+    "name": "cortex layer V",
+    "load": 243.6
+   },
+   "UB-13": {
+    "name": "cortex layer VI",
+    "load": 243.6
+   },
+   "BS-05": {
+    "name": "pontine tegmentum (locus coeruleus, parabrachial, V/VI/VII nuclei)",
+    "load": 184.3
+   },
+   "BS-06": {
+    "name": "basilar pons (pontine nuclei)",
+    "load": 184.3
+   },
+   "BS-16": {
+    "name": "raphe nuclei",
+    "load": 184.3
+   },
+   "UB-20": {
+    "name": "caudate nucleus",
+    "load": 40.0
+   },
+   "BS-13": {
+    "name": "dorsal medulla (NTS, DMV, area postrema, XII)",
+    "load": 40.0
+   },
+   "BS-14": {
+    "name": "ventrolateral medulla (ambiguus, preB\u00f6tzinger, RVLM, RTN)",
+    "load": 40.0
+   },
+   "BS-15": {
+    "name": "ventral medulla (inferior olive, pyramids)",
+    "load": 40.0
+   },
+   "BS-03b": {
+    "name": "substantia nigra (pars compacta + pars reticulata)",
+    "load": 40.0
+   },
+   "UB-16": {
+    "name": "cingulate gyrus",
+    "load": 14.3
+   },
+   "UB-26": {
+    "name": "insula",
+    "load": 14.3
+   }
+  },
+  "ganglia_list": [
+   {
+    "id": 18,
+    "n": 404,
+    "mean_C": 0.443,
+    "angular_sd_deg": 6.9,
+    "sign_agreement": [
+     0.96,
+     0.96
+    ],
+    "layer": "A_weak",
+    "central": [
+     "divine warning and moral responsibility",
+     "divine warning and moral responsibility",
+     "divine warning and moral responsibility"
+    ]
+   },
+   {
+    "id": 17,
+    "n": 293,
+    "mean_C": 0.433,
+    "angular_sd_deg": 14.5,
+    "sign_agreement": [
+     0.99,
+     0.99,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "covenant breach and consequences",
+     "covenant breach and consequences",
+     "covenant breach and consequences"
+    ]
+   },
+   {
+    "id": 55,
+    "n": 212,
+    "mean_C": 0.395,
+    "angular_sd_deg": 6.6,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "balanced",
+    "central": [
+     "divine mercy conditional on repentance and reform",
+     "divine mercy conditional on repentance and reform",
+     "divine mercy conditional on repentance and reform"
+    ]
+   },
+   {
+    "id": 36,
+    "n": 166,
+    "mean_C": -0.376,
+    "angular_sd_deg": 14.0,
+    "sign_agreement": [
+     0.89,
+     0.89
+    ],
+    "layer": "balanced",
+    "central": [
+     "divine invitation to worship and praise",
+     "divine invitation to worship and praise",
+     "divine invitation to worship and praise"
+    ]
+   },
+   {
+    "id": 38,
+    "n": 148,
+    "mean_C": -0.502,
+    "angular_sd_deg": 13.8,
+    "sign_agreement": [
+     0.96,
+     0.96
+    ],
+    "layer": "B_weak",
+    "central": [
+     "trust in divine guidance and inheritance security",
+     "trust in divine guidance and inheritance security",
+     "trust in divine guidance and inheritance security"
+    ]
+   },
+   {
+    "id": 37,
+    "n": 128,
+    "mean_C": 0.984,
+    "angular_sd_deg": 18.1,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "divine command and guidance for warfare conduct",
+     "divine command and guidance for warfare conduct",
+     "divine command and guidance for warfare conduct"
+    ]
+   },
+   {
+    "id": 28,
+    "n": 125,
+    "mean_C": 0.507,
+    "angular_sd_deg": 12.8,
+    "sign_agreement": [
+     0.9,
+     0.9
+    ],
+    "layer": "A_weak",
+    "central": [
+     "detailed divine instructions for sacred object construction",
+     "detailed divine instructions for sacred object construction",
+     "detailed divine instructions for sacred object construction"
+    ]
+   },
+   {
+    "id": 26,
+    "n": 123,
+    "mean_C": 0.901,
+    "angular_sd_deg": 18.1,
+    "sign_agreement": [
+     0.99,
+     0.99,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "divine eschatological announcement of imminent national doom",
+     "divine eschatological announcement of imminent national doom",
+     "divine eschatological announcement of imminent national doom"
+    ]
+   },
+   {
+    "id": 53,
+    "n": 121,
+    "mean_C": -0.204,
+    "angular_sd_deg": 8.7,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "balanced",
+    "central": [
+     "divine deliverance and provision in history",
+     "divine deliverance and provision in history",
+     "divine deliverance and provision in history"
+    ]
+   },
+   {
+    "id": 34,
+    "n": 120,
+    "mean_C": 0.138,
+    "angular_sd_deg": 9.6,
+    "sign_agreement": [
+     0.8,
+     0.8
+    ],
+    "layer": "balanced",
+    "central": [
+     "divine judgment and expulsion from sacred space",
+     "divine judgment and expulsion from sacred space",
+     "divine judgment and expulsion from sacred space"
+    ]
+   },
+   {
+    "id": 50,
+    "n": 113,
+    "mean_C": 1.123,
+    "angular_sd_deg": 11.3,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "divine promise of land inheritance to descendants",
+     "divine promise of land inheritance to descendants",
+     "divine promise of land inheritance to descendants"
+    ]
+   },
+   {
+    "id": 29,
+    "n": 106,
+    "mean_C": 0.796,
+    "angular_sd_deg": 16.3,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "royal temple construction as divine covenant fulfillment",
+     "royal temple construction as divine covenant fulfillment",
+     "royal temple construction as divine covenant fulfillment"
+    ]
+   },
+   {
+    "id": 11,
+    "n": 104,
+    "mean_C": 0.616,
+    "angular_sd_deg": 9.7,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "testing believers through hardship and patience",
+     "testing believers through hardship and patience",
+     "testing believers through hardship and patience"
+    ]
+   },
+   {
+    "id": 46,
+    "n": 98,
+    "mean_C": 0.262,
+    "angular_sd_deg": 7.0,
+    "sign_agreement": [
+     0.86,
+     0.86
+    ],
+    "layer": "balanced",
+    "central": [
+     "spiritual thirst and longing for God",
+     "spiritual thirst and longing for God",
+     "spiritual thirst and longing for God"
+    ]
+   },
+   {
+    "id": 16,
+    "n": 93,
+    "mean_C": -0.232,
+    "angular_sd_deg": 9.1,
+    "sign_agreement": [
+     0.8,
+     0.8
+    ],
+    "layer": "balanced",
+    "central": [
+     "divine auditory and visual manifestation as covenant confirmation",
+     "divine auditory and visual manifestation as covenant confirmation",
+     "divine auditory and visual manifestation as covenant confirmation"
+    ]
+   },
+   {
+    "id": 52,
+    "n": 91,
+    "mean_C": 0.385,
+    "angular_sd_deg": 8.5,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "balanced",
+    "central": [
+     "righteousness contrasted with wickedness as life path",
+     "righteousness contrasted with wickedness as life path",
+     "righteousness contrasted with wickedness as life path"
+    ]
+   },
+   {
+    "id": 25,
+    "n": 89,
+    "mean_C": -0.13,
+    "angular_sd_deg": 15.3,
+    "sign_agreement": [
+     0.86,
+     0.86
+    ],
+    "layer": "balanced",
+    "central": [
+     "communal repentance and covenant renewal",
+     "communal repentance and covenant renewal",
+     "divine covenant initiation through communal assent"
+    ]
+   },
+   {
+    "id": 48,
+    "n": 89,
+    "mean_C": 0.677,
+    "angular_sd_deg": 9.1,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "prophetic lament over social injustice and moral decay",
+     "prophetic lament over social injustice and moral decay",
+     "prophetic lament over social injustice and moral decay"
+    ]
+   },
+   {
+    "id": 5,
+    "n": 87,
+    "mean_C": -0.87,
+    "angular_sd_deg": 13.2,
+    "sign_agreement": [
+     0.98,
+     0.98
+    ],
+    "layer": "B_weak",
+    "central": [
+     "apostolic appeal for doctrinal unity",
+     "apostolic appeal for doctrinal unity",
+     "apostolic appeal for doctrinal unity"
+    ]
+   },
+   {
+    "id": 45,
+    "n": 85,
+    "mean_C": 0.751,
+    "angular_sd_deg": 4.6,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "personal lament as plea for divine intervention",
+     "personal lament as plea for divine intervention",
+     "personal lament as plea for divine intervention"
+    ]
+   },
+   {
+    "id": 32,
+    "n": 82,
+    "mean_C": 0.302,
+    "angular_sd_deg": 7.7,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "balanced",
+    "central": [
+     "human inability to justify oneself before divine omnipotence",
+     "human inability to justify oneself before divine omnipotence",
+     "human inability to justify oneself before divine omnipotence"
+    ]
+   },
+   {
+    "id": 51,
+    "n": 79,
+    "mean_C": 0.478,
+    "angular_sd_deg": 7.5,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "accusation of social injustice as source of divine judgment",
+     "accusation of social injustice as source of divine judgment",
+     "accusation of social injustice as source of divine judgment"
+    ]
+   },
+   {
+    "id": 44,
+    "n": 74,
+    "mean_C": 0.941,
+    "angular_sd_deg": 15.0,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "imprecatory prayer for enemy destruction",
+     "imprecatory prayer for enemy destruction",
+     "prayer for protection from evil forces"
+    ]
+   },
+   {
+    "id": 24,
+    "n": 72,
+    "mean_C": -0.691,
+    "angular_sd_deg": 9.0,
+    "sign_agreement": [
+     0.97,
+     0.97
+    ],
+    "layer": "B_weak",
+    "central": [
+     "angelic mediation of divine promise and instruction",
+     "angelic mediation of divine promise and instruction",
+     "divine communication through symbolic dream vision"
+    ]
+   },
+   {
+    "id": 39,
+    "n": 72,
+    "mean_C": 0.6,
+    "angular_sd_deg": 19.7,
+    "sign_agreement": [
+     0.93,
+     0.94,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "divine military defense as protection of sacred city",
+     "divine military defense as protection of sacred city",
+     "divine military defense as protection of sacred city"
+    ]
+   },
+   {
+    "id": 40,
+    "n": 71,
+    "mean_C": -0.911,
+    "angular_sd_deg": 8.2,
+    "sign_agreement": [
+     0.98,
+     0.98
+    ],
+    "layer": "B_weak",
+    "central": [
+     "divine blessing as universal covenantal promise",
+     "divine blessing as universal covenantal promise",
+     "divine blessing as universal covenantal promise"
+    ]
+   },
+   {
+    "id": 14,
+    "n": 66,
+    "mean_C": -0.568,
+    "angular_sd_deg": 10.1,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "B_weak",
+    "central": [
+     "faithful conduct as criteria for eternal inheritance",
+     "faithful conduct as criteria for eternal inheritance",
+     "faithful conduct as criteria for eternal inheritance"
+    ]
+   },
+   {
+    "id": 19,
+    "n": 65,
+    "mean_C": 0.617,
+    "angular_sd_deg": 9.2,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "prophetic confrontation of royal sin and divine retribution",
+     "prophetic confrontation of royal sin and divine retribution",
+     "prophetic confrontation of royal sin and divine retribution"
+    ]
+   },
+   {
+    "id": 0,
+    "n": 60,
+    "mean_C": 1.704,
+    "angular_sd_deg": 24.5,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "human strategy for survival amid foreign threat",
+     "human strategy for survival amid foreign threat",
+     "human strategy for survival amid foreign threat"
+    ]
+   },
+   {
+    "id": 7,
+    "n": 58,
+    "mean_C": -0.596,
+    "angular_sd_deg": 14.2,
+    "sign_agreement": [
+     0.96,
+     0.96
+    ],
+    "layer": "B_weak",
+    "central": [
+     "Christian pressing toward spiritual maturity",
+     "Christian exhortation to rejoice and practice virtue",
+     "Christian exhortation to rejoice and practice virtue"
+    ]
+   },
+   {
+    "id": 13,
+    "n": 55,
+    "mean_C": 0.865,
+    "angular_sd_deg": 15.3,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "imperial conquest as divine instrument of judgment",
+     "imperial conquest as divine instrument of judgment",
+     "imperial conquest as divine instrument of judgment"
+    ]
+   },
+   {
+    "id": 12,
+    "n": 52,
+    "mean_C": 1.488,
+    "angular_sd_deg": 25.4,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "military defeat and royal death narrative",
+     "military defeat and royal death narrative",
+     "military defeat and royal death narrative"
+    ]
+   },
+   {
+    "id": 8,
+    "n": 51,
+    "mean_C": -0.81,
+    "angular_sd_deg": 8.5,
+    "sign_agreement": [
+     0.97,
+     0.97
+    ],
+    "layer": "B_weak",
+    "central": [
+     "wisdom teaching through paternal exhortation",
+     "wisdom teaching through paternal exhortation",
+     "wisdom teaching through paternal exhortation"
+    ]
+   },
+   {
+    "id": 27,
+    "n": 51,
+    "mean_C": -0.185,
+    "angular_sd_deg": 10.3,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "balanced",
+    "central": [
+     "divine exaltation and human abasement on judgment day",
+     "divine exaltation and human abasement on judgment day",
+     "divine exaltation and human abasement on judgment day"
+    ]
+   },
+   {
+    "id": 43,
+    "n": 49,
+    "mean_C": 0.15,
+    "angular_sd_deg": 9.5,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "balanced",
+    "central": [
+     "divine communication of historical prophetic narratives",
+     "divine communication of historical prophetic narratives",
+     "divine communication of historical prophetic narratives"
+    ]
+   },
+   {
+    "id": 49,
+    "n": 48,
+    "mean_C": 0.76,
+    "angular_sd_deg": 7.9,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "divine promise of eternal royal dynasty",
+     "divine promise of eternal royal dynasty",
+     "divine promise of eternal royal dynasty"
+    ]
+   },
+   {
+    "id": 10,
+    "n": 47,
+    "mean_C": 1.688,
+    "angular_sd_deg": 27.1,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "genealogical record of Judahite and Simeonite clans",
+     "genealogical record of Judahite and Simeonite clans",
+     "genealogical record of Judahite and Simeonite clans"
+    ]
+   },
+   {
+    "id": 9,
+    "n": 46,
+    "mean_C": -0.185,
+    "angular_sd_deg": 6.3,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "balanced",
+    "central": [
+     "divine rejection of empty ritual sacrifice",
+     "divine rejection of empty ritual sacrifice",
+     "divine rejection of empty ritual sacrifice"
+    ]
+   },
+   {
+    "id": 21,
+    "n": 45,
+    "mean_C": 0.891,
+    "angular_sd_deg": 12.4,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "divine eschatological destruction of foreign nations",
+     "divine eschatological destruction of foreign nations",
+     "divine eschatological destruction of foreign nations"
+    ]
+   },
+   {
+    "id": 4,
+    "n": 43,
+    "mean_C": -1.45,
+    "angular_sd_deg": 6.0,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "B_strong",
+    "central": [
+     "divine authorship and perfection of scripture",
+     "divine authorship and perfection of scripture",
+     "divine authorship and perfection of scripture"
+    ]
+   },
+   {
+    "id": 30,
+    "n": 43,
+    "mean_C": 0.651,
+    "angular_sd_deg": 9.3,
+    "sign_agreement": [
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "divine selection and purification of a chosen lineage",
+     "divine selection and purification of a chosen lineage",
+     "divine selection and purification of a chosen lineage"
+    ]
+   },
+   {
+    "id": 1,
+    "n": 41,
+    "mean_C": 1.433,
+    "angular_sd_deg": 27.8,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_strong",
+    "central": [
+     "familial favoritism and sibling rivalry",
+     "familial favoritism and sibling rivalry",
+     "familial favoritism and sibling rivalry"
+    ]
+   },
+   {
+    "id": 31,
+    "n": 41,
+    "mean_C": 0.706,
+    "angular_sd_deg": 9.4,
+    "sign_agreement": [
+     1.0,
+     1.0,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "divine appointment of wise governance",
+     "divine appointment of wise governance",
+     "divine appointment of wise governance"
+    ]
+   },
+   {
+    "id": 2,
+    "n": 40,
+    "mean_C": 0.699,
+    "angular_sd_deg": 14.2,
+    "sign_agreement": [
+     0.94,
+     0.94,
+     1.0
+    ],
+    "layer": "A_weak",
+    "central": [
+     "communal remembrance through annual ritual observance",
+     "communal remembrance through annual ritual observance",
+     "communal remembrance through annual ritual observance"
+    ]
+   }
+  ]
+ },
+ "_layer_rule": {
+  "A_strong": {
+   "structures": [
+    "UB-20 caudate nucleus",
+    "BS-13 dorsal medulla (NTS, DMV, area postrema, XII)",
+    "BS-14 ventrolateral medulla (ambiguus, preB\u00f6tzinger, RVLM, RTN)",
+    "BS-15 ventral medulla (inferior olive, pyramids)",
+    "BS-03b substantia nigra (pars compacta + pars reticulata)"
+   ],
+   "reading": "vulture's beak / brainstem: rote sequence, below conscious thought"
+  },
+  "A_weak": {
+   "structures": [
+    "UB-22 putamen",
+    "UB-23 globus pallidus externus (GPe)",
+    "UB-24 globus pallidus internus (GPi)",
+    "UB-29 thalamus"
+   ],
+   "reading": "basal ganglia + thalamus: habit relay"
+  },
+  "balanced": {
+   "structures": [
+    "UB-09 cortex layer I (molecular)",
+    "UB-10 cortex layers II-III",
+    "UB-11 cortex layer IV (granular)",
+    "UB-12 cortex layer V",
+    "UB-13 cortex layer VI"
+   ],
+   "reading": "cortex I\u2013VI: the plastic coating; ganglia grown into fixed geometry"
+  },
+  "B_weak": {
+   "structures": [
+    "BS-05 pontine tegmentum (locus coeruleus, parabrachial, V/VI/VII nuclei)",
+    "BS-06 basilar pons (pontine nuclei)",
+    "BS-16 raphe nuclei"
+   ],
+   "reading": "pons: the first reflection"
+  },
+  "B_strong": {
+   "structures": [
+    "UB-10 cortex layers II-III",
+    "UB-16 cingulate gyrus",
+    "UB-26 insula"
+   ],
+   "reading": "prefrontal / cingulate / insula: the reflection of the pons"
+  }
+ },
+ "_thresholds": {
+  "A_strong": "> +0.5\u03bb",
+  "A_weak": "> +0.15\u03bb",
+  "balanced": "|C| \u2264 0.15\u03bb",
+  "B_weak": "< \u22120.15\u03bb",
+  "B_strong": "< \u22120.5\u03bb"
+ }
+}

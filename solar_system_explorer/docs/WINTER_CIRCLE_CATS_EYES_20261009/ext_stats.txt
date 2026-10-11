@@ -1,0 +1,143 @@
+GEMINI · LEO EXTENSION — 49 stars/clusters + 3 Mars events + 3 Jupiter marks
+
+ZECLIPTIC LONGITUDE SEQUENCE (bright stars, mag < 2.6, plus floor-sitters)
+  λ=  69.8  β=  -5.5              Aldebaran     Tau  rear_hip
+  λ=  76.8  β= -31.1  Δλ=  7.0  Rigel         Ori  front_paw
+  λ=  80.9  β= -16.8  Δλ=  4.1  Bellatrix     Ori  shoulder
+  λ=  81.9  β= +22.9  Δλ=  0.9  Capella       Aur  spine_apex
+  λ=  82.4  β= -23.6  Δλ=  0.5  Mintaka       Ori  belt_W
+  λ=  83.5  β= -24.5  Δλ=  1.1  Alnilam       Ori  belt_C
+  λ=  84.7  β= -25.3  Δλ=  1.2  Alnitak       Ori  belt_E
+  λ=  88.8  β= -16.0  Δλ=  4.1  Betelgeuse    Ori  chest
+  λ=  93.4  β=  -0.9  Δλ=  4.7  Propus        Gem  Castor_foot
+  λ=  95.3  β=  -0.8  Δλ=  1.9  Tejat         Gem  Castor_foot
+  λ=  99.1  β=  -6.7  Δλ=  3.8  Alhena        Gem  Pollux_foot
+  λ=  99.9  β=  +2.1  Δλ=  0.8  Mebsuta       Gem  Castor_waist
+  λ= 104.1  β= -39.6  Δλ=  4.1  Sirius        CMa  prey
+  λ= 105.0  β=  -2.0  Δλ=  0.9  Mekbuda       Gem  Pollux_knee (Cepheid)
+  λ= 108.5  β=  -0.2  Δλ=  3.5  Wasat         Gem  Pollux_waist (on Zecliptic)
+  λ= 110.2  β= +10.1  Δλ=  1.7  Castor        Gem  head_W / haunch_W
+  λ= 113.2  β=  +6.7  Δλ=  3.0  Pollux        Gem  head_E / haunch_E
+  λ= 115.8  β= -16.0  Δλ=  2.6  Procyon       CMi  right_eye
+  λ= 127.3  β=  +1.3  Δλ= 11.6  M44           Cnc  hive
+  λ= 128.7  β=  +0.1  Δλ=  1.4  Asellus Aus.  Cnc  donkey_S (on Zecliptic)
+  λ= 147.3  β= -22.4  Δλ= 18.6  Alphard       Hya  below_floor_reference
+  λ= 149.6  β=  +8.8  Δλ=  2.3  Algieba       Leo  mane / sickle
+  λ= 149.8  β=  +0.5  Δλ=  0.2  Regulus       Leo  heart (ON Zecliptic)
+  λ= 156.4  β=  +0.1  Δλ=  6.6  ρ Leo         Leo  chest
+  λ= 161.3  β= +14.3  Δλ=  4.9  Zosma         Leo  hip
+  λ= 168.7  β=  +1.7  Δλ=  7.4  σ Leo         Leo  rear_paw
+  λ= 171.6  β= +12.3  Δλ=  2.9  Denebola      Leo  tail
+  sector span: 69.8° → 171.6°  = 101.8° of Zecliptic (prior report: 46.0° for the Circle alone)
+
+ON THE FLOOR (|β| ≤ 2.5°): 10
+  Asellus Aus.  β=+0.08°  λ=128.7°  Cnc
+  ρ Leo         β=+0.15°  λ=156.4°  Leo
+  Wasat         β=-0.18°  λ=108.5°  Gem
+  Regulus       β=+0.46°  λ=149.8°  Leo
+  Tejat         β=-0.82°  λ=95.3°  Gem
+  Propus        β=-0.89°  λ=93.4°  Gem
+  M44           β=+1.29°  λ=127.3°  Cnc
+  σ Leo         β=+1.70°  λ=168.7°  Leo
+  Mekbuda       β=-2.04°  λ=105.0°  Gem
+  Mebsuta       β=+2.07°  λ=99.9°  Gem
+  Regulus is the brightest star in the sky within 0.5° of the Zecliptic (β=+0.46°). The Moon occults it; Mars passes it ~every 2 years.
+
+MARS OPPOSITIONS IN THIS SECTOR
+  Mars_2008  2008/01/02  λ= 89.40 β=+3.51  mag -1.38  nearest Propus 6.0°  F=14 G=8
+  Mars_2025  2025/01/16  λ=116.05 β=+4.29  mag -1.25  nearest κ Gem 2.7°  F=16 G=1
+  Mars_2027  2027-2-20  λ=150.24 β=+4.46  mag -1.12  nearest η Leo 2.4°  F=12 G=1
+  Mars 2027 stations: 2027/1/10 (RA max) → 2027/4/5 (RA min); retrograde loop inside the Sickle
+  Regulus passes: 2026/11/26 (1.7°); 2027/3/1 (4.9°); 2027/5/15 (1.2°)
+  β at opposition: +3.51 (2008, Gemini/chest) · +4.29 (2025, Gemini/haunch) · +4.46 (2027, Leo/Sickle). Mars orbits 1.85° off the ecliptic; near opposition its β is largest because Earth is closest — geometry, not omen.
+
+JUPITER
+  Jupiter_2026-01-10 (opposition, Gemini)    RA 7.43h Dec +22.2  λ=109.8 β=+0.26  nearest Wasat 1.3°
+  Jupiter_2026-10-09 (today)                 RA 9.55h Dec +15.2  λ=140.6 β=+0.62  nearest Subra 5.7°
+  Jupiter_2027-02-19 (Mars opposition day)   RA 9.56h Dec +15.6  λ=140.6 β=+1.06  nearest Subra 6.0°
+
+DANCE — continuation from M44
+  step vector (Gomeisa→Procyon): ΔRA=+0.2025h  ΔDec=-3.064°;  Zecliptic Δλ=3.59°
+  A. keep the reflected step past M44:
+     step  6  RA 8.87h Dec +23.6  nearest Asellus Bor. 3.0°
+     step  7  RA 9.07h Dec +26.7  nearest ι Cnc 4.4°
+     step  8  RA 9.28h Dec +29.7  nearest Al Minliar 4.0°
+     step  9  RA 9.48h Dec +32.8  nearest Al Minliar 6.7°
+     step 10  RA 9.68h Dec +35.9  nearest Rasalas 10.2°
+     step 11  RA 9.88h Dec +38.9  nearest Rasalas 12.9°
+     step 12  RA 10.09h Dec +42.0  nearest Rasalas 16.2°
+  B. second slide at M44 (Dec flipped back):
+     step  1  RA 8.87h Dec +17.5  nearest Asellus Aus. 1.9°
+     step  2  RA 9.07h Dec +14.4  nearest Acubens 2.9°
+     step  3  RA 9.28h Dec +11.4  nearest Acubens 4.4°
+     step  4  RA 9.48h Dec +8.3  nearest Subra 3.5°
+     step  5  RA 9.68h Dec +5.2  nearest Subra 4.7°
+     step  6  RA 9.88h Dec +2.2  nearest Subra 8.3°
+     step  7  RA 10.09h Dec -0.9  nearest Alphard 12.1°
+     step  8  RA 10.29h Dec -4.0  nearest Alphard 13.2°
+     step  9  RA 10.49h Dec -7.0  nearest Alphard 15.4°
+  → Neither A nor B enters Leo. The slide is a Dec-dominant move; Leo lies along λ at β≈0. The phrase changes: from stepping to walking the floor.
+  C. walk the floor from M44 in Δλ units (β pinned to 0):
+     Regulus      6.26 steps   (β of star +0.46°)
+     Algieba      6.20 steps   (β of star +8.81°)
+     Adhafera     5.63 steps   (β of star +11.87°)
+     η Leo        5.72 steps   (β of star +4.87°)
+     Ras Elased   3.72 steps   (β of star +9.72°)
+     Denebola    12.32 steps   (β of star +12.27°)
+     Zosma        9.45 steps   (β of star +14.33°)
+     Subra        4.70 steps   (β of star -3.76°)
+  D. phrase lengths 2-1-2-1-2-1:
+     2 eyes          Gomeisa → Procyon      4.3°
+     →1              Procyon → Pollux      22.8°
+     →2 donkeys       Pollux → M44         15.1°
+     →1 heart            M44 → Regulus     22.5°
+     →2 mane         Regulus → Algieba      8.4°
+     →1 tail         Algieba → Denebola    21.9°
+  twin pairs 2.5°–5.5° apart in the set: 28
+     2.73°  Ras Elased — Rasalas
+     2.74°  Alnitak — Mintaka
+     3.15°  κ Gem — υ Gem
+     3.33°  Asellus Bor. — Asellus Aus.
+     3.34°  Ras Elased — Alterf
+     3.59°  Alterf — Al Minliar
+     3.63°  Pollux — κ Gem
+     3.66°  Algieba — Adhafera
+     3.95°  Alhena — Alzirr
+     3.99°  Wasat — Mekbuda
+     4.02°  ι Gem — τ Gem
+     4.30°  Algieba — η Leo
+     4.30°  Procyon — Gomeisa
+     4.33°  Pollux — ι Gem
+     4.51°  Castor — Pollux
+     4.52°  Castor — ι Gem
+     4.55°  ι Leo — σ Leo
+     4.80°  Regulus — η Leo
+     5.00°  Castor — υ Gem
+     5.09°  Zosma — Chertan
+     5.22°  Mekbuda — λ Gem
+     5.28°  Castor — τ Gem
+     5.37°  Ras Elased — Al Minliar
+     5.38°  θ Gem — τ Gem
+     5.41°  κ Gem — ι Gem
+     5.44°  Chertan — ι Leo
+     5.46°  Wasat — λ Gem
+     5.46°  Mebsuta — Tejat
+
+STRUCTURAL FACTS ABOUT star_pipe (hold for every input)
+  T1  F = L + |L−B| + B = 2·max(L,B).  F is always even; an F-group is 'same max digit-sum'. F=14 <=> max(L,B)=7.
+      (prior report's 'self-pipe stars have even F' is true but weaker: ALL F are even.)
+  T2  G = leading digit of round(λ). For λ in 100–199, G=1 regardless. Gemini/Cancer/Leo all collapse to G=1; G_diff=0 there carries no information.
+  T3  L and B are digit sums of ROUNDED degrees; a star 0.5° off changes L by up to 9. The pipe is a coarse hash of position, not a geometric property.
+  T4  Self-pipe <=> digit-sum(round λ) ≡ digit-sum(round |β|) (mod 10). Expected rate ≈ 1/10 under independence; observed 7/49.
+
+WHAT IS REAL GEOMETRY (independent of any pipe; all numbers computed)
+  • Propus: 3.5° from the June-solstice point (λ=90°), 9.2° from the galactic anticenter.
+  • Tejat: 5.4° from the June-solstice point (λ=90°), 10.6° from the galactic anticenter.
+  • Floor-sitters |β| ≤ 0.5°: Wasat (λ 108.5) → Asellus Aus. (λ 128.7) → Regulus (λ 149.8) → ρ Leo (λ 156.4);  Δλ: 20.2°, 21.1°, 6.6°
+  • Aldebaran (λ 69.8°) and Regulus (λ 149.8°) — two of the four 'royal stars' — bracket this sector 80.0° apart.
+  • In λ, Regulus sits 22.5° past M44 and 21.8° before Denebola — the heart is the λ-midpoint of hive and tail to within 1°.
+  • The three long legs of the phrase (Procyon→Pollux, M44→Regulus, Algieba→Denebola) are 22.8°, 22.5°, 21.9° — spread 0.9°. Targets were chosen by name, so treat this as a curiosity, not a test.
+  • Mars oppositions recur in the same sector every ~15–17 years (2008 Gem → 2025 Gem → 2027 Leo → ~2042 Gem/Cnc est.).
+
+LEDGER  coordinates: J2000 catalogue values (Hipparcos/SIMBAD-level, ±0.01°). Planets: PyEphem VSOP87 (±1′). Ecliptic transform: exact rotation, ε=23.4393°.
+        Dance geometry: linear RA/Dec stepping (as in dance_projection.py) for A/B; exact ecliptic for C. Pipe: digit arithmetic, deterministic.

@@ -1,0 +1,779 @@
+{
+  "sim": "diamond_hello_world_v2",
+  "backend": "numpy_cpu",
+  "date": "20261009",
+  "poem": "The screw does not insist on completing its spin.",
+  "n_seeds": 10000000,
+  "n_turns": 120,
+  "steps_per_turn": 12,
+  "total_steps": 1440,
+  "runtime_s": 325.31,
+  "throughput_Bsteps_per_s": 0.0443,
+  "helix": {
+    "radius_m": 0.01,
+    "pitch_km": 2.0,
+    "kappa_per_m": 9.869604391348448e-08,
+    "dz_per_step_m": 166.66666666666666,
+    "max_depth_km": 240.0
+  },
+  "physics": {
+    "gamma_K_per_km": 8.0,
+    "T_surface_K": 288.15,
+    "P_BS_anchor_kbar": 25.0,
+    "T_BS_anchor_K": 1273.0,
+    "slope_BS_kbar_per_K": 0.03,
+    "T_kinetic_freeze_K": 1200.0,
+    "P_kinetic_lock_kbar": 70.0,
+    "K_shift_kbar": 8.0,
+    "K_trans_kbar": 2.0,
+    "lambda_decay_per_km": 0.01,
+    "C_min_nucleate": 0.1
+  },
+  "diamonds": {
+    "n_nucleated": 10000000,
+    "yield_pct": 100.0,
+    "depth_mean_km": 114.229,
+    "depth_median_km": 114.166,
+    "depth_std_km": 0.301,
+    "depth_min_km": 113.999,
+    "depth_max_km": 119.499,
+    "crystal_mean": 2.642e-05,
+    "crystal_max": 2.649e-05,
+    "mean_formation_step": 684.4
+  },
+  "suit_transitions_km": {
+    "spade_fall": 0.0,
+    "club_lift_onset": 113.98,
+    "heart_orbit_stability": 113.98,
+    "diamond_crystal_mean": 114.23
+  },
+  "HOW_TO_FLY_connection": {
+    "lift_integral": "LIFT  = \u222b\u222b \u03c1v\u00b2\u03ba \u00b7 \u1e91_up  dA  (wing \u2192 upward gradient)",
+    "depth_integral": "DEPTH = \u222b\u222b \u03c1v\u00b2\u03ba \u00b7 \u1e91_dn  dA  (screw \u2192 downward gradient)",
+    "unification": "Same integral, \u1e91 reversed. Diamond = lift pointing into Earth.",
+    "stall_analog": "Stall = screw step \u2192 0 = crystal lock = diamond formed.",
+    "V_mod_field": "V_mod_field(down) \u2265 1 \u2192 diamond. < 1 \u2192 humus (graphite-equivalent)."
+  },
+  "per_turn_log": [
+    {
+      "turn": 1,
+      "depth_km": 1.9999998779296875,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 2,
+      "depth_km": 4.000000732421875,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 3,
+      "depth_km": 5.9999990234375,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 4,
+      "depth_km": 7.9999970703125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 5,
+      "depth_km": 10.0,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 6,
+      "depth_km": 12.00000390625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 7,
+      "depth_km": 14.0000078125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 8,
+      "depth_km": 16.00001171875,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 9,
+      "depth_km": 18.000005859375,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 10,
+      "depth_km": 19.999998046875,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 11,
+      "depth_km": 21.999990234375,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 12,
+      "depth_km": 23.999982421875,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 13,
+      "depth_km": 25.999974609375,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 14,
+      "depth_km": 27.999966796875,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 15,
+      "depth_km": 29.999958984375,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 16,
+      "depth_km": 31.999951171875,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 17,
+      "depth_km": 33.99995703125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 18,
+      "depth_km": 35.99997265625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 19,
+      "depth_km": 37.99998828125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 20,
+      "depth_km": 40.00000390625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 21,
+      "depth_km": 42.00001953125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 22,
+      "depth_km": 44.00003515625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 23,
+      "depth_km": 46.00005078125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 24,
+      "depth_km": 48.00006640625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 25,
+      "depth_km": 50.00008203125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 26,
+      "depth_km": 52.00009765625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 27,
+      "depth_km": 54.00011328125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 28,
+      "depth_km": 56.00012890625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 29,
+      "depth_km": 58.00014453125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 30,
+      "depth_km": 60.00016015625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 31,
+      "depth_km": 62.00017578125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 32,
+      "depth_km": 64.00019140625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 33,
+      "depth_km": 66.0001953125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 34,
+      "depth_km": 68.0001640625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 35,
+      "depth_km": 70.0001328125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 36,
+      "depth_km": 72.0001015625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 37,
+      "depth_km": 74.0000703125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 38,
+      "depth_km": 76.0000390625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 39,
+      "depth_km": 78.0000078125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 40,
+      "depth_km": 79.9999765625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 41,
+      "depth_km": 81.9999453125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 42,
+      "depth_km": 83.9999140625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 43,
+      "depth_km": 85.9998828125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 44,
+      "depth_km": 87.9998515625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 45,
+      "depth_km": 89.9998203125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 46,
+      "depth_km": 91.9997890625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 47,
+      "depth_km": 93.9997578125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 48,
+      "depth_km": 95.9997265625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 49,
+      "depth_km": 97.9996953125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 50,
+      "depth_km": 99.9996640625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 51,
+      "depth_km": 101.9996328125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 52,
+      "depth_km": 103.9996015625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 53,
+      "depth_km": 105.9995703125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 54,
+      "depth_km": 107.9995390625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 55,
+      "depth_km": 109.9995078125,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 56,
+      "depth_km": 111.9994765625,
+      "n_nucleated": 0,
+      "mean_crystal": 0.0
+    },
+    {
+      "turn": 57,
+      "depth_km": 113.9994453125,
+      "n_nucleated": 4195169,
+      "mean_crystal": 4.47282637594526e-08
+    },
+    {
+      "turn": 58,
+      "depth_km": 115.9994140625,
+      "n_nucleated": 9991884,
+      "mean_crystal": 5.174953230380197e-07
+    },
+    {
+      "turn": 59,
+      "depth_km": 117.9993828125,
+      "n_nucleated": 9999986,
+      "mean_crystal": 1.0459493751113769e-06
+    },
+    {
+      "turn": 60,
+      "depth_km": 119.9993515625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.56991529820516e-06
+    },
+    {
+      "turn": 61,
+      "depth_km": 121.9993203125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.0890213363600196e-06
+    },
+    {
+      "turn": 62,
+      "depth_km": 123.9992890625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.60335559687519e-06
+    },
+    {
+      "turn": 63,
+      "depth_km": 125.9992578125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 3.1130045954341767e-06
+    },
+    {
+      "turn": 64,
+      "depth_km": 127.9992265625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 3.618053369791596e-06
+    },
+    {
+      "turn": 65,
+      "depth_km": 129.9991953125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 4.118583547096932e-06
+    },
+    {
+      "turn": 66,
+      "depth_km": 131.999203125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 4.614676527125994e-06
+    },
+    {
+      "turn": 67,
+      "depth_km": 133.999265625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 5.106409389554756e-06
+    },
+    {
+      "turn": 68,
+      "depth_km": 135.999328125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 5.593856712948764e-06
+    },
+    {
+      "turn": 69,
+      "depth_km": 137.999390625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 6.077094894862967e-06
+    },
+    {
+      "turn": 70,
+      "depth_km": 139.999453125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 6.556194875884103e-06
+    },
+    {
+      "turn": 71,
+      "depth_km": 141.999515625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 7.031227141851559e-06
+    },
+    {
+      "turn": 72,
+      "depth_km": 143.999578125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 7.5022599048679695e-06
+    },
+    {
+      "turn": 73,
+      "depth_km": 145.999640625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 7.969359103299212e-06
+    },
+    {
+      "turn": 74,
+      "depth_km": 147.999703125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 8.432592949247919e-06
+    },
+    {
+      "turn": 75,
+      "depth_km": 149.999765625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 8.892021469364408e-06
+    },
+    {
+      "turn": 76,
+      "depth_km": 151.999828125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 9.347708328277804e-06
+    },
+    {
+      "turn": 77,
+      "depth_km": 153.999890625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 9.799711733649019e-06
+    },
+    {
+      "turn": 78,
+      "depth_km": 155.999953125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.0248094440612476e-05
+    },
+    {
+      "turn": 79,
+      "depth_km": 158.000015625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.0692911928344984e-05
+    },
+    {
+      "turn": 80,
+      "depth_km": 160.000078125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.1134220585518051e-05
+    },
+    {
+      "turn": 81,
+      "depth_km": 162.000140625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.1572076800803188e-05
+    },
+    {
+      "turn": 82,
+      "depth_km": 164.000203125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.2006532415398397e-05
+    },
+    {
+      "turn": 83,
+      "depth_km": 166.000265625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.2437639270501677e-05
+    },
+    {
+      "turn": 84,
+      "depth_km": 168.000328125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.286544920731103e-05
+    },
+    {
+      "turn": 85,
+      "depth_km": 170.000390625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.3290015886013862e-05
+    },
+    {
+      "turn": 86,
+      "depth_km": 172.000453125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.3711381143366452e-05
+    },
+    {
+      "turn": 87,
+      "depth_km": 174.000515625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.4129598639556207e-05
+    },
+    {
+      "turn": 88,
+      "depth_km": 176.000578125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.4544712939823512e-05
+    },
+    {
+      "turn": 89,
+      "depth_km": 178.000640625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.4956770428398158e-05
+    },
+    {
+      "turn": 90,
+      "depth_km": 180.000703125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.5365816580015235e-05
+    },
+    {
+      "turn": 91,
+      "depth_km": 182.000765625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.577189141244162e-05
+    },
+    {
+      "turn": 92,
+      "depth_km": 184.000828125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.6175044947885908e-05
+    },
+    {
+      "turn": 93,
+      "depth_km": 186.000890625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.6575313566136174e-05
+    },
+    {
+      "turn": 94,
+      "depth_km": 188.000953125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.6972733646980487e-05
+    },
+    {
+      "turn": 95,
+      "depth_km": 190.001015625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.736735248414334e-05
+    },
+    {
+      "turn": 96,
+      "depth_km": 192.001078125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.775921009539161e-05
+    },
+    {
+      "turn": 97,
+      "depth_km": 194.001140625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.8148337403545156e-05
+    },
+    {
+      "turn": 98,
+      "depth_km": 196.001203125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.8534778064349666e-05
+    },
+    {
+      "turn": 99,
+      "depth_km": 198.001265625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.891856845759321e-05
+    },
+    {
+      "turn": 100,
+      "depth_km": 200.001328125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.929974496306386e-05
+    },
+    {
+      "turn": 101,
+      "depth_km": 202.001390625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 1.9678343960549682e-05
+    },
+    {
+      "turn": 102,
+      "depth_km": 204.001453125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.0054396372870542e-05
+    },
+    {
+      "turn": 103,
+      "depth_km": 206.001515625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.04279349418357e-05
+    },
+    {
+      "turn": 104,
+      "depth_km": 208.001578125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.079899968521204e-05
+    },
+    {
+      "turn": 105,
+      "depth_km": 210.001640625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.1167621525819413e-05
+    },
+    {
+      "turn": 106,
+      "depth_km": 212.001703125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.1533825929509476e-05
+    },
+    {
+      "turn": 107,
+      "depth_km": 214.001765625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.1897649276070297e-05
+    },
+    {
+      "turn": 108,
+      "depth_km": 216.001828125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.2259120669332333e-05
+    },
+    {
+      "turn": 109,
+      "depth_km": 218.001890625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.261827467009425e-05
+    },
+    {
+      "turn": 110,
+      "depth_km": 220.001953125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.297514038218651e-05
+    },
+    {
+      "turn": 111,
+      "depth_km": 222.002015625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.3329741452471353e-05
+    },
+    {
+      "turn": 112,
+      "depth_km": 224.002078125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.3682108803768642e-05
+    },
+    {
+      "turn": 113,
+      "depth_km": 226.002140625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.403226972091943e-05
+    },
+    {
+      "turn": 114,
+      "depth_km": 228.002203125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.438025694573298e-05
+    },
+    {
+      "turn": 115,
+      "depth_km": 230.002265625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.472608866810333e-05
+    },
+    {
+      "turn": 116,
+      "depth_km": 232.002328125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.5069795810850337e-05
+    },
+    {
+      "turn": 117,
+      "depth_km": 234.002390625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.541140202083625e-05
+    },
+    {
+      "turn": 118,
+      "depth_km": 236.002453125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.575094003987033e-05
+    },
+    {
+      "turn": 119,
+      "depth_km": 238.002515625,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.6088429876836017e-05
+    },
+    {
+      "turn": 120,
+      "depth_km": 240.002578125,
+      "n_nucleated": 10000000,
+      "mean_crystal": 2.642389154061675e-05
+    }
+  ]
+}

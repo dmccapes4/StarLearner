@@ -1,0 +1,489 @@
+{
+ "axiom": "Vulcan bound to Mercury (Pluto/Charon-like) and always anti-Earth (Config A); possibly inverted during lunar occultation (Config B).",
+ "mercury": {
+  "mass_kg": 3.3011e+23,
+  "GM_m3s2": 22031870000000.0,
+  "radius_km": 2439.7,
+  "hill_radius_perihelion_km": 175284.10851056196,
+  "hill_radius_mean_km": 220658.01642882026,
+  "spin_d": 58.646,
+  "orbit_d": 87.969,
+  "spin_orbit_ratio": 1.4999999999999998
+ },
+ "pluto_charon_template": {
+  "mass_ratio": 0.12171910974673829,
+  "radius_ratio": 0.5099722292350417,
+  "separation_R_P": 16.486914078936298,
+  "period_d": 6.387221,
+  "barycenter_outside_pluto": true
+ },
+ "chain_mass_ratio": {
+  "saturn_rings": 2.7096456346553117e-08,
+  "mars_moons": 1.891820292655561e-08,
+  "geometric_mean": 2.2641030448163075e-08
+ },
+ "variants": {
+  "charon_scaled": {
+   "label": "V1 Charon-scaled",
+   "mass_ratio": 0.12171910974673829,
+   "mass_kg": 4.018069531849578e+22,
+   "radius_km": 1244.179247664731,
+   "separation_km": 40223.124278380885,
+   "separation_R_M": 16.486914078936298,
+   "kepler_period_d": 3.7316900596339284,
+   "separation_over_hill_peri": 0.22947387883686668,
+   "separation_over_hill_mean": 0.18228716513164178,
+   "bound_in_hill_sphere": true,
+   "mercury_reflex_km": 4364.660310995627,
+   "mercury_reflex_over_R_M": 1.7890151703060324,
+   "barycenter_outside_mercury": true,
+   "derivation": "q=M_Charon/M_Pluto, R_V=0.510 R_M, a=16.49 R_M (Pluto/Charon ratios applied to Mercury)",
+   "baseline_km_to_see_vulcan_limb_at_mean_distance": 4681110.465620872,
+   "baseline_in_lunar_distances": 12.17770672638104,
+   "reflex_over_ranging_precision": 436466.0310995627,
+   "reflex_detectable": true
+  },
+  "spin_locked": {
+   "label": "V2 Spin-locked (58.646 d)",
+   "mass_ratio": 0.12171910974673829,
+   "mass_kg": 4.018069531849578e+22,
+   "radius_km": 1244.179247664731,
+   "separation_km": 252366.10277189955,
+   "separation_R_M": 103.44144885514595,
+   "kepler_period_d": 58.64599999999991,
+   "separation_over_hill_peri": 1.4397546070566511,
+   "separation_over_hill_mean": 1.1436978672075921,
+   "bound_in_hill_sphere": false,
+   "mercury_reflex_km": 27384.553844843504,
+   "mercury_reflex_over_R_M": 11.22455787385478,
+   "barycenter_outside_mercury": true,
+   "derivation": "Mutual tidal lock like Pluto/Charon: orbital period = Mercury's measured sidereal spin 58.646 d; a from Kepler III",
+   "baseline_km_to_see_vulcan_limb_at_mean_distance": 748145.060570122,
+   "baseline_in_lunar_distances": 1.9462670670398594,
+   "reflex_over_ranging_precision": 2738455.38448435,
+   "reflex_detectable": true
+  },
+  "earth_synchronous": {
+   "label": "V3 Earth-synchronous (365.26 d)",
+   "mass_ratio": 0.12171910974673829,
+   "mass_kg": 4.018069531849578e+22,
+   "radius_km": 1244.179247664731,
+   "separation_km": 854286.7349895388,
+   "separation_R_M": 350.1605668686883,
+   "kepler_period_d": 365.2559999999993,
+   "separation_over_hill_peri": 4.873726102432513,
+   "separation_over_hill_mean": 3.8715418039893152,
+   "bound_in_hill_sphere": false,
+   "mercury_reflex_km": 92699.69633917682,
+   "mercury_reflex_over_R_M": 37.996350509971236,
+   "barycenter_outside_mercury": true,
+   "derivation": "Strict anti-Earth lock: the Earth->Mercury direction turns once per sidereal year on average; a from Kepler III",
+   "baseline_km_to_see_vulcan_limb_at_mean_distance": 222729.6190112092,
+   "baseline_in_lunar_distances": 0.579421485461002,
+   "reflex_over_ranging_precision": 9269969.633917682,
+   "reflex_detectable": true
+  },
+  "chain_scaled": {
+   "label": "V4 Chain-scaled (Phobos-class)",
+   "mass_ratio": 2.2641030448163075e-08,
+   "mass_kg": 7474030561243113.0,
+   "radius_km": 9.834323161007326,
+   "separation_km": 40223.124278380885,
+   "separation_R_M": 16.486914078936298,
+   "kepler_period_d": 3.952279230117905,
+   "separation_over_hill_peri": 0.22947387883686668,
+   "separation_over_hill_mean": 0.18228716513164178,
+   "bound_in_hill_sphere": true,
+   "mercury_reflex_km": 0.000910692960888042,
+   "mercury_reflex_over_R_M": 3.732807152059852e-07,
+   "barycenter_outside_mercury": false,
+   "derivation": "From 'Saturn/rings is to Mercury/Vulcan is to Mars/moons': q = sqrt(q_SaturnRings * q_MarsMoons); rho = Phobos; a = 16.49 R_M",
+   "baseline_km_to_see_vulcan_limb_at_mean_distance": 9511719.638809463,
+   "baseline_in_lunar_distances": 24.744327884519937,
+   "reflex_over_ranging_precision": 0.09106929608880421,
+   "reflex_detectable": false
+  }
+ },
+ "lock_kinematics": {
+  "step_hours": 1.0,
+  "span": "2026-01-01 .. 2027-12-31",
+  "omega_mean_rad_s": 2.535657247376667e-07,
+  "omega_min_rad_s": 4.875689666594536e-09,
+  "omega_max_rad_s": 4.4305304201104913e-07,
+  "implied_period_mean_d": 286.79764286623106,
+  "implied_period_min_d": 164.13847840055413,
+  "implied_period_max_d": 14915.233974935016,
+  "free_fall_radius_km_min": 482369.6464296763,
+  "free_fall_radius_km_max": 9749741.096686617,
+  "free_fall_radius_km_mean": 871988.7397178859,
+  "hill_radius_perihelion_km": 175284.10851056196,
+  "hill_radius_mean_km": 220658.01642882026,
+  "free_fall_over_hill_min": 2.751930283518032,
+  "fraction_of_time_free_fall_inside_hill": 0.0,
+  "note": "The Earth->Mercury line turns once per year on average (because Mercury never strays more than ~28 deg from the Sun, the line follows the Earth->Sun line and librates about it with the 115.9-d synodic period). A Vulcan tracking it would need the orbital angular rate of a 1-year orbit; around Mercury that radius is always outside the Hill sphere."
+ },
+ "required_vs_available_acceleration": {
+  "charon_scaled": {
+   "gravity_available_ms2": 0.01361757446164253,
+   "centripetal_required_ms2_mean": 3.1002014466520014e-06,
+   "centripetal_required_ms2_max": 7.895638324320449e-06,
+   "tangential_required_ms2_mean": 4.759468019663911e-06,
+   "tangential_required_ms2_max": 1.8648915650327212e-05,
+   "solar_tide_ms2_mean": 5.781710222275972e-05,
+   "gravity_over_centripetal_mean": 4392.480519725113,
+   "nongravitational_force_needed_ms2_mean": 0.013614474260195878,
+   "verdict": "Mercury's gravity exceeds the required centripetal acceleration by 4392x: a free Vulcan here would orbit in 3.73 d, not track Earth. Holding the lock needs a sustained outward push of 0.0136 m/s^2 plus a tangential push of up to 1.86e-05 m/s^2 that no central force can supply."
+  },
+  "spin_locked": {
+   "gravity_available_ms2": 0.0003459308693056659,
+   "centripetal_required_ms2_mean": 1.9451143364313128e-05,
+   "centripetal_required_ms2_max": 4.95384560138751e-05,
+   "tangential_required_ms2_mean": 2.986163847137191e-05,
+   "tangential_required_ms2_max": 0.00011700618109679095,
+   "solar_tide_ms2_mean": 0.0003627534415412085,
+   "gravity_over_centripetal_mean": 17.7846033431815,
+   "nongravitational_force_needed_ms2_mean": 0.0003264797259413528,
+   "verdict": "Mercury's gravity exceeds the required centripetal acceleration by 18x: a free Vulcan here would orbit in 58.65 d, not track Earth. Holding the lock needs a sustained outward push of 0.000326 m/s^2 plus a tangential push of up to 0.000117 m/s^2 that no central force can supply."
+  },
+  "earth_synchronous": {
+   "gravity_available_ms2": 3.0188673792125663e-05,
+   "centripetal_required_ms2_mean": 6.584423808902575e-05,
+   "centripetal_required_ms2_max": 0.00016769306725304193,
+   "tangential_required_ms2_mean": 0.00010108489749989848,
+   "tangential_required_ms2_max": 0.0003960786624070427,
+   "solar_tide_ms2_mean": 0.001227959895471999,
+   "gravity_over_centripetal_mean": 0.4584861890467711,
+   "nongravitational_force_needed_ms2_mean": -3.565556429690009e-05,
+   "verdict": "Centripetal requirement is met in the mean, but the separation is 4.87x Mercury's Hill radius: the Sun's gravity gradient dominates and the orbit is not bound."
+  },
+  "chain_scaled": {
+   "gravity_available_ms2": 0.01361757446164253,
+   "centripetal_required_ms2_mean": 3.1002014466520014e-06,
+   "centripetal_required_ms2_max": 7.895638324320449e-06,
+   "tangential_required_ms2_mean": 4.759468019663911e-06,
+   "tangential_required_ms2_max": 1.8648915650327212e-05,
+   "solar_tide_ms2_mean": 5.781710222275972e-05,
+   "gravity_over_centripetal_mean": 4392.480519725113,
+   "nongravitational_force_needed_ms2_mean": 0.013614474260195878,
+   "verdict": "Mercury's gravity exceeds the required centripetal acceleration by 4392x: a free Vulcan here would orbit in 3.95 d, not track Earth. Holding the lock needs a sustained outward push of 0.0136 m/s^2 plus a tangential push of up to 1.86e-05 m/s^2 that no central force can supply."
+  }
+ },
+ "hiddenness": {
+  "charon_scaled": {
+   "earth_centre": {
+    "baseline_km": 0.0,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 0.0,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "earth_limb": {
+    "baseline_km": 6378.137,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 0.007678652477585844,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "lunar_farside_camera": {
+    "baseline_km": 384400.0,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 0.46277996417825434,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "sun_earth_L2": {
+    "baseline_km": 1500000.0,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 1.8058531380525016,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "config_B_near_side": {
+    "note": "In front of Mercury: a dark disc of angular radius R_V/(D-a) on Mercury's bright disc; visible in any telescope resolving Mercury's disc (>= ~10 cm aperture).",
+    "silhouette_fraction_of_mercury_disc_area": 0.2602160818268038
+   }
+  },
+  "spin_locked": {
+   "earth_centre": {
+    "baseline_km": 0.0,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 0.0,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "earth_limb": {
+    "baseline_km": 6378.137,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 0.04805428087935498,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "lunar_farside_camera": {
+    "baseline_km": 384400.0,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 2.896153778136791,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "sun_earth_L2": {
+    "baseline_km": 1500000.0,
+    "hidden_fraction": 0.0,
+    "max_parallax_arcsec": 11.301328478681544,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "config_B_near_side": {
+    "note": "In front of Mercury: a dark disc of angular radius R_V/(D-a) on Mercury's bright disc; visible in any telescope resolving Mercury's disc (>= ~10 cm aperture).",
+    "silhouette_fraction_of_mercury_disc_area": 0.26097988945212275
+   }
+  },
+  "earth_synchronous": {
+   "earth_centre": {
+    "baseline_km": 0.0,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 0.0,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "earth_limb": {
+    "baseline_km": 6378.137,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 0.16150123104586725,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "lunar_farside_camera": {
+    "baseline_km": 384400.0,
+    "hidden_fraction": 0.0,
+    "max_parallax_arcsec": 9.733417957944674,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "sun_earth_L2": {
+    "baseline_km": 1500000.0,
+    "hidden_fraction": 0.0,
+    "max_parallax_arcsec": 37.98159973183405,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "config_B_near_side": {
+    "note": "In front of Mercury: a dark disc of angular radius R_V/(D-a) on Mercury's bright disc; visible in any telescope resolving Mercury's disc (>= ~10 cm aperture).",
+    "silhouette_fraction_of_mercury_disc_area": 0.2631672225392419
+   }
+  },
+  "chain_scaled": {
+   "earth_centre": {
+    "baseline_km": 0.0,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 0.0,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "earth_limb": {
+    "baseline_km": 6378.137,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 0.007678652477585844,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "lunar_farside_camera": {
+    "baseline_km": 384400.0,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 0.46277996417825434,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "sun_earth_L2": {
+    "baseline_km": 1500000.0,
+    "hidden_fraction": 1.0,
+    "max_parallax_arcsec": 1.8058531380525016,
+    "mercury_mean_angular_radius_arcsec": 3.4717936269246246
+   },
+   "config_B_near_side": {
+    "note": "In front of Mercury: a dark disc of angular radius R_V/(D-a) on Mercury's bright disc; visible in any telescope resolving Mercury's disc (>= ~10 cm aperture).",
+    "silhouette_fraction_of_mercury_disc_area": 1.6257627829475325e-05
+   }
+  }
+ },
+ "ranging_precision_m": 10.0,
+ "lunar_occultations_2026_2030": [
+  {
+   "utc": "2026-02-18 23:10",
+   "min_geocentric_sep_deg": 0.11943134407727227,
+   "geocentric_occultation": true,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 18.08754507634112,
+   "moon_elongation_deg": 18.093203858226083,
+   "earth_mercury_distance_au": 0.9598932715285295,
+   "mercury_angular_radius_arcsec": 3.5043961930345553,
+   "daylight_note": "Mercury within 18 deg of the Sun: daytime/twilight event"
+  },
+  {
+   "utc": "2027-01-08 05:18",
+   "min_geocentric_sep_deg": 0.47542824218297397,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 4.455669006853331,
+   "moon_elongation_deg": 4.733524704060455,
+   "earth_mercury_distance_au": 1.4101165705734635,
+   "mercury_angular_radius_arcsec": 2.385509394514853,
+   "daylight_note": "Mercury within 4 deg of the Sun: daytime/twilight event"
+  },
+  {
+   "utc": "2027-02-08 03:55",
+   "min_geocentric_sep_deg": 0.3190540526255067,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 16.699362348261467,
+   "moon_elongation_deg": 16.690472720070417,
+   "earth_mercury_distance_au": 0.8226229581717652,
+   "mercury_angular_radius_arcsec": 4.089171464336504,
+   "daylight_note": "Mercury within 17 deg of the Sun: daytime/twilight event"
+  },
+  {
+   "utc": "2027-03-06 06:32",
+   "min_geocentric_sep_deg": 1.1077823461970169,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 24.167017754302197,
+   "moon_elongation_deg": 24.0158407314723,
+   "earth_mercury_distance_au": 0.7586106608740333,
+   "mercury_angular_radius_arcsec": 4.434219686009168,
+   "daylight_note": "possibly observable in twilight"
+  },
+  {
+   "utc": "2027-08-01 15:58",
+   "min_geocentric_sep_deg": 0.28696853837174174,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 10.817271455336824,
+   "moon_elongation_deg": 10.80867611078626,
+   "earth_mercury_distance_au": 1.23857436585792,
+   "mercury_angular_radius_arcsec": 2.715901781266107,
+   "daylight_note": "Mercury within 11 deg of the Sun: daytime/twilight event"
+  },
+  {
+   "utc": "2027-12-28 16:35",
+   "min_geocentric_sep_deg": 0.6959377499790639,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 9.81535284222076,
+   "moon_elongation_deg": 9.614659261694769,
+   "earth_mercury_distance_au": 1.3600126431602613,
+   "mercury_angular_radius_arcsec": 2.473393422760758,
+   "daylight_note": "Mercury within 10 deg of the Sun: daytime/twilight event"
+  },
+  {
+   "utc": "2028-01-27 16:41",
+   "min_geocentric_sep_deg": 0.8443274444455862,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 11.670066663155223,
+   "moon_elongation_deg": 11.58289414149717,
+   "earth_mercury_distance_au": 0.7249553445780553,
+   "mercury_angular_radius_arcsec": 4.640073835750419,
+   "daylight_note": "Mercury within 12 deg of the Sun: daytime/twilight event"
+  },
+  {
+   "utc": "2028-02-23 00:05",
+   "min_geocentric_sep_deg": 0.20218759649181492,
+   "geocentric_occultation": true,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 26.355098920308397,
+   "moon_elongation_deg": 26.32872359466231,
+   "earth_mercury_distance_au": 0.8844072046080698,
+   "mercury_angular_radius_arcsec": 3.8035039842928144,
+   "daylight_note": "possibly observable in twilight"
+  },
+  {
+   "utc": "2028-09-20 05:22",
+   "min_geocentric_sep_deg": 1.129928620770841,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 21.143861380230017,
+   "moon_elongation_deg": 21.37211123130871,
+   "earth_mercury_distance_au": 0.7383728406864016,
+   "mercury_angular_radius_arcsec": 4.55575576606662,
+   "daylight_note": "possibly observable in twilight"
+  },
+  {
+   "utc": "2029-02-11 04:22",
+   "min_geocentric_sep_deg": 0.9689118093098362,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 25.65315179139354,
+   "moon_elongation_deg": 25.784232618941385,
+   "earth_mercury_distance_au": 1.0218847960862039,
+   "mercury_angular_radius_arcsec": 3.2918058271808333,
+   "daylight_note": "possibly observable in twilight"
+  },
+  {
+   "utc": "2029-09-09 08:15",
+   "min_geocentric_sep_deg": 0.7463762970069643,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 13.16592616635082,
+   "moon_elongation_deg": 13.416543725326278,
+   "earth_mercury_distance_au": 0.6516098654605258,
+   "mercury_angular_radius_arcsec": 5.162362488306806,
+   "daylight_note": "Mercury within 13 deg of the Sun: daytime/twilight event"
+  },
+  {
+   "utc": "2030-04-04 15:01",
+   "min_geocentric_sep_deg": 0.8837894347903807,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 19.10753218082305,
+   "moon_elongation_deg": 19.312020502931734,
+   "earth_mercury_distance_au": 0.8770271941691745,
+   "mercury_angular_radius_arcsec": 3.8355097183168905,
+   "daylight_note": "Mercury within 19 deg of the Sun: daytime/twilight event"
+  },
+  {
+   "utc": "2030-08-29 01:53",
+   "min_geocentric_sep_deg": 0.7509188171605142,
+   "geocentric_occultation": false,
+   "topocentric_possible": true,
+   "mercury_elongation_deg": 4.475504634883446,
+   "moon_elongation_deg": 5.188595327569452,
+   "earth_mercury_distance_au": 0.6241134586982425,
+   "mercury_angular_radius_arcsec": 5.389799369941926,
+   "daylight_note": "Mercury within 4 deg of the Sun: daytime/twilight event"
+  }
+ ],
+ "mercury_transits_2026_2030": [],
+ "precession_without_relativity": {
+  "solar_J2_measured": 2.2e-07,
+  "solar_J2_needed_for_mercury_43arcsec": 0.00033840129337077467,
+  "ratio_needed_over_measured": 1538.1876971398847,
+  "rows": {
+   "mercury": {
+    "measured_anomaly_arcsec_cy": 42.98,
+    "measured_err": 0.04,
+    "J2_model_prediction_arcsec_cy": 42.97999999999998,
+    "J2_measured_contribution_arcsec_cy": 0.027941973583534216,
+    "scaling_note": "J2 precession rate scales as a^-3.5 (1-e^2)^-2; the measured anomalies scale as a^-2.5 (1-e^2)^-1"
+   },
+   "venus": {
+    "measured_anomaly_arcsec_cy": 8.62,
+    "measured_err": 0.4,
+    "J2_model_prediction_arcsec_cy": 4.420497548888698,
+    "J2_measured_contribution_arcsec_cy": 0.0028738349403705397,
+    "scaling_note": "J2 precession rate scales as a^-3.5 (1-e^2)^-2; the measured anomalies scale as a^-2.5 (1-e^2)^-1"
+   },
+   "earth": {
+    "measured_anomaly_arcsec_cy": 3.84,
+    "measured_err": 0.4,
+    "J2_model_prediction_arcsec_cy": 1.4234980880100496,
+    "J2_measured_contribution_arcsec_cy": 0.0009254384823496578,
+    "scaling_note": "J2 precession rate scales as a^-3.5 (1-e^2)^-2; the measured anomalies scale as a^-2.5 (1-e^2)^-1"
+   },
+   "mars": {
+    "measured_anomaly_arcsec_cy": 1.35,
+    "measured_err": 0.1,
+    "J2_model_prediction_arcsec_cy": 0.3315813335752502,
+    "J2_measured_contribution_arcsec_cy": 0.00021556623693701007,
+    "scaling_note": "J2 precession rate scales as a^-3.5 (1-e^2)^-2; the measured anomalies scale as a^-2.5 (1-e^2)^-1"
+   },
+   "icarus": {
+    "measured_anomaly_arcsec_cy": 10.05,
+    "measured_err": 1.0,
+    "J2_model_prediction_arcsec_cy": 10.949492041777331,
+    "J2_measured_contribution_arcsec_cy": 0.007118436886562599,
+    "scaling_note": "J2 precession rate scales as a^-3.5 (1-e^2)^-2; the measured anomalies scale as a^-2.5 (1-e^2)^-1"
+   }
+  },
+  "verdict": "A solar oblateness J2 = 3.38e-04 (1538x the helioseismic value 2.2e-7) reproduces Mercury's 43\"/cy, but then predicts 4.42\"/cy for Venus (measured 8.62), 1.42\"/cy for Earth (measured 3.84) and 10.95\"/cy for Icarus (measured 10.05). The a^-3.5 law is refuted by the outer rows; the data follow a^-2.5. This is a measurement statement, not a theory statement."
+ },
+ "historical": {
+  "le_verrier_vulcan": "1859: intra-Mercurial planet proposed to explain 38\"/cy (later 43\"); Lescarbault 'transit' 1859; never confirmed; searched at eclipses 1878 (Watson, Swift) \u2014 no body > ~a few hundred km exists inside Mercury's orbit (SOHO/LASCO era limits).",
+  "mariner10_moon_1974": "UV excess 1974-03 attributed to a Mercury moon; identified as the star 31 Crateris.",
+  "ida_dactyl": "243 Ida's moon Dactyl: imaged by Galileo 1993-08-28, found in downlinked frames 1994-02-17 (Ann Harch); announced March 1994. First confirmed asteroid moon \u2014 not an April 1 release.",
+  "messenger": "MESSENGER (2011-2015) performed dedicated satellite searches; none found."
+ }
+}

@@ -1,0 +1,141 @@
+{
+  "epoch": "J2000.0 ICRS",
+  "image_date": "2008-01-02",
+  "image_file": "Winter_Circle_010208key.jpg",
+  "date_decode": "US format 01/02/08 = Jan 2 2008; Mars at RA 5h57m Dec+27\u00b0 confirms Gemini position matching image",
+  "mars": {
+    "name": "Mars",
+    "date": "2008-01-02",
+    "ra_j2000": "05h 57m 18.73s",
+    "dec_j2000": "+26deg 57' 04.8\"",
+    "ra_hms": "5.955203h",
+    "dist_au": 0.61011,
+    "mag": -1.38,
+    "note": "Near opposition Dec 2007; in Gemini, upper-center of Winter Hexagon"
+  },
+  "stars": [
+    {
+      "name": "Sirius",
+      "bayer": "\u03b1 CMa",
+      "ra": "06h 45m 08.92s",
+      "dec": "-16\u00b0 42\u2032 58.0\u2033",
+      "dist_ly": 8.6,
+      "mag": -1.46
+    },
+    {
+      "name": "Rigel",
+      "bayer": "\u03b2 Ori",
+      "ra": "05h 14m 32.27s",
+      "dec": "-08\u00b0 12\u2032 05.9\u2033",
+      "dist_ly": "~860",
+      "mag": 0.13
+    },
+    {
+      "name": "Aldebaran",
+      "bayer": "\u03b1 Tau",
+      "ra": "04h 35m 55.24s",
+      "dec": "+16\u00b0 30\u2032 33.5\u2033",
+      "dist_ly": 65.3,
+      "mag": 0.87
+    },
+    {
+      "name": "Capella",
+      "bayer": "\u03b1 Aur",
+      "ra": "05h 16m 41.36s",
+      "dec": "+45\u00b0 59\u2032 52.8\u2033",
+      "dist_ly": 42.9,
+      "mag": 0.08
+    },
+    {
+      "name": "Pollux",
+      "bayer": "\u03b2 Gem",
+      "ra": "07h 45m 18.95s",
+      "dec": "+28\u00b0 01\u2032 34.3\u2033",
+      "dist_ly": 33.8,
+      "mag": 1.14
+    },
+    {
+      "name": "Castor",
+      "bayer": "\u03b1 Gem",
+      "ra": "07h 34m 35.87s",
+      "dec": "+31\u00b0 53\u2032 17.8\u2033",
+      "dist_ly": 51.5,
+      "mag": 1.58
+    },
+    {
+      "name": "Procyon",
+      "bayer": "\u03b1 CMi",
+      "ra": "07h 39m 18.12s",
+      "dec": "+05\u00b0 13\u2032 30.0\u2033",
+      "dist_ly": 11.46,
+      "mag": 0.34,
+      "cat_role": "right_eye"
+    },
+    {
+      "name": "Gomeisa",
+      "bayer": "\u03b2 CMi",
+      "ra": "07h 27m 09.04s",
+      "dec": "+08\u00b0 17\u2032 21.5\u2033",
+      "dist_ly": "~170",
+      "mag": 2.89,
+      "cat_role": "left_eye"
+    },
+    {
+      "name": "Betelgeuse",
+      "bayer": "\u03b1 Ori",
+      "ra": "05h 55m 10.31s",
+      "dec": "+07\u00b0 24\u2032 25.4\u2033",
+      "dist_ly": "~700",
+      "mag": "+0.5v",
+      "note": "variable"
+    },
+    {
+      "name": "Bellatrix",
+      "bayer": "\u03b3 Ori",
+      "ra": "05h 25m 07.86s",
+      "dec": "+06\u00b0 20\u2032 58.9\u2033",
+      "dist_ly": 250,
+      "mag": 1.64
+    },
+    {
+      "name": "Alnilam",
+      "bayer": "\u03b5 Ori",
+      "ra": "05h 36m 12.81s",
+      "dec": "-01\u00b0 12\u2032 06.9\u2033",
+      "dist_ly": "~1340",
+      "mag": 1.69,
+      "note": "belt center"
+    },
+    {
+      "name": "Alnitak",
+      "bayer": "\u03b6 Ori",
+      "ra": "05h 40m 45.53s",
+      "dec": "-01\u00b0 56\u2032 34.3\u2033",
+      "dist_ly": "~800",
+      "mag": 1.74,
+      "note": "belt E"
+    },
+    {
+      "name": "Mintaka",
+      "bayer": "\u03b4 Ori",
+      "ra": "05h 32m 00.40s",
+      "dec": "-00\u00b0 17\u2032 56.7\u2033",
+      "dist_ly": "~900",
+      "mag": 2.23,
+      "note": "belt W"
+    }
+  ],
+  "cat_geometry": {
+    "eyes": [
+      "Procyon (\u03b1 CMi)",
+      "Gomeisa (\u03b2 CMi)"
+    ],
+    "eye_separation_deg": 4.3,
+    "hunched_back_arc": "Pollux \u2192 Castor \u2192 Capella (Dec +28\u00b0 \u2192 +32\u00b0 \u2192 +46\u00b0)",
+    "prey": "Sirius (cat faces ESE, staring down at brightest star)",
+    "front_paw": "Rigel",
+    "chest_throat": "Betelgeuse",
+    "rear_hip": "Aldebaran",
+    "collar": "Orion belt (Mintaka/Alnilam/Alnitak)"
+  }
+}

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OurMercilessJourney — Star Learner</title>
+  <meta name="description" content="OurMercilessJourney: the Mercury / Vulcan / Planet X elimination work, told in sequence from the receipts. Rendered by pygame at the clock of the simulations; narrated with ElevenLabs." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;650;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/site.css?v=2" />
+  <style>
+    .player { max-width: 64rem; margin: 0 0 1.5rem; }
+    .player video { width: 100%; height: auto; background: #07080c; border-radius: 10px; display: block; }
+    .chapters { max-width: 48rem; }
+    .chapters table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    .chapters td { padding: 0.3rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,0.25); vertical-align: top; }
+    .chapters td:first-child { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--muted); }
+    .chapters a { text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav-brand" href="/">Star <span>Learner</span></a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/games/solar/">Solar System Explorer</a></li>
+        <li><a href="/journey/" aria-current="page">OurMercilessJourney</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <section class="prose" aria-labelledby="journey-title">
+      <p class="eyebrow">Solar System Explorer · research log · v0.0.1 · 2026-10-10</p>
+      <h1 id="journey-title">OurMercilessJourney</h1>
+      <p class="lede">
+        The Mercury / Vulcan / Planet X elimination work, told in the order it happened, from the receipts.
+        Every orbit on screen comes from DE421 or from a live integrator whose equations are printed; the frame is
+        Sol's equator (the Zecliptic) unless a shot says otherwise and why. Rendered by pygame at the clock of the
+        simulations. Narrated with ElevenLabs. 17.7 minutes. We will add onto it as we go.
+      </p>
+
+      <div class="player">
+        <video id="journey" controls preload="metadata" playsinline
+               src="/media/journey/OurMercilessJourney_v0.0.1.mp4" type="video/mp4"></video>
+      </div>
+      <div class="btn-row">
+        <a class="btn" href="/media/journey/OurMercilessJourney_v0.0.1.mp4" download>Download mp4 (58 MB)</a>
+        <a class="btn ghost" href="/games/solar/">Solar System Explorer</a>
+      </div>
+    </section>
+
+    <section class="prose chapters" aria-labelledby="chapters-title">
+      <h2 id="chapters-title">Chapters</h2>
+      <table>
+        <tbody>
+          <tr><td><a href="#t=0">00:00</a></td><td>CH00 — OurMercilessJourney</td></tr>
+          <tr><td><a href="#t=23">00:23</a></td><td>CH01 — Prologue: the rule before the planet</td></tr>
+          <tr><td><a href="#t=91">01:31</a></td><td>CH02 — The frame: Sol's equator, not Earth's orbit</td></tr>
+          <tr><td><a href="#t=163">02:43</a></td><td>CH03 — The light path :&lt;7)L&gt;:-</td></tr>
+          <tr><td><a href="#t=216">03:36</a></td><td>CH04 — The axiom: Vulcan always behind Mercury</td></tr>
+          <tr><td><a href="#t=293">04:53</a></td><td>CH05 — Test 1 &amp; 2: the Hill circle and the lock</td></tr>
+          <tr><td><a href="#t=361">06:01</a></td><td>CH06 — Test 3–5: spin, wobble, hiding</td></tr>
+          <tr><td><a href="#t=423">07:03</a></td><td>CH07 — The relaxed axiom: Luna from Mercury</td></tr>
+          <tr><td><a href="#t=514">08:34</a></td><td>CH08 — 42 Pis</td></tr>
+          <tr><td><a href="#t=544">09:04</a></td><td>CH09 — The deliberate error, and Hume v. Spock</td></tr>
+          <tr><td><a href="#t=601">10:01</a></td><td>CH10 — Eliminating, not forcing</td></tr>
+          <tr><td><a href="#t=658">10:58</a></td><td>CH11 — The annulus: two walls, live</td></tr>
+          <tr><td><a href="#t=762">12:42</a></td><td>CH12 — The 43 arcseconds: no Newtonian cause survives</td></tr>
+          <tr><td><a href="#t=823">13:43</a></td><td>CH13 — The ladder, out of sample, and Planet X</td></tr>
+          <tr><td><a href="#t=889">14:49</a></td><td>CH14 — Confined and dated: BepiColombo</td></tr>
+          <tr><td><a href="#t=964">16:04</a></td><td>CH15 — The other loop: AndromedaBrainScans</td></tr>
+          <tr><td><a href="#t=1021">17:01</a></td><td>CH16 — Not yet</td></tr>
+        </tbody>
+      </table>
+      <p>
+        Three voices: narrator, the operator's own words (verbatim or marked […], with date and transcript line), and a
+        chronicler who reads the board. Thirteen rows; ten closed, one confined, one dated, one moot.
+      </p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>
+      <a href="/">Star Learner</a>
+      ·
+      <a href="https://dylanmccapes.systems">dylanmccapes.systems</a>
+      ·
+      <a href="https://github.com/dmccapes4/StarLearner">GitHub</a>
+    </p>
+  </footer>
+
+  <script>
+    (function () {
+      var v = document.getElementById('journey');
+      function seekFromHash() {
+        var m = /t=(\d+)/.exec(location.hash);
+        if (m && v) { v.currentTime = parseInt(m[1], 10); v.play().catch(function () {}); }
+      }
+      window.addEventListener('hashchange', seekFromHash);
+      v.addEventListener('loadedmetadata', seekFromHash);
+    })();
+  </script>
+</body>
+</html>

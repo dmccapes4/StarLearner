@@ -1,0 +1,10 @@
+{
+ "user_holds": 12,
+ "user_tests": 139,
+ "user_rate": 0.08633093525179857,
+ "null_mean_rate": 0.10748386067847379,
+ "null_p05": 0.05747126436781609,
+ "null_p95": 0.16447368421052633,
+ "p_value_user_ge_null": 0.73175,
+ "note": "Rate of |residual| < 0.30 dex among all evaluable (line, metric, hypothesis) tests, 7 lines excluding the Planet X line. p = fraction of 4000 random ladders with a hold rate >= the user's."
+}

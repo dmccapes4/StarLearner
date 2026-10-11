@@ -1,0 +1,57 @@
+{"t": 1791700961.622396, "event": "start", "N": 256, "L": 24.0, "T": 3.0, "kappa": 1.0, "lambda_medium": 1.7320508075688772}
+{"t": 1791700961.6844718, "event": "static_case", "name": "lawn bowl", "w": 6.0, "r": 0.35, "peak_depth": 0.8249476866200323, "k": 1.9966101694915255, "R": 0.8784810126582279, "w_over_r": 17.142857142857142}
+{"t": 1791700961.7335086, "event": "static_case", "name": "croquet", "w": 6.0, "r": 0.8, "peak_depth": 0.5812782891657203, "k": 1.8661016949152542, "R": 1.2550632911392405, "w_over_r": 7.5}
+{"t": 1791700961.7821767, "event": "static_case", "name": "bowling ball", "w": 6.0, "r": 2.0, "peak_depth": 0.3396548378665037, "k": 1.2135593220338983, "R": 1.9329113924050634, "w_over_r": 3.0}
+{"t": 1791700961.9084396, "event": "capture_radius", "name": "lawn bowl", "delta": 0.25, "capture_radius": 1.1500000000000001, "capture_area": 4.154756284372502}
+{"t": 1791700961.9096305, "event": "capture_radius", "name": "croquet", "delta": 0.25, "capture_radius": 1.1500000000000001, "capture_area": 4.154756284372502}
+{"t": 1791700961.910253, "event": "capture_radius", "name": "bowling ball", "delta": 0.25, "capture_radius": 0.8500000000000001, "capture_area": 2.269800692218626}
+{"t": 1791700963.4511883, "event": "capture_vs_delta", "name": "lawn bowl", "delta": 0.1, "capture_radius": 2.1500000000000004}
+{"t": 1791700963.451256, "event": "capture_vs_delta", "name": "lawn bowl", "delta": 0.25, "capture_radius": 1.1500000000000001}
+{"t": 1791700963.451284, "event": "capture_vs_delta", "name": "lawn bowl", "delta": 0.5, "capture_radius": 0.55}
+{"t": 1791700963.451303, "event": "capture_vs_delta", "name": "lawn bowl", "delta": 0.8, "capture_radius": 0.0}
+{"t": 1791700963.4513247, "event": "capture_vs_delta", "name": "croquet", "delta": 0.1, "capture_radius": 2.1500000000000004}
+{"t": 1791700963.4513454, "event": "capture_vs_delta", "name": "croquet", "delta": 0.25, "capture_radius": 1.1500000000000001}
+{"t": 1791700963.4513636, "event": "capture_vs_delta", "name": "croquet", "delta": 0.5, "capture_radius": 0.35000000000000003}
+{"t": 1791700963.4513783, "event": "capture_vs_delta", "name": "croquet", "delta": 0.8, "capture_radius": 0.0}
+{"t": 1791700963.4513938, "event": "capture_vs_delta", "name": "bowling ball", "delta": 0.1, "capture_radius": 2.55}
+{"t": 1791700963.451408, "event": "capture_vs_delta", "name": "bowling ball", "delta": 0.25, "capture_radius": 0.8500000000000001}
+{"t": 1791700963.4514213, "event": "capture_vs_delta", "name": "bowling ball", "delta": 0.5, "capture_radius": 0.0}
+{"t": 1791700963.451434, "event": "capture_vs_delta", "name": "bowling ball", "delta": 0.8, "capture_radius": 0.0}
+{"t": 1791700965.6984687, "event": "splash", "step": 700, "from_": [3.6, 1.8], "to": [-4.0, -3.0]}
+{"t": 1791700965.7268302, "event": "foam_sucked_under", "step": 708, "n": 1}
+{"t": 1791700965.8612745, "event": "foam_sucked_under", "step": 750, "n": 1}
+{"t": 1791700965.877219, "event": "foam_sucked_under", "step": 755, "n": 1}
+{"t": 1791700965.9483206, "event": "foam_sucked_under", "step": 777, "n": 1}
+{"t": 1791700966.3415306, "event": "dynamics_done", "steps": 900, "molecules": 240, "foam_sunk": 4, "outcasts_final": 179}
+{"t": 1791702524.6207178, "event": "phases_1_4_start"}
+{"t": 1791702525.5396028, "event": "p1_k0", "max_rel_err": 0.019153808025781028, "mean_rel_err": 0.005291623023154762}
+{"t": 1791702526.2875211, "event": "p1_edges", "centre": {"peak": 0.4613704959908435, "capture_area": 3.51}, "near edge": {"peak": 0.45436118305255674, "capture_area": 3.2849999999999997}, "at edge": {"peak": 0.39527379629750514, "capture_area": 2.025}}
+{"t": 1791702544.0968888, "event": "p1_T_sweep", "rows": [[0.5, 0.7071067811865476, 0.79625, 45.12, 6.328125, 1.4050844772662416], [1.0, 1.0, 0.78359375, 47.55, 6.046875, 0.9593002650039383], [2.0, 1.4142135623730951, 0.7839583333333334, 47.48, 4.921875, 0.6214056426064113], [3.0, 1.7320508075688772, 0.79546875, 45.27, 3.375, 0.47252540835676426], [5.0, 2.23606797749979, 0.8541666666666666, 34.0, 1.828125, 0.3288867352269129], [8.0, 2.8284271247461903, 1.03125, 0.0, 0.0, 0.2322168712443191], [12.0, 3.4641016151377544, 1.03125, 0.0, 0.0, 0.17027448988225638]]}
+{"t": 1791702544.3872657, "event": "p1_regional", "corridor_depth_5": 0.02302129813939154, "offcorridor_depth_5": 0.009231578050038403, "other_patch_depth_10": 0.0010864837489531055, "ratio": 2.4937554570419054}
+{"t": 1791702551.443595, "event": "p1_convergence", "outcast_mean_abs_diff": 0.0007465277777777779, "surface_depth_mean_abs_diff": 0.0004966579819918367}
+{"t": 1791702553.6679304, "event": "p2_crowd_push", "final_ball_pos": [4.4914880414630405, 2.05175930358363], "displacement": 4.937932873829643}
+{"t": 1791702558.2069242, "event": "p2_rivals", "initial_sep": 8.0, "final_sep": 13.089048505778369, "gov_r_final": 1.3591892567252806, "inf_r_range": [0.811688610026654, 1.2085324339309924]}
+{"t": 1791702558.8770509, "sim_t": 3.3400000000000025, "event": "merge", "detail": ["A", "B"]}
+{"t": 1791702560.393622, "event": "p2_merge", "merged": true, "step": 167, "w_after": 10.0, "r_after": 1.1313708498984762}
+{"t": 1791702569.1467738, "event": "p2_static", "rows": [[2.0, 0.5, 5.70946892560548], [2.0, 2.0, 4.447323516997427], [6.0, 0.5, 3.3335452056099153], [6.0, 2.0, 4.212145948573057], [12.0, 0.5, 1.6820548942130948], [12.0, 2.0, 4.28026978250001]]}
+{"t": 1791702584.305562, "event": "p3_ratchet", "0.0": {"early_slope": 0.0029314836697809598, "late_slope": 0.0034454847455249074, "final_delta": 0.25, "final_inside_frac": 0.31466666666666665, "min_R": -0.00035694362647377593}, "0.5": {"early_slope": 0.0029320965937736218, "late_slope": 0.0035653229312995025, "final_delta": 0.5216870203122093, "final_inside_frac": 0.029833333333333333, "min_R": -0.000687180615266814}, "1.0": {"early_slope": 0.0029320965937736218, "late_slope": 0.0035653229312995025, "final_delta": 0.7651659827020763, "final_inside_frac": 0.0, "min_R": -0.000687180615266814}}
+{"t": 1791702589.3760824, "event": "p3_eta", "n_trapped": 7, "corr_logeta_vs_first_trap_step": -0.2862953372217602}
+{"t": 1791702590.773026, "sim_t": 7.6199999999999255, "event": "jump", "detail": ["inf", [0.0, 0.0], [-3.7123776433010303, -6.6454178037609575]]}
+{"t": 1791702592.672729, "sim_t": 18.439999999999696, "event": "jump", "detail": ["inf", [-3.7123776433010303, -6.6454178037609575], [3.3398709277007423, -4.144580891530431]]}
+{"t": 1791702593.7572553, "sim_t": 24.619999999999564, "event": "jump", "detail": ["inf", [3.3398709277007423, -4.144580891530431], [6.087728929181951, -5.007411885638618]]}
+{"t": 1791702595.2939274, "sim_t": 33.419999999999625, "event": "jump", "detail": ["inf", [6.087728929181951, -5.007411885638618], [-1.5524570218540026, -6.78133640872511]]}
+{"t": 1791702595.943789, "sim_t": 37.14000000000021, "event": "jump", "detail": ["inf", [-1.5524570218540026, -6.78133640872511], [0.8078501727769201, 2.5736674888745554]]}
+{"t": 1791702596.6420667, "sim_t": 41.14000000000083, "event": "jump", "detail": ["inf", [0.8078501727769201, 2.5736674888745554], [8.148490404598345, -0.045572789658361756]]}
+{"t": 1791702596.91393, "sim_t": 42.700000000001076, "event": "jump", "detail": ["inf", [8.148490404598345, -0.045572789658361756], [-1.3411564431755547, 6.2400314419907765]]}
+{"t": 1791702597.9794116, "event": "p3_relapse", "jumps": 7, "relapse_by_kind": {"surface": 72, "planner": 89, "deep": 77, "foam": 0}, "beliefs_lost": 279, "planners_to_deep": 19, "n_planner0": 48, "mean_depth_zero_anchor_vs_anchored_after_last_jump": null, "kinds_final": {"surface": 124, "planner": 19, "deep": 52, "foam": 45}}
+{"t": 1791702609.5577433, "event": "p4_dissolution", "rows": [[0.0, 0, 131], [0.6, 5, 126], [1.2, 10, 121], [2.4, 26, 107]]}
+{"t": 1791702624.866889, "event": "p4_foam_mass", "0.0": {"rim_depth_beyond_6": 0.006128267047223634, "outcast_frac": 0.8173333333333334, "peak": 0.47252523983188105}, "0.08": {"rim_depth_beyond_6": 0.0232371430650272, "outcast_frac": 0.82325, "peak": 0.48122089290224507}}
+{"t": 1791702625.9197953, "sim_t": 5.639999999999968, "event": "jump", "detail": ["inf", [0.0, 0.0], [7.355377915478037, 2.1528113781444915]]}
+{"t": 1791702629.197111, "sim_t": 24.27999999999957, "event": "jump", "detail": ["inf", [7.355377915478037, 2.1528113781444915], [-1.5151086401110767, 6.067931541820439]]}
+{"t": 1791702629.64798, "sim_t": 26.839999999999517, "event": "jump", "detail": ["inf", [-1.5151086401110767, 6.067931541820439], [-1.2248909764311584, -5.725184543811406]]}
+{"t": 1791702634.2948046, "sim_t": 53.16000000000271, "event": "jump", "detail": ["inf", [-1.2248909764311584, -5.725184543811406], [4.330679893762962, -0.6966638967166734]]}
+{"t": 1791702635.6309156, "event": "p4_rafts", "before_jumps": {"edge_mean_raft": 1.553191489361702, "centre_mean_raft": 2.7857142857142856, "n_edge_foam": 73, "n_centre_foam": 39}, "after_jumps": {"edge_mean_raft": 3.5384615384615383, "centre_mean_raft": 1.8888888888888888, "n_edge_foam": 138, "n_centre_foam": 17}, "jumps": 4, "foam_dissolved": 51, "refloated": 95, "beliefs_lost": 190}
+{"t": 1791702635.6312492, "event": "phases_1_4_done", "seconds": 111.01054358482361}
+{"t": 1791704103.637177, "event": "phase5_plan", "docs": ["PHASE5_NEXT_STEPS_20261011.md", "OPERATOR_BIAS_STATEMENT_20261011.md", "kernel_field.py"], "infra": {"torch": "2.14.0+cu130", "gpu": "NVIDIA GeForce RTX 3060 12GB", "venv": "~/Documents/NarrativeErosionAndHistoricalInversion/.venv-stone", "sandbox_hides_gpu": true}, "dims": {"stored": 384, "processing": 32, "state_graph": 8, "physics_base": 2}, "kernel_depth_w5_r0.3": {"n2": [-0.502, -0.233, -0.109, -0.0299], "n8": [-11.7, -0.0139, -0.000257, -3.12e-06], "n32": [-1.96e+18, -5490, -1.77e-05, -2.18e-14], "rho_over_lambda": [0, 0.5, 1, 2]}, "receipts_verified": ["Shapiro uses 'horseshoe right' (Media Matters 2026-10-02)", "Daily Wire 'New Left on the Right' 2026-05-06", "Harpole v. Owens 2026-04-30", "Bride of Charlie 2026-03", "Fort Huachuca episode IMDb tt39228257 / yt ewBzjVe3LNQ"]}
+{"t": 1791705540.8180344, "event": "phase5_axes", "docs": ["PHASE5_AXES_20261011.md", "REFLECTION_CALFIRE_TO_CITIZENSHIP_20261011.md"], "axes": ["economy_safety_net", "immigration", "healthcare", "education", "foreign_war", "trade", "abortion", "guns"], "operator_proposed_s": {"abortion": -0.4, "immigration": 0.1, "guns": -0.2, "education": 0.5, "trade": -0.5, "foreign_war": 0.6, "economy": -0.3, "healthcare": null}, "polls": ["Pew 2026-10-08 midterm issues", "Gallup 2026-02 MIP", "AP-NORC 2025-12 priorities"]}
+{"t": 1791706948.904007, "event": "phase5_axes_v1", "n_axes": 7, "axes": ["economy", "immigration", "healthcare", "education", "foreign_war", "abortion", "guns"], "weighting": "horseshoe attention vector (operator)", "scorer_selfcheck": {"minilm": "66/70", "nli_mean": "28/70", "hybrid": "62/70"}, "operator_hybrid_p": [-0.01, -0.04, -0.06, -0.05, 0.31, 0.0, 0.17], "operator_attention": [0.23, 0.15, 0.15, 0.15, 0.12, 0.06, 0.14], "pillar": "economy", "h": 0.09}

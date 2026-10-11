@@ -1,0 +1,343 @@
+{
+ "history_b2n": {
+  "seed_concept": "arts",
+  "seed_letter": "A",
+  "bearing_A_deg": 27.98,
+  "bearing_B_deg": 8.32,
+  "refraction_deg": 19.65,
+  "bootstrap_sd_deg": 6.35,
+  "bootstrap_p5_p95": [
+   6.28,
+   27.56
+  ],
+  "blur_deg": 0.0,
+  "occlusion_fraction": 0.385,
+  "interval_deg": [
+   9.34,
+   29.97
+  ],
+  "interval_width_deg": 20.64,
+  "centroid_sep_deg": 77.35,
+  "seed_to_centroid_A_deg": 30.19,
+  "seed_to_centroid_B_deg": 105.88,
+  "resultant_A": 0.312,
+  "resultant_B": 0.4927,
+  "combined_bearing_deg": 13.76,
+  "priors_in_interval": {
+   "90_measured": false,
+   "60_suspected": false,
+   "30_d20_hemisphere": false
+  },
+  "direction_recoverable": true
+ },
+ "six_a": {
+  "seed_concept": "Ritualized single combat codes and techniques",
+  "seed_letter": "R",
+  "bearing_A_deg": 116.2,
+  "bearing_B_deg": 74.37,
+  "refraction_deg": 41.82,
+  "bootstrap_sd_deg": 4.22,
+  "bootstrap_p5_p95": [
+   35.23,
+   48.73
+  ],
+  "blur_deg": 0.0,
+  "occlusion_fraction": 0.518,
+  "interval_deg": [
+   33.07,
+   50.57
+  ],
+  "interval_width_deg": 17.5,
+  "centroid_sep_deg": 48.89,
+  "seed_to_centroid_A_deg": 82.67,
+  "seed_to_centroid_B_deg": 51.45,
+  "resultant_A": 0.2895,
+  "resultant_B": 0.5847,
+  "combined_bearing_deg": 92.04,
+  "priors_in_interval": {
+   "90_measured": false,
+   "60_suspected": false,
+   "30_d20_hemisphere": false
+  },
+  "direction_recoverable": true
+ },
+ "six_b": {
+  "seed_concept": "Boat architecture and hull integrity",
+  "seed_letter": "B",
+  "bearing_A_deg": 81.98,
+  "bearing_B_deg": 64.67,
+  "refraction_deg": 17.31,
+  "bootstrap_sd_deg": 4.85,
+  "bootstrap_p5_p95": [
+   7.67,
+   23.8
+  ],
+  "blur_deg": 0.0,
+  "occlusion_fraction": 0.214,
+  "interval_deg": [
+   11.14,
+   23.49
+  ],
+  "interval_width_deg": 12.35,
+  "centroid_sep_deg": 38.05,
+  "seed_to_centroid_A_deg": 66.51,
+  "seed_to_centroid_B_deg": 100.59,
+  "resultant_A": 0.2929,
+  "resultant_B": 0.5696,
+  "combined_bearing_deg": 70.92,
+  "priors_in_interval": {
+   "90_measured": false,
+   "60_suspected": false,
+   "30_d20_hemisphere": false
+  },
+  "direction_recoverable": true
+ },
+ "mythology": {
+  "seed_concept": "agriculture and the cyclical fertility of land",
+  "seed_letter": "A",
+  "bearing_A_deg": 23.06,
+  "bearing_B_deg": 5.4,
+  "refraction_deg": 17.66,
+  "bootstrap_sd_deg": 3.63,
+  "bootstrap_p5_p95": [
+   12.0,
+   23.57
+  ],
+  "blur_deg": 8.22,
+  "occlusion_fraction": 0.173,
+  "interval_deg": [
+   6.79,
+   28.52
+  ],
+  "interval_width_deg": 21.73,
+  "centroid_sep_deg": 27.77,
+  "seed_to_centroid_A_deg": 63.47,
+  "seed_to_centroid_B_deg": 85.51,
+  "resultant_A": 0.4099,
+  "resultant_B": 0.7159,
+  "combined_bearing_deg": 10.7,
+  "priors_in_interval": {
+   "90_measured": false,
+   "60_suspected": false,
+   "30_d20_hemisphere": false
+  },
+  "direction_recoverable": true
+ },
+ "sports": {
+  "seed_concept": "Time-based Regulation and Periodic Ritual Structure in Games",
+  "seed_letter": "T",
+  "bearing_A_deg": 290.83,
+  "bearing_B_deg": 322.15,
+  "refraction_deg": 31.32,
+  "bootstrap_sd_deg": 8.2,
+  "bootstrap_p5_p95": [
+   16.62,
+   43.38
+  ],
+  "blur_deg": 3.12,
+  "occlusion_fraction": 0.143,
+  "interval_deg": [
+   21.08,
+   41.56
+  ],
+  "interval_width_deg": 20.48,
+  "centroid_sep_deg": 10.72,
+  "seed_to_centroid_A_deg": 18.11,
+  "seed_to_centroid_B_deg": 20.97,
+  "resultant_A": 0.5459,
+  "resultant_B": 0.8182,
+  "combined_bearing_deg": 314.21,
+  "priors_in_interval": {
+   "90_measured": false,
+   "60_suspected": false,
+   "30_d20_hemisphere": true
+  },
+  "direction_recoverable": true
+ },
+ "warfare": {
+  "seed_concept": "weapons and toolmaking for hunting and fighting",
+  "seed_letter": "W",
+  "bearing_A_deg": 183.11,
+  "bearing_B_deg": 2.81,
+  "refraction_deg": 179.69,
+  "bootstrap_sd_deg": 61.32,
+  "bootstrap_p5_p95": [
+   9.09,
+   178.25
+  ],
+  "blur_deg": 4.36,
+  "occlusion_fraction": 0.249,
+  "interval_deg": [
+   97.84,
+   180.0
+  ],
+  "interval_width_deg": 82.16,
+  "centroid_sep_deg": 12.23,
+  "seed_to_centroid_A_deg": 9.71,
+  "seed_to_centroid_B_deg": 2.53,
+  "resultant_A": 0.7236,
+  "resultant_B": 0.8495,
+  "combined_bearing_deg": 183.4,
+  "priors_in_interval": {
+   "90_measured": false,
+   "60_suspected": false,
+   "30_d20_hemisphere": false
+  },
+  "direction_recoverable": true
+ },
+ "childhood": {
+  "seed_concept": "Excitement as an emotional state",
+  "seed_letter": "E",
+  "bearing_A_deg": 159.95,
+  "bearing_B_deg": 160.73,
+  "refraction_deg": 0.78,
+  "bootstrap_sd_deg": 9.67,
+  "bootstrap_p5_p95": [
+   0.78,
+   30.02
+  ],
+  "blur_deg": 0.0,
+  "occlusion_fraction": 0.397,
+  "interval_deg": [
+   0.0,
+   16.82
+  ],
+  "interval_width_deg": 16.82,
+  "centroid_sep_deg": 1.38,
+  "seed_to_centroid_A_deg": 11.03,
+  "seed_to_centroid_B_deg": 9.65,
+  "resultant_A": 0.8497,
+  "resultant_B": 0.8912,
+  "combined_bearing_deg": 160.37,
+  "priors_in_interval": {
+   "90_measured": false,
+   "60_suspected": false,
+   "30_d20_hemisphere": false
+  },
+  "direction_recoverable": true
+ },
+ "family": {
+  "seed_concept": "Temporary shelter place outdoors for human rest, habitation, or refuge",
+  "seed_letter": "T",
+  "bearing_A_deg": 203.26,
+  "bearing_B_deg": 242.11,
+  "refraction_deg": 38.85,
+  "bootstrap_sd_deg": 10.87,
+  "bootstrap_p5_p95": [
+   19.16,
+   55.08
+  ],
+  "blur_deg": 2.16,
+  "occlusion_fraction": 0.272,
+  "interval_deg": [
+   23.63,
+   54.07
+  ],
+  "interval_width_deg": 30.44,
+  "centroid_sep_deg": 13.01,
+  "seed_to_centroid_A_deg": 13.28,
+  "seed_to_centroid_B_deg": 20.48,
+  "resultant_A": 0.8149,
+  "resultant_B": 0.8629,
+  "combined_bearing_deg": 229.63,
+  "priors_in_interval": {
+   "90_measured": false,
+   "60_suspected": false,
+   "30_d20_hemisphere": true
+  },
+  "direction_recoverable": true
+ },
+ "islam_origin": {
+  "seed_concept": "Persecution based on group identity",
+  "seed_letter": "P",
+  "bearing_A_deg": 340.48,
+  "bearing_B_deg": 236.56,
+  "refraction_deg": 103.92,
+  "bootstrap_sd_deg": 58.02,
+  "bootstrap_p5_p95": [
+   6.76,
+   174.51
+  ],
+  "blur_deg": 1.69,
+  "occlusion_fraction": 0.316,
+  "interval_deg": [
+   19.05,
+   180.0
+  ],
+  "interval_width_deg": 160.95,
+  "centroid_sep_deg": 108.69,
+  "seed_to_centroid_A_deg": 105.53,
+  "seed_to_centroid_B_deg": 15.7,
+  "resultant_A": 0.2154,
+  "resultant_B": 0.1873,
+  "combined_bearing_deg": 324.76,
+  "priors_in_interval": {
+   "90_measured": true,
+   "60_suspected": true,
+   "30_d20_hemisphere": true
+  },
+  "direction_recoverable": false
+ },
+ "leper_king": {
+  "seed_concept": "Religion and Ritual Symbolism",
+  "seed_letter": "R",
+  "bearing_A_deg": 10.43,
+  "bearing_B_deg": 31.35,
+  "refraction_deg": 20.93,
+  "bootstrap_sd_deg": 8.84,
+  "bootstrap_p5_p95": [
+   4.83,
+   35.56
+  ],
+  "blur_deg": 12.88,
+  "occlusion_fraction": 0.406,
+  "interval_deg": [
+   0.0,
+   47.22
+  ],
+  "interval_width_deg": 47.22,
+  "centroid_sep_deg": 11.47,
+  "seed_to_centroid_A_deg": 150.57,
+  "seed_to_centroid_B_deg": 146.76,
+  "resultant_A": 0.4618,
+  "resultant_B": 0.738,
+  "combined_bearing_deg": 25.04,
+  "priors_in_interval": {
+   "90_measured": false,
+   "60_suspected": false,
+   "30_d20_hemisphere": true
+  },
+  "direction_recoverable": true
+ },
+ "sacred": {
+  "seed_concept": "political factionalism and contested kingship",
+  "seed_letter": "P",
+  "bearing_A_deg": 70.3,
+  "bearing_B_deg": 74.8,
+  "refraction_deg": 4.49,
+  "bootstrap_sd_deg": 2.2,
+  "bootstrap_p5_p95": [
+   0.27,
+   7.29
+  ],
+  "blur_deg": 0.0,
+  "occlusion_fraction": 0.121,
+  "interval_deg": [
+   1.99,
+   7.0
+  ],
+  "interval_width_deg": 5.01,
+  "centroid_sep_deg": 6.17,
+  "seed_to_centroid_A_deg": 104.01,
+  "seed_to_centroid_B_deg": 108.43,
+  "resultant_A": 0.8176,
+  "resultant_B": 0.9353,
+  "combined_bearing_deg": 73.6,
+  "priors_in_interval": {
+   "90_measured": false,
+   "60_suspected": false,
+   "30_d20_hemisphere": false
+  },
+  "direction_recoverable": true
+ }
+}

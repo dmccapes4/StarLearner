@@ -1,0 +1,152 @@
+{
+ "anomalous_advances_measured": {
+  "Mercury": [
+   42.98,
+   0.04
+  ],
+  "Venus": [
+   8.62,
+   0.4
+  ],
+  "Earth": [
+   3.84,
+   0.3
+  ],
+  "Mars": [
+   1.35,
+   0.1
+  ]
+ },
+ "hall": {
+  "Mercury": {
+   "predicted_arcsec_per_cy": 42.98,
+   "measured": 42.98,
+   "sigma": 0.04,
+   "ratio": 1.0,
+   "sigmas_off": 0.0
+  },
+  "Venus": {
+   "predicted_arcsec_per_cy": 16.826389357572683,
+   "measured": 8.62,
+   "sigma": 0.4,
+   "ratio": 1.9520173268645806,
+   "sigmas_off": 20.51597339393171
+  },
+  "Earth": {
+   "predicted_arcsec_per_cy": 10.35138510645319,
+   "measured": 3.84,
+   "sigma": 0.3,
+   "ratio": 2.695673204805518,
+   "sigmas_off": 21.704617021510636
+  },
+  "Mars": {
+   "predicted_arcsec_per_cy": 5.503667005520914,
+   "measured": 1.35,
+   "sigma": 0.1,
+   "ratio": 4.076790374459936,
+   "sigmas_off": 41.536670055209136
+  },
+  "Moon": {
+   "predicted_excess_perigee_arcsec_per_yr": 1.3838691461019599,
+   "LLR_sigma_arcsec_per_yr": 0.0001,
+   "sigmas_off": 13838.691461019598,
+   "note": "Brown (1903) rejected Hall's \u03b4 on the lunar motion with 19th-c. data; LLR makes the rejection ~1e4 \u03c3."
+  },
+  "delta": 1.5974631315433216e-07
+ },
+ "exterior_ring": [
+  {
+   "ring": "inner zodiacal (0.6 AU)",
+   "b_au": 0.6,
+   "mass_required_kg": 7.887654303381178e+23,
+   "mass_required_earth": 0.1320728425602153,
+   "mass_measured_kg": 1e+17,
+   "deficit_factor": 7887654.3033811785,
+   "advance_from_measured_mass_arcsec_per_cy": 5.449021768306438e-06
+  },
+  {
+   "ring": "zodiacal cloud peak (1 AU)",
+   "b_au": 1.0,
+   "mass_required_kg": 3.651691807120915e+24,
+   "mass_required_earth": 0.6114483451861819,
+   "mass_measured_kg": 1e+17,
+   "deficit_factor": 36516918.07120915,
+   "advance_from_measured_mass_arcsec_per_cy": 1.1769887019541908e-06
+  },
+  {
+   "ring": "asteroid belt (2.7 AU)",
+   "b_au": 2.7,
+   "mass_required_kg": 7.187624983956099e+25,
+   "mass_required_earth": 12.03513777829962,
+   "mass_measured_kg": 2.39e+21,
+   "deficit_factor": 30073.74470274518,
+   "advance_from_measured_mass_arcsec_per_cy": 0.001429153583127834
+  }
+ ],
+ "ring_note": "Interior mass (dust inside Mercury's orbit, spherically distributed) makes the force fall off slower than r^-2 and REGRESSES the perihelion; it cannot produce an advance. Zodiacal cloud total mass estimates: 1e16\u20131e18 kg (IRAS/COBE/DIRBE); 1e17 used. Asteroid belt: 2.39e21 kg (Pitjeva & Pitjev 2018), already included in ephemeris budgets.",
+ "planetary_budget": {
+  "Venus": {
+   "alpha": 0.5351595118147683,
+   "advance_arcsec_per_cy": 286.2072544173398,
+   "classical_1947": 277.8,
+   "fractional_mass_error_for_43": 0.1501708965675891,
+   "GM_relative_uncertainty": 1e-09,
+   "factor_over_uncertainty": 150170896.5675891
+  },
+  "Earth": {
+   "alpha": 0.387098,
+   "advance_arcsec_per_cy": 96.56993311420314,
+   "classical_1947": 90.0,
+   "fractional_mass_error_for_43": 0.4450660636698594,
+   "GM_relative_uncertainty": 1e-09,
+   "factor_over_uncertainty": 445066063.66985935
+  },
+  "Mars": {
+   "alpha": 0.25405482388350825,
+   "advance_arcsec_per_cy": 2.420118361506876,
+   "classical_1947": 2.5,
+   "fractional_mass_error_for_43": 17.7594619683141,
+   "GM_relative_uncertainty": 1e-09,
+   "factor_over_uncertainty": 17759461968.3141
+  },
+  "Jupiter": {
+   "alpha": 0.0743789870109907,
+   "advance_arcsec_per_cy": 160.1475124861184,
+   "classical_1947": 153.6,
+   "fractional_mass_error_for_43": 0.2683775684853395,
+   "GM_relative_uncertainty": 1e-08,
+   "factor_over_uncertainty": 26837756.84853395
+  },
+  "Saturn": {
+   "alpha": 0.04039592594911611,
+   "advance_arcsec_per_cy": 7.6253603302968225,
+   "classical_1947": 7.3,
+   "fractional_mass_error_for_43": 5.6364549527231285,
+   "GM_relative_uncertainty": 1e-08,
+   "factor_over_uncertainty": 563645495.2723129
+  },
+  "Uranus": {
+   "alpha": 0.020142051367439538,
+   "advance_arcsec_per_cy": 0.1440524998875145,
+   "classical_1947": 0.14,
+   "fractional_mass_error_for_43": 298.36344411628784,
+   "GM_relative_uncertainty": 1e-07,
+   "factor_over_uncertainty": 2983634441.1628785
+  },
+  "Neptune": {
+   "alpha": 0.01285612753238127,
+   "advance_arcsec_per_cy": 0.04417023553629737,
+   "classical_1947": 0.04,
+   "fractional_mass_error_for_43": 973.0534482814952,
+   "GM_relative_uncertainty": 1e-07,
+   "factor_over_uncertainty": 9730534482.814953
+  }
+ },
+ "budget_total_arcsec_per_cy": 553.1584014448888,
+ "verdict": {
+  "hall": "ELIMINATED. \u03b4 = 1.597e-07 reproduces Mercury but predicts Venus 16.8\u2033 (measured 8.62), Earth 10.4\u2033 (3.84), Mars 5.5\u2033 (1.35) and a lunar perigee excess of 1.38\u2033/yr against an LLR limit of ~1e-4\u2033/yr.",
+  "ring": "ELIMINATED. An exterior ring at 1 AU would need 0.61 M\u2295 (4e+07\u00d7 the zodiacal cloud); at 0.6 AU 0.13 M\u2295. Interior dust regresses, not advances. The asteroid belt's real contribution is 0.0014\u2033/cy.",
+  "masses": "ELIMINATED. Budget reproduced (total 553.2\u2033/cy vs classical 531). Venus would need a 15.0 % mass error against 1e-9 relative (\u00d72e+08); Jupiter 26.8 % against 1e-8 (\u00d73e+07).",
+  "row_10": "No Newtonian cause of Mercury's 43\u2033/century survives measurement: solar J2 (report \u00a7), inner planet/ring (report \u00a7), Hall's exponent, exterior zodiacal mass, and perturbing-mass error are each excluded by more than two orders of magnitude. The residual stands as an unexplained measurement under the rules of this audit. This statement is a receipt; it is also an arrow, recorded and not followed (see GAMEPLAN \u00a73, REFLECTION \u00a72)."
+ }
+}
