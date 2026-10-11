@@ -1,0 +1,272 @@
+{
+  "phi": 1.618033988749895,
+  "cube_in_cube": {
+    "n_perspectives": 8,
+    "all_eight_give_cube_in_cube": true,
+    "outer_over_inner_edge_ratio": 1.9999999999999993,
+    "expected_ratio_(d+1)/(d-1)": 2.0,
+    "off_axis_view_w_levels": [
+      -1.414213562,
+      -0.0,
+      1.414213562
+    ],
+    "off_axis_note": "a diagonal view has 3 w-levels (-\u221a2, 0, +\u221a2), so there is no inner/outer split of 8+8",
+    "dual": "the 8 directions \u00b1e_i are the 8 vertices of the 16-cell, the tesseract's dual"
+  },
+  "eight_point_shadow": {
+    "projection": "(x+y)/2, (z+w)/2",
+    "distinct_points": 9,
+    "multiplicities": {
+      "corners": 1,
+      "edge_midpoints": 2,
+      "centre": 4
+    },
+    "visible_points": 8,
+    "hidden_at_centre": 4,
+    "outer_side": 2.0,
+    "inner_side": 1.4142135623730951,
+    "ratio": 1.414213562373095,
+    "inner_rotation_deg": 45.0,
+    "matches_20260928_template": true,
+    "template_source": "outbox/session_20260928/tools/find_tesseract.py docstring"
+  },
+  "n_cube_diagonals": {
+    "1-cube": 1.0,
+    "2-cube": 1.4142135623730951,
+    "3-cube": 1.7320508075688772,
+    "4-cube": 2.0,
+    "5-cube": 2.23606797749979,
+    "6-cube": 2.449489742783178
+  },
+  "phi_from_5cube": 1.618033988749895,
+  "tesseract_contains": {
+    "face_diagonal": 1.4142135623730951,
+    "cell_diagonal": 1.7320508075688772,
+    "body_diagonal": 2.0
+  },
+  "dodecahedron": {
+    "vertices": 20,
+    "cube_vertices_inside": 8,
+    "golden_rectangle_vertices": 12,
+    "faces": 12,
+    "face_pairs": 6,
+    "vertex_pairs": 10,
+    "edges": 30,
+    "edge_pairs": 15,
+    "edge": 1.236067977,
+    "cube_edge_over_dodeca_edge": 1.618033989404128,
+    "cube_edge_over_dodeca_edge_is_phi": true,
+    "R_circ_over_edge": 1.401258539010656,
+    "R_mid_over_edge": 1.3090169949042332,
+    "R_in_over_edge": 1.113516364861844,
+    "R_in_closed_form_check": true,
+    "circ_over_in": 1.258408572364819,
+    "circ_over_mid": 1.0704662693192697,
+    "mid_over_in": 1.1755705045849465,
+    "cube_shares_circumsphere": true,
+    "five_cubes_fit": "compound of five cubes: 5 \u00d7 8 = 40 vertex-slots over 20 vertices, each vertex used twice"
+  },
+  "steiner_rope_trick": {
+    "pentagon_dP_for_dr_1": 6.283185307179588,
+    "square_dP_for_dr_1": 6.283185307179586,
+    "scalene_triangle_dP_for_dr_1": 6.283185307179586,
+    "two_pi": 6.283185307179586,
+    "statement": "offset any convex polygon by \u0394r: perimeter grows by exactly 2\u03c0\u0394r (exterior angles sum to 2\u03c0)",
+    "in_3d": "surface area grows by 2\u00b7M\u00b7\u0394r + 4\u03c0\u0394r\u00b2, M = \u00bd \u03a3 edge\u00b7(\u03c0 \u2212 dihedral); not constant \u2014 the rope trick is a great-circle (1-D) fact"
+  },
+  "orbit_vs_dodeca_ratios": {
+    "dodeca": {
+      "circ/in": 1.258408572364819,
+      "circ/mid": 1.0704662693192697,
+      "mid/in": 1.1755705045849465
+    },
+    "bodies": {
+      "mercury": {
+        "e": 0.20563,
+        "a/q": 1.258859221773229,
+        "Q/a": 1.20563,
+        "Q/q": 1.5177184435464581,
+        "nearest": {
+          "orbit": "a/q",
+          "dodeca": "circ/in",
+          "miss_pct": 0.03581105678286433
+        }
+      },
+      "venus": {
+        "e": 0.006772,
+        "a/q": 1.0068181726652894,
+        "Q/a": 1.006772,
+        "Q/q": 1.0136363453305788,
+        "nearest": {
+          "orbit": "Q/q",
+          "dodeca": "circ/mid",
+          "miss_pct": 5.308894415218722
+        }
+      },
+      "earth": {
+        "e": 0.01671,
+        "a/q": 1.0169939692257626,
+        "Q/a": 1.01671,
+        "Q/q": 1.033987938451525,
+        "nearest": {
+          "orbit": "Q/q",
+          "dodeca": "circ/mid",
+          "miss_pct": 3.407704839774358
+        }
+      },
+      "mars": {
+        "e": 0.093394,
+        "a/q": 1.103014981149474,
+        "Q/a": 1.093394,
+        "Q/q": 1.2060299622989479,
+        "nearest": {
+          "orbit": "Q/a",
+          "dodeca": "circ/mid",
+          "miss_pct": 2.1418452255679643
+        }
+      },
+      "ceres": {
+        "e": 0.0785,
+        "a/q": 1.0851871947911014,
+        "Q/a": 1.0785,
+        "Q/q": 1.170374389582203,
+        "nearest": {
+          "orbit": "Q/q",
+          "dodeca": "mid/in",
+          "miss_pct": 0.4420079427373944
+        }
+      },
+      "vesta": {
+        "e": 0.0894,
+        "a/q": 1.0981770261366133,
+        "Q/a": 1.0894,
+        "Q/q": 1.1963540522732263,
+        "nearest": {
+          "orbit": "Q/q",
+          "dodeca": "mid/in",
+          "miss_pct": 1.7679541641458412
+        }
+      },
+      "pallas": {
+        "e": 0.2302,
+        "a/q": 1.2990387113535982,
+        "Q/a": 1.2302,
+        "Q/q": 1.5980774227071965,
+        "nearest": {
+          "orbit": "Q/a",
+          "dodeca": "circ/in",
+          "miss_pct": 2.2416068186669422
+        }
+      },
+      "hygiea": {
+        "e": 0.1125,
+        "a/q": 1.1267605633802817,
+        "Q/a": 1.1125,
+        "Q/q": 1.2535211267605635,
+        "nearest": {
+          "orbit": "Q/q",
+          "dodeca": "circ/in",
+          "miss_pct": 0.388383050750443
+        }
+      },
+      "jupiter": {
+        "e": 0.048386,
+        "a/q": 1.0508462464822923,
+        "Q/a": 1.048386,
+        "Q/q": 1.1016924929645844,
+        "nearest": {
+          "orbit": "a/q",
+          "dodeca": "circ/mid",
+          "miss_pct": 1.8328483016521524
+        }
+      },
+      "saturn": {
+        "e": 0.053862,
+        "a/q": 1.0569282705059937,
+        "Q/a": 1.053862,
+        "Q/q": 1.1138565410119876,
+        "nearest": {
+          "orbit": "a/q",
+          "dodeca": "circ/mid",
+          "miss_pct": 1.2646824287032485
+        }
+      },
+      "uranus": {
+        "e": 0.047257,
+        "a/q": 1.0496009941820617,
+        "Q/a": 1.047257,
+        "Q/q": 1.0992019883641235,
+        "nearest": {
+          "orbit": "a/q",
+          "dodeca": "circ/mid",
+          "miss_pct": 1.9491763295331737
+        }
+      },
+      "neptune": {
+        "e": 0.00859,
+        "a/q": 1.0086644274316376,
+        "Q/a": 1.00859,
+        "Q/q": 1.0173288548632755,
+        "nearest": {
+          "orbit": "Q/q",
+          "dodeca": "circ/mid",
+          "miss_pct": 4.96395038115356
+        }
+      },
+      "pluto": {
+        "e": 0.2488,
+        "a/q": 1.3312034078807242,
+        "Q/a": 1.2488,
+        "Q/q": 1.6624068157614482,
+        "nearest": {
+          "orbit": "Q/a",
+          "dodeca": "circ/in",
+          "miss_pct": 0.7635495002042614
+        }
+      }
+    },
+    "note": "trend table, not a sum; one hit (Mercury a/q) and the misses are listed"
+  },
+  "dodeca_spherals_rsol": {
+    "83.24": {
+      "vertices_rsol": 83.24,
+      "edges_rsol": 77.76050716005645,
+      "faces_rsol": 66.14703827356661
+    },
+    "155.54": {
+      "vertices_rsol": 155.54,
+      "edges_rsol": 145.3011687130608,
+      "faces_rsol": 123.60055662026129
+    },
+    "215.03": {
+      "vertices_rsol": 215.03,
+      "edges_rsol": 200.87508234775277,
+      "faces_rsol": 170.87455117689848
+    },
+    "327.64": {
+      "vertices_rsol": 327.64,
+      "edges_rsol": 306.0722316905442,
+      "faces_rsol": 260.3605913016742
+    },
+    "443": {
+      "vertices_rsol": 443,
+      "edges_rsol": 413.83835502048305,
+      "faces_rsol": 352.0319312252523
+    },
+    "594.74": {
+      "vertices_rsol": 594.74,
+      "edges_rsol": 555.5896687694856,
+      "faces_rsol": 472.61280085080494
+    },
+    "704": {
+      "vertices_rsol": 704,
+      "edges_rsol": 657.657340709752,
+      "faces_rsol": 559.4367484934033
+    },
+    "1118.79": {
+      "vertices_rsol": 1118.79,
+      "edges_rsol": 1045.142693483897,
+      "faces_rsol": 889.0514770553049
+    }
+  }
+}
