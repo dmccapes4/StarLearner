@@ -1,0 +1,376 @@
+{
+ "literals": {
+  "iau_poles": "IAU WG 2015 report (Archinal et al. 2018), J2000 RA/Dec of north poles",
+  "invariable_plane": "i 1.5787\u00b0, node 107.5822\u00b0 (Souami & Souchay 2012)",
+  "obliquity_j2000": 23.439291,
+  "au_km": 149597870.7,
+  "solar_node_deg": 75.76
+ },
+ "frame_check": {
+  "solar_pole_elements_vs_iau_deg": 0.001876510182896908
+ },
+ "bodies": {
+  "sol": {
+   "pole_radec": [
+    286.13,
+    63.87
+   ],
+   "right_hand_rule_flipped": false,
+   "spin_tilt_to_zecliptic_deg": 0.001876510182896908,
+   "lean_azimuth_zecliptic_deg": null,
+   "obliquity_to_own_orbit_deg": null,
+   "tilt_to_ecliptic_pole_deg": 7.251726833001019,
+   "tilt_to_invariable_pole_deg": 5.9682435551546735
+  },
+  "mercury": {
+   "pole_radec": [
+    281.0097,
+    61.4143
+   ],
+   "right_hand_rule_flipped": false,
+   "spin_tilt_to_zecliptic_deg": 3.397891421217883,
+   "lean_azimuth_zecliptic_deg": 162.85671128431,
+   "obliquity_to_own_orbit_deg": 0.034,
+   "tilt_to_ecliptic_pole_deg": 7.037690406531879,
+   "tilt_to_invariable_pole_deg": 6.378534816836594,
+   "orbit_i_to_zecliptic_deg": 3.3798051595230327,
+   "node_ecl_deg": 48.331
+  },
+  "venus": {
+   "pole_radec": [
+    272.76,
+    67.16
+   ],
+   "right_hand_rule_flipped": true,
+   "spin_tilt_to_zecliptic_deg": 173.57632945146003,
+   "lean_azimuth_zecliptic_deg": 262.2246521283077,
+   "obliquity_to_own_orbit_deg": 177.36,
+   "tilt_to_ecliptic_pole_deg": 178.76099134147088,
+   "tilt_to_invariable_pole_deg": 179.54212011737297,
+   "orbit_i_to_zecliptic_deg": 3.8558209416344793,
+   "node_ecl_deg": 76.68
+  },
+  "earth": {
+   "pole_radec": [
+    0.0,
+    90.0
+   ],
+   "right_hand_rule_flipped": false,
+   "spin_tilt_to_zecliptic_deg": 26.129808377668247,
+   "lean_azimuth_zecliptic_deg": 28.901375069714362,
+   "obliquity_to_own_orbit_deg": 23.44,
+   "tilt_to_ecliptic_pole_deg": 23.439290999999994,
+   "tilt_to_invariable_pole_deg": 23.00889718725821,
+   "orbit_i_to_zecliptic_deg": 7.250000000000011,
+   "companion": "luna",
+   "companion_pis_per_earth_year": 41.99909585614909,
+   "all_moons_pis": {
+    "luna": 41.99909585614909
+   },
+   "node_ecl_deg": -11.26
+  },
+  "mars": {
+   "pole_radec": [
+    317.68143,
+    52.8865
+   ],
+   "right_hand_rule_flipped": false,
+   "spin_tilt_to_zecliptic_deg": 19.5436119173068,
+   "lean_azimuth_zecliptic_deg": 279.62672176062136,
+   "obliquity_to_own_orbit_deg": 25.19,
+   "tilt_to_ecliptic_pole_deg": 26.717951048003407,
+   "tilt_to_invariable_pole_deg": 25.29135489121811,
+   "orbit_i_to_zecliptic_deg": 5.649150021471895,
+   "companion": "phobos",
+   "companion_pis_per_earth_year": 3598.152134624027,
+   "all_moons_pis": {
+    "phobos": 3598.152134624027,
+    "deimos": 908.9435515770641
+   },
+   "node_ecl_deg": 49.558
+  },
+  "jupiter": {
+   "pole_radec": [
+    268.056595,
+    64.495303
+   ],
+   "right_hand_rule_flipped": false,
+   "spin_tilt_to_zecliptic_deg": 7.8670498830931095,
+   "lean_azimuth_zecliptic_deg": 106.25131979913112,
+   "obliquity_to_own_orbit_deg": 3.13,
+   "tilt_to_ecliptic_pole_deg": 2.2165002227798762,
+   "tilt_to_invariable_pole_deg": 3.4468576287642296,
+   "orbit_i_to_zecliptic_deg": 6.089647708749477,
+   "companion": "ganymede",
+   "companion_pis_per_earth_year": 160.3855191586321,
+   "all_moons_pis": {
+    "io": 648.6134474828694,
+    "europa": 323.12819235430374,
+    "ganymede": 160.3855191586321,
+    "callisto": 68.75699320672724
+   },
+   "node_ecl_deg": 100.464
+  },
+  "saturn": {
+   "pole_radec": [
+    40.589,
+    83.537
+   ],
+   "right_hand_rule_flipped": false,
+   "spin_tilt_to_zecliptic_deg": 29.359070023175125,
+   "lean_azimuth_zecliptic_deg": 16.83907535816583,
+   "obliquity_to_own_orbit_deg": 26.73,
+   "tilt_to_ecliptic_pole_deg": 28.052173616014148,
+   "tilt_to_invariable_pole_deg": 27.342325120672253,
+   "orbit_i_to_zecliptic_deg": 5.504083059021557,
+   "companion": "titan",
+   "companion_pis_per_earth_year": 71.96529929463459,
+   "all_moons_pis": {
+    "titan": 71.96529929463459,
+    "rhea": 253.98111935656235,
+    "iapetus": 14.466549385438084,
+    "dione": 419.24979804638235,
+    "tethys": 607.7789710026212,
+    "enceladus": 837.5815308415682,
+    "mimas": 1218.1387444298819
+   },
+   "node_ecl_deg": 113.666
+  },
+  "uranus": {
+   "pole_radec": [
+    257.311,
+    -15.175
+   ],
+   "right_hand_rule_flipped": true,
+   "spin_tilt_to_zecliptic_deg": 97.89777658484331,
+   "lean_azimuth_zecliptic_deg": 0.8912422689948929,
+   "obliquity_to_own_orbit_deg": 97.77,
+   "tilt_to_ecliptic_pole_deg": 97.72179837714263,
+   "tilt_to_invariable_pole_deg": 96.93185163790203,
+   "orbit_i_to_zecliptic_deg": 6.478404579449672,
+   "companion": "titania",
+   "companion_pis_per_earth_year": 131.804123277389,
+   "all_moons_pis": {
+    "titania": 131.804123277389,
+    "oberon": 85.23261511200688,
+    "umbriel": 276.90316053401267,
+    "ariel": 455.3518639892653,
+    "miranda": 812.0924962865879
+   },
+   "node_ecl_deg": 74.006
+  },
+  "neptune": {
+   "pole_radec": [
+    299.36,
+    43.46
+   ],
+   "right_hand_rule_flipped": false,
+   "spin_tilt_to_zecliptic_deg": 21.762260774207228,
+   "lean_azimuth_zecliptic_deg": 235.52944230724944,
+   "obliquity_to_own_orbit_deg": 28.32,
+   "tilt_to_ecliptic_pole_deg": 28.02638594977259,
+   "tilt_to_invariable_pole_deg": 27.228426066347733,
+   "orbit_i_to_zecliptic_deg": 6.429706287668237,
+   "companion": "triton",
+   "companion_pis_per_earth_year": 195.25526706175594,
+   "all_moons_pis": {
+    "triton": 195.25526706175594,
+    "proteus": 1022.4329260658363,
+    "nereid": 3.18622396082898
+   },
+   "node_ecl_deg": 131.784
+  },
+  "pluto": {
+   "pole_radec": [
+    132.993,
+    -6.163
+   ],
+   "right_hand_rule_flipped": false,
+   "spin_tilt_to_zecliptic_deg": 119.14239768780511,
+   "lean_azimuth_zecliptic_deg": 59.86099981994441,
+   "obliquity_to_own_orbit_deg": 122.53,
+   "tilt_to_ecliptic_pole_deg": 112.81555396374559,
+   "tilt_to_invariable_pole_deg": 113.59236811423078,
+   "orbit_i_to_zecliptic_deg": 11.897918003509988,
+   "companion": "charon",
+   "companion_pis_per_earth_year": 179.65351398565176,
+   "all_moons_pis": {
+    "charon": 179.65351398565176,
+    "styx": 56.918982998658166,
+    "nix": 46.17652705243254,
+    "kerberos": 35.66946525498752,
+    "hydra": 30.038918776255198
+   },
+   "node_ecl_deg": 110.299
+  }
+ },
+ "curve": {
+  "anchors": {
+   "sol": [
+    0,
+    0
+   ],
+   "earth_luna": [
+    41.99909585614909,
+    26.129808377668247
+   ],
+   "pluto_charon": [
+    179.65351398565176,
+    119.14239768780511
+   ]
+  },
+  "mercury_tilt_deg": 3.397891421217883,
+  "fits": {
+   "power": {
+    "a": 0.5279249242541516,
+    "b": 1.0439393558659822,
+    "form": "tilt = a * Pis^b"
+   },
+   "linear": {
+    "k": 0.6610527447374297,
+    "form": "tilt = k * Pis"
+   },
+   "quadratic": {
+    "c1": 0.6096341046004581,
+    "c2": 0.0002980441139521508,
+    "form": "tilt = c1*Pis + c2*Pis^2"
+   }
+  },
+  "vulcan_prediction": {
+   "power": {
+    "vulcan_pis_per_earth_year": 5.951162723947061,
+    "a_km_earth_year_frame": 537036.2384020698,
+    "a_over_R_hill": 3.0638455661621964,
+    "a_km_mercury_year_frame": 207885.8060589582,
+    "a_over_R_hill_mercury_year_frame": 1.1860093595489076
+   },
+   "linear": {
+    "vulcan_pis_per_earth_year": 5.140121492979393,
+    "a_km_earth_year_frame": 592137.4826675873,
+    "a_over_R_hill": 3.3782036873855397,
+    "a_km_mercury_year_frame": 229215.4031324664,
+    "a_over_R_hill_mercury_year_frame": 1.307696848676536
+   },
+   "quadratic": {
+    "vulcan_pis_per_earth_year": 5.55855156229792,
+    "a_km_earth_year_frame": 562035.4597234458,
+    "a_over_R_hill": 3.20646862942308,
+    "a_km_mercury_year_frame": 217562.96172112343,
+    "a_over_R_hill_mercury_year_frame": 1.2412185025237035
+   }
+  },
+  "other_pairs_residuals": {
+   "mars": {
+    "pis": 3598.152134624027,
+    "tilt": 19.5436119173068,
+    "power_fit_tilt": 2722.0965920113804,
+    "residual_deg": -2702.5529800940735
+   },
+   "jupiter": {
+    "pis": 160.3855191586321,
+    "tilt": 7.8670498830931095,
+    "power_fit_tilt": 105.83537598786835,
+    "residual_deg": -97.96832610477523
+   },
+   "saturn": {
+    "pis": 71.96529929463459,
+    "tilt": 29.359070023175125,
+    "power_fit_tilt": 45.84543486284901,
+    "residual_deg": -16.486364839673886
+   },
+   "uranus": {
+    "pis": 131.804123277389,
+    "tilt": 97.89777658484331,
+    "power_fit_tilt": 86.22823120726842,
+    "residual_deg": 11.669545377574892
+   },
+   "neptune": {
+    "pis": 195.25526706175594,
+    "tilt": 21.762260774207228,
+    "power_fit_tilt": 129.96383973135946,
+    "residual_deg": -108.20157895715224
+   }
+  }
+ },
+ "distances_in_solar_radii": {
+  "mercury": {
+   "a": 83.23851739575764,
+   "perihelion": 66.122181063668,
+   "aphelion": 100.35485372784728,
+   "a_au_classical": 0.387098
+  },
+  "venus": {
+   "a": 155.53963922548857,
+   "perihelion": 154.48632478865358,
+   "aphelion": 156.59295366232357,
+   "a_au_classical": 0.723332
+  },
+  "earth": {
+   "a": 215.03215567054764,
+   "perihelion": 211.4389683492928,
+   "aphelion": 218.62534299180248,
+   "a_au_classical": 1.0
+  },
+  "mars": {
+   "a": 327.6399799199444,
+   "perihelion": 297.0403716353011,
+   "aphelion": 358.2395882045877,
+   "a_au_classical": 1.523679
+  },
+  "ceres": {
+   "a": 594.7359361536006,
+   "perihelion": 548.049165165543,
+   "aphelion": 641.4227071416583,
+   "a_au_classical": 2.7658
+  },
+  "jupiter": {
+   "a": 1118.7886524167357,
+   "perihelion": 1064.6549446808995,
+   "aphelion": 1172.9223601525719,
+   "a_au_classical": 5.20289
+  },
+  "saturn": {
+   "a": 2050.6907080186415,
+   "perihelion": 1940.2364051033414,
+   "aphelion": 2161.1450109339416,
+   "a_au_classical": 9.53667
+  },
+  "uranus": {
+   "a": 4126.286440307046,
+   "perihelion": 3931.290521997456,
+   "aphelion": 4321.282358616637,
+   "a_au_classical": 19.18916
+  },
+  "neptune": {
+   "a": 6465.999718440914,
+   "perihelion": 6410.456780859507,
+   "aphelion": 6521.542656022322,
+   "a_au_classical": 30.06992
+  },
+  "pluto": {
+   "a": 8489.899570184562,
+   "perihelion": 6377.612557122642,
+   "aphelion": 10602.18658324648,
+   "a_au_classical": 39.482
+  },
+  "_conversion": {
+   "R_sol_km": 695700.0,
+   "classical_AU_in_R_sol": 215.03215567054764,
+   "luna_a": 0.5525370130803507,
+   "charon_a": 0.028160701451775193,
+   "mercury_hill_perihelion": 0.25195020616982944
+  }
+ },
+ "normal": {
+  "solar_equator_to_ecliptic_deg": 7.25,
+  "invariable_plane_to_ecliptic_deg": 1.5787,
+  "solar_equator_to_invariable_plane_deg": 5.966636268421219,
+  "solar_pole_lean_azimuth_from_invariable_node": null,
+  "how_we_tell": [
+   "Invariable plane: sum of the planets' orbital angular momenta (Jupiter ~61 %, Saturn ~25 %, Neptune ~8 %, Uranus ~5 %) from the ephemeris; its pole is fixed to ~0.01\u00b0.",
+   "Solar equator: sunspot tracking (Carrington 1863, refined by Doppler and helioseismology) gives i = 7.25\u00b0 to the ecliptic, node 75.76\u00b0 (J2000).",
+   "Angle between the two poles is the number above. It is ~6\u00b0, not ~1\u00b0. The ~1.6\u00b0 figure is the ecliptic's tilt to the invariable plane \u2014 Earth's orbit, not Sol's spin.",
+   "Sol carries ~0.5 % of the system's angular momentum in its spin; the planets' orbits carry the rest. So the 'normal' of the system is set by Jupiter and Saturn, and Sol is the body that is tipped."
+  ]
+ }
+}
