@@ -1,0 +1,222 @@
+{
+  "literals": {
+    "vulcanoid_zone_au": [
+      [
+        0.09,
+        0.21
+      ],
+      "Evans & Tabachnik 1999, Nature 399, 41 \u2014 long-lived low-i orbits"
+    ],
+    "le_verrier_vulcan_au": [
+      0.1427,
+      "Le Verrier 1859, from Lescarbault's transit; P = 19.7 d"
+    ],
+    "sublimation_rock_au": [
+      0.06,
+      "rough silicate sublimation radius (~1,500 K) \u2014 nothing solid survives inside"
+    ],
+    "GM_sun_km3s2": [
+      132712440018.0,
+      "IAU 2015 nominal"
+    ],
+    "R_sol_km": [
+      695700.0,
+      "IAU 2015 nominal"
+    ]
+  },
+  "mercury_rsol": {
+    "q": 66.12218106366801,
+    "a": 83.23851739575765,
+    "Q": 100.3548537278473,
+    "period_yr": 0.24084180217970744
+  },
+  "classical": {
+    "interior_resonances_with_mercury": {
+      "2:1": {
+        "a_rsol": 52.43698011447783,
+        "a_au_table": 0.24385645928610283,
+        "pis": 26.0884235696404,
+        "shell": 52
+      },
+      "3:1": {
+        "a_rsol": 40.01690531568574,
+        "a_au_table": 0.18609730805561908,
+        "pis": 39.1326353544606,
+        "shell": 40
+      },
+      "4:1": {
+        "a_rsol": 33.033227519574744,
+        "a_au_table": 0.15361994310369653,
+        "pis": 52.1768471392808,
+        "shell": 33
+      },
+      "5:2": {
+        "a_rsol": 45.188819599657236,
+        "a_au_table": 0.21014912610973105,
+        "pis": 32.6105294620505,
+        "shell": 45
+      },
+      "3:2": {
+        "a_rsol": 63.522877594631375,
+        "a_au_table": 0.2954110625759398,
+        "pis": 19.566317677230305,
+        "shell": 64
+      },
+      "5:3": {
+        "a_rsol": 59.21410504013001,
+        "a_au_table": 0.2753732568762989,
+        "pis": 21.74035297470033,
+        "shell": 59
+      },
+      "7:4": {
+        "a_rsol": 57.31904822365732,
+        "a_au_table": 0.26656035719362947,
+        "pis": 22.827370623435357,
+        "shell": 57
+      }
+    },
+    "vulcanoid_zone_rsol": [
+      19.352894010349285,
+      45.156752690815004
+    ],
+    "vulcanoid_zone_shells": [
+      20,
+      45
+    ],
+    "vulcanoid_zone_pis": [
+      32.64527192377121,
+      116.35511196796529
+    ],
+    "le_verrier_rsol": 30.685088614187148,
+    "le_verrier_pis": 58.27915857987933,
+    "le_verrier_period_d": 19.6894863483687,
+    "sublimation_rsol": 12.901929340232858,
+    "note": "5\u20137 Pis would be a \u2248 126\u2013158 R\u2609 \u2014 outside Mercury (a=83): no heliocentric Vulcan is that slow",
+    "five_to_seven_pis_rsol": [
+      126.04858183182064,
+      157.74538205072284
+    ]
+  },
+  "tight_binding": {
+    "knobs": {
+      "N_shells": 130,
+      "hopping_t_over_well_depth": 0.02,
+      "mercury_scatterer_over_well_depth": 1.0
+    },
+    "leak_lt_1pct_max_rc_rsol": 66.0,
+    "leak_at": {
+      "20": 0.0,
+      "30": 0.0,
+      "37": 0.0,
+      "40": 0.0,
+      "45": 9.357825230848566e-24,
+      "50": 3.1713618225350637e-15,
+      "55": 3.8581256623611555e-09,
+      "60": 9.758721634589784e-06,
+      "63": 6.440968108643845e-05,
+      "66": 0.0001609674200553656
+    },
+    "peak_follows_rc": true,
+    "reading": "the ground state sits at the circular radius (shell = rc) until the well's tail reaches Mercury's dwell shells; leakage rises from ~shell 66.  With t a knob, the EDGE is a knob; the SHAPE (flat then rising) is not."
+  },
+  "hydrogen_ladder": {
+    "a1_rsol": 9.248724155084183,
+    "assignment": "Mercury = n 3; a_n = a1 n\u00b2",
+    "fit": {
+      "mercury": {
+        "n": 3,
+        "pred_rsol": 83.23851739575764,
+        "miss_pct": 1.707245054310191e-14
+      },
+      "venus": {
+        "n": 4,
+        "pred_rsol": 147.97958648134693,
+        "miss_pct": 4.860531232930083
+      },
+      "earth": {
+        "n": 5,
+        "pred_rsol": 231.21810387710457,
+        "miss_pct": 7.527222222222216
+      },
+      "mars": {
+        "n": 6,
+        "pred_rsol": 332.95406958303056,
+        "miss_pct": 1.6219295534032887
+      },
+      "ceres": {
+        "n": 8,
+        "pred_rsol": 591.9183459253877,
+        "miss_pct": 0.47375483083053804
+      },
+      "vesta": {
+        "n": 7,
+        "pred_rsol": 453.18748359912496,
+        "miss_pct": 10.754454560425346
+      },
+      "pallas": {
+        "n": 8,
+        "pred_rsol": 591.9183459253877,
+        "miss_pct": 0.6820288321226473
+      },
+      "hygiea": {
+        "n": 9,
+        "pred_rsol": 749.1466565618189,
+        "miss_pct": 10.898678975011928
+      },
+      "jupiter": {
+        "n": 11,
+        "pred_rsol": 1119.0956227651861,
+        "miss_pct": 0.0274377423999948
+      },
+      "saturn": {
+        "n": 15,
+        "pred_rsol": 2080.962934893941,
+        "miss_pct": 1.4761966178970163
+      },
+      "uranus": {
+        "n": 21,
+        "pred_rsol": 4078.687352392125,
+        "miss_pct": 1.1535575293551192
+      },
+      "neptune": {
+        "n": 26,
+        "pred_rsol": 6252.137528836908,
+        "miss_pct": 3.3074883841098037
+      },
+      "pluto": {
+        "n": 30,
+        "pred_rsol": 8323.851739575764,
+        "miss_pct": 1.9558279722405172
+      },
+      "belt_4:1": {
+        "n": 7,
+        "pred_rsol": 453.18748359912496,
+        "miss_pct": 2.3074541531823014
+      },
+      "belt_2:1": {
+        "n": 9,
+        "pred_rsol": 749.1466565618189,
+        "miss_pct": 6.540733944954124
+      }
+    },
+    "hits_under_2pct": 8,
+    "null_random_a1_hits_under_2pct": {
+      "mean": 3.584,
+      "p_ge_observed": 0.0298
+    },
+    "predicted_inner_states": {
+      "n1": {
+        "a_rsol": 9.248724155084183,
+        "pis": 352.19371819014543,
+        "inside_sublimation": true
+      },
+      "n2": {
+        "a_rsol": 36.99489662033673,
+        "pis": 44.02421477376818,
+        "in_vulcanoid_zone": true,
+        "period_d": 26.064898673370056
+      }
+    },
+    "verdict": "see p_ge_observed: if it is not small, the ladder is chance and n2 is not a prediction"
+  }
+}
