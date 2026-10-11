@@ -25,7 +25,7 @@ Time: one sim clock in JD (TT≈UTC for display). Rates: pause · real time · 1
 
 **Navigation**
 - Free-fly: W/S forward/back, A/D strafe, Q/E down/up, mouse-drag look, scroll = speed; touch: left half drag = move (joystick), right half drag = look, two-finger pinch = speed, three-finger tap = pause.
-- Speed presets: 1 km/s · 100 km/s · 1 R☉/s · 1 Luna-distance/s · 1 AU/s · 10 AU/s, plus "auto" (speed ∝ distance to nearest surface).
+- Speed presets: 1 km/s · 100 km/s · 1 R☉/s · 1 Luna-distance/s · 10 R☉/s · 215 R☉/s (Earth mean) · 1000 R☉/s, plus "auto" (speed ∝ distance to nearest surface). Classical AU is not a display unit.
 - Hop: Prev/Next body (ordered by distance from Sol), hop to Sol, hop to barycentre, hop list (every body incl. moons and the seven real belt bodies).
 - Teleport (from the tap card): place the camera at `standoff × radius` from the body on the sunward-side quarter, looking at it.
 - Orbit cam: lock to a body at a distance; drag to orbit around it; scroll to change distance; auto-rotate toggle.
@@ -52,11 +52,11 @@ Time: one sim clock in JD (TT≈UTC for display). Rates: pause · real time · 1
 - Sol glare on/off, exposure slider.
 
 **Overlays (each toggleable)**
-- Orbit lines (full orbit, re-solved every N frames in the current frame), trails (last N days), labels (with distance from camera), spin axes (through the poles, length 3 radii), equator ring, tropics and polar circles rings, prime-meridian mark, Zecliptic/Ecliptic/Invariable grid discs (R = 1.2 × reference-plane radius of the farthest shown body, with 1 AU rings), node markers (where each orbit crosses the chosen plane), perihelion/aphelion ticks, Hill spheres (translucent), Mercury's survival annulus (from `v4_annulus.json`: 13,254–81,473 km prograde, to 136,457 km retrograde), the belt sample on/off, moon orbits on/off, constellation-free star sphere on/off (from `star_positions/*.jsonl` if present), light-time circles (1, 8.3, 60 light-minutes), Sol's B₀ line (where Sol's equator meets the view).
+- Orbit lines (full orbit, re-solved every N frames in the current frame), trails (last N days), labels (with distance from camera), spin axes (through the poles, length 3 radii), equator ring, tropics and polar circles rings, prime-meridian mark, Zecliptic/Ecliptic/Invariable grid discs (R = 1.2 × reference-plane radius of the farthest shown body, with R☉ rings (1 = photosphere)), node markers (where each orbit crosses the chosen plane), perihelion/aphelion ticks, Hill spheres (translucent), Mercury's survival annulus (from `v4_annulus.json`: 13,254–81,473 km prograde, to 136,457 km retrograde), the belt sample on/off, moon orbits on/off, constellation-free star sphere on/off (from `star_positions/*.jsonl` if present), light-time circles (1, 8.3, 60 light-minutes), Sol's B₀ line (where Sol's equator meets the view).
 - Transparency: per-body alpha slider (default 1.0; "Pluto transparent" = 0.25), wireframe toggle, hide body.
 
 **Readouts (HUD, selectable)**
-- Camera position in reference frame (km / R☉ / AU / light-min), altitude above nearest surface, speed.
+- Camera position in reference frame (km / R☉ / light-min), altitude above nearest surface, speed. 1 R☉ = Sol-centre to the bubbling surface.
 - For the selected body: distance to camera, angular diameter as seen from camera, phase angle, distance from Sol (AU and R☉), heliocentric latitude in the chosen plane (the body's "B₀"), spin tilt to the Zecliptic (from `tilt_curve.json`), its companion's Pis, orbital period, current true anomaly, time to next perihelion / node crossing.
 - Luna Pis and Charon Pis elapsed; Sol's B₀ as seen from Earth (the real one, for cross-checking against `_solar_equator_view`).
 

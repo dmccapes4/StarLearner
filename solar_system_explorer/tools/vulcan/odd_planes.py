@@ -15,10 +15,14 @@ B = json.load(open(os.path.join(DOC, "data", "bodies_metrics.json")))
 SBDIR = os.path.join(DOC, "data", "sbdb")
 SE_I, SE_NODE = 7.25, 75.76
 INV_I, INV_NODE = 1.5787, 107.5822
+R_SOL_KM = float(B["sol"]["r_eq_km"])
+AU_KM = 149597870.7   # table unit only; never the displayed length
+R_PER_CLASSICAL_AU = AU_KM / R_SOL_KM   # 215.03 — Earth mean / photosphere
 LIT = {
     "solar_equator": ((SE_I, SE_NODE), "Carrington / J2000; same as every other file tonight"),
     "invariable": ((INV_I, INV_NODE), "Souami & Souchay 2012"),
     "odd_threshold_deg": (10.0, "i to Zecliptic (or to primary equator, for moons) at or above this is flagged"),
+    "r_sol_km": (R_SOL_KM, "photosphere; display length 1"),
 }
 
 
@@ -49,7 +53,10 @@ bodies = {}
 for k, b in B.items():
     if b.get("kind") in ("planet", "dwarf") and b.get("i_ecl_deg") is not None:
         row = planes(b["i_ecl_deg"], b.get("omega_node_deg") or 0.0)
-        row.update({"id": k, "name": b["name"], "kind": b["kind"], "a_au": b.get("a_au"), "e": b.get("e"),
+        a_au = b.get("a_au")
+        row.update({"id": k, "name": b["name"], "kind": b["kind"], "a_au_table": a_au,
+                    "a_rsol": None if a_au is None else float(a_au) * R_PER_CLASSICAL_AU,
+                    "e": b.get("e"),
                     "source": "bodies_metrics", "odd": row["i_zecliptic_deg"] >= 10.0})
         bodies[k] = row
 
@@ -62,7 +69,8 @@ for fn in sorted(os.listdir(SBDIR)):
     row = planes(el["i"], el["om"])
     row.update({"id": k, "name": name, "kind": "asteroid" if k != "ceres" else "dwarf",
                 "fullname": d["object"]["fullname"], "orbit_class": d["object"]["orbit_class"]["name"],
-                "a_au": el["a"], "e": el["e"], "period_d": el["per"],
+                "a_au_table": el["a"], "a_rsol": el["a"] * R_PER_CLASSICAL_AU,
+                "e": el["e"], "period_d": el["per"],
                 "source": d["signature"]["source"] + " SBDB " + d["object"]["fullname"],
                 "odd": row["i_zecliptic_deg"] >= 10.0})
     bodies[k] = row
@@ -99,22 +107,24 @@ L = []
 L.append("# Oddly-planed bodies vs the Zecliptic\n")
 L.append("**Date:** 2026-10-11 · **Sources:** `data/bodies_metrics.json`, `data/sbdb/*.json` (JPL SBDB, fetched 2026-10-11) via `tools/vulcan/odd_planes.py` → `data/odd_planes.json`.\n")
 L.append("**Cut:** i to the Zecliptic ≥ 10°. That is a cut so we can hop them, not a claim that 9.9° is ordinary. Planes are orbit poles, not spin axes (those are the tilt curve).\n")
+L.append(f"**Length:** 1 = Sol-centre to the photosphere (R☉ = {R_SOL_KM:,.0f} km). The classical AU is a table unit only ({R_PER_CLASSICAL_AU:.2f} R☉) and is not used as a measure here.\n")
 L.append("## 1. The three you named\n")
-L.append("| body | i to ecliptic | i to Zecliptic | i to invariable | a (AU) | e | verdict |")
+L.append("| body | i to ecliptic | i to Zecliptic | i to invariable | a (R☉) | e | verdict |")
 L.append("|---|---|---|---|---|---|---|")
 for k in ("pallas", "juno", "psyche"):
     b = bodies[k]
     v = "oddly planed" if b["odd"] else "plane is ordinary — oddness is elsewhere"
-    L.append(f"| **{b['name']}** | {b['i_ecl_deg']:.2f}° | **{b['i_zecliptic_deg']:.2f}°** | {b['i_invariable_deg']:.2f}° | {b['a_au']:.3f} | {b['e']:.3f} | {v} |")
+    L.append(f"| **{b['name']}** | {b['i_ecl_deg']:.2f}° | **{b['i_zecliptic_deg']:.2f}°** | {b['i_invariable_deg']:.2f}° | {b['a_rsol']:.1f} | {b['e']:.3f} | {v} |")
 L.append("\nPallas is the one. Juno is tipped enough to flag. **Psyche is not oddly planed** — 3.1° to Earth's orbit, 7.06° to Sol's equator, which is what you get for a body that lives in the ecliptic. Keep it on the hop list because you named it and because the Psyche spacecraft is going there; do not put it on the odd-plane overlay as if it belonged.\n")
 
 L.append("## 2. Heliocentric bodies, i to Zecliptic (high → low)\n")
-L.append("| body | class | i ecl | **i Zecliptic** | i inv | a | e | odd |")
+L.append("| body | class | i ecl | **i Zecliptic** | i inv | a (R☉) | e | odd |")
 L.append("|---|---|---|---|---|---|---|---|")
 for b in sorted(bodies.values(), key=lambda x: -x["i_zecliptic_deg"]):
     cls = b.get("orbit_class") or b["kind"]
     flag = "**yes**" if b["odd"] else ""
-    L.append(f"| {b['name']} | {cls} | {b['i_ecl_deg']:.2f}° | {b['i_zecliptic_deg']:.2f}° | {b['i_invariable_deg']:.2f}° | {b.get('a_au') or '—'} | {b.get('e') if b.get('e') is not None else '—'} | {flag} |")
+    ar = "—" if b.get("a_rsol") is None else f"{b['a_rsol']:.1f}"
+    L.append(f"| {b['name']} | {cls} | {b['i_ecl_deg']:.2f}° | {b['i_zecliptic_deg']:.2f}° | {b['i_invariable_deg']:.2f}° | {ar} | {b.get('e') if b.get('e') is not None else '—'} | {flag} |")
 
 L.append("\n**What the Zecliptic does to the ranking.** Hidalgo (42.5° ecliptic) stays first at 38.7°. Pallas stays second and gets *more* tipped (34.9 → 36.5). Interamnia jumps 17.3 → 24.1 — Sol's equator makes it odder. Eros 10.8 → 16.5. Hygiea is the reverse surprise: 3.8° to the ecliptic, **10.8° to the Zecliptic**, so it is ordinary in an Earth-frame belt map and flagged here. Ceres is the other reverse: 10.6° to the ecliptic, **3.41° to the Zecliptic** — the same number as Mercury (3.38°). Ceres sits in Sol's equator. Vesta too (3.47°). The 'aligned belt' (Ceres, Vesta, Psyche) and the 'tipped belt' (Pallas, Euphrosyne, Interamnia, Juno) are two different families once the frame is Sol's.\n")
 
@@ -127,7 +137,7 @@ L.append("\nTriton is captured and backward. Iapetus is the only large regular m
 
 L.append("## 4. Hidalgo at 42°\n")
 h = bodies["hidalgo"]
-L.append(f"944 Hidalgo: a = {h['a_au']:.2f} AU (Jupiter-crossing), e = {h['e']:.3f}, i = {h['i_ecl_deg']:.1f}° ecliptic = **{h['i_zecliptic_deg']:.1f}° Zecliptic**. The 42 is the ecliptic inclination, the same numeral as Luna's Pis, and it is a coincidence of the same kind: four-figure-looking, no mechanism offered, exact enough to remember. Hidalgo is the body that *is* 42° to Earth's orbit and 39° to Sol's.\n")
+L.append(f"944 Hidalgo: a = {h['a_rsol']:.0f} R☉ (Jupiter-crossing; Jupiter is 1,119 R☉), e = {h['e']:.3f}, i = {h['i_ecl_deg']:.1f}° ecliptic = **{h['i_zecliptic_deg']:.1f}° Zecliptic**. The 42 is the ecliptic inclination, the same numeral as Luna's Pis, and it is a coincidence of the same kind: four-figure-looking, no mechanism offered, exact enough to remember. Hidalgo is the body that *is* 42° to Earth's orbit and 39° to Sol's.\n")
 
 L.append("## Literals\n")
 for k, (v, why) in LIT.items():

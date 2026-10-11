@@ -23,9 +23,10 @@ const RATES: Array = [
 	["paused", 0.0], ["real time", 1.0 / 86400.0], ["1 min / s", 1.0 / 1440.0], ["1 hour / s", 1.0 / 24.0],
 	["6 hours / s", 0.25], ["1 day / s", 1.0], ["1 week / s", 7.0], ["1 month / s", 30.436875],
 	["1 year / s", 365.25636], ["10 years / s", 3652.5636], ["1 Pluto year / min", 90560.0 / 60.0]]
-const SPEEDS: Array = [   # free-fly km per real second
+const SPEEDS: Array = [   # free-fly km per real second. 1 R☉ = Sol-centre → photosphere.
 	["1 km/s", 1.0], ["100 km/s", 100.0], ["1 R\u2609/s", 695700.0], ["1 Luna-dist/s", 384400.0],
-	["1 AU/s", 1.495978707e8], ["10 AU/s", 1.495978707e9], ["auto", -1.0]]
+	["10 R\u2609/s", 6957000.0], ["215 R\u2609/s (Earth mean)", 695700.0 * 215.032],
+	["1000 R\u2609/s", 695700000.0], ["auto", -1.0]]
 const SIZE_SCALES: Array = [1.0, 10.0, 100.0, 1000.0]
 const FRAMES: Array = ["zecliptic", "ecliptic", "invariable", "body"]
 const LANDING_SPOTS: Array = ["north pole", "arctic circle", "tropic (N)", "equator", "tropic (S)",
@@ -343,21 +344,23 @@ func _build_sphere_wire(r: float, n: int) -> ImmediateMesh:
 	return im
 
 func _build_grid_mesh() -> ImmediateMesh:
-	## Rings at 0.1, 0.5, 1..10 AU and every 10 AU to 50, plus 12 spokes; frame XZ plane; units.
+	## Rings in R☉ (1 = Sol centre to photosphere). Named distances:
+	## 66 Mercury peri, 83 Mercury a, 155 Venus, 215 Earth, 328 Mars,
+	## 600 belt, 1119 Jupiter, 2051 Saturn, 4126 Uranus, 6466 Neptune, 8490 Pluto.
 	var im := ImmediateMesh.new()
-	var au := ZeclipticBodies.AU_KM / KM_PER_UNIT
-	var radii: Array = [0.1, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50]
+	var rs := ZeclipticBodies.r_sol_km() / KM_PER_UNIT
+	var radii: Array = [1, 10, 25, 50, 66, 83, 100, 155, 215, 328, 500, 600, 1119, 2051, 4126, 6466, 8490, 10600]
 	for r in radii:
 		im.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
 		for k in 181:
 			var a := TAU * float(k) / 180.0
-			im.surface_add_vertex(Vector3(cos(a), 0, sin(a)) * float(r) * au)
+			im.surface_add_vertex(Vector3(cos(a), 0, sin(a)) * float(r) * rs)
 		im.surface_end()
 	im.surface_begin(Mesh.PRIMITIVE_LINES)
 	for k in 12:
 		var a := TAU * float(k) / 12.0
 		im.surface_add_vertex(Vector3.ZERO)
-		im.surface_add_vertex(Vector3(cos(a), 0, sin(a)) * 50.0 * au)
+		im.surface_add_vertex(Vector3(cos(a), 0, sin(a)) * 10600.0 * rs)
 	im.surface_end()
 	return im
 
@@ -666,7 +669,7 @@ func _build_panel() -> void:
 	og.columns = 2
 	ov.add_child(og)
 	var names: Dictionary = {"orbits": "orbit lines", "moon_orbits": "moon orbits", "labels": "labels", "markers": "markers",
-		"axes": "spin axes", "equators": "equator rings", "tropics": "tropics & polar circles", "grid": "plane grid (AU rings)",
+		"axes": "spin axes", "equators": "equator rings", "tropics": "tropics & polar circles", "grid": "plane grid (R☉ rings; 1 = photosphere)",
 		"nodes": "node markers", "hill": "Hill spheres", "annulus": "Mercury annulus", "belt": "belt sample (representative)",
 		"belt_big": "belt big bodies", "odd_planes": "odd planes (i_Z ≥ 10°)", "heliobarrier": "heliobarrier (TS/HP)", "trails": "trails", "light_time": "light-time rings",
 		"glare": "Sol glow", "sol_equator_disc": "Sol equator disc", "readouts": "readouts", "frame_banner": "frame banner"}
@@ -786,7 +789,7 @@ func _rel(id: String) -> Vector3:
 	return v
 
 func _compressed(id: String) -> Vector3:
-	## heliocentric, frame-godot, with |r| -> 0.3 AU * (|r|/0.3 AU)^0.5 beyond 0.3 AU; moons keep real offsets.
+	## heliocentric, frame-godot, compress beyond Mercury perihelion (66 R☉).
 	if id == "sol":
 		return Vector3.ZERO
 	var r := ZeclipticBodies.rel_ecl_km64(id, "sol", jd)
@@ -797,7 +800,7 @@ func _compressed(id: String) -> Vector3:
 		off = ZeclipticBodies.moon_offset_ecl_km(id, jd)
 		base -= off
 	var L := base.length()
-	var k := 0.3 * ZeclipticBodies.AU_KM
+	var k := ZeclipticBodies.km_from_rsol(66.0)
 	if L > k:
 		base = base.normalized() * (k * sqrt(L / k))
 	return ZeclipticBodies.to_godot(_fb * (base + off))
@@ -974,7 +977,7 @@ func _rebuild_planet_orbits() -> void:
 			var p := ZeclipticBodies.helio_ecl_km(id, t)
 			if dist_log:
 				var L := p.length()
-				var kk := 0.3 * ZeclipticBodies.AU_KM
+				var kk := ZeclipticBodies.km_from_rsol(66.0)
 				if L > kk:
 					p = p.normalized() * (kk * sqrt(L / kk))
 			_orbit_im.surface_add_vertex(ZeclipticBodies.to_godot(_fb * p) / KM_PER_UNIT)
@@ -1013,7 +1016,7 @@ func _rebuild_odd_orbits() -> void:
 			var p := ZeclipticBodies.helio_ecl_km(id, t)
 			if dist_log:
 				var L := p.length()
-				var kk := 0.3 * ZeclipticBodies.AU_KM
+				var kk := ZeclipticBodies.km_from_rsol(66.0)
 				if L > kk:
 					p = p.normalized() * (kk * sqrt(L / kk))
 			_odd_orbit_im.surface_add_vertex(ZeclipticBodies.to_godot(_fb * p) / KM_PER_UNIT)
@@ -1195,7 +1198,7 @@ func _fill_card() -> void:
 		lines.append("[color=#aab]%s[/color]" % str(b.get("phase_note", "")))
 	elif selected != "sol":
 		var hel := ZeclipticBodies.helio_ecl_km(selected, jd).length()
-		lines.append("from Sol %.4f AU = %.1f R\u2609 · period %.2f d · heliocentric lat (%s) %.2f°" % [hel / ZeclipticBodies.AU_KM, hel / ZeclipticBodies.radius_km("sol"), ZeclipticBodies.period_d(selected), frame_id, ZeclipticBodies.latitude_in_frame_deg(selected, jd, _fb)])
+		lines.append("from Sol %.1f R\u2609 (centre\u2192photosphere = 1) · period %.2f d · heliocentric lat (%s) %.2f°" % [ZeclipticBodies.rsol(hel), ZeclipticBodies.period_d(selected), frame_id, ZeclipticBodies.latitude_in_frame_deg(selected, jd, _fb)])
 	if b.get("spin_tilt_to_zecliptic_deg") != null or b.get("pole_radec_j2000") != null:
 		lines.append("spin tilt to Zecliptic %.2f° · obliquity to own orbit %s° · tropics ±%.1f°, polar circles ±%.1f°" % [ZeclipticBodies.spin_tilt_to_zecliptic_deg(selected), str(b.get("obliquity_deg", "—")), ZeclipticBodies.tropic_lat_deg(selected), ZeclipticBodies.polar_circle_lat_deg(selected)])
 	if b.get("rot_d") != null:
@@ -1443,20 +1446,20 @@ func _apply_preset_mercury() -> void:
 
 func _apply_preset_overview() -> void:
 	frame_id = "zecliptic"; ref_id = "sol"; selected = "sol"; look_target = "sol"
-	cam_mode = Cam.ORBIT; orbit_target = "sol"; orbit_dist_km = 45.0 * ZeclipticBodies.AU_KM; orbit_az = 0.0; orbit_el = 1.2
+	cam_mode = Cam.ORBIT; orbit_target = "sol"; orbit_dist_km = ZeclipticBodies.km_from_rsol(9676.0); orbit_az = 0.0; orbit_el = 1.2
 	overlays["grid"] = true; overlays["orbits"] = true; rate_idx = 8; size_idx = 3; _card.visible = false; paused_by_tap = false; _rel_cache.clear()
-	_say("Above the Zecliptic: 45 AU over Sol's pole, 1 year per second, bodies \u00d71000")
+	_say("Above the Zecliptic: 9,676 R\u2609 over Sol's pole (past Pluto aphelion), 1 year per second, bodies \u00d71000")
 
 func _apply_preset_odd_planes() -> void:
 	frame_id = "zecliptic"; ref_id = "sol"; selected = "pallas"; look_target = "pallas"
-	cam_mode = Cam.ORBIT; orbit_target = "sol"; orbit_dist_km = 8.0 * ZeclipticBodies.AU_KM; orbit_az = 0.4; orbit_el = 1.15
+	cam_mode = Cam.ORBIT; orbit_target = "sol"; orbit_dist_km = ZeclipticBodies.km_from_rsol(1720.0); orbit_az = 0.4; orbit_el = 1.15
 	overlays["odd_planes"] = true; overlays["orbits"] = true; overlays["belt"] = true; overlays["belt_big"] = true
 	overlays["grid"] = true; overlays["labels"] = true
 	rate_idx = 8; size_idx = 2; dist_log = false; _card.visible = true; paused_by_tap = false
 	alpha["pallas"] = 1.0
 	_fill_card()
 	_rel_cache.clear()
-	_say("Odd planes: 8 AU over Sol's pole. Amber orbits are i_Z ≥ 10°. Pallas 36.5°, Hidalgo 38.7°. Psyche is metal-grey — its plane is ordinary.")
+	_say("Odd planes: 1,720 R\u2609 over Sol's pole (past Jupiter). Amber orbits are i_Z ≥ 10°. Pallas 36.5°, Hidalgo 38.7°. Psyche is metal-grey — its plane is ordinary.")
 
 # ── HUD text ────────────────────────────────────────────────────────────
 func _update_hud() -> void:
@@ -1480,7 +1483,7 @@ func _update_hud() -> void:
 		lines.append("camera: %s%s" % [mode_s, ("  → looking at " + _name(look_target)) if look_target != "" else ""])
 		lines.append("camera from %s: %s · alt above nearest surface %s" % [_name(ref_id), _dist_str(cam_pos.length()), _dist_str(_nearest_surface_km())])
 		var sol_d := (_rel("sol") - cam_pos).length()
-		lines.append("from Sol: %.4f AU = %s R\u2609 = %.1f light-min" % [sol_d / ZeclipticBodies.AU_KM, _fmt(sol_d / ZeclipticBodies.radius_km("sol")), sol_d / 299792.458 / 60.0])
+		lines.append("from Sol: %.1f R\u2609 (1 = bubbling surface) = %s km = %.1f light-min" % [ZeclipticBodies.rsol(sol_d), _fmt(sol_d), sol_d / 299792.458 / 60.0])
 		if selected != "":
 			var d := (_rel(selected) - cam_pos).length()
 			lines.append("selected %s: %s away · %.3f° across · spin tilt to Zecliptic %.2f°" % [_name(selected), _dist_str(d), ZeclipticBodies.angular_diameter_deg(ZeclipticBodies.radius_km(selected), d), ZeclipticBodies.spin_tilt_to_zecliptic_deg(selected)])
@@ -1741,11 +1744,12 @@ func _fmt(x: float) -> String:
 	return "%.1f" % x
 
 func _dist_str(km: float) -> String:
-	if km < 1.0e4:
+	if km < ZeclipticBodies.r_sol_km() * 0.05:
 		return "%s km" % _fmt(km)
-	if km < 0.02 * ZeclipticBodies.AU_KM:
-		return "%s km" % _fmt(km)
-	return "%.4f AU (%s km)" % [km / ZeclipticBodies.AU_KM, _fmt(km)]
+	var r := ZeclipticBodies.rsol(km)
+	if r < 10.0:
+		return "%.2f R\u2609 (%s km)" % [r, _fmt(km)]
+	return "%.1f R\u2609 (%s km)" % [r, _fmt(km)]
 
 func _say(t: String) -> void:
 	_msg.text = t

@@ -77,8 +77,9 @@ func _run() -> void:
 	_check("Charon returns after one period", (c1 - c0).length(), 0.0, 0.1)
 
 	# Earth perihelion distance early January
-	var r_peri := ZeclipticBodies.helio_ecl_km("earth", ZeclipticBodies.jd_from_ymd(2026, 1, 3.5)).length() / ZeclipticBodies.AU_KM
-	_check("Earth distance 2026-01-03", r_peri, 0.9833, 0.0005)
+	var r_peri := ZeclipticBodies.rsol(ZeclipticBodies.helio_ecl_km("earth", ZeclipticBodies.jd_from_ymd(2026, 1, 3.5)).length())
+	_check("Earth distance 2026-01-03 in R☉", r_peri, 211.44, 0.15)
+	_check("classical AU in R☉ (table unit only)", ZeclipticBodies.AU_KM / ZeclipticBodies.r_sol_km(), 215.032, 0.01)
 
 	# Ceres: SBDB epoch position should have |r| between q and Q
 	var ce := ZeclipticBodies.helio_ecl_km("ceres", 2461200.5).length() / ZeclipticBodies.AU_KM

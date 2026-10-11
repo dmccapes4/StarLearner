@@ -4,16 +4,28 @@ extends RefCounted
 ## res://data/zecliptic_bodies.json (written by tools/zecliptic_export.py);
 ## nothing numeric is typed here except J2000's obliquity and the epoch.
 ##
-## Units: kilometres and Julian days throughout. Positions are heliocentric
-## J2000-ecliptic (x toward the equinox, z toward the ecliptic north pole)
-## until a frame basis is applied; `to_godot()` then maps a frame vector to
-## Godot's Y-up world the way Ephemeris.godot_dir_from_ecliptic does.
+## Units: kilometres and Julian days throughout. Display unit is R☉
+## (Sol-centre to the photosphere). Classical AU is a table unit only —
+## Standish / SBDB store `a` that way — and is converted to km at the
+## Kepler boundary. It is not shown on screen.
 
 const PATH := "res://data/zecliptic_bodies.json"
 const J2000 := 2451545.0
 const OBLIQ_J2000_DEG := 23.439291
-const AU_KM := 1.495978707e8
+const AU_KM := 1.495978707e8   ## table unit only (lossy Earth-orbit length)
+const R_SOL_KM_FALLBACK := 695700.0
 const DAY_S := 86400.0
+
+static func r_sol_km() -> float:
+	var r := radius_km("sol")
+	return r if r > 1.0 else R_SOL_KM_FALLBACK
+
+## Sol-radii: centre of Sol to the bubbling surface is 1.
+static func rsol(km: float) -> float:
+	return km / r_sol_km()
+
+static func km_from_rsol(n: float) -> float:
+	return n * r_sol_km()
 
 static var _data: Dictionary = {}
 static var _pole_cache: Dictionary = {}
