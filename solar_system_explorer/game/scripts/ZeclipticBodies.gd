@@ -352,6 +352,45 @@ static func pis_elapsed(id: String, jd0: float, jd: float) -> float:
 		return 0.0
 	return (jd - jd0) / per * PI
 
+static func odd_plane(id: String) -> bool:
+	return bool(body(id).get("odd_plane", false))
+
+static func odd_plane_ids() -> Array:
+	var listed: Array = data().get("odd_plane_ids", [])
+	if not listed.is_empty():
+		return listed
+	var out: Array = []
+	for id in bodies():
+		if odd_plane(id):
+			out.append(id)
+	return out
+
+## Orbit inclination to the Zecliptic (not spin tilt). Pulled from the JSON
+## when present; otherwise computed from the ecliptic (i, Ω) of the body.
+static func orbit_i_zecliptic_deg(id: String) -> float:
+	var b := body(id)
+	if b.get("i_zecliptic_deg") != null:
+		return float(b["i_zecliptic_deg"])
+	var i := 0.0
+	var node := 0.0
+	if b.has("elements"):
+		i = float(b["elements"]["i"])
+		node = float(b["elements"]["node"])
+	elif b.has("sbdb"):
+		i = float(b["sbdb"]["i"])
+		node = float(b["sbdb"]["node"])
+	elif b.get("i_ecl_deg") != null:
+		i = float(b["i_ecl_deg"])
+		node = float(b.get("omega_node_deg", 0.0))
+	else:
+		return 0.0
+	var zb := frame_basis("zecliptic")
+	var inc := deg_to_rad(i)
+	var O := deg_to_rad(node)
+	var pole := Vector3(sin(inc) * sin(O), -sin(inc) * cos(O), cos(inc))
+	var z := zb * pole
+	return rad_to_deg(acos(clampf(z.z, -1.0, 1.0)))
+
 static func spin_tilt_to_zecliptic_deg(id: String) -> float:
 	var b := body(id)
 	if b.get("spin_tilt_to_zecliptic_deg") != null:

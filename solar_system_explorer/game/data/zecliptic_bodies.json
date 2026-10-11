@@ -74,6 +74,9 @@
 "spin_tilt_to_zecliptic_deg": 3.397891421217883,
 "i_solar_equator_deg": 3.38,
 "i_invariable_deg": 6.344,
+"i_ecl_deg": 7.005,
+"i_zecliptic_deg": 3.3798051595230327,
+"odd_plane": false,
 "hill_radius_km": 175284.10851056196,
 "rings": false,
 "n_moons": 0,
@@ -115,6 +118,9 @@
 "spin_tilt_to_zecliptic_deg": 173.57632945146003,
 "i_solar_equator_deg": 3.856,
 "i_invariable_deg": 2.195,
+"i_ecl_deg": 3.395,
+"i_zecliptic_deg": 3.8558209416344793,
+"odd_plane": false,
 "hill_radius_km": 1004233.0457360842,
 "rings": false,
 "n_moons": 0,
@@ -156,6 +162,9 @@
 "spin_tilt_to_zecliptic_deg": 26.129808377668247,
 "i_solar_equator_deg": 7.25,
 "i_invariable_deg": 1.579,
+"i_ecl_deg": 0.0,
+"i_zecliptic_deg": 7.250000000000011,
+"odd_plane": false,
 "hill_radius_km": 1471427.8067341384,
 "rings": false,
 "n_moons": 1,
@@ -197,6 +206,9 @@
 "spin_tilt_to_zecliptic_deg": 19.5436119173068,
 "i_solar_equator_deg": 5.649,
 "i_invariable_deg": 1.68,
+"i_ecl_deg": 1.85,
+"i_zecliptic_deg": 5.649150021471895,
+"odd_plane": false,
 "hill_radius_km": 982737.5760396076,
 "rings": false,
 "n_moons": 2,
@@ -238,6 +250,9 @@
 "spin_tilt_to_zecliptic_deg": 7.8670498830931095,
 "i_solar_equator_deg": 6.09,
 "i_invariable_deg": 0.327,
+"i_ecl_deg": 1.304,
+"i_zecliptic_deg": 6.089647708749477,
+"odd_plane": false,
 "hill_radius_km": 50562815.55419566,
 "rings": true,
 "n_moons": 95,
@@ -279,6 +294,9 @@
 "spin_tilt_to_zecliptic_deg": 29.359070023175125,
 "i_solar_equator_deg": 5.504,
 "i_invariable_deg": 0.93,
+"i_ecl_deg": 2.485,
+"i_zecliptic_deg": 5.504083059021557,
+"odd_plane": false,
 "hill_radius_km": 61645285.77434835,
 "rings": true,
 "n_moons": 274,
@@ -320,6 +338,9 @@
 "spin_tilt_to_zecliptic_deg": 97.89777658484331,
 "i_solar_equator_deg": 6.478,
 "i_invariable_deg": 1.028,
+"i_ecl_deg": 0.772,
+"i_zecliptic_deg": 6.478404579449672,
+"odd_plane": false,
 "hill_radius_km": 66768641.64416798,
 "rings": true,
 "n_moons": 28,
@@ -361,6 +382,9 @@
 "spin_tilt_to_zecliptic_deg": 21.762260774207228,
 "i_solar_equator_deg": 6.43,
 "i_invariable_deg": 0.726,
+"i_ecl_deg": 1.77,
+"i_zecliptic_deg": 6.429706287668237,
+"odd_plane": false,
 "hill_radius_km": 115038752.93230867,
 "rings": true,
 "n_moons": 16,
@@ -402,6 +426,9 @@
 "spin_tilt_to_zecliptic_deg": 119.14239768780511,
 "i_solar_equator_deg": 11.898,
 "i_invariable_deg": 15.583,
+"i_ecl_deg": 17.16,
+"i_zecliptic_deg": 11.897918003509988,
+"odd_plane": true,
 "hill_radius_km": 5756370.658651432,
 "rings": false,
 "n_moons": 5,
@@ -424,6 +451,7 @@
 "i_note": "to ecliptic",
 "rot_d": 27.3217,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 41.99909585614909,
 "hill_radius_km": 58146.857803457766,
@@ -445,6 +473,7 @@
 "i_note": "to Mars equator",
 "rot_d": 0.31891,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 3598.152134624027,
 "hill_radius_km": 16.33660729989652,
@@ -466,6 +495,7 @@
 "i_note": "to Mars equator",
 "rot_d": 1.26244,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 908.9435515770641,
 "hill_radius_km": 21.46869344926995,
@@ -487,6 +517,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 1.769138,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 648.6134474828694,
 "hill_radius_km": 10515.177622845991,
@@ -508,6 +539,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 3.551181,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 323.12819235430374,
 "hill_radius_km": 13529.226397686813,
@@ -529,6 +561,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 7.154553,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 160.3855191586321,
 "hill_radius_km": 31678.684431915328,
@@ -550,6 +583,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 16.689018,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 68.75699320672724,
 "hill_radius_km": 49772.83565213901,
@@ -571,6 +605,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 15.945,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 71.96529929463459,
 "hill_radius_km": 50896.291130465426,
@@ -592,6 +627,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 4.518,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 253.98111935656235,
 "hill_radius_km": 5821.629991125316,
@@ -613,6 +649,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 79.32,
 "synchronous": true,
+"odd_plane": true,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 14.466549385438084,
 "hill_radius_km": 35263.991338582906,
@@ -634,6 +671,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 2.737,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 419.24979804638235,
 "hill_radius_km": 3248.8949786801727,
@@ -655,6 +693,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 1.888,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 607.7789710026212,
 "hill_radius_km": 2099.274425179231,
@@ -676,6 +715,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 1.37,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 837.5815308415682,
 "hill_radius_km": 944.0626634905346,
@@ -697,6 +737,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 0.942,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 1218.1387444298819,
 "hill_radius_km": 509.65048771629847,
@@ -718,6 +759,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 8.706,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 131.804123277389,
 "hill_radius_km": 10252.81555226321,
@@ -739,6 +781,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 13.463,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 85.23261511200688,
 "hill_radius_km": 13275.846026548807,
@@ -760,6 +803,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 4.144,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 276.90316053401267,
 "hill_radius_km": 4504.907661834004,
@@ -781,6 +825,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 2.52,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 455.3518639892653,
 "hill_radius_km": 3216.2697052209624,
@@ -802,6 +847,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 1.413,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 812.0924962865879,
 "hill_radius_km": 812.585096187562,
@@ -823,6 +869,7 @@
 "i_note": "retrograde, to Neptune equator",
 "rot_d": -5.876854,
 "synchronous": true,
+"odd_plane": true,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 195.25526706175594,
 "hill_radius_km": 14594.087353879775,
@@ -844,6 +891,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 1.12231,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 1022.4329260658363,
 "hill_radius_km": 615.2166601741822,
@@ -865,6 +913,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 0.48,
 "synchronous": false,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 3.18622396082898,
 "hill_radius_km": 6399.421638677124,
@@ -886,6 +935,7 @@
 "i_note": "to Pluto equator",
 "rot_d": 6.387221,
 "synchronous": true,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 179.65351398565176,
 "hill_radius_km": 6730.661896052796,
@@ -907,6 +957,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 3.24,
 "synchronous": false,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 56.918982998658166,
 "hill_radius_km": 246.02467043770147,
@@ -928,6 +979,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 1.83,
 "synchronous": false,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 46.17652705243254,
 "hill_radius_km": 425.0545576439691,
@@ -949,6 +1001,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 5.33,
 "synchronous": false,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 35.66946525498752,
 "hill_radius_km": 433.45050228943967,
@@ -970,6 +1023,7 @@
 "i_note": "to primary equator (assumed)",
 "rot_d": 0.43,
 "synchronous": false,
+"odd_plane": false,
 "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
 "pis_per_earth_year": 30.038918776255198,
 "hill_radius_km": 693.2413626797361,
@@ -978,7 +1032,7 @@
 "ceres": {
 "id": "ceres",
 "name": "Ceres",
-"kind": "asteroid",
+"kind": "dwarf",
 "parent": "sol",
 "radius_km": 469.7,
 "rot_d": 0.3780904166666667,
@@ -996,7 +1050,12 @@
 "orbit_class": "Main-belt Asteroid"
 },
 "period_d": 1679.853119758983,
-"H_mag": 3.34
+"H_mag": 3.34,
+"i_ecl_deg": 10.58802780183462,
+"i_zecliptic_deg": 3.4072948377159546,
+"i_invariable_deg": 9.213825803299057,
+"odd_plane": false,
+"notes": "10.6\u00b0 to the ecliptic but 3.41\u00b0 to the Zecliptic \u2014 aligned with Sol's equator, like Mercury."
 },
 "eros": {
 "id": "eros",
@@ -1019,7 +1078,68 @@
 "orbit_class": "Amor"
 },
 "period_d": 643.1963890927677,
-"H_mag": 10.4
+"H_mag": 10.4,
+"i_ecl_deg": 10.82854410314273,
+"i_zecliptic_deg": 16.537539478405368,
+"i_invariable_deg": 12.348993431260565,
+"odd_plane": true,
+"notes": "Amor / NEA. 10.8\u00b0 ecliptic, 16.5\u00b0 Zecliptic."
+},
+"euphrosyne": {
+"id": "euphrosyne",
+"name": "Euphrosyne",
+"kind": "asteroid",
+"parent": "sol",
+"radius_km": 133.54,
+"rot_d": 0.2304166666666667,
+"sbdb": {
+"epoch_jd": 2461200.5,
+"a": 3.16,
+"e": 0.216,
+"i": 26.3,
+"node": 30.8,
+"w": 62.0,
+"ma": 183.0,
+"period_d": 2050.0,
+"source": "NASA/JPL Small-Body Database (SBDB) API",
+"fullname": "31 Euphrosyne (A854 RA)",
+"orbit_class": "Main-belt Asteroid"
+},
+"period_d": 2050.0,
+"H_mag": 6.83,
+"i_ecl_deg": 26.3,
+"i_zecliptic_deg": 21.73840325526566,
+"i_invariable_deg": 25.98127909757456,
+"odd_plane": true,
+"notes": "Largest high-i family namesake. 26.3\u00b0 ecliptic, 21.7\u00b0 Zecliptic."
+},
+"hidalgo": {
+"id": "hidalgo",
+"name": "Hidalgo",
+"kind": "asteroid",
+"parent": "sol",
+"radius_km": 19.0,
+"rot_d": 0.4192916666666667,
+"sbdb": {
+"epoch_jd": 2461200.5,
+"a": 5.73,
+"e": 0.662,
+"i": 42.5,
+"node": 21.3,
+"w": 56.6,
+"ma": 200.0,
+"period_d": 5010.0,
+"source": "NASA/JPL Small-Body Database (SBDB) API",
+"fullname": "944 Hidalgo (A920 UB)",
+"orbit_class": "Centaur"
+},
+"period_d": 5010.0,
+"H_mag": 10.55,
+"i_ecl_deg": 42.5,
+"i_zecliptic_deg": 38.65316430643262,
+"i_invariable_deg": 42.421321159245785,
+"odd_plane": true,
+"notes": "Jupiter-crossing; i = 42.5\u00b0 ecliptic = 38.7\u00b0 Zecliptic. The 42\u00b0 is the same numeral as Luna's Pis; coincidence, no mechanism."
 },
 "hygiea": {
 "id": "hygiea",
@@ -1042,7 +1162,40 @@
 "orbit_class": "Main-belt Asteroid"
 },
 "period_d": 2042.987283349627,
-"H_mag": 5.65
+"H_mag": 5.65,
+"i_ecl_deg": 3.829529946447122,
+"i_zecliptic_deg": 10.794807274012259,
+"i_invariable_deg": 5.404838252793019,
+"odd_plane": true,
+"notes": "Ordinary in the ecliptic (3.8\u00b0) but 10.8\u00b0 to the Zecliptic, so it is flagged here."
+},
+"interamnia": {
+"id": "interamnia",
+"name": "Interamnia",
+"kind": "asteroid",
+"parent": "sol",
+"radius_km": 153.1565,
+"rot_d": 0.36362500000000003,
+"sbdb": {
+"epoch_jd": 2461200.5,
+"a": 3.06,
+"e": 0.155,
+"i": 17.3,
+"node": 280.0,
+"w": 94.1,
+"ma": 221.0,
+"period_d": 1950.0,
+"source": "NASA/JPL Small-Body Database (SBDB) API",
+"fullname": "704 Interamnia (A910 TC)",
+"orbit_class": "Main-belt Asteroid"
+},
+"period_d": 1950.0,
+"H_mag": 6.34,
+"i_ecl_deg": 17.3,
+"i_zecliptic_deg": 24.089670719226433,
+"i_invariable_deg": 18.86601155367798,
+"odd_plane": true,
+"notes": "17.3\u00b0 ecliptic jumps to 24.1\u00b0 Zecliptic \u2014 Sol's equator makes it odder."
 },
 "juno": {
 "id": "juno",
@@ -1065,7 +1218,12 @@
 "orbit_class": "Main-belt Asteroid"
 },
 "period_d": 1594.434579527149,
-"H_mag": 5.19
+"H_mag": 5.19,
+"i_ecl_deg": 12.98659236598085,
+"i_zecliptic_deg": 15.284587747918017,
+"i_invariable_deg": 12.329043989726955,
+"odd_plane": true,
+"notes": "One of the four original asteroids. Moderately tipped: 13\u00b0 ecliptic, 15.3\u00b0 Zecliptic."
 },
 "pallas": {
 "id": "pallas",
@@ -1088,7 +1246,12 @@
 "orbit_class": "Main-belt Asteroid"
 },
 "period_d": 1683.504809564834,
-"H_mag": 4.12
+"H_mag": 4.12,
+"i_ecl_deg": 34.93279321851542,
+"i_zecliptic_deg": 36.45685435888845,
+"i_invariable_deg": 34.299412445663634,
+"odd_plane": true,
+"notes": "The classic high-i main-belt body. 35\u00b0 to the ecliptic, 36.5\u00b0 to the Zecliptic \u2014 odder vs Sol than vs Earth."
 },
 "psyche": {
 "id": "psyche",
@@ -1111,7 +1274,12 @@
 "orbit_class": "Main-belt Asteroid"
 },
 "period_d": 1827.87996016922,
-"H_mag": 6.2
+"H_mag": 6.2,
+"i_ecl_deg": 3.098749116151128,
+"i_zecliptic_deg": 7.0636254927359685,
+"i_invariable_deg": 2.2062662278918377,
+"odd_plane": false,
+"notes": "NOT oddly planed (3.1\u00b0 ecliptic, 7.06\u00b0 Zecliptic \u2014 Earth's plane). Oddness is metal / the Psyche mission, not tilt."
 },
 "vesta": {
 "id": "vesta",
@@ -1134,11 +1302,28 @@
 "orbit_class": "Main-belt Asteroid"
 },
 "period_d": 1325.389042911101,
-"H_mag": 3.25
+"H_mag": 3.25,
+"i_ecl_deg": 7.143925545058711,
+"i_zecliptic_deg": 3.467976721448031,
+"i_invariable_deg": 5.569865360616334,
+"odd_plane": false,
+"notes": ""
 }
 },
+"odd_plane_ids": [
+"pluto",
+"iapetus",
+"triton",
+"eros",
+"euphrosyne",
+"hidalgo",
+"hygiea",
+"interamnia",
+"juno",
+"pallas"
+],
 "belt": {
-"sample_note": "600 representative main-belt orbits, seeded, Kirkwood gaps carved; NOT real objects",
+"sample_note": "600 representative main-belt orbits + 80 high-i (18\u201342\u00b0) so the belt is not a pancake; seeded, Kirkwood gaps carved; NOT real objects",
 "a_inner_au": 2.06,
 "a_outer_au": 3.27,
 "kirkwood_gaps_au": [
@@ -5953,6 +6138,726 @@
 "node": 198.52,
 "w": 152.38,
 "ma": 107.89
+},
+{
+"a": 2.76775,
+"e": 0.1837,
+"i": 24.904,
+"node": 286.78,
+"w": 224.19,
+"ma": 150.25,
+"odd_tail": true
+},
+{
+"a": 2.86879,
+"e": 0.0092,
+"i": 20.427,
+"node": 94.66,
+"w": 160.1,
+"ma": 88.29,
+"odd_tail": true
+},
+{
+"a": 2.40078,
+"e": 0.063,
+"i": 38.232,
+"node": 51.91,
+"w": 143.89,
+"ma": 18.19,
+"odd_tail": true
+},
+{
+"a": 2.89851,
+"e": 0.271,
+"i": 31.268,
+"node": 263.05,
+"w": 32.95,
+"ma": 36.59,
+"odd_tail": true
+},
+{
+"a": 3.18305,
+"e": 0.0204,
+"i": 21.947,
+"node": 245.11,
+"w": 163.33,
+"ma": 69.65,
+"odd_tail": true
+},
+{
+"a": 3.00641,
+"e": 0.1599,
+"i": 23.148,
+"node": 132.05,
+"w": 121.9,
+"ma": 71.29,
+"odd_tail": true
+},
+{
+"a": 2.34307,
+"e": 0.1438,
+"i": 25.635,
+"node": 165.69,
+"w": 102.63,
+"ma": 302.97,
+"odd_tail": true
+},
+{
+"a": 2.09669,
+"e": 0.07,
+"i": 31.167,
+"node": 141.92,
+"w": 84.2,
+"ma": 339.12,
+"odd_tail": true
+},
+{
+"a": 2.3635,
+"e": 0.1459,
+"i": 21.106,
+"node": 302.89,
+"w": 6.76,
+"ma": 39.44,
+"odd_tail": true
+},
+{
+"a": 3.01996,
+"e": 0.1166,
+"i": 26.145,
+"node": 264.97,
+"w": 298.28,
+"ma": 302.44,
+"odd_tail": true
+},
+{
+"a": 2.59348,
+"e": 0.1299,
+"i": 24.18,
+"node": 298.46,
+"w": 186.7,
+"ma": 2.24,
+"odd_tail": true
+},
+{
+"a": 2.91963,
+"e": 0.152,
+"i": 39.12,
+"node": 196.12,
+"w": 59.85,
+"ma": 19.23,
+"odd_tail": true
+},
+{
+"a": 2.76023,
+"e": 0.1122,
+"i": 30.865,
+"node": 88.58,
+"w": 304.55,
+"ma": 167.11,
+"odd_tail": true
+},
+{
+"a": 3.15522,
+"e": 0.057,
+"i": 37.78,
+"node": 101.6,
+"w": 266.25,
+"ma": 154.83,
+"odd_tail": true
+},
+{
+"a": 3.18208,
+"e": 0.0174,
+"i": 27.963,
+"node": 89.96,
+"w": 324.96,
+"ma": 126.27,
+"odd_tail": true
+},
+{
+"a": 2.27353,
+"e": 0.109,
+"i": 30.399,
+"node": 137.37,
+"w": 59.59,
+"ma": 289.73,
+"odd_tail": true
+},
+{
+"a": 2.54327,
+"e": 0.0555,
+"i": 28.909,
+"node": 200.48,
+"w": 224.94,
+"ma": 245.94,
+"odd_tail": true
+},
+{
+"a": 2.6116,
+"e": 0.1071,
+"i": 29.644,
+"node": 310.91,
+"w": 138.92,
+"ma": 305.17,
+"odd_tail": true
+},
+{
+"a": 2.60782,
+"e": 0.3134,
+"i": 20.282,
+"node": 168.68,
+"w": 84.64,
+"ma": 18.3,
+"odd_tail": true
+},
+{
+"a": 3.11463,
+"e": 0.024,
+"i": 40.156,
+"node": 210.12,
+"w": 324.04,
+"ma": 242.88,
+"odd_tail": true
+},
+{
+"a": 3.09814,
+"e": 0.1528,
+"i": 18.194,
+"node": 131.32,
+"w": 46.2,
+"ma": 126.12,
+"odd_tail": true
+},
+{
+"a": 2.90765,
+"e": 0.2508,
+"i": 40.074,
+"node": 155.37,
+"w": 275.43,
+"ma": 204.33,
+"odd_tail": true
+},
+{
+"a": 2.17056,
+"e": 0.0361,
+"i": 28.703,
+"node": 142.5,
+"w": 170.49,
+"ma": 269.89,
+"odd_tail": true
+},
+{
+"a": 3.07529,
+"e": 0.0444,
+"i": 40.875,
+"node": 62.82,
+"w": 56.2,
+"ma": 71.34,
+"odd_tail": true
+},
+{
+"a": 2.35188,
+"e": 0.0677,
+"i": 23.204,
+"node": 279.5,
+"w": 303.05,
+"ma": 276.48,
+"odd_tail": true
+},
+{
+"a": 3.21749,
+"e": 0.1897,
+"i": 22.846,
+"node": 131.55,
+"w": 94.07,
+"ma": 113.42,
+"odd_tail": true
+},
+{
+"a": 2.74072,
+"e": 0.1013,
+"i": 37.545,
+"node": 152.63,
+"w": 45.91,
+"ma": 10.56,
+"odd_tail": true
+},
+{
+"a": 2.21266,
+"e": 0.0558,
+"i": 23.007,
+"node": 133.17,
+"w": 202.53,
+"ma": 58.93,
+"odd_tail": true
+},
+{
+"a": 2.56433,
+"e": 0.0412,
+"i": 34.586,
+"node": 344.15,
+"w": 9.37,
+"ma": 334.74,
+"odd_tail": true
+},
+{
+"a": 2.45204,
+"e": 0.0351,
+"i": 40.909,
+"node": 132.71,
+"w": 197.24,
+"ma": 219.82,
+"odd_tail": true
+},
+{
+"a": 2.59632,
+"e": 0.0045,
+"i": 26.763,
+"node": 211.19,
+"w": 293.08,
+"ma": 308.7,
+"odd_tail": true
+},
+{
+"a": 2.79636,
+"e": 0.032,
+"i": 31.344,
+"node": 47.97,
+"w": 318.93,
+"ma": 119.44,
+"odd_tail": true
+},
+{
+"a": 3.12949,
+"e": 0.1369,
+"i": 27.242,
+"node": 294.02,
+"w": 80.52,
+"ma": 35.11,
+"odd_tail": true
+},
+{
+"a": 2.85636,
+"e": 0.0536,
+"i": 37.633,
+"node": 242.77,
+"w": 193.07,
+"ma": 359.05,
+"odd_tail": true
+},
+{
+"a": 2.42984,
+"e": 0.0938,
+"i": 32.555,
+"node": 3.17,
+"w": 284.21,
+"ma": 174.63,
+"odd_tail": true
+},
+{
+"a": 2.74951,
+"e": 0.1716,
+"i": 29.6,
+"node": 266.72,
+"w": 186.84,
+"ma": 221.39,
+"odd_tail": true
+},
+{
+"a": 2.68614,
+"e": 0.2309,
+"i": 27.379,
+"node": 98.09,
+"w": 178.97,
+"ma": 72.49,
+"odd_tail": true
+},
+{
+"a": 2.08284,
+"e": 0.128,
+"i": 29.083,
+"node": 218.07,
+"w": 248.64,
+"ma": 4.91,
+"odd_tail": true
+},
+{
+"a": 2.99742,
+"e": 0.0674,
+"i": 26.123,
+"node": 172.68,
+"w": 10.7,
+"ma": 350.9,
+"odd_tail": true
+},
+{
+"a": 2.6922,
+"e": 0.0478,
+"i": 37.263,
+"node": 125.61,
+"w": 238.33,
+"ma": 302.28,
+"odd_tail": true
+},
+{
+"a": 3.09108,
+"e": 0.323,
+"i": 36.863,
+"node": 41.29,
+"w": 179.89,
+"ma": 81.73,
+"odd_tail": true
+},
+{
+"a": 2.854,
+"e": 0.0564,
+"i": 34.279,
+"node": 104.7,
+"w": 337.34,
+"ma": 94.57,
+"odd_tail": true
+},
+{
+"a": 3.20721,
+"e": 0.0228,
+"i": 40.966,
+"node": 13.03,
+"w": 109.52,
+"ma": 205.37,
+"odd_tail": true
+},
+{
+"a": 2.65448,
+"e": 0.1927,
+"i": 41.695,
+"node": 262.95,
+"w": 31.84,
+"ma": 100.23,
+"odd_tail": true
+},
+{
+"a": 3.19827,
+"e": 0.124,
+"i": 26.101,
+"node": 3.76,
+"w": 320.76,
+"ma": 198.08,
+"odd_tail": true
+},
+{
+"a": 2.86357,
+"e": 0.0889,
+"i": 33.75,
+"node": 312.78,
+"w": 206.2,
+"ma": 137.07,
+"odd_tail": true
+},
+{
+"a": 2.76266,
+"e": 0.0264,
+"i": 21.106,
+"node": 242.29,
+"w": 310.31,
+"ma": 58.11,
+"odd_tail": true
+},
+{
+"a": 3.18523,
+"e": 0.1299,
+"i": 40.047,
+"node": 179.07,
+"w": 322.09,
+"ma": 230.55,
+"odd_tail": true
+},
+{
+"a": 3.24933,
+"e": 0.0449,
+"i": 33.44,
+"node": 252.35,
+"w": 200.54,
+"ma": 76.7,
+"odd_tail": true
+},
+{
+"a": 2.32082,
+"e": 0.1705,
+"i": 18.172,
+"node": 253.22,
+"w": 82.66,
+"ma": 108.27,
+"odd_tail": true
+},
+{
+"a": 2.10566,
+"e": 0.1101,
+"i": 30.786,
+"node": 34.29,
+"w": 326.5,
+"ma": 355.44,
+"odd_tail": true
+},
+{
+"a": 2.23462,
+"e": 0.0432,
+"i": 41.831,
+"node": 202.89,
+"w": 292.67,
+"ma": 125.5,
+"odd_tail": true
+},
+{
+"a": 2.92871,
+"e": 0.1369,
+"i": 18.199,
+"node": 295.61,
+"w": 267.38,
+"ma": 259.15,
+"odd_tail": true
+},
+{
+"a": 2.54456,
+"e": 0.051,
+"i": 22.482,
+"node": 297.69,
+"w": 45.09,
+"ma": 237.22,
+"odd_tail": true
+},
+{
+"a": 3.12709,
+"e": 0.0165,
+"i": 35.059,
+"node": 47.9,
+"w": 253.27,
+"ma": 94.5,
+"odd_tail": true
+},
+{
+"a": 3.11312,
+"e": 0.1012,
+"i": 39.576,
+"node": 57.67,
+"w": 246.12,
+"ma": 324.56,
+"odd_tail": true
+},
+{
+"a": 2.86592,
+"e": 0.0644,
+"i": 37.387,
+"node": 278.61,
+"w": 168.17,
+"ma": 232.45,
+"odd_tail": true
+},
+{
+"a": 2.15362,
+"e": 0.0586,
+"i": 40.566,
+"node": 188.06,
+"w": 112.1,
+"ma": 75.98,
+"odd_tail": true
+},
+{
+"a": 3.02193,
+"e": 0.0037,
+"i": 22.264,
+"node": 320.89,
+"w": 326.81,
+"ma": 83.7,
+"odd_tail": true
+},
+{
+"a": 2.65394,
+"e": 0.0283,
+"i": 31.777,
+"node": 29.8,
+"w": 241.66,
+"ma": 225.21,
+"odd_tail": true
+},
+{
+"a": 2.36184,
+"e": 0.018,
+"i": 34.926,
+"node": 230.8,
+"w": 348.33,
+"ma": 32.79,
+"odd_tail": true
+},
+{
+"a": 2.15233,
+"e": 0.0843,
+"i": 19.029,
+"node": 284.1,
+"w": 155.74,
+"ma": 29.19,
+"odd_tail": true
+},
+{
+"a": 2.40497,
+"e": 0.015,
+"i": 25.87,
+"node": 96.72,
+"w": 180.64,
+"ma": 313.66,
+"odd_tail": true
+},
+{
+"a": 2.86409,
+"e": 0.0495,
+"i": 32.074,
+"node": 321.21,
+"w": 277.84,
+"ma": 80.23,
+"odd_tail": true
+},
+{
+"a": 2.89608,
+"e": 0.091,
+"i": 40.553,
+"node": 61.68,
+"w": 54.15,
+"ma": 123.44,
+"odd_tail": true
+},
+{
+"a": 2.40215,
+"e": 0.3193,
+"i": 31.043,
+"node": 203.05,
+"w": 142.88,
+"ma": 29.33,
+"odd_tail": true
+},
+{
+"a": 2.79322,
+"e": 0.2291,
+"i": 22.177,
+"node": 44.12,
+"w": 185.32,
+"ma": 133.66,
+"odd_tail": true
+},
+{
+"a": 2.44572,
+"e": 0.1682,
+"i": 34.647,
+"node": 55.9,
+"w": 248.04,
+"ma": 310.89,
+"odd_tail": true
+},
+{
+"a": 2.18301,
+"e": 0.2819,
+"i": 22.925,
+"node": 317.24,
+"w": 241.69,
+"ma": 5.79,
+"odd_tail": true
+},
+{
+"a": 2.3881,
+"e": 0.0954,
+"i": 24.274,
+"node": 45.86,
+"w": 112.54,
+"ma": 312.15,
+"odd_tail": true
+},
+{
+"a": 2.44785,
+"e": 0.2074,
+"i": 29.703,
+"node": 297.89,
+"w": 108.07,
+"ma": 162.13,
+"odd_tail": true
+},
+{
+"a": 2.72853,
+"e": 0.0458,
+"i": 28.568,
+"node": 87.59,
+"w": 301.25,
+"ma": 139.15,
+"odd_tail": true
+},
+{
+"a": 2.88241,
+"e": 0.036,
+"i": 19.08,
+"node": 333.04,
+"w": 79.8,
+"ma": 19.41,
+"odd_tail": true
+},
+{
+"a": 2.6486,
+"e": 0.0634,
+"i": 20.909,
+"node": 353.76,
+"w": 345.16,
+"ma": 354.81,
+"odd_tail": true
+},
+{
+"a": 2.1688,
+"e": 0.1614,
+"i": 32.011,
+"node": 310.42,
+"w": 243.75,
+"ma": 102.93,
+"odd_tail": true
+},
+{
+"a": 2.56599,
+"e": 0.0258,
+"i": 20.549,
+"node": 94.13,
+"w": 229.16,
+"ma": 62.96,
+"odd_tail": true
+},
+{
+"a": 2.35519,
+"e": 0.0278,
+"i": 40.962,
+"node": 80.17,
+"w": 351.13,
+"ma": 165.38,
+"odd_tail": true
+},
+{
+"a": 2.79153,
+"e": 0.1314,
+"i": 32.598,
+"node": 31.15,
+"w": 116.53,
+"ma": 185.82,
+"odd_tail": true
+},
+{
+"a": 2.72246,
+"e": 0.0761,
+"i": 23.195,
+"node": 334.49,
+"w": 251.21,
+"ma": 274.34,
+"odd_tail": true
+},
+{
+"a": 3.02023,
+"e": 0.0508,
+"i": 20.838,
+"node": 275.64,
+"w": 121.02,
+"ma": 319.8,
+"odd_tail": true
 }
 ]
 },

@@ -65,7 +65,7 @@ var overlays: Dictionary = {
 	"orbits": true, "moon_orbits": true, "labels": true, "markers": true, "axes": false, "equators": false,
 	"tropics": false, "grid": true, "nodes": false, "hill": false, "annulus": false, "belt": true, "belt_big": true,
 	"heliobarrier": false, "trails": false, "light_time": false, "glare": true, "sol_equator_disc": true,
-	"readouts": true, "frame_banner": true}
+	"readouts": true, "frame_banner": true, "odd_planes": true}
 var bookmarks: Dictionary = {}
 var _trail: Dictionary = {}             # id -> PackedVector3Array of ref-rel km samples
 var _trail_t: float = 0.0
@@ -84,6 +84,8 @@ var _aux_nodes: Dictionary = {}         # id -> MeshInstance3D (axis + equator +
 var _hill_nodes: Dictionary = {}
 var _orbit_mesh: MeshInstance3D
 var _orbit_im: ImmediateMesh
+var _odd_orbit_mesh: MeshInstance3D
+var _odd_orbit_im: ImmediateMesh
 var _moon_orbit_mesh: MeshInstance3D
 var _moon_orbit_im: ImmediateMesh
 var _grid_mesh: MeshInstance3D
@@ -110,6 +112,8 @@ var _msg_t: float = 0.0
 var _ids: Array = []
 var _planet_ids: Array = []
 var _asteroid_ids: Array = []
+var _odd_ids: Array = []
+var _watch_ids: Array = ["pallas", "juno", "psyche", "hidalgo", "euphrosyne", "interamnia"]
 var _rel_cache: Dictionary = {}         # id -> Vector3 km, ref-relative, godot axes (this frame)
 var _fb: Basis = Basis.IDENTITY         # ecliptic -> frame
 var _orbit_rebuild_t: float = 0.0
@@ -135,6 +139,8 @@ func _ready() -> void:
 				_planet_ids.append(id)
 			elif b.has("sbdb"):
 				_asteroid_ids.append(id)
+		if ZeclipticBodies.odd_plane(id):
+			_odd_ids.append(id)
 	_build_world()
 	_build_hud()
 	_apply_preset_charon_pluto()
@@ -195,6 +201,8 @@ func _build_world() -> void:
 
 	_orbit_im = ImmediateMesh.new()
 	_orbit_mesh = _line_node(_orbit_im, Color(0.45, 0.55, 0.8, 0.55))
+	_odd_orbit_im = ImmediateMesh.new()
+	_odd_orbit_mesh = _line_node(_odd_orbit_im, Color(1.0, 0.55, 0.15, 0.85))
 	_moon_orbit_im = ImmediateMesh.new()
 	_moon_orbit_mesh = _line_node(_moon_orbit_im, Color(0.6, 0.75, 0.9, 0.5))
 	_annulus_im = ImmediateMesh.new()
@@ -305,7 +313,17 @@ func _fallback_color(id: String) -> Color:
 	var k := str(ZeclipticBodies.body(id).get("kind", ""))
 	if k == "moon":
 		return Color(0.62, 0.62, 0.66)
-	if k == "asteroid":
+	if k == "asteroid" or k == "dwarf":
+		if id == "pallas":
+			return Color(1.0, 0.45, 0.12)
+		if id == "juno":
+			return Color(0.95, 0.7, 0.2)
+		if id == "psyche":
+			return Color(0.55, 0.62, 0.72)   # metal-grey; plane is ordinary
+		if id == "hidalgo":
+			return Color(1.0, 0.25, 0.35)
+		if ZeclipticBodies.odd_plane(id):
+			return Color(1.0, 0.62, 0.28)
 		return Color(0.55, 0.5, 0.45)
 	return Color(0.7, 0.7, 0.7)
 
@@ -552,6 +570,10 @@ func _build_panel() -> void:
 	prow2.add_child(_small_button("Luna \u2192 Earth", func(): _apply_preset_luna_earth(), Color(0.5, 0.35, 0.1)))
 	prow2.add_child(_small_button("Mercury annulus", func(): _apply_preset_mercury(), Color(0.5, 0.35, 0.1)))
 	prow2.add_child(_small_button("Above the Zecliptic", func(): _apply_preset_overview(), Color(0.5, 0.35, 0.1)))
+	var prow3 := HBoxContainer.new()
+	nav.add_child(prow3)
+	prow3.add_child(_small_button("Odd planes", func(): _apply_preset_odd_planes(), Color(0.55, 0.28, 0.08)))
+	prow3.add_child(_small_button("Hop odd (Y)", func(): _hop_odd(1), Color(0.55, 0.28, 0.08)))
 	nav.add_child(prow2)
 
 	# — Time —
@@ -646,7 +668,7 @@ func _build_panel() -> void:
 	var names: Dictionary = {"orbits": "orbit lines", "moon_orbits": "moon orbits", "labels": "labels", "markers": "markers",
 		"axes": "spin axes", "equators": "equator rings", "tropics": "tropics & polar circles", "grid": "plane grid (AU rings)",
 		"nodes": "node markers", "hill": "Hill spheres", "annulus": "Mercury annulus", "belt": "belt sample (representative)",
-		"belt_big": "belt big bodies", "heliobarrier": "heliobarrier (TS/HP)", "trails": "trails", "light_time": "light-time rings",
+		"belt_big": "belt big bodies", "odd_planes": "odd planes (i_Z ≥ 10°)", "heliobarrier": "heliobarrier (TS/HP)", "trails": "trails", "light_time": "light-time rings",
 		"glare": "Sol glow", "sol_equator_disc": "Sol equator disc", "readouts": "readouts", "frame_banner": "frame banner"}
 	for key in names:
 		var cb := CheckButton.new()
@@ -718,12 +740,12 @@ func _help_text() -> String:
 	return """[b]Zecliptic Flight — controls[/b]
 [b]Move[/b]  W/S forward-back · A/D strafe · Q/E down/up · Shift ×10 · wheel: speed · touch: drag left half
 [b]Look[/b]  mouse drag (or arrows) · touch: drag right half · L: lock look at selected · K: clear
-[b]Select[/b]  tap/click a body: pauses time, opens its card · N/P next/prev body · Esc closes
+[b]Select[/b]  tap/click a body: pauses time, opens its card · N/P next/prev body · Y hop oddly-planed (Pallas, Juno, Hidalgo…) · Esc closes
 [b]Card[/b]  Teleport · Orbit cam (drag to orbit, wheel distance) · Land (pick spot: poles, tropics, equator, subsolar, sub-primary, custom lat/lon) · Set reference · Look-at · Equator frame · Transparent · Hide
 [b]Time[/b]  Space pause · [ ] slower/faster · R reverse · , . ±1 day · < > ±1 year · 0 now · tap pauses, Resume on card
 [b]Frame[/b]  F cycles Zecliptic → Ecliptic → Invariable → selected's equator · B sets reference body = selected · Z: Sol reference
 [b]Scale[/b]  X body size ×1/10/100/1000 · C compressed distances (not to scale)
-[b]Overlays[/b]  O orbits · G grid · I axes · U equators/tropics · J Hill · M annulus · V belt · T trails
+[b]Overlays[/b]  O orbits · G grid · I axes · U equators/tropics · J Hill · M annulus · V belt · T trails · odd-plane orbits default on (amber)
 [b]Marks[/b]  1–9 recall · Shift+1–9 save · F12 screenshot · H / ? this help · \u2630 the control panel
 [b]Frame rule[/b]  Zecliptic (Sol's equator) unless a plane is named with a reason; the banner says which plane, which origin, and why.
 [b]Honesty[/b]  Planets: Standish elements (1800–2050). Luna: Meeus. Other moons: real period and tilt, arbitrary phase (said on the card). Belt sample: representative, not real. Sizes real unless × is on. Distances real unless 'compressed' is on."""
@@ -797,7 +819,7 @@ func _place_bodies() -> void:
 		var mi: MeshInstance3D = _body_nodes[id]
 		var b := ZeclipticBodies.body(id)
 		var vis := not hidden_ids.has(id)
-		if b.get("kind", "") == "asteroid" and not overlays["belt_big"]:
+		if b.get("kind", "") == "asteroid" and not overlays["belt_big"] and not _always_show(id):
 			vis = false
 		if cam_mode == Cam.SURFACE and id == surf_body and SIZE_SCALES[size_idx] > 1.0:
 			pass  # keep the ground under your feet at its real size: handled below
@@ -899,6 +921,10 @@ func _update_lines(delta: float) -> void:
 			_orbit_rebuild_t = 2.0
 			_rebuild_planet_orbits()
 		_orbit_mesh.transform = Transform3D(Basis.IDENTITY, (_rel("sol") - cam_pos) / KM_PER_UNIT)
+	_odd_orbit_mesh.visible = overlays["odd_planes"]
+	if _odd_orbit_mesh.visible:
+		_rebuild_odd_orbits()
+		_odd_orbit_mesh.transform = Transform3D(Basis.IDENTITY, (_rel("sol") - cam_pos) / KM_PER_UNIT)
 	_moon_orbit_mesh.visible = overlays["moon_orbits"]
 	if _moon_orbit_mesh.visible:
 		_rebuild_moon_orbits()
@@ -969,6 +995,32 @@ func _rebuild_planet_orbits() -> void:
 					_orbit_im.surface_add_vertex(m + Vector3(0, s, 0))
 				prev = cur
 		_orbit_im.surface_end()
+
+func _rebuild_odd_orbits() -> void:
+	_odd_orbit_im.clear_surfaces()
+	for id in _odd_ids:
+		if hidden_ids.has(id):
+			continue
+		var b := ZeclipticBodies.body(id)
+		if b.get("kind", "") == "moon":
+			continue
+		var per := ZeclipticBodies.period_d(id)
+		if per <= 0.0:
+			continue
+		_odd_orbit_im.surface_begin(Mesh.PRIMITIVE_LINE_STRIP)
+		for k in 161:
+			var t := jd + per * float(k) / 160.0
+			var p := ZeclipticBodies.helio_ecl_km(id, t)
+			if dist_log:
+				var L := p.length()
+				var kk := 0.3 * ZeclipticBodies.AU_KM
+				if L > kk:
+					p = p.normalized() * (kk * sqrt(L / kk))
+			_odd_orbit_im.surface_add_vertex(ZeclipticBodies.to_godot(_fb * p) / KM_PER_UNIT)
+		_odd_orbit_im.surface_end()
+
+func _always_show(id: String) -> bool:
+	return ZeclipticBodies.odd_plane(id) or id in _watch_ids
 
 func _rebuild_moon_orbits() -> void:
 	_moon_orbit_im.clear_surfaces()
@@ -1153,6 +1205,18 @@ func _fill_card() -> void:
 	if selected == "mercury":
 		var ann: Dictionary = ZeclipticBodies.data()["mercury_annulus_km"]
 		lines.append("[color=#fa8]survival annulus %s – %s km (prograde), to %s km retrograde — no companion on the board[/color]" % [_fmt(float(ann["inner_km_10km_body"])), _fmt(float(ann["outer_km_prograde_this_run"])), _fmt(float(ann["outer_km_retrograde_this_run"]))])
+	if b.get("i_zecliptic_deg") != null or b.has("sbdb") or b.has("elements"):
+		var iz := ZeclipticBodies.orbit_i_zecliptic_deg(selected)
+		var ie = b.get("i_ecl_deg")
+		if ie == null and b.has("sbdb"):
+			ie = b["sbdb"].get("i")
+		if ie == null and b.has("elements"):
+			ie = b["elements"].get("i")
+		var ii = b.get("i_invariable_deg")
+		var odd_s := " · ODD PLANE" if ZeclipticBodies.odd_plane(selected) else ""
+		var ie_s := ("%.2f°" % float(ie)) if ie != null else "—"
+		var ii_s := ("%.2f°" % float(ii)) if ii != null else "—"
+		lines.append("[color=#fa8]orbit i: ecliptic %s · Zecliptic %.2f° · invariable %s%s[/color]" % [ie_s, iz, ii_s, odd_s])
 	if b.has("sbdb"):
 		lines.append("[color=#aab]%s · %s, epoch JD %.1f[/color]" % [str(b["sbdb"]["fullname"]), str(b["sbdb"]["source"]), float(b["sbdb"]["epoch_jd"])])
 	if str(b.get("notes", "")) != "":
@@ -1283,6 +1347,21 @@ func _hop(step: int) -> void:
 	_select(_ids[i], false)
 	_teleport(_ids[i])
 
+func _hop_odd(step: int) -> void:
+	var hop: Array = _odd_ids.duplicate()
+	for id in _watch_ids:
+		if not hop.has(id) and ZeclipticBodies.body(id):
+			hop.append(id)
+	if hop.is_empty():
+		_say("no oddly-planed bodies in the catalog")
+		return
+	var i := hop.find(selected)
+	i = wrapi((0 if i < 0 else i) + step, 0, hop.size())
+	_select(hop[i], false)
+	_teleport(hop[i])
+	_say("%s · i to Zecliptic %.1f°%s" % [_name(hop[i]), ZeclipticBodies.orbit_i_zecliptic_deg(hop[i]),
+		" · ODD" if ZeclipticBodies.odd_plane(hop[i]) else " · named, plane ordinary"])
+
 func _save_mark(slot: int) -> void:
 	bookmarks[slot] = {"jd": jd, "rate_idx": rate_idx, "reverse": reverse, "frame_id": frame_id, "frame_body": frame_body,
 		"ref_id": ref_id, "cam_mode": cam_mode, "cam_pos": cam_pos, "yaw": yaw, "pitch": pitch, "orbit_target": orbit_target,
@@ -1368,6 +1447,17 @@ func _apply_preset_overview() -> void:
 	overlays["grid"] = true; overlays["orbits"] = true; rate_idx = 8; size_idx = 3; _card.visible = false; paused_by_tap = false; _rel_cache.clear()
 	_say("Above the Zecliptic: 45 AU over Sol's pole, 1 year per second, bodies \u00d71000")
 
+func _apply_preset_odd_planes() -> void:
+	frame_id = "zecliptic"; ref_id = "sol"; selected = "pallas"; look_target = "pallas"
+	cam_mode = Cam.ORBIT; orbit_target = "sol"; orbit_dist_km = 8.0 * ZeclipticBodies.AU_KM; orbit_az = 0.4; orbit_el = 1.15
+	overlays["odd_planes"] = true; overlays["orbits"] = true; overlays["belt"] = true; overlays["belt_big"] = true
+	overlays["grid"] = true; overlays["labels"] = true
+	rate_idx = 8; size_idx = 2; dist_log = false; _card.visible = true; paused_by_tap = false
+	alpha["pallas"] = 1.0
+	_fill_card()
+	_rel_cache.clear()
+	_say("Odd planes: 8 AU over Sol's pole. Amber orbits are i_Z ≥ 10°. Pallas 36.5°, Hidalgo 38.7°. Psyche is metal-grey — its plane is ordinary.")
+
 # ── HUD text ────────────────────────────────────────────────────────────
 func _update_hud() -> void:
 	var rate_lbl: String = RATES[rate_idx][0]
@@ -1426,7 +1516,7 @@ func _draw_overlay() -> void:
 		if hidden_ids.has(id):
 			continue
 		var b := ZeclipticBodies.body(id)
-		if b.get("kind", "") == "asteroid" and not overlays["belt_big"]:
+		if b.get("kind", "") == "asteroid" and not overlays["belt_big"] and not _always_show(id):
 			continue
 		var p := (_rel(id) - cam_pos) / KM_PER_UNIT
 		if _cam.is_position_behind(p):
@@ -1443,11 +1533,15 @@ func _draw_overlay() -> void:
 		if overlays["markers"] and px < 3.0:
 			var col := Color(1, 1, 1, 0.8) if id != "sol" else GOLD
 			_overlay.draw_circle(sp, 2.5 if not is_moon else 1.5, col)
-		if overlays["labels"] and (px >= 1.0 or not is_moon or id == selected):
+		var watch := _always_show(id)
+		if overlays["labels"] and (watch or px >= 1.0 or not is_moon or id == selected):
 			var txt := _name(id)
 			if id == selected:
 				txt += "  \u25C1"
-			_overlay.draw_string(ThemeDB.fallback_font, sp + Vector2(8, -6), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.9, 0.93, 1.0, 0.9) if id != selected else GOLD)
+			elif ZeclipticBodies.odd_plane(id) and b.get("kind", "") != "planet":
+				txt += "  %.0f°" % ZeclipticBodies.orbit_i_zecliptic_deg(id)
+			var col := GOLD if id == selected else (Color(1.0, 0.62, 0.28, 0.95) if watch else Color(0.9, 0.93, 1.0, 0.9))
+			_overlay.draw_string(ThemeDB.fallback_font, sp + Vector2(8, -6), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, col)
 		if id == selected:
 			sel_pos = sp
 			_overlay.draw_arc(sp, maxf(px * 0.5 + 8.0, 14.0), 0, TAU, 48, GOLD, 1.5)
@@ -1588,6 +1682,7 @@ func _unhandled_input(ev: InputEvent) -> void:
 		"z": _set_reference("sol")
 		"n": _hop(1)
 		"p": _hop(-1)
+		"y": _hop_odd(-1 if k.shift_pressed else 1)
 		"t": overlays["trails"] = not overlays["trails"]
 		"l": _set_look_target(selected)
 		"k": look_target = ""

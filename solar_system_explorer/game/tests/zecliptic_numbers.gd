@@ -84,6 +84,16 @@ func _run() -> void:
 	var ce := ZeclipticBodies.helio_ecl_km("ceres", 2461200.5).length() / ZeclipticBodies.AU_KM
 	_check("Ceres |r| within [q,Q] (midpoint check loose)", ce, 2.7656, 0.25)
 
+	# oddly-planed belt: Pallas / Juno / Hidalgo vs Psyche (named, plane ordinary)
+	_check("Pallas i to Zecliptic", ZeclipticBodies.orbit_i_zecliptic_deg("pallas"), 36.46, 0.15)
+	_check("Juno i to Zecliptic", ZeclipticBodies.orbit_i_zecliptic_deg("juno"), 15.28, 0.15)
+	_check("Hidalgo i to Zecliptic", ZeclipticBodies.orbit_i_zecliptic_deg("hidalgo"), 38.65, 0.2)
+	_check("Psyche i to Zecliptic (ordinary)", ZeclipticBodies.orbit_i_zecliptic_deg("psyche"), 7.06, 0.15)
+	_check("Ceres i to Zecliptic (aligned with Sol)", ZeclipticBodies.orbit_i_zecliptic_deg("ceres"), 3.41, 0.15)
+	_check("Pallas flagged odd", 1.0 if ZeclipticBodies.odd_plane("pallas") else 0.0, 1.0, 0.0)
+	_check("Psyche not flagged odd", 1.0 if not ZeclipticBodies.odd_plane("psyche") else 0.0, 1.0, 0.0)
+	_check("Hidalgo in odd_plane_ids", 1.0 if "hidalgo" in ZeclipticBodies.odd_plane_ids() else 0.0, 1.0, 0.0)
+
 	# surface direction: north pole dir equals pole
 	var sd := ZeclipticBodies.surface_dir_ecl("earth", jd, 90.0, 0.0)
 	_check("Earth north pole surface dir = pole", sd.dot(ZeclipticBodies.pole_ecl("earth")), 1.0, 1e-6)

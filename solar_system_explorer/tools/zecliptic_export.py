@@ -21,6 +21,7 @@ B = json.load(open(os.path.join(DATA, "bodies_metrics.json")))
 A = json.load(open(os.path.join(DATA, "v4_annulus.json")))
 T = json.load(open(os.path.join(DATA, "tilt_curve.json")))
 P = json.load(open(os.path.join(DATA, "pis.json")))
+OP = json.load(open(os.path.join(DATA, "odd_planes.json"))) if os.path.exists(os.path.join(DATA, "odd_planes.json")) else {"bodies": {}, "moons": {}}
 
 # ---------------------------------------------------------------- Standish elements
 # Mercury..Jupiter: parse Ephemeris.gd so the game and this file cannot disagree.
@@ -61,6 +62,9 @@ def planet(k):
             "pole_radec_j2000": tc.get("pole_radec"), "pole_right_hand_flipped": tc.get("right_hand_rule_flipped", False),
             "spin_tilt_to_zecliptic_deg": tc.get("spin_tilt_to_zecliptic_deg"),
             "i_solar_equator_deg": b.get("i_solar_equator_deg"), "i_invariable_deg": b.get("i_invariable_deg"),
+            "i_ecl_deg": b.get("i_ecl_deg"),
+            "i_zecliptic_deg": OP.get("bodies", {}).get(k, {}).get("i_zecliptic_deg"),
+            "odd_plane": bool(OP.get("bodies", {}).get(k, {}).get("odd", False)),
             "hill_radius_km": b.get("hill_radius_km"), "rings": b.get("rings", False), "n_moons": b.get("n_moons"),
             "albedo_geom": b.get("albedo_geom"), "notes": b.get("notes", "")}
 
@@ -80,6 +84,7 @@ for k, b in B.items():
                  "a_km": b["a_km"], "e": b.get("e", 0.0), "period_d": b["period_d"], "retrograde": b["period_d"] < 0,
                  "i_deg": b.get("i_deg", 0.0), "i_note": b.get("i_note", "to primary equator (assumed)"),
                  "rot_d": b.get("rot_d"), "synchronous": abs((b.get("rot_d") or 0) - b["period_d"]) < 1e-3 * abs(b["period_d"]),
+                 "odd_plane": bool(OP.get("moons", {}).get(k, {}).get("odd", False)),
                  "phase_note": "Luna: Meeus series (real). Others: circular, period-exact, epoch-arbitrary phase.",
                  "pis_per_earth_year": P["moons"].get(k, {}).get("pis_per_earth_year"),
                  "hill_radius_km": b.get("hill_radius_in_primary_km"), "notes": b.get("notes", "")}
@@ -93,11 +98,37 @@ for f in sorted(os.listdir(os.path.join(DATA, "sbdb"))):
     name = d["object"]["shortname"].split(" ", 1)[1]
     k = name.lower()
     diam = float(pp["diameter"]) if pp.get("diameter") else None
-    bodies[k] = {"id": k, "name": name, "kind": "asteroid" if o.get("moid") else "asteroid", "parent": "sol",
-                 "radius_km": diam / 2 if diam else 1.0, "rot_d": float(pp["rot_per"]) / 24.0 if pp.get("rot_per") else None,
+    op = OP.get("bodies", {}).get(k, {})
+    note = ""
+    if k == "pallas":
+        note = "The classic high-i main-belt body. 35° to the ecliptic, 36.5° to the Zecliptic — odder vs Sol than vs Earth."
+    elif k == "juno":
+        note = "One of the four original asteroids. Moderately tipped: 13° ecliptic, 15.3° Zecliptic."
+    elif k == "psyche":
+        note = "NOT oddly planed (3.1° ecliptic, 7.06° Zecliptic — Earth's plane). Oddness is metal / the Psyche mission, not tilt."
+    elif k == "hidalgo":
+        note = "Jupiter-crossing; i = 42.5° ecliptic = 38.7° Zecliptic. The 42° is the same numeral as Luna's Pis; coincidence, no mechanism."
+    elif k == "ceres":
+        note = "10.6° to the ecliptic but 3.41° to the Zecliptic — aligned with Sol's equator, like Mercury."
+    elif k == "euphrosyne":
+        note = "Largest high-i family namesake. 26.3° ecliptic, 21.7° Zecliptic."
+    elif k == "interamnia":
+        note = "17.3° ecliptic jumps to 24.1° Zecliptic — Sol's equator makes it odder."
+    elif k == "hygiea":
+        note = "Ordinary in the ecliptic (3.8°) but 10.8° to the Zecliptic, so it is flagged here."
+    elif k == "eros":
+        note = "Amor / NEA. 10.8° ecliptic, 16.5° Zecliptic."
+    bodies[k] = {"id": k, "name": name, "kind": "asteroid" if k != "ceres" else "dwarf", "parent": "sol",
+                 "radius_km": diam / 2 if diam else (26.0 if k == "hidalgo" else 1.0),
+                 "rot_d": float(pp["rot_per"]) / 24.0 if pp.get("rot_per") else None,
                  "sbdb": {"epoch_jd": float(o["epoch"]), "a": el["a"], "e": el["e"], "i": el["i"], "node": el["om"], "w": el["w"], "ma": el["ma"], "period_d": el["per"],
                           "source": d["signature"]["source"], "fullname": d["object"]["fullname"], "orbit_class": d["object"]["orbit_class"]["name"]},
-                 "period_d": el["per"], "H_mag": float(pp["H"]) if pp.get("H") else None}
+                 "period_d": el["per"], "H_mag": float(pp["H"]) if pp.get("H") else None,
+                 "i_ecl_deg": op.get("i_ecl_deg", el["i"]),
+                 "i_zecliptic_deg": op.get("i_zecliptic_deg"),
+                 "i_invariable_deg": op.get("i_invariable_deg"),
+                 "odd_plane": bool(op.get("odd", False)),
+                 "notes": note}
     SB[k] = bodies[k]
 
 # representative belt sample (deterministic), carved at the Kirkwood gaps from bodies_metrics
@@ -113,6 +144,14 @@ while len(belt) < 600:
     inc = min(30.0, abs(rng.gauss(0, ab["i_mean_deg"] * 0.9)))
     belt.append({"a": round(a, 5), "e": round(e, 4), "i": round(inc, 3), "node": round(rng.uniform(0, 360), 2),
                  "w": round(rng.uniform(0, 360), 2), "ma": round(rng.uniform(0, 360), 2)})
+# high-i tail so the representative belt is not a pancake (Pallas / Euphrosyne families)
+while len(belt) < 680:
+    a = rng.uniform(ab["a_inner_au"], ab["a_outer_au"])
+    if any(abs(a - g) < 0.025 for g in gaps):
+        continue
+    belt.append({"a": round(a, 5), "e": round(min(0.35, abs(rng.gauss(0, 0.15))), 4),
+                 "i": round(rng.uniform(18.0, 42.0), 3), "node": round(rng.uniform(0, 360), 2),
+                 "w": round(rng.uniform(0, 360), 2), "ma": round(rng.uniform(0, 360), 2), "odd_tail": True})
 
 out = {
     "schema": "ZECLIPTIC_BODIES_v1", "generated": "2026-10-11", "epoch_jd": 2451545.0,
@@ -122,7 +161,9 @@ out = {
         "invariable": {"i_deg": 1.5787, "node_deg": 107.5822, "why": "The system's total angular-momentum plane (Souami & Souchay 2012). Set by Jupiter and Saturn."},
     },
     "bodies": bodies,
-    "belt": {"sample_note": "600 representative main-belt orbits, seeded, Kirkwood gaps carved; NOT real objects", "a_inner_au": ab["a_inner_au"], "a_outer_au": ab["a_outer_au"],
+    "odd_plane_ids": [k for k, b in bodies.items() if b.get("odd_plane")],
+    "belt": {"sample_note": "600 representative main-belt orbits + 80 high-i (18–42°) so the belt is not a pancake; seeded, Kirkwood gaps carved; NOT real objects",
+             "a_inner_au": ab["a_inner_au"], "a_outer_au": ab["a_outer_au"],
              "kirkwood_gaps_au": gaps, "resonances": ab.get("kirkwood_resonances"), "sample": belt},
     "heliobarrier": B["heliobarrier"],
     "mercury_annulus_km": A["annulus"], "mercury_hill_perihelion_km": A["constants"]["R_hill_perihelion_km"],
