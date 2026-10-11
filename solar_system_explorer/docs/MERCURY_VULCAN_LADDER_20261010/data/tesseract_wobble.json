@@ -1,0 +1,238 @@
+{
+  "literals": {
+    "obliquity_deg": [
+      23.439291,
+      "IAU 2006 J2000 mean obliquity"
+    ],
+    "precession_yr": [
+      25772.0,
+      "general precession period, IAU 2006"
+    ],
+    "nutation_yr": [
+      18.6,
+      "lunar node regression period (nutation driver)"
+    ],
+    "nutation_amp_arcsec": [
+      9.2025,
+      "principal nutation in obliquity, 18.6 yr term"
+    ],
+    "sol_tilt_deg": [
+      7.25,
+      "Sol equator to Zecliptic, Carrington"
+    ],
+    "r_sol_km": [
+      695700.0,
+      "IAU 2015 nominal solar radius"
+    ],
+    "receipt_yr": [
+      18.6,
+      "1 receipt = 1 wobble (nutation period)"
+    ],
+    "stars_j2000": {
+      "Polaris": [
+        37.9546,
+        89.2641,
+        "alpha UMi, SIMBAD"
+      ],
+      "Procyon": [
+        114.8255,
+        5.225,
+        "alpha CMi \u2014 the first Cat's Eye, SIMBAD"
+      ],
+      "Gomeisa": [
+        111.7876,
+        8.2893,
+        "beta CMi \u2014 the second Cat's Eye (the slide), SIMBAD"
+      ],
+      "sigma Oct": [
+        317.1951,
+        -88.9565,
+        "south pole star, SIMBAD"
+      ],
+      "delta Dra": [
+        288.1387,
+        67.6615,
+        "Altais, nearest bright star to Sol's north pole, SIMBAD"
+      ],
+      "alpha Pic": [
+        102.0478,
+        -61.9414,
+        "nearest bright star to Sol's south pole, SIMBAD"
+      ],
+      "Canopus": [
+        95.988,
+        -52.6957,
+        "for scale, down from Sol, SIMBAD"
+      ],
+      "Vega": [
+        279.2347,
+        38.7837,
+        "for scale, up from Sol, SIMBAD"
+      ]
+    },
+    "mount_discovery": [
+      -78.37,
+      165.0,
+      "lat, lon deg \u2014 black spire, Antarctica"
+    ]
+  },
+  "pulled": {
+    "sol_pole_radec_j2000": [
+      286.13,
+      63.87
+    ],
+    "sol_mass_kg": 1.98892e+30,
+    "jupiter": {
+      "name": "Jupiter",
+      "kind": "planet",
+      "mass_kg": 1.89819e+27,
+      "gm_km3s2": 126686531.9,
+      "r_mean_km": 69911.0,
+      "r_eq_km": 71492.0,
+      "density": 1326.0,
+      "a_au": 5.20289,
+      "e": 0.048386,
+      "i_ecl_deg": 1.304,
+      "omega_node_deg": 100.464,
+      "period_d": 4332.59,
+      "rot_d": 0.41354,
+      "obliquity_deg": 3.13,
+      "j2": 0.014697,
+      "dipole_Am2": 1.55e+27,
+      "albedo_geom": 0.538,
+      "albedo_bond": 0.343,
+      "g_ms2": 24.79,
+      "irradiance_Wm2": 50.26,
+      "n_moons": 95,
+      "rings": true,
+      "ring_mass_kg": 10000000000000.0,
+      "ring_inner_km": 92000.0,
+      "ring_outer_km": 226000.0,
+      "ring_note": "halo 92,000-122,500; main 122,500-129,000; gossamer to 226,000 km; mass very poorly known",
+      "moons_total_mass_kg": 3.93e+23,
+      "internal_heat_ratio": 1.67,
+      "notes": "Radiates 1.67x the sunlight it receives. System III rotation 9h 55m 29.7s. Galilean moons 1:2:4 Laplace resonance (Io:Europa:Ganymede).",
+      "id": "jupiter",
+      "v_esc_kms": 60.203,
+      "mass_earth": 317.8376477679917,
+      "a_km": 778341265.486323,
+      "i_solar_equator_deg": 6.09,
+      "i_invariable_deg": 0.327,
+      "period_yr": 11.86198494182067,
+      "synodic_earth_d": 398.88360623027955,
+      "mean_orbital_speed_kms": 13.06437352991671,
+      "kepler_T2_over_a3": 0.9990352323186182,
+      "hill_radius_km": 50562815.55419566,
+      "hill_radius_primary_radii": 723.2454914705219,
+      "orbital_L_kgm2s": 1.927202037912922e+43,
+      "spin_L_uniform_sphere_kgm2s": 6.5258833042913845e+38,
+      "spin_orbit_ratio": 10476.834163563379,
+      "moons_to_primary_mass_ratio": 0.00020703933747412008,
+      "ring_to_primary_mass_ratio": 5.268176526059035e-15,
+      "ring_outer_primary_radii": 3.2326815522593013,
+      "roche_fluid_km_ice": 193951.1872026213
+    },
+    "saturn": {
+      "name": "Saturn",
+      "kind": "planet",
+      "mass_kg": 5.6834e+26,
+      "gm_km3s2": 37931206.2,
+      "r_mean_km": 58232.0,
+      "r_eq_km": 60268.0,
+      "density": 687.0,
+      "a_au": 9.53667,
+      "e": 0.053862,
+      "i_ecl_deg": 2.485,
+      "omega_node_deg": 113.666,
+      "period_d": 10759.22,
+      "rot_d": 0.44401,
+      "rot_note": "10h 39m 24s; interior 10h 33m 38s (Cassini ring seismology)",
+      "obliquity_deg": 26.73,
+      "j2": 0.016298,
+      "dipole_Am2": 4.6e+25,
+      "albedo_geom": 0.499,
+      "albedo_bond": 0.342,
+      "g_ms2": 10.44,
+      "irradiance_Wm2": 14.82,
+      "n_moons": 274,
+      "n_moons_note": "274 confirmed (IAU/MPC Mar 2025); 146 in 2023",
+      "rings": true,
+      "ring_mass_kg": 1.54e+19,
+      "ring_mass_err_kg": 4.9e+18,
+      "ring_inner_km": 66900.0,
+      "ring_outer_km": 140180.0,
+      "ring_note": "D 66,900-74,510; C 74,658-92,000; B 92,000-117,580; Cassini Div to 122,170; A to 136,775; F 140,180; G 166,000-175,000; E 180,000-480,000 km. Mass = 0.41 Mimas (Iess+2019, Grand Finale).",
+      "moons_total_mass_kg": 1.405e+23,
+      "internal_heat_ratio": 1.78,
+      "notes": "Rings lie in the equatorial plane, tilted 26.73 deg to the orbit; ring-plane crossings every ~15 yr (next 2025 Mar 23, 2038-39). Ring mass / Saturn mass = 2.7e-8.",
+      "id": "saturn",
+      "v_esc_kms": 36.095,
+      "mass_earth": 95.16426107632029,
+      "a_km": 1426665525.568569,
+      "i_solar_equator_deg": 5.504,
+      "i_invariable_deg": 0.93,
+      "period_yr": 29.457138945927444,
+      "synodic_earth_d": 378.09152122520334,
+      "mean_orbital_speed_kms": 9.642896490121526,
+      "kepler_T2_over_a3": 1.000439572319791,
+      "hill_radius_km": 61645285.77434835,
+      "hill_radius_primary_radii": 1058.6152935559203,
+      "orbital_L_kgm2s": 7.809980346445755e+42,
+      "spin_L_uniform_sphere_kgm2s": 1.26259772214853e+38,
+      "spin_orbit_ratio": 24231.931713249698,
+      "moons_to_primary_mass_ratio": 0.00024721117640848786,
+      "ring_to_primary_mass_ratio": 2.7096456346553117e-08,
+      "ring_outer_primary_radii": 2.40726748179695,
+      "roche_fluid_km_ice": 129751.69464743722
+    }
+  },
+  "receipts": {
+    "receipt_yr": 18.6,
+    "receipts_per_precession": 1385.5913978494623,
+    "clip_receipts": 69.27956989247312,
+    "clip_years": 1288.6000000000001,
+    "fold_period_receipts": 10.0,
+    "axis_leaves_polaris_by_5deg_at_receipt": 53.5,
+    "axis_leaves_polaris_by_5deg_year": 2995.1,
+    "closest_to_polaris_deg": 0.45925514724456795,
+    "closest_to_polaris_receipt": 5.5,
+    "closest_to_polaris_year": 2102.3
+  },
+  "separations_deg": {
+    "earth_pole_j2000_to_polaris_deg": 0.7358999999996702,
+    "earth_pole_j2000_to_sigma_oct_deg": 1.0434999999994807,
+    "earth_pole_to_procyon_deg": 84.775,
+    "earth_pole_to_gomeisa_deg": 81.7107,
+    "procyon_to_gomeisa_deg": 4.299850542950436,
+    "sol_pole_to_earth_pole_deg": 26.129999999999992,
+    "sol_pole_to_zecliptic_pole_deg": 7.251726833001019,
+    "sol_pole_to_delta_dra_deg": 3.879601113685218,
+    "sol_pole_to_vega_deg": 25.41978309815322,
+    "sol_pole_to_polaris_deg": 26.411797733395993,
+    "sol_antipole_to_alpha_pic_deg": 2.6778973808083597,
+    "sol_antipole_to_canopus_deg": 12.346716420305492,
+    "sol_pole_to_procyon_deg": 110.59612793908819,
+    "sol_pole_to_gomeisa_deg": 107.71296727958183,
+    "cats_eyes_below_zecliptic_deg": {
+      "Procyon": -16.019607003952096,
+      "Gomeisa": -13.48724575978739
+    }
+  },
+  "sol_wobble_rsol": {
+    "min": 0.4817669063453592,
+    "max": 1.6537432320687804
+  },
+  "drawing": {
+    "nutation_exaggeration": 500.0,
+    "sky_radius_units": 3.6,
+    "camera_elev_az": [
+      18.0,
+      215.0
+    ]
+  },
+  "frame": "Zecliptic (J2000 ecliptic), obliquity rotation of equatorial coordinates",
+  "outputs": {
+    "mp4": "video/tesseract_wobble.mp4",
+    "sheet": "img/tesseract_wobble_sheet.png"
+  }
+}
